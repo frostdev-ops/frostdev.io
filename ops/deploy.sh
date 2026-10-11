@@ -26,14 +26,14 @@ if [[ $mode != activate ]]; then
     node --input-type=module <<'NODE'
 import assert from 'node:assert/strict';
 import { readdirSync, statSync, lstatSync } from 'node:fs';
-const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'privacy', 'guides',
+const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'privacy', 'guides',
   'guides/rimeward-first-workspace', 'guides/crosspane-two-computers',
   'guides/rimewire-agent-handoffs', 'guides/frostsim-first-simulation',
-  'guides/loothing-raid-loot'];
+  'guides/loothing-raid-loot', 'guides/glaze-safari', 'guides/glaze-chrome'];
 for (const page of pages) assert(statSync(`dist/${page ? page + '/' : ''}index.html`).size > 0);
 for (const file of ['robots.txt', 'sitemap.xml', 'ads.txt']) assert(statSync(`dist/${file}`).size > 0);
 assert(statSync('dist/_site').isDirectory());
-const allowed = new Set(['index.html', '404.html', 'rimeward', 'rimewire', 'crosspane',
+const allowed = new Set(['index.html', '404.html', 'rimeward', 'rimewire', 'crosspane', 'glaze',
   'privacy', 'guides', '_site', 'projects', 'robots.txt', 'sitemap.xml', 'ads.txt']);
 for (const name of readdirSync('dist')) assert(allowed.has(name), `Unexpected static output: ${name}`);
 function inspect(path) {
@@ -126,10 +126,11 @@ activated=1
 
 # The origin uses the existing Cloudflare origin certificate. Public TLS is checked normally.
 for origin in origin public; do
-    for route in / /rimeward /rimewire /crosspane /privacy /guides \
+    for route in / /rimeward /rimewire /crosspane /glaze /privacy /guides \
         /guides/rimeward-first-workspace /guides/crosspane-two-computers \
         /guides/rimewire-agent-handoffs /guides/frostsim-first-simulation \
-        /guides/loothing-raid-loot /robots.txt /sitemap.xml /ads.txt; do
+        /guides/loothing-raid-loot /guides/glaze-safari /guides/glaze-chrome \
+        /robots.txt /sitemap.xml /ads.txt; do
         case "$route" in
             /) file=index.html ;;
             *.txt|*.xml) file=${route#/} ;;

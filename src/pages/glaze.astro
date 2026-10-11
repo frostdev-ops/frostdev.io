@@ -1,0 +1,94 @@
+---
+import MarketingLayout from '../layouts/MarketingLayout.astro';
+import '../styles/products.css';
+
+const source = 'https://github.com/frostdev-ops/glaze';
+---
+
+<MarketingLayout title="Glaze — Your colours on Blackboard Ultra" description="Make Blackboard Ultra yours with Glaze: palettes, readable fonts, comfortable spacing and optional extras. Get started in Safari or Chrome." path="/glaze" image="/projects/glaze-preview.webp">
+  <div class="product-page glaze-page">
+    <section class="product-hero" aria-labelledby="glaze-title">
+      <div class="product-intro">
+        <p class="product-eyebrow">Glaze · Blackboard Ultra</p>
+        <img class="product-logo" src="/projects/glaze-logo.svg" width="420" height="120" alt="Glaze" />
+        <h1 class="product-title" id="glaze-title">Your courses.<br />Your colours.</h1>
+        <p class="product-lead">A calmer place to study. Shape Blackboard Ultra with your own palette, readable type and just the details you need.</p>
+        <div class="product-actions">
+          <a class="product-button" href="/guides/glaze-safari">Safari guide <span aria-hidden="true">→</span></a>
+          <a class="product-button secondary" href="/guides/glaze-chrome">Chrome guide <span aria-hidden="true">→</span></a>
+        </div>
+        <p class="product-meta">Open source · No analytics · No Glaze account</p>
+      </div>
+      <figure class="glaze-preview">
+        <div class="preview-top"><span class="preview-dots" aria-hidden="true">● ● ●</span><span>Glaze 2.0.1 · Course preview</span></div>
+        <a href="/projects/glaze-preview.webp" aria-label="Open the full-size Glaze sample course preview"><img src="/projects/glaze-preview.webp" width="1000" height="1020" alt="Glaze’s Frost palette on its sample Blackboard Ultra course, with content and grade cards" /></a>
+        <figcaption>Glaze’s own preview, styled by the real extension. Sample course data.</figcaption>
+      </figure>
+    </section>
+
+    <section class="product-section" aria-labelledby="comfort-heading">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">Make room for focus</p>
+        <h2 id="comfort-heading">A little more you.<br />A lot easier to read.</h2>
+        <p>Start with a preset, then tune the parts that make the biggest difference to your day.</p>
+      </div>
+      <div class="product-grid">
+        <article class="product-card"><span class="glaze-feature" aria-hidden="true">01</span><h3>Find your palette</h3><p>Choose from six presets, adjust individual colours, or save your own. Automatic light and dark palettes follow your system.</p></article>
+        <article class="product-card"><span class="glaze-feature" aria-hidden="true">02</span><h3>Settle into reading</h3><p>Try Inter or Atkinson Hyperlegible. Adjust text size, line height and density, then check the result in the live preview.</p></article>
+        <article class="product-card"><span class="glaze-feature" aria-hidden="true">03</span><h3>Choose your extras</h3><p>Due-date countdowns, score bars, course progress and folder previews start off. Turn on the helpers that work for you.</p></article>
+      </div>
+    </section>
+
+    <section class="product-section product-split" aria-labelledby="editor-heading">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">Quick change or full control</p>
+        <h2 id="editor-heading">See it as you shape it.</h2>
+        <p>The popup keeps palettes and motion close. <strong>Open the editor</strong> puts every setting beside a live preview: colours, backgrounds, course colours and more.</p>
+        <p class="product-caption">These editor features are in Glaze 2.0.1. Safari has a signed, notarized Mac download. The Chrome Web Store rollout is underway; check the version on the <a href="https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh">store listing</a>. The Chrome guide also covers the official 2.0.1 download.</p>
+      </div>
+      <figure class="product-panel editor-preview">
+        <a href="/projects/glaze-editor.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-editor.webp" width="1440" height="1000" loading="lazy" alt="Glaze’s full editor, with palette controls beside its live sample-course preview" /></a>
+        <figcaption class="product-caption">Actual Glaze editor with its built-in demonstration course.</figcaption>
+      </figure>
+    </section>
+
+    <section class="product-section" aria-labelledby="browser-heading">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">Start in your browser</p>
+        <h2 id="browser-heading">Two browsers.<br />The same comfortable course.</h2>
+      </div>
+      <div class="browser-guides">
+        <a class="product-panel browser-guide" href="/guides/glaze-safari"><span class="product-eyebrow">Safari on Mac</span><h3>Install the app. Enable the extension.</h3><p>Use the signed Mac release, grant access to your Blackboard site, and make your first theme.</p><span class="product-text-link">Follow the Safari guide →</span></a>
+        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Choose your install. Find your look.</h3><p>Start with the store version or load the 2.0.1 package, then explore the editor and back up your settings.</p><span class="product-text-link">Follow the Chrome guide →</span></a>
+      </div>
+    </section>
+
+    <section class="product-cta">
+      <p class="product-eyebrow">Glaze by Frostdev</p>
+      <h2>Keep your theme. Keep your privacy.</h2>
+      <p>Glaze has no analytics or server. Optional folder previews use your Blackboard session; an image background loads the URL you choose. It restyles Ultra pages without submitting coursework.</p>
+      <div class="product-actions"><a class="product-button" href={source}>View source <span aria-hidden="true">↗</span></a><a class="product-button secondary" href={`${source}/blob/main/PRIVACY.md`}>Read the privacy policy <span aria-hidden="true">↗</span></a></div>
+      <p class="product-caption">Works on Blackboard Ultra pages under /ultra/. Not affiliated with or endorsed by Anthology Inc.</p>
+    </section>
+  </div>
+</MarketingLayout>
+
+<style>
+  .glaze-page { --product-accent: #6fdcff; }
+  .glaze-preview { min-width: 0; border: 1px solid #2b4b61; border-radius: 1rem; overflow: hidden; background: #060d18; animation: preview-arrive .8s ease-out both; }
+  .preview-top { display: flex; align-items: center; gap: 1rem; padding: .85rem 1rem; color: #adc8db; font-size: .7rem; border-bottom: 1px solid #23394e; }
+  .preview-dots { color: #40647c; letter-spacing: .2em; }
+  .glaze-preview img, .editor-preview img { display: block; width: 100%; height: auto; }
+  .glaze-preview figcaption { padding: .85rem 1rem; color: #8fa8c0; font-size: .72rem; line-height: 1.6; }
+  .glaze-feature { display: block; margin-bottom: 1.25rem; color: #6fdcff; font-size: .75rem; }
+  .editor-preview { padding: .75rem; }
+  .editor-preview figcaption { padding: 0 .5rem .5rem; }
+  .browser-guides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+  .browser-guide { transition: border-color .2s, transform .2s; }
+  .browser-guide:hover { border-color: #6fdcff; transform: translateY(-3px); }
+  .browser-guide .product-eyebrow { display: block; }
+  .product-caption a { color: #9be7ff; text-decoration: underline; text-underline-offset: .2em; }
+  @keyframes preview-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @media (max-width: 700px) { .browser-guides { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .glaze-preview { animation: none; } .browser-guide { transition: none; } .browser-guide:hover { transform: none; } }
+</style>

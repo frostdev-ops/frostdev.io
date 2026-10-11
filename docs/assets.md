@@ -26,6 +26,22 @@ they are not part of Git or the static build.
   not evidence of model performance or provider calls.
 - Guide browser screenshots in `docs/screenshots/` show this static site at desktop
   and phone widths. They are review evidence, separate from native golden images.
+- Glaze branding comes unchanged from its repository. Its editor, popup and course
+  preview captures use the actual unpacked 2.0.1 extension in a disposable Chromium
+  profile, with the built-in sample course and real extension storage. Captured UI
+  source is `63cb89d`; the later `418f347` publishing/docs commit leaves those files
+  unchanged. No institution account or real coursework is captured.
+- Glaze captures use the Frost palette, reduced motion, device scale 1 and a fixed
+  October 11 clock. Dimensions: editor 1440 × 1000, popup 320 × 297, course preview
+  1000 × 1020, narrow editor 390 × 844. PNG goldens retain the browser pixels;
+  published images are WebP encodings. The popup is its real extension page rendered
+  at its native width. Shared Safari UI sources match byte-for-byte; these images
+  do not establish a Safari app installation or a live institution workflow.
+- The narrow Glaze editor capture records existing behavior: its full page extends
+  to 452 pixels at a 390-pixel viewport. Glaze source was not changed for this website
+  work. Website guides themselves are checked for horizontal overflow separately.
+- Requested website goldens cover the hub, guide index, Glaze page and both browser
+  guides at desktop and phone widths, plus the sixth project card on a phone.
 
 The inline UI icons retain their Lucide/Feather attribution in
 [`public/_site/lucide-license.txt`](../public/_site/lucide-license.txt). Project

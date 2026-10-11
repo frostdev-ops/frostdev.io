@@ -6,6 +6,8 @@ Allow: /crosspane$
 Allow: /crosspane/$
 Allow: /rimewire$
 Allow: /rimewire/$
+Allow: /glaze$
+Allow: /glaze/$
 Allow: /guides$
 Allow: /guides/
 Allow: /privacy$

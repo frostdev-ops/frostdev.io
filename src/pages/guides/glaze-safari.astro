@@ -1,0 +1,174 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+
+const source = 'https://github.com/frostdev-ops/glaze';
+const release = `${source}/releases/tag/safari-v2.0.1`;
+const reference = `${source}/blob/safari-v2.0.1`;
+const apple = 'https://support.apple.com/102343';
+const chapters = [
+  { id: 'prepare', title: 'Check your Mac and Blackboard' },
+  { id: 'install', title: 'Install the Safari app' },
+  { id: 'permissions', title: 'Enable Glaze for your school' },
+  { id: 'first-theme', title: 'Try your first palette' },
+  { id: 'editor', title: 'Make the page easier to read' },
+  { id: 'automatic', title: 'Follow light, dark and motion' },
+  { id: 'courses', title: 'Tune courses and extras' },
+  { id: 'backup', title: 'Keep a portable backup' },
+  { id: 'privacy', title: 'Know what stays on your Mac' },
+  { id: 'troubleshooting', title: 'Recover, update or remove' },
+];
+---
+
+<GuideLayout
+  title="Make Blackboard feel at home in Safari"
+  description="Install Glaze on your Mac, give it access to your school’s Blackboard Ultra site, and build a calmer, more readable workspace with palettes, fonts and optional extras."
+  path="/guides/glaze-safari"
+  project="Glaze"
+  duration="12 min read"
+  chapters={chapters}
+>
+  <section class="guide-section" id="prepare">
+    <h2>Check your Mac and Blackboard</h2>
+    <p>Glaze restyles Blackboard Ultra in your browser. Start with an ordinary Safari window and your school’s usual Blackboard address. Sign in through the school’s normal login, then open Courses. The address of the Ultra page should contain <code>/ultra/</code>.</p>
+    <p>The sign-in screen may live on another domain and keep its original appearance. Glaze targets HTTPS Ultra pages, using <code>https://*/ultra/*</code> so schools with different hostnames can use the same extension. Classic Blackboard pages and unrelated websites are outside that match.</p>
+    <div class="guide-table-wrap"><table>
+      <thead><tr><th scope="col">Requirement</th><th scope="col">What to check</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Mac app</th><td>Intel or Apple Silicon Mac, macOS 12 or newer.</td></tr>
+        <tr><th scope="row">Styling</th><td>Safari 17.2 or newer. Check Safari → About Safari.</td></tr>
+        <tr><th scope="row">Frosted glass</th><td>Safari 18 or newer for the glass blur.</td></tr>
+        <tr><th scope="row">Blackboard</th><td>Your institution’s HTTPS Blackboard Ultra site, with an <code>/ultra/</code> page.</td></tr>
+      </tbody>
+    </table></div>
+    <p>These are the <a href={release}>Safari release’s requirements</a>. Being able to open the Mac app does not establish that an older Safari can render the theme. This package is for Safari on Mac; for Google Chrome, follow the <a href="/guides/glaze-chrome">Chrome guide</a>.</p>
+    <aside class="guide-callout"><strong>Start on a page you can inspect.</strong> Use Courses, a reading page or a completed activity for the first check. Confirm headings, buttons and focus indicators stay readable before using your new look for an assessment.</aside>
+  </section>
+
+  <section class="guide-section" id="install">
+    <h2>Install the Safari app</h2>
+    <p>The <a href={release}>Glaze 2.0.1 Safari release</a>, published October 11, 2026, provides a Developer ID signed and Apple-notarized Mac app. You do not need Xcode or a source build to use this download.</p>
+    <ol class="guide-steps">
+      <li>Open the release and download <strong>glaze-2.0.1-safari-macos.zip</strong> from Assets. Choose the Safari Mac archive rather than a source-code archive.</li>
+      <li>In Finder, unzip the download and move <strong>Glaze.app</strong> into <strong>Applications</strong>.</li>
+      <li>Open Glaze from Applications. If macOS asks whether to open the downloaded app, confirm that it is the Glaze download you just obtained.</li>
+      <li>Choose <strong>Quit and Open Safari Settings…</strong>. On macOS 12, the button reads <strong>Quit and Open Safari Extensions Preferences…</strong>.</li>
+    </ol>
+    <p>The app’s button opens Safari’s extension settings and quits the setup app. Safari loads the extension from Glaze.app, so leave the app in Applications. You do not need its setup window running while using Blackboard.</p>
+    <p>The release also includes <strong>glaze-2.0.1-safari-macos.sha256</strong> for checking the archive. If macOS reports that the app is damaged or cannot be verified, download the signed Safari archive again from the release and check the file; do not bypass verification with Terminal commands.</p>
+  </section>
+
+  <section class="guide-section" id="permissions">
+    <h2>Enable Glaze for your school</h2>
+    <p>There are two switches to check: Safari must enable the extension, and Glaze must have website access. The theme’s own on/off control comes after those permissions.</p>
+    <ol class="guide-steps">
+      <li>In Safari, choose <strong>Safari → Settings → Extensions</strong> (Preferences on older macOS). Select the checkbox beside <strong>Glaze for Blackboard Ultra</strong>.</li>
+      <li>Return to your signed-in Blackboard Ultra tab. Click the Glaze toolbar button and allow access to this school’s Blackboard site when Safari asks.</li>
+      <li>To review persistent access, select Glaze in Extensions settings and choose <strong>Edit Websites</strong>. Set your Blackboard hostname to <strong>Allow</strong>. Keep other websites at <strong>Ask</strong> or <strong>Deny</strong> according to your preference.</li>
+      <li>Reload the Ultra tab once after enabling the extension or changing its website permission. Click Glaze again to open its quick controls.</li>
+    </ol>
+    <p><strong>Ask</strong> requires consent, <strong>Allow</strong> permits access and <strong>Deny</strong> blocks it. Safari’s website permission is broader than Glaze’s <code>/ultra/</code> content-script match: seeing a website-access prompt does not mean the extension themes every page on that domain. Apple documents these controls in its <a href={apple}>Safari extensions guide</a> and <a href="https://developer.apple.com/documentation/safariservices/managing-safari-web-extension-permissions">web extension permission reference</a>.</p>
+    <p>If you use Safari profiles, enable Glaze in the profile you use for school. Apple notes that extensions start disabled in a new profile. In a private window on macOS Sonoma 14 or later, website-access extensions are off by default; use <strong>Allow in Private Browsing</strong> in Glaze’s Extensions settings only if you want it there. Begin in a normal window to make setup easier.</p>
+  </section>
+
+  <section class="guide-section" id="first-theme">
+    <h2>Try your first palette</h2>
+    <p>Click Glaze in Safari’s toolbar. The popup offers the theme switch, palette swatches, three motion levels and <strong>Open the editor</strong>. Hover a swatch to see its name: <strong>Frost, Midnight, Forest, Ember, Paper</strong> or <strong>Rose</strong>.</p>
+    <ol class="guide-steps">
+      <li>Check that <strong>Theme on / off</strong> is on. The default is Frost with Subtle motion.</li>
+      <li>Try <strong>Paper</strong> for a light page or <strong>Frost</strong> for a dark one. Look at a course card, navigation label and ordinary paragraph.</li>
+      <li>Switch Glaze off and back on to compare the same page. Your saved theme choices remain available.</li>
+      <li>Choose <strong>Open the editor</strong> when you are ready to adjust the full look.</li>
+    </ol>
+    <p>Popup changes save immediately and apply to open Ultra tabs with Glaze running. Choosing a preset also turns automatic light/dark selection off: it is an explicit palette choice. If the popup says <strong>Not saved</strong>, reopen it and check the setting before assuming it persisted.</p>
+    <figure class="guide-figure guide-figure-compact">
+      <a href="/projects/glaze-popup.webp" aria-label="Open the full-size Glaze popup capture"><img src="/projects/glaze-popup.webp" alt="Glaze’s quick-control popup with palette swatches, motion levels and Open the editor" width="320" height="297" loading="lazy" /></a>
+      <figcaption>The actual shared extension popup, captured with disposable sample settings. This is a control reference, not an image of Safari’s installation or permission screens.</figcaption>
+    </figure>
+  </section>
+
+  <section class="guide-section" id="editor">
+    <h2>Make the page easier to read</h2>
+    <p>The editor combines settings with a live preview of a sample Ultra course. It saves changes automatically; sliders and colour drags wait briefly after you stop moving them. Check the <strong>Saved</strong> notice, then compare the result in your real Blackboard tab.</p>
+    <figure class="guide-figure">
+      <a href="/projects/glaze-editor.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-editor.webp" alt="Glaze editor showing palette and appearance controls beside its sample Ultra course preview" width="1440" height="1000" loading="lazy" /></a>
+      <figcaption>The actual extension editor and its built-in disposable course preview. The sample names and coursework are demonstration content.</figcaption>
+    </figure>
+    <p>Under <strong>Look</strong>, choose System, Blackboard’s own Open Sans, Inter, Atkinson Hyperlegible, Serif or Monospace. Inter and Atkinson Hyperlegible are bundled. Increase <strong>Text size</strong> and <strong>Line height</strong> if reading feels cramped; try <strong>Roomy</strong> density if controls need more breathing space.</p>
+    <p><strong>Corner radius</strong>, <strong>Depth</strong> and <strong>Glass blur</strong> change the surfaces. Start with a Solid background while choosing text colours. A decorative background is easier to judge once headings, muted labels and text on buttons are clear.</p>
+    <p>Under <strong>Palette</strong>, edit individual colour tokens and watch the contrast indicators. They check selected text and surface pairs; they do not certify the accessibility of every Blackboard screen. Inspect small labels, selected states and keyboard focus in the actual course too.</p>
+    <p>Name a palette and choose <strong>Save as preset</strong> to keep it. You can save up to twelve custom palettes. A saved palette stores colours; use a settings export to preserve fonts, motion and the rest of your setup. <strong>Back to Frost</strong> restores the Frost colours and turns automatic palette selection off without resetting all other options.</p>
+  </section>
+
+  <section class="guide-section" id="automatic">
+    <h2>Follow light, dark and motion</h2>
+    <p>In Palette, enable <strong>Follow the system’s light and dark mode</strong>, then choose the Light and Dark palettes. The initial pair is Paper and Frost, and your saved palettes are available in both menus. Glaze follows your computer’s appearance rather than a separate Blackboard setting.</p>
+    <p>Selecting a swatch or manually changing a palette colour turns this automatic mode off. If your theme stops following the system after a colour edit, turn the checkbox back on and verify the two selected palettes.</p>
+    <div class="guide-table-wrap"><table>
+      <thead><tr><th scope="col">Motion</th><th scope="col">What changes</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Off</th><td>Removes Glaze’s entrances, hover motion and colour transitions.</td></tr>
+        <tr><th scope="row">Subtle</th><td>Gentle entrances, panel slides and hover lift. This is the default.</td></tr>
+        <tr><th scope="row">Expressive</th><td>Springier motion, a drifting aurora and a small completion burst.</td></tr>
+      </tbody>
+    </table></div>
+    <p>Leave <strong>Turn motion off when the system asks for reduced motion</strong> enabled to respect your Mac’s preference. The editor also lets you switch entrances, hover effects and transitions individually.</p>
+    <p>For a background, choose <strong>Solid, Gradient, Aurora</strong> or <strong>Image</strong>. Aurora drifts with Expressive motion. An image needs an <code>https://</code> picture address; if it cannot load, the gradient appears instead. Use Dim and Blur to keep the page readable, and remember that an external image host receives an ordinary browser request for that image.</p>
+    <figure class="guide-figure">
+      <a href="/projects/glaze-preview.webp" aria-label="Open the full-size Glaze sample course preview"><img src="/projects/glaze-preview.webp" alt="Glaze’s themed sample Blackboard course with a content list and course navigation" width="1000" height="1020" loading="lazy" /></a>
+      <figcaption>The real Glaze styling applied to its disposable sample preview. Your school’s content and Blackboard version may produce a different layout.</figcaption>
+    </figure>
+  </section>
+
+  <section class="guide-section" id="courses">
+    <h2>Tune courses and extras</h2>
+    <p>Glaze tones Blackboard’s course colours to fit your palette by default. Open <strong>Messages</strong> or <strong>Grades</strong> in Blackboard once, then return to the editor’s <strong>Courses</strong> section. Discovered course names appear beside their colour controls; <strong>Reset</strong> removes a custom colour for that slot.</p>
+    <p>Ultra has ten course-colour slots. Glaze’s overrides apply to these slots, so courses sharing a slot can share your chosen colour. The course-name list is learned from pages you open on this device, rather than fetched as a complete school roster.</p>
+    <p>Every Extra starts off. Turn on one at a time, then check the relevant Blackboard page:</p>
+    <ul>
+      <li><strong>Due-date urgency</strong> marks overdue, due-today and near-due items; <strong>Countdowns and percentages</strong> adds date and grade context.</li>
+      <li><strong>Score bars</strong> visualises a score’s share of its total. <strong>Course progress</strong> summarises completion visible in course content. Keep Blackboard’s displayed records as the reference.</li>
+      <li><strong>Reading width</strong> shortens lines in announcements, posts and documents. <strong>Shorter descriptions</strong> limits long content descriptions until hover or focus.</li>
+      <li><strong>Folder previews</strong> shows a closed folder’s contents on hover by requesting them from your own Blackboard site with your existing session.</li>
+      <li><strong>Keyboard shortcuts</strong> enables <kbd>g</kbd> then <kbd>c</kbd>, <kbd>a</kbd>, <kbd>g</kbd>, <kbd>m</kbd> or <kbd>s</kbd> for Courses, Calendar, Grades, Messages or Activity; <kbd>/</kbd> searches and <kbd>?</kbd> shows the list.</li>
+    </ul>
+    <p><strong>Declutter</strong> can hide the floating help button, course banners, an empty Course Faculty box and selected course tabs. Hide only parts you know you do not need. If navigation disappears, restore its checkbox in Extras or switch Glaze off to see the ordinary page.</p>
+  </section>
+
+  <section class="guide-section" id="backup">
+    <h2>Keep a portable backup</h2>
+    <p>Once the theme feels right, open the editor’s <strong>Backup</strong> section and choose <strong>Export settings</strong>. Save <code>glaze-settings.json</code> somewhere you can find again. It includes colours, custom presets and options, but excludes the locally discovered course names.</p>
+    <p>On another installation, choose <strong>Import settings…</strong> and select the JSON file. Import replaces the current configuration with the file’s settings; export the current setup first if you want to keep both. Invalid values are normalised to defaults, and an unrecognised file produces a notice.</p>
+    <p>Use export and import when moving between Safari and Chrome or another Mac. The extension uses the browser storage API, but Chrome’s Google-account sync description is not a promise of Safari or iCloud settings sync. Safari’s <strong>Share across devices</strong> control manages extension availability and enablement; keep an explicit backup of your Glaze choices.</p>
+    <p><strong>Reset everything</strong> needs a second click within four seconds. It restores defaults while keeping your saved custom palettes. It is not an uninstall and does not erase the course-name cache.</p>
+  </section>
+
+  <section class="guide-section" id="privacy">
+    <h2>Know what stays on your Mac</h2>
+    <p>Glaze stores your settings through browser extension storage and records discovered course names in local extension storage. It has no analytics or server of its own, ships bundled fonts and loads no remote code. Its <a href={`${reference}/PRIVACY.md`}>privacy policy</a> describes these stores and network requests.</p>
+    <p>There are two optional request paths: Folder previews asks your own Blackboard site for folder contents, using the session you already have; an Image background loads the HTTPS image address you chose. Folder responses stay in memory briefly. Choosing a remote image means that image host can see a normal request.</p>
+    <p>Safari’s permission warning is still meaningful: an extension that restyles a page needs access to its content. Grant access to your school’s Ultra host, review the source or privacy policy if needed, and withdraw access through Edit Websites whenever you want. Export files can include an image URL and personal palette names, so inspect a backup before sharing it.</p>
+    <aside class="guide-callout"><strong>Your school remains the source of truth.</strong> Glaze changes presentation and adds optional hints. It does not submit assignments or change your recorded grades. Compare any due-date, score or completion hint with the underlying Blackboard record.</aside>
+  </section>
+
+  <section class="guide-section" id="troubleshooting">
+    <h2>Recover, update or remove</h2>
+    <p>Find the first missing step: app in Applications, extension listed and enabled, permission for the actual Ultra hostname, an HTTPS <code>/ultra/</code> page, then Glaze’s own theme switch.</p>
+    <ul class="guide-checklist">
+      <li><strong>Glaze is absent from Extensions:</strong> open the installed Glaze.app once, use its Safari settings button, and restart Safari if the list has not refreshed. Check that you downloaded the Safari app archive.</li>
+      <li><strong>The app says Safari could not load Glaze:</strong> use the signed, notarized release in Applications and open it again. If the problem continues, report the app version, macOS version and exact message.</li>
+      <li><strong>Enabled but no theme:</strong> check Edit Websites for the hostname after login, the active Safari profile and private-browsing setting, then reload the Ultra page. A school login page or Classic course may be outside Glaze’s match.</li>
+      <li><strong>The preview changes but Blackboard does not:</strong> the editor preview works independently of school-site access. Recheck permission and refresh the real tab. Another styling extension can also affect the result; compare with it temporarily disabled.</li>
+      <li><strong>A page is hard to use:</strong> switch Glaze off, confirm the original page works, then restore a built-in palette and disable the last Extra you changed. Check the Safari version if glass or other styles are missing.</li>
+      <li><strong>Courses are missing from the editor:</strong> visit Messages or Grades with Glaze enabled. Names are discovered locally; an empty list does not indicate lost Blackboard courses.</li>
+      <li><strong>Changes do not persist:</strong> watch for Not saved, reopen the editor and verify the value. Keep an export before clearing extension storage or reinstalling.</li>
+    </ul>
+    <h3>Update the downloaded app</h3>
+    <p>Check <a href={`${source}/releases`}>GitHub Releases</a> for a newer Safari package. Export settings, quit Safari and Glaze, then replace Glaze.app in Applications with the new signed release. Open the replacement app, return to Extensions settings and verify enablement, website access and your theme. This GitHub download follows the release-download workflow; do not expect an App Store update.</p>
+    <h3>Turn it off or uninstall</h3>
+    <p>For a temporary pause, turn the theme off in the popup, or uncheck Glaze under Safari → Settings → Extensions. To remove it, export anything you want to keep, select Glaze in Extensions settings and choose <strong>Uninstall</strong>; follow Safari’s instructions to remove the containing app. Apple also documents deleting the containing app to remove an extension. Do not depend on a reinstall retaining your settings.</p>
+    <div class="guide-sources">
+      <p>Continue with the <a href="/glaze">Glaze overview</a>, <a href="/guides/glaze-chrome">Chrome guide</a>, <a href={release}>Safari release and download</a>, <a href={source}>source repository</a> and <a href={`${source}/issues`}>issue tracker</a>. Apple’s <a href={apple}>extension instructions</a> cover Safari permissions, profiles and removal.</p>
+      <p>Glaze is an independent project and is not affiliated with or endorsed by Anthology Inc. or your institution.</p>
+    </div>
+  </section>
+</GuideLayout>

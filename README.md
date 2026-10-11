@@ -21,7 +21,7 @@ npm run build
 npm run preview
 ```
 
-Astro generates eleven static pages with independent `/_site/` assets. No database,
+Astro generates fourteen static pages with independent `/_site/` assets. No database,
 authentication service, native runtime or account data is included. `/login` and
 other application routes are provided by the existing Rimeward server in production.
 
@@ -55,11 +55,13 @@ The site was extracted from public-only source in Rimeward commit
 package, lockfile, static build, CI and deployment. Shared runtime imports were
 replaced with public icons, brand assets and static product metadata.
 
-Guides cover Rimeward, Crosspane, Rimewire, Frostsim and Loothing. Their source is
+Guides cover Rimeward, Crosspane, Rimewire, Frostsim, Loothing and Glaze. Glaze has
+separate Safari and Chrome walkthroughs. Their source is
 in `src/pages/guides/`, shared presentation in `GuideLayout.astro` and `guides.css`.
 Examples use demonstration data and make no provider or model calls. Interface
 images are public product captures; see [asset provenance](docs/assets.md).
 
 See [public routes and validation](docs/public-pages.md) and
 [AdSense follow-up](docs/adsense-review.md). Review captures live in
-`docs/screenshots/`; they are separate from Rimeward's golden screenshots.
+`docs/screenshots/`; requested website and extension baselines live in
+`docs/goldens/`. Both are separate from Rimeward's golden screenshots.
