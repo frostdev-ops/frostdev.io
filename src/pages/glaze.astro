@@ -3,6 +3,8 @@ import MarketingLayout from '../layouts/MarketingLayout.astro';
 import '../styles/products.css';
 
 const source = 'https://github.com/frostdev-ops/glaze';
+const safariDownload = `${source}/releases/download/safari-v2.0.1/glaze-2.0.1-safari-macos.zip`;
+const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 ---
 
 <MarketingLayout title="Glaze — Your colours on Blackboard Ultra" description="Make Blackboard Ultra yours with Glaze: palettes, readable fonts, comfortable spacing and optional extras. Get started in Safari or Chrome." path="/glaze" image="/projects/glaze-preview.webp">
@@ -13,9 +15,13 @@ const source = 'https://github.com/frostdev-ops/glaze';
         <img class="product-logo" src="/projects/glaze-logo.svg" width="420" height="120" alt="Glaze" />
         <h1 class="product-title" id="glaze-title">Your courses.<br />Your colours.</h1>
         <p class="product-lead">A calmer place to study. Shape Blackboard Ultra with your own palette, readable type and just the details you need.</p>
-        <div class="product-actions">
-          <a class="product-button" href="/guides/glaze-safari">Safari guide <span aria-hidden="true">→</span></a>
-          <a class="product-button secondary" href="/guides/glaze-chrome">Chrome guide <span aria-hidden="true">→</span></a>
+        <div class="product-actions" data-glaze-install="safari">
+          <a class="product-button" href={safariDownload}>Download for Safari on Mac <span aria-hidden="true">↓</span></a>
+          <a class="product-button secondary" href="/guides/glaze-safari">Safari visual guide <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="product-actions" data-glaze-install="chrome">
+          <a class="product-button" href={chromeStore}>Get from Chrome Web Store <span aria-hidden="true">↗</span></a>
+          <a class="product-button secondary" href="/guides/glaze-chrome">Chrome visual guide <span aria-hidden="true">→</span></a>
         </div>
         <p class="product-meta">Open source · No analytics · No Glaze account</p>
       </div>
@@ -44,7 +50,7 @@ const source = 'https://github.com/frostdev-ops/glaze';
         <p class="product-eyebrow">Quick change or full control</p>
         <h2 id="editor-heading">See it as you shape it.</h2>
         <p>The popup keeps palettes and motion close. <strong>Open the editor</strong> puts every setting beside a live preview: colours, backgrounds, course colours and more.</p>
-        <p class="product-caption">These editor features are in Glaze 2.0.1. Safari has a signed, notarized Mac download. The Chrome Web Store rollout is underway; check the version on the <a href="https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh">store listing</a>. The Chrome guide also covers the official 2.0.1 download.</p>
+        <p class="product-caption">These editor features are in Glaze 2.0.1. Safari has a signed, notarized Mac download. The Chrome Web Store rollout is underway; check the version on the <a href={chromeStore}>store listing</a>. The Chrome guide also covers the official 2.0.1 download.</p>
       </div>
       <figure class="product-panel editor-preview">
         <a href="/projects/glaze-editor.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-editor.webp" width="1440" height="1000" loading="lazy" alt="Glaze’s full editor, with palette controls beside its live sample-course preview" /></a>
@@ -72,6 +78,20 @@ const source = 'https://github.com/frostdev-ops/glaze';
     </section>
   </div>
 </MarketingLayout>
+
+<script>
+  const ua = navigator.userAgent;
+  const mobile = /Android|iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const otherBrowser = /Edg|OPR|Firefox|FxiOS|CriOS/.test(ua);
+  const browser = !mobile && !otherBrowser && /Chrome\//.test(ua) ? 'chrome'
+    : !mobile && !otherBrowser && /Macintosh/.test(ua) && /Safari\//.test(ua) && !/Chrome|Chromium/.test(ua) ? 'safari'
+    : null;
+  if (browser) {
+    for (const links of document.querySelectorAll<HTMLElement>('[data-glaze-install]')) {
+      links.hidden = links.dataset.glazeInstall !== browser;
+    }
+  }
+</script>
 
 <style>
   .glaze-page { --product-accent: #6fdcff; }

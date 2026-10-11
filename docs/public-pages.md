@@ -4,6 +4,11 @@ The hub `/` links six projects and the guide index. `/rimeward`, `/crosspane`,
 `/rimewire` and `/glaze` contain public product descriptions and demonstrations. `/privacy`
 describes current storage, provider connections and local versus shared data.
 
+Glaze's primary install action matches desktop Safari or Chrome and keeps its
+visual guide beside it. Safari on Mac links to the signed 2.0.1 app archive;
+Chrome links to the extension store. Other browsers and visitors without JavaScript
+retain both platform-labelled choices. Downloads begin only when a link is chosen.
+
 The desktop project carousel animates and supports dragging, arrow keys and
 pause/resume. Phones use native horizontal scrolling with snap points, so vertical
 swipes scroll the page normally. All six project links remain available without
