@@ -33,6 +33,10 @@ manifest and activates an immutable release under `/opt/frostdev-public/`.
 Failed HTTP verification restores the previous public release. It leaves the
 Rimeward service and its release process unchanged.
 
+Public HTML sets `Cache-Control: no-cache, no-transform` so Cloudflare preserves
+the built pages for exact release verification. See
+[Cloudflare response inspection](https://developers.cloudflare.com/rules/configuration-rules/response-body-inspection/).
+
 First installation requires `ops/deploy.sh stage`, a `current` symlink to that
 verified release, and the nginx include in `ops/public-site.nginx.conf`. Install
 the include as `/etc/nginx/snippets/frostdev-public.conf` inside the existing apex
