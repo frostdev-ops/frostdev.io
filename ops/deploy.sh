@@ -62,11 +62,13 @@ mkdir -p /opt/frostdev-public/releases
 [[ ! -e "$2" ]] || { echo "Release already exists; use activate after reviewing it." >&2; exit 1; }
 mkdir -m 755 "$1"
 REMOTE
-    rsync -a --chmod=D755,F644 dist/ "$host:$candidate/"
-    rsync -a --chmod=F644 "$manifest" "$host:$candidate/.build-sha256"
+    rsync -a dist/ "$host:$candidate/"
+    rsync -a "$manifest" "$host:$candidate/.build-sha256"
     ssh "$host" bash -s -- "$candidate" "$release" <<'REMOTE'
 set -euo pipefail
 cd "$1"
+find . -type d -exec chmod 755 {} +
+find . -type f -exec chmod 644 {} +
 sha256sum --status -c .build-sha256
 touch .complete
 exec 9>/opt/frostdev-public/.deploy.lock

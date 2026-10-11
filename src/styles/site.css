@@ -116,4 +116,3 @@ body:has(#splash-canvas.live) .splash-ground::after {
     scroll-behavior: auto !important;
   }
 }
-

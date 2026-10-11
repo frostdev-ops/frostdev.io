@@ -21,4 +21,3 @@ export type IconId = keyof typeof icons;
 export function iconSvg(id: IconId, stroke = 2): string {
   return icons[id].replace(/stroke-width="[\d.]+"/g, `stroke-width="${stroke}"`);
 }
-
