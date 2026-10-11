@@ -5,6 +5,12 @@ Published artwork was copied unchanged from Rimeward's public website source at
 public interface captures use demonstration data. Private project files and
 application profiles are not included.
 
+Website-only Blender masters, earlier design directions, capture provenance and
+marketing screenshots were migrated from the native repository unchanged. The
+32 source files were checked by SHA-256 before the native cleanup release removes
+them. Unpublished artwork and capture work remain in a local ignored archive;
+they are not part of Git or the static build.
+
 - Frostdev's crystal icon and static/animated wordmark come from the user's
   Blender containment-cradle artwork. The reduced-motion variant is a still image.
 - Frostsim's image comes from its public brand assets, Loothing's from its public
