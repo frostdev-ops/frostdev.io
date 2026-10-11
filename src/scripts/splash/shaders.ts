@@ -8,7 +8,6 @@
 
 export const terrainVert = /* glsl */ `
 uniform float uTime;
-uniform float uFlow;    // morph speed multiplier (CTA hover boosts it)
 uniform float uDetail;  // 1 = full domain warp, 0 = governor-reduced
 uniform float uLevels;
 uniform float uAmp;
@@ -52,7 +51,7 @@ float fbm2(vec2 p) {
 void main() {
   vec3 pos = position;
   vec2 p = pos.xz * 0.13;
-  float t = uTime * 0.018 * uFlow;
+  float t = uTime * 0.018;
 
   // Domain warp gives the blobby, organic plate shapes of the reference art;
   // scrolling the domain makes the whole landscape slowly become a new one.
@@ -89,14 +88,14 @@ void main() {
   // just outside its boundary…
   col *= 1.0 - 0.30 * smoothstep(0.80, 0.995, f);
   // …and each plate carries a faint bright rim along its own cut edge.
-  col += vec3(0.05) * smoothstep(0.07, 0.0, f);
+  col += vec3(0.05) * (1.0 - smoothstep(0.0, 0.07, f));
 
   // Distance fade into the page background so the mesh has no horizon line.
   float fogF = smoothstep(uFogRange.x, uFogRange.y, distance(vWorld, uCam));
   col = mix(col, uFog, fogF);
 
   // Soft alpha vignette at the plane borders — blends into the CSS ground.
-  float edge = smoothstep(28.0, 21.0, abs(vWorld.x)) * smoothstep(20.0, 14.0, abs(vWorld.z + 3.0));
+  float edge = (1.0 - smoothstep(21.0, 28.0, abs(vWorld.x))) * (1.0 - smoothstep(14.0, 20.0, abs(vWorld.z + 3.0)));
   gl_FragColor = vec4(col, edge * (1.0 - fogF * 0.9));
 }
 `;

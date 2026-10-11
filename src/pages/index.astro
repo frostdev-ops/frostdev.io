@@ -15,9 +15,9 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
   </section>
 
   <section class="project-carousel" id="projects" aria-label="Frostdev projects">
-    <div class="projects" role="group" aria-label="Project carousel">
+    <div class="projects" role="group" aria-label="Project carousel" tabindex="0">
       <div class="project-ring">
-        <a class="project rimeward" href="/rimeward" style="--index: 0">
+        <a class="project rimeward" href="/rimeward">
           <div class="project-art">
             <RimewardMark class="crystal" aria-hidden="true" />
             <RimewardLockup class="project-logo" aria-hidden="true" />
@@ -28,7 +28,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
             <span class="project-destination">Explore Rimeward</span>
           </div>
         </a>
-        <a class="project frostsim" href="https://sim.frostdev.io" style="--index: 1">
+        <a class="project frostsim" href="https://sim.frostdev.io">
           <div class="project-art">
             <img class="project-logo" src="/projects/frostsim.webp" width="720" height="178" alt="" />
           </div>
@@ -38,7 +38,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
             <span class="project-destination">sim.frostdev.io</span>
           </div>
         </a>
-        <a class="project loothing" href="https://loothing.xyz" style="--index: 2">
+        <a class="project loothing" href="https://loothing.xyz">
           <div class="project-art">
             <img class="loothing-mascot" src="/projects/loothing.webp" width="320" height="315" alt="" />
           </div>
@@ -48,7 +48,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
             <span class="project-destination">loothing.xyz</span>
           </div>
         </a>
-        <a class="project crosspane" href="/crosspane" style="--index: 3">
+        <a class="project crosspane" href="/crosspane">
           <div class="project-art">
             <img class="project-logo" src="/projects/crosspane.webp" width="900" height="301" alt="" />
           </div>
@@ -58,7 +58,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
             <span class="project-destination">Explore Crosspane</span>
           </div>
         </a>
-        <a class="project rimewire" href="/rimewire" style="--index: 4">
+        <a class="project rimewire" href="/rimewire">
           <div class="project-art">
             <img class="project-logo" src="/projects/rimewire.webp" width="900" height="301" alt="" />
           </div>
@@ -70,7 +70,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
         </a>
       </div>
     </div>
-    <p id="carousel-help" class="carousel-hint">Drag or swipe to explore<span class="sr-only">. Use arrow keys to browse. Press Space to pause or resume.</span></p>
+    <p id="carousel-help" class="carousel-hint"><span class="desktop-help">Drag to explore<span class="sr-only">. Use arrow keys to browse. Press Space to pause or resume.</span></span><span class="mobile-help">Swipe to explore<span class="sr-only">. Use Tab to reach each project.</span></span></p>
   </section>
 
   <section class="hub-summary" aria-labelledby="about-title">
@@ -103,9 +103,6 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
   .splash-tagline { font-size: 0.75rem; letter-spacing: 0.3em; color: #b3c8dc; }
   .project-carousel {
     --card-width: clamp(14rem, calc((100vw - 8.5rem) / 3), 22.5rem);
-    --radius: clamp(20rem, 35vw, 27rem);
-    --axis-x: 0;
-    --axis-y: 1;
     position: relative;
     z-index: 1;
     max-width: 76rem;
@@ -127,7 +124,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
     touch-action: pan-y pinch-zoom;
     mask-image: linear-gradient(to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
   }
-  .is-rotating .projects:focus-visible { outline: 2px solid #9be7ff; outline-offset: -6px; border-radius: 1rem; }
+  .projects:focus-visible { outline: 2px solid #9be7ff; outline-offset: -6px; border-radius: 1rem; }
   .is-rotating .project { cursor: grab; }
   .is-rotating .projects.is-dragging, .is-rotating .is-dragging .project { cursor: grabbing; }
   .is-rotating .project-ring {
@@ -153,6 +150,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
     padding: 0.5rem 1.25rem 1rem;
   }
   .is-rotating .carousel-hint { display: block; }
+  .mobile-help { display: none; }
   .project {
     --project-color: #17c8f4;
     display: flex;
@@ -186,29 +184,14 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
   .project:hover h2 span { color: var(--project-color); }
   .project-copy p { color: #b3c8dc; font-size: 0.9rem; margin-top: 0.5rem; }
   .project-destination { display: block; color: #8fa8c0; font-size: 0.75rem; margin-top: 1.75rem; }
-  @media (max-width: 760px) {
-    .project-carousel { --card-width: min(82vw, 21rem); --radius: 24rem; --axis-x: -1; --axis-y: 0; }
-    .projects { max-width: 32rem; margin: auto; padding: 0 1.25rem 1rem; }
-    .project-ring { grid-template-columns: 1fr; }
-    .is-rotating .projects { height: 34rem; padding: 0; perspective: 1400px; mask-image: none; touch-action: pan-x pinch-zoom; }
-    .is-rotating .project-ring {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: var(--card-width);
-      height: 20rem;
-      margin: -10rem 0 0 calc(var(--card-width) / -2);
-      transform-style: preserve-3d;
-    }
-    .is-rotating .project {
-      position: absolute;
-      inset: 0;
-      width: auto;
-      height: auto;
-      backface-visibility: hidden;
-      transform: rotate3d(var(--axis-x), var(--axis-y), 0, calc(var(--index) * 72deg)) translateZ(var(--radius));
-    }
-    .is-rotating .project-duplicate { display: none; }
+  @media (max-width: 760px), (pointer: coarse) {
+    .project-carousel { --card-width: min(82vw, 21rem); }
+    .projects { overflow-x: auto; padding: 0 1.25rem 1rem; scroll-snap-type: x mandatory; scroll-padding-inline: 1.25rem; }
+    .project-ring { display: flex; width: max-content; }
+    .project { flex: 0 0 var(--card-width); width: var(--card-width); scroll-snap-align: start; }
+    .carousel-hint, .mobile-help { display: block; }
+    .desktop-help { display: none; }
+    .project-carousel .project:hover { transform: none; }
     .hub-hero { padding-top: 3rem; padding-bottom: 2rem; }
     .project-art { height: 10rem; }
     .project-logo { max-width: 18rem; }
@@ -227,7 +210,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
   const stage = carousel.querySelector<HTMLElement>('.projects')!;
   const projects = [...carousel.querySelectorAll<HTMLAnchorElement>('.project')];
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  const mobile = matchMedia('(max-width: 760px)');
+  const mobile = matchMedia('(max-width: 760px), (pointer: coarse)');
   const duration = 80_000;
   let rotation: Animation | undefined;
   let playbackMode: 'auto' | 'paused' | 'playing' = 'auto';
@@ -293,18 +276,17 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
   function setup() {
     const elapsed = rotation?.currentTime ?? 0;
     finishDrag();
+    suppressClick = false;
     stopCoast();
     rotation?.cancel();
     rotation = undefined;
-    carousel.classList.toggle('is-rotating', !reducedMotion.matches);
-    stage.tabIndex = reducedMotion.matches ? -1 : 0;
-    if (reducedMotion.matches) stage.removeAttribute('aria-describedby');
+    const animated = !mobile.matches && !reducedMotion.matches;
+    carousel.classList.toggle('is-rotating', animated);
+    stage.tabIndex = animated || mobile.matches ? 0 : -1;
+    if (!animated && !mobile.matches) stage.removeAttribute('aria-describedby');
     else stage.setAttribute('aria-describedby', 'carousel-help');
-    if (reducedMotion.matches) return;
-    const frames = mobile.matches ? [
-      { transform: 'translateZ(calc(-1 * var(--radius))) rotate3d(var(--axis-x), var(--axis-y), 0, 0deg)' },
-      { transform: 'translateZ(calc(-1 * var(--radius))) rotate3d(var(--axis-x), var(--axis-y), 0, -360deg)' },
-    ] : [
+    if (!animated) return;
+    const frames = [
       { transform: 'translateX(0)' },
       { transform: `translateX(calc(-${projects.length} * (var(--card-width) + 1.25rem)))` },
     ];
@@ -318,10 +300,10 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
     stopCoast();
     suppressClick = false;
     if (playbackMode === 'playing') playbackMode = 'auto';
-    const coordinate = mobile.matches ? event.clientY : event.clientX;
-    const pixels = mobile.matches ? ring.offsetHeight : projects[0].offsetWidth + parseFloat(getComputedStyle(ring).columnGap);
+    const coordinate = event.clientX;
+    const pixels = projects[0].offsetWidth + parseFloat(getComputedStyle(ring).columnGap);
     drag = {
-      id: event.pointerId, start: coordinate, cross: mobile.matches ? event.clientX : event.clientY,
+      id: event.pointerId, start: coordinate, cross: event.clientY,
       time: Number(rotation.currentTime), last: coordinate, stamp: event.timeStamp,
       velocity: 0, scale: duration / projects.length / pixels, moved: false,
     };
@@ -329,9 +311,9 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
   });
   window.addEventListener('pointermove', event => {
     if (!drag || event.pointerId !== drag.id) return;
-    const coordinate = mobile.matches ? event.clientY : event.clientX;
+    const coordinate = event.clientX;
     const delta = coordinate - drag.start;
-    const cross = (mobile.matches ? event.clientX : event.clientY) - drag.cross;
+    const cross = event.clientY - drag.cross;
     if (!drag.moved) {
       if (Math.abs(delta) < 8 || Math.abs(delta) < Math.abs(cross)) return;
       drag.moved = true;
@@ -362,8 +344,8 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
   carousel.addEventListener('keydown', event => {
     suppressClick = false;
     if (!rotation) return;
-    const backward = mobile.matches ? 'ArrowUp' : 'ArrowLeft';
-    const forward = mobile.matches ? 'ArrowDown' : 'ArrowRight';
+    const backward = 'ArrowLeft';
+    const forward = 'ArrowRight';
     if (event.key === ' ') {
       event.preventDefault();
       if (event.repeat) return;

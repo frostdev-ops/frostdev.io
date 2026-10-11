@@ -4,20 +4,12 @@
 import * as THREE from 'three';
 import { terrainVert, terrainFrag } from './shaders.ts';
 
-export interface SceneHandle {
-  /** 1.0 normally, ~3.0 while the Enter CTA is hovered/focused (morph speeds up). */
-  setGust(target: number): void;
-  /** Begin the 650ms dive down into a valley (index.ts fires the flash + nav). */
-  startGate(): void;
-}
-
 export interface SceneOptions {
   /** Render exactly one frame (reduced motion, or ?still for screenshots). */
   still?: boolean;
 }
 
 // Brand palette, deep pits → pale plateaus (from assets/frostbackground*.png).
-// Exported for the /perf bench, which builds the same mesh under its own clock.
 export const PALETTE = [0x0a1626, 0x123b66, 0x2e6db4, 0x1f8fc9, 0x5f93ab, 0x8fa6b5, 0xc4d4dc, 0xeaf6f9];
 export const FOG_COLOR = 0x060d18;
 export const LEVELS = 8;
@@ -28,7 +20,7 @@ export const SEGMENTS: [[number, number], [number, number]] = [[420, 260], [260,
 // High and fairly top-down: plates read as blobby paper cutouts, not a horizon.
 export const CAM_BASE = new THREE.Vector3(0, 10.5, 5.0);
 
-export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}): SceneHandle | null {
+export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}): void {
   const reduced = opts.still || matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(pointer: fine)').matches;
   const high = fine && (navigator.hardwareConcurrency || 0) >= 8;
@@ -50,7 +42,7 @@ export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}):
       preserveDrawingBuffer: !!opts.still,
     });
   } catch {
-    return null; // no WebGL — the CSS ground layer stays the experience
+    return; // no WebGL — the CSS ground layer stays the experience
   }
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, high ? 1.75 : 1.25));
   renderer.setSize(innerWidth, innerHeight, false);
@@ -68,7 +60,6 @@ export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}):
 
   const uniforms = {
     uTime: { value: 0 },
-    uFlow: { value: 1 },
     uDetail: { value: 1 },
     uLevels: { value: LEVELS },
     uAmp: { value: AMP },
@@ -110,8 +101,6 @@ export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}):
     if (notch === 1) {
       renderer.setPixelRatio(1);
       renderer.setSize(innerWidth, innerHeight, false);
-    } else {
-      uniforms.uDetail.value = 0;
     }
   }
 
@@ -129,12 +118,6 @@ export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}):
     );
   }
 
-  // ------------------------------------------------------- flow and gate
-  let flow = 1;
-  let flowTarget = 1;
-  let gateStart = 0;
-  const gateFrom = new THREE.Vector3();
-
   // ------------------------------------------------------------ the loop
   let t = reduced ? 24 : 0; // still frame: far enough in for interesting shapes
   let raf = 0;
@@ -143,13 +126,13 @@ export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}):
   let visible = document.visibilityState === 'visible';
   let intersecting = true;
 
-  function step(dt: number, now: number) {
+  function step(dt: number) {
     const p = Math.min(Math.max(scrollY / (innerHeight * 1.2), 0), 1);
     canvas.style.setProperty('--splash-opacity', (1 - 0.6 * Math.min(scrollY / innerHeight, 1)).toFixed(3));
 
-    flow += (flowTarget - flow) * (1 - Math.exp(-3 * dt));
     uniforms.uTime.value = t;
-    uniforms.uFlow.value = flow;
+    // Fade detail changes instead of remapping the whole landscape in one frame.
+    uniforms.uDetail.value += ((notch >= 2 ? 0 : 1) - uniforms.uDetail.value) * (1 - Math.exp(-dt));
 
     // Slow autonomous sway + mouse parallax + scroll descent. The landscape
     // itself morphs via the shader; the camera just breathes over it.
@@ -159,14 +142,8 @@ export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}):
       CAM_BASE.y - p * 2.2 + my * 0.4,
       CAM_BASE.z - p * 2.0
     );
-    if (gateStart) {
-      const g = Math.min((now - gateStart) / 650, 1);
-      const ease = g * g; // easeInQuad — accelerating plunge
-      camera.position.lerpVectors(gateFrom, new THREE.Vector3(gateFrom.x * 0.3, 0.9, -1.5), ease);
-    } else {
-      const k = 1 - Math.exp(-4 * dt);
-      camera.position.lerp(target, reduced ? 1 : k);
-    }
+    const k = 1 - Math.exp(-4 * dt);
+    camera.position.lerp(target, reduced ? 1 : k);
     camera.lookAt(0, 0, -3.5);
   }
 
@@ -183,9 +160,10 @@ export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}):
     const dt = lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60;
     lastT = now;
     t += dt;
-    step(dt, now);
-    render();
+    // Resizing the drawing buffer clears it; redraw within the same frame.
     govern(dt);
+    step(dt);
+    render();
   }
 
   function pause() {
@@ -202,7 +180,7 @@ export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}):
   }
 
   function renderStill() {
-    step(0, performance.now());
+    step(0);
     render();
   }
 
@@ -210,13 +188,7 @@ export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}):
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight, false);
-    if (reduced) renderStill();
-  });
-
-  // Same as the valley: bfcache restores the page mid-dive, so let go of the
-  // camera and the idle lerp eases it back up.
-  addEventListener('pageshow', (e) => {
-    if (e.persisted) gateStart = 0;
+    renderStill();
   });
 
   if (reduced) {
@@ -232,16 +204,4 @@ export function createScene(canvas: HTMLCanvasElement, opts: SceneOptions = {}):
     }).observe(canvas);
     resume();
   }
-
-  return {
-    setGust(target: number) {
-      flowTarget = target;
-    },
-    startGate() {
-      if (reduced || gateStart) return;
-      gateStart = performance.now();
-      gateFrom.copy(camera.position);
-      resume();
-    },
-  };
 }
