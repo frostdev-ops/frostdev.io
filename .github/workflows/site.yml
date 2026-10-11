@@ -1,0 +1,48 @@
+name: Website
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - name: Verify the public static output
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readdirSync, statSync, lstatSync } from 'node:fs';
+          const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'privacy', 'guides',
+            'guides/rimeward-first-workspace', 'guides/crosspane-two-computers',
+            'guides/rimewire-agent-handoffs', 'guides/frostsim-first-simulation',
+            'guides/loothing-raid-loot'];
+          for (const page of pages) assert(statSync(`dist/${page ? page + '/' : ''}index.html`).size > 0);
+          for (const file of ['robots.txt', 'sitemap.xml', 'ads.txt']) assert(statSync(`dist/${file}`).size > 0);
+          assert(statSync('dist/_site').isDirectory());
+          const allowed = new Set(['index.html', '404.html', 'rimeward', 'rimewire', 'crosspane',
+            'privacy', 'guides', '_site', 'projects', 'robots.txt', 'sitemap.xml', 'ads.txt']);
+          for (const name of readdirSync('dist')) assert(allowed.has(name), `Unexpected static output: ${name}`);
+          function inspect(path) {
+            for (const name of readdirSync(path)) {
+              const file = `${path}/${name}`;
+              const entry = lstatSync(file);
+              assert(!entry.isSymbolicLink(), `Build contains a symlink: ${file}`);
+              assert(!/(^\.env($|\.)|\.(db|sqlite|sqlite3)$)/i.test(name), `Private artifact: ${file}`);
+              if (entry.isDirectory()) inspect(file);
+              else assert(entry.isFile(), `Unexpected file type: ${file}`);
+            }
+          }
+          inspect('dist');
+          NODE

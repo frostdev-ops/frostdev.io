@@ -1,0 +1,43 @@
+---
+import MarketingLayout from '../../layouts/MarketingLayout.astro';
+import '../../styles/guides.css';
+
+const guides = [
+  { project: 'Rimeward', slug: 'rimeward-first-workspace', title: 'Your project. One connected workspace.', description: 'Bring your folders, Editor, Terminal and Rime together. Make a small change, follow where it runs, and review the result.', image: 'rimeward-workspace.webp', duration: '8 min', topics: ['Workspaces', 'Wards & Leylines', 'Reviewing changes'] },
+  { project: 'Crosspane', slug: 'crosspane-two-computers', title: 'Two computers. One flowing desk.', description: 'Pair your devices, arrange their edges, and move naturally between them. Set permissions and learn how to take control back.', image: 'crosspane-windows.webp', duration: '10 min', topics: ['Pairing', 'Display layout', 'Input & projection'] },
+  { project: 'Rimewire', slug: 'rimewire-agent-handoffs', title: 'Give the next agent a clear starting point.', description: 'Turn a tracker into a living project board. Define useful work packages, post evidence, and hand off work without losing the thread.', image: 'rimewire-board-progress.webp', duration: '10 min', topics: ['Project boards', 'Work packages', 'Agent handoffs'] },
+  { project: 'Frostsim', slug: 'frostsim-first-simulation', title: 'Make your next upgrade an informed one.', description: 'Import a character, run your first simulation, and compare gear against a useful baseline. Understand what the numbers actually say.', image: 'frostsim.webp', duration: '9 min', topics: ['Character import', 'Simulation', 'Gear comparisons'] },
+  { project: 'Loothing', slug: 'loothing-raid-loot', title: 'Keep raid loot moving, together.', description: 'Connect your guild, prepare a roster and wishlists, publish a raid, and record the loot. Follow the optional addon workflow when you need it.', image: 'loothing.webp', duration: '12 min', topics: ['Raid setup', 'Wishlists', 'Awards & history'] },
+];
+---
+
+<MarketingLayout title="Practical project guides — Frostdev" description="Step-by-step guides for Rimeward, Crosspane, Rimewire, Frostsim and Loothing. Get set up, understand the choices, and check the result." path="/guides">
+  <div class="guides-hub">
+    <header class="guides-hub-hero">
+      <p class="guide-eyebrow">Frostdev field guides</p>
+      <h1>From first step<br />to <span>a working flow.</span></h1>
+      <p>Good tools get better when you know your way around. Pick a project, follow a real task, and finish with a result you can check.</p>
+      <div class="guides-hub-meta"><span class="guides-product-dots" aria-hidden="true">{guides.map((guide) => <i data-project={guide.project.toLowerCase()}></i>)}</span><span>Five projects. Practical paths.</span></div>
+    </header>
+
+    <div class="guides-collection-heading"><h2>Find your starting point</h2><span>Setup · Workflow · Troubleshooting</span></div>
+    <div class="guides-card-grid">
+      {guides.map((guide, i) => (
+        <a class:list={['guides-card', { 'guides-card-featured': i === 0 }]} data-project={guide.project.toLowerCase()} href={`/guides/${guide.slug}`} style={`--step:${i}`}>
+          <div class:list={['guides-card-art', { 'guides-card-art-logo': i > 2 }]}>
+            <img src={`/projects/${guide.image}`} alt={`${guide.project} ${i > 2 ? 'project artwork' : 'interface'}`} width="1000" height="625" loading="lazy" />
+            <span class="guides-card-art-tag">{guide.project}</span>
+          </div>
+          <div class="guides-card-copy">
+            <div class="guides-card-meta"><span>{guide.project}</span><span>{guide.duration} read</span></div>
+            <h3>{guide.title}</h3>
+            <p>{guide.description}</p>
+            <ul class="guides-card-topics" aria-label="Topics">{guide.topics.map((topic) => <li>{topic}</li>)}</ul>
+            <span class="guides-card-action">Open the guide <span aria-hidden="true">↗</span></span>
+          </div>
+        </a>
+      ))}
+    </div>
+    <section class="guides-hub-help"><div><p class="guide-eyebrow">A good guide keeps growing</p><h2>Something unclear?</h2><p>These guides follow the projects’ documentation. Check the linked references if your installed version looks different, or tell us which step needs a closer look.</p></div><a href="mailto:admin@frostdev.io">Help improve a guide <span aria-hidden="true">↗</span></a></section>
+  </div>
+</MarketingLayout>

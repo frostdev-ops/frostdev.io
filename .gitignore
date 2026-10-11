@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+.DS_Store
+AGENTS.md
+CLAUDE.md
+.codex/
+.claude/
+.rimewire/journal/

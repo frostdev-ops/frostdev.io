@@ -1,0 +1,15 @@
+---
+interface Props {
+  id: 'rime' | 'host';
+  class?: string;
+  title?: string;
+}
+
+const { id, class: cls = '', title } = Astro.props;
+---
+
+{id === 'rime' ? (
+  <span class={`fd-ic ${cls}`.trim()} data-icon={id} style="--ic:url('/_site/rime-agent.svg')" title={title} />
+) : (
+  <span class={`fd-ic-e ${cls}`.trim()} data-icon={id} title={title}>🖥️</span>
+)}
