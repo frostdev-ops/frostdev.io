@@ -2,8 +2,8 @@
 import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
-const release = `${source}/releases/tag/safari-v2.0.1`;
-const reference = `${source}/blob/safari-v2.0.1`;
+const release = `${source}/releases/tag/safari-v2.0.2`;
+const reference = `${source}/blob/safari-v2.0.2`;
 const apple = 'https://support.apple.com/102343';
 const chapters = [
   { id: 'prepare', title: 'Check your Mac and Blackboard' },
@@ -46,15 +46,15 @@ const chapters = [
 
   <section class="guide-section" id="install">
     <h2>Install the Safari app</h2>
-    <p>The <a href={release}>Glaze 2.0.1 Safari release</a>, published October 11, 2026, provides a Developer ID signed and Apple-notarized Mac app. You do not need Xcode or a source build to use this download.</p>
+    <p>The <a href={release}>Glaze 2.0.2 Safari release</a>, published October 11, 2026, provides a Developer ID signed and Apple-notarized Mac app that installs itself. You do not need Xcode or a source build to use this download.</p>
     <ol class="guide-steps">
-      <li><a href={`${source}/releases/download/safari-v2.0.1/glaze-2.0.1-safari-macos.zip`}>Download Glaze 2.0.1 for Safari</a> and save the Mac app archive, <strong>glaze-2.0.1-safari-macos.zip</strong>.</li>
-      <li>In Finder, unzip the download and move <strong>Glaze.app</strong> into <strong>Applications</strong>.</li>
-      <li>Open Glaze from Applications. If macOS asks whether to open the downloaded app, confirm that it is the Glaze download you just obtained.</li>
-      <li>Choose <strong>Quit and Open Safari Settings…</strong>. On macOS 12, the button reads <strong>Quit and Open Safari Extensions Preferences…</strong>.</li>
+      <li><a href={`${source}/releases/download/safari-v2.0.2/glaze-2.0.2-safari-macos.dmg`}>Download Glaze 2.0.2 for Safari</a>, the disk image <strong>glaze-2.0.2-safari-macos.dmg</strong>, and open it.</li>
+      <li>Open <strong>Glaze</strong> in the disk image window. If macOS asks whether to open an app downloaded from the internet, confirm that it is the Glaze download you just obtained.</li>
+      <li>Click <strong>Install Glaze</strong>. Glaze copies itself into Applications (your own Applications folder if your account is not an administrator) and reopens from there.</li>
+      <li>Glaze opens Safari’s Extensions settings and shows an illustrated guide beside them. Follow its two steps, which continue in the next section.</li>
     </ol>
-    <p>The app’s button opens Safari’s extension settings and quits the setup app. Safari loads the extension from Glaze.app, so leave the app in Applications. You do not need its setup window running while using Blackboard.</p>
-    <p>The release also includes <strong>glaze-2.0.1-safari-macos.sha256</strong> for checking the archive. If macOS reports that the app is damaged or cannot be verified, download the signed Safari archive again from the release and check the file; do not bypass verification with Terminal commands.</p>
+    <p>Safari loads the extension from Glaze.app, so leave the app in Applications. You can close the guide once Glaze is on; you do not need the app running while using Blackboard. Dragging Glaze into the disk image’s Applications shortcut works too: open it from Applications and the same guide appears.</p>
+    <p>The release also includes <strong>glaze-2.0.2-safari-macos.dmg.sha256</strong> for checking the download. If macOS reports that the app is damaged or cannot be verified, download the disk image again from the release and check the file; do not bypass verification with Terminal commands.</p>
   </section>
 
   <section class="guide-section" id="permissions">
