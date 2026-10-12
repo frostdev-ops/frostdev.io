@@ -3,7 +3,7 @@ import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
 const store = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
-const release = `${source}/releases/tag/v2.0.1`;
+const release = `${source}/releases/tag/v2.0.2`;
 const chapters = [
   { id: 'install', title: 'Choose your Chrome installation' },
   { id: 'ultra', title: 'Check your Blackboard page' },
@@ -40,14 +40,14 @@ const chapters = [
     <h2>Choose your Chrome installation.</h2>
     <p>Glaze restyles Blackboard Ultra in your browser. You still sign in through your institution and use Blackboard’s own courses, assignments and grades. You do not need a Glaze account.</p>
     <aside class="guide-callout">
-      <strong>This guide follows Glaze 2.0.1.</strong>
-      <p><a href={store}>Get Glaze from the Chrome Web Store</a>, choose <strong>Add to Chrome</strong> and confirm your installed version is <strong>2.0.1</strong> before following the editor chapters. The rollout is underway; if the listing still shows an older version, wait for the update or use the <a href={release}>official 2.0.1 GitHub download</a> below.</p>
+      <strong>This guide follows Glaze 2.0.2.</strong>
+      <p><a href={store}>Get Glaze from the Chrome Web Store</a>, choose <strong>Add to Chrome</strong> and confirm your installed version is <strong>2.0.2</strong> before following the editor chapters. The rollout is underway; if the listing still shows an older version, wait for the update or use the <a href={release}>official 2.0.2 GitHub download</a> below.</p>
     </aside>
-    <p>The 2.0.1 package requires Chrome <strong>113 or newer</strong>. To install that package:</p>
+    <p>The 2.0.2 package requires Chrome <strong>113 or newer</strong>. To install that package:</p>
     <ol class="guide-steps">
-      <li><strong>Download and extract.</strong> Get <a href={`${source}/releases/download/v2.0.1/glaze-v2.0.1.zip`}>glaze-v2.0.1.zip</a> from the official release. Extract it into a folder you will keep. The folder should contain <code>manifest.json</code>, <code>popup.html</code> and <code>options.html</code>.</li>
+      <li><strong>Download and extract.</strong> Get <a href={`${source}/releases/download/v2.0.2/glaze-v2.0.2.zip`}>glaze-v2.0.2.zip</a> from the official release. Extract it into a folder you will keep. The folder should contain <code>manifest.json</code>, <code>popup.html</code> and <code>options.html</code>.</li>
       <li><strong>Open Chrome’s Extensions page.</strong> Type <code>chrome://extensions</code> into the address bar. Turn on <strong>Developer mode</strong>, then choose <strong>Load unpacked</strong> and select the extracted folder containing <code>manifest.json</code>.</li>
-      <li><strong>Keep one active copy.</strong> If an older Glaze is installed, disable it on the Extensions page before enabling the new copy. Confirm the new card says <strong>2.0.1</strong>.</li>
+      <li><strong>Keep one active copy.</strong> If an older Glaze is installed, disable it on the Extensions page before enabling the new copy. Confirm the new card says <strong>2.0.2</strong>.</li>
       <li><strong>Pin and open.</strong> Open Chrome’s puzzle-piece Extensions menu and pin Glaze. Visit your Blackboard Ultra site, refresh its tab, then click the Glaze icon.</li>
     </ol>
     <p>An unpacked installation uses that local folder and does not receive store updates. To update it, download a newer official package, replace the files in the same folder, choose <strong>Reload</strong> on its extension card and refresh your Ultra tabs. Export settings first. Chrome’s <a href="https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked">unpacked-extension reference</a> illustrates the installation and reload controls.</p>
@@ -163,7 +163,7 @@ const chapters = [
     <h2>Recover a familiar page.</h2>
     <p>Start with the smallest change: switch <strong>Theme on / off</strong> off in the popup and compare the same page. Then use the symptom below to find the next step.</p>
     <ul class="guide-checklist">
-      <li><strong>No “Open the editor” button:</strong> check Glaze’s version on <code>chrome://extensions</code>. This guide’s editor is in 2.0.1. If you have an older store build, wait for its update or follow the official download installation above.</li>
+      <li><strong>No “Open the editor” button:</strong> check Glaze’s version on <code>chrome://extensions</code>. This guide follows 2.0.2. If you have an older store build, wait for its update or follow the official download installation above.</li>
       <li><strong>Popup changes, Ultra does not:</strong> check the master switch, extension enablement, site access and the page’s <code>/ultra/</code> address. Refresh the course tab after installation or extension reload.</li>
       <li><strong>Palette keeps switching:</strong> check automatic light/dark mode. A manual swatch choice turns it off; enable it again in the editor if that was accidental.</li>
       <li><strong>Expressive still looks still:</strong> check your system’s reduced-motion preference and the editor’s motion override checkbox.</li>
