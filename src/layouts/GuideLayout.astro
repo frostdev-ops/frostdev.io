@@ -9,9 +9,11 @@ interface Props {
   project: string;
   duration: string;
   chapters: Array<{ id: string; title: string }>;
+  updated?: string;
 }
 
-const { title, description, path, project, duration, chapters } = Astro.props;
+const { title, description, path, project, duration, chapters, updated = '2026-10-11' } = Astro.props;
+const updatedText = new Date(`${updated}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 const product = project.toLowerCase();
 const projectHref = product === 'frostsim' ? 'https://sim.frostdev.io' : product === 'loothing' ? 'https://loothing.xyz' : `/${product}`;
 const flows: Record<string, string[]> = {
@@ -34,7 +36,7 @@ const flow = flows[product] ?? ['Get set up', 'Put it to work', 'Check the resul
         <p class="guide-eyebrow"><a href={projectHref}>{project}</a> <span aria-hidden="true">/</span> Field guide</p>
         <h1>{title}</h1>
         <p class="guide-lead">{description}</p>
-        <div class="guide-meta"><span>{duration}</span><span>{chapters.length} chapters</span><span>By Frostdev</span><span>Updated <time datetime="2026-10-11">October 11, 2026</time></span></div>
+        <div class="guide-meta"><span>{duration}</span><span>{chapters.length} chapters</span><span>By Frostdev</span><span>Updated <time datetime={updated}>{updatedText}</time></span></div>
       </div>
       <div class="guide-visual">
         <slot name="visual">

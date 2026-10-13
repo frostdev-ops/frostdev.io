@@ -3,190 +3,154 @@ import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
 const store = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
-const release = `${source}/releases/tag/v2.0.3`;
+const release = `${source}/releases/tag/v2.1.1`;
 const chapters = [
-  { id: 'install', title: 'Choose your Chrome installation' },
+  { id: 'install', title: 'Install Glaze' },
   { id: 'ultra', title: 'Check your Blackboard page' },
-  { id: 'popup', title: 'Start with the quick controls' },
+  { id: 'popup', title: 'Start with the popup' },
   { id: 'palette', title: 'Make a palette your own' },
-  { id: 'look', title: 'Set up comfortable reading' },
-  { id: 'background', title: 'Choose background and motion' },
-  { id: 'courses', title: 'Keep course colors useful' },
-  { id: 'extras', title: 'Add helpers one at a time' },
-  { id: 'backup', title: 'Back up and understand privacy' },
-  { id: 'recovery', title: 'Recover a familiar page' },
+  { id: 'look', title: 'Fonts and reading' },
+  { id: 'background', title: 'Background and motion' },
+  { id: 'courses', title: 'Course colors and tint' },
+  { id: 'extras', title: 'Helpers' },
+  { id: 'backup', title: 'Share, back up, privacy' },
+  { id: 'recovery', title: 'Fix a problem' },
 ];
 ---
 
 <GuideLayout
   title="Make Blackboard Ultra yours with Glaze for Chrome"
-  description="Install Glaze, find a comfortable palette, tune reading and motion, and add the small helpers that fit your coursework. Keep a simple way back to Blackboard’s own appearance."
+  description="Install Glaze, pick a palette and fonts, choose a background, and turn on the helpers that suit your coursework."
   path="/guides/glaze-chrome"
   project="Glaze"
-  duration="12 min read"
+  duration="8 min read"
+  updated="2026-10-13"
   chapters={chapters}
 >
   <div slot="visual" class="guide-overview" aria-label="Glaze setup overview">
     <div class="guide-overview-top"><span class="guide-status-dot" aria-hidden="true"></span><span>Glaze for Chrome</span><span class="guide-overview-tag">Your daily study space</span></div>
     <ol class="guide-overview-flow">
       <li style="--step:0"><span class="guide-overview-number">01</span><span>Open Blackboard Ultra</span><span class="guide-overview-line" aria-hidden="true"></span></li>
-      <li style="--step:1"><span class="guide-overview-number">02</span><span>Find your palette and reading rhythm</span><span class="guide-overview-line" aria-hidden="true"></span></li>
-      <li style="--step:2"><span class="guide-overview-number">03</span><span>Save a backup. Make it yours.</span></li>
+      <li style="--step:1"><span class="guide-overview-number">02</span><span>Pick a palette and fonts</span><span class="guide-overview-line" aria-hidden="true"></span></li>
+      <li style="--step:2"><span class="guide-overview-number">03</span><span>Keep the helpers you like</span></li>
     </ol>
     <p class="guide-overview-footer">Quick controls in the popup. The full editor in a tab.</p>
   </div>
 
   <section id="install" class="guide-section">
-    <h2>Choose your Chrome installation.</h2>
-    <p>Glaze restyles Blackboard Ultra in your browser. You still sign in through your institution and use Blackboard’s own courses, assignments and grades. You do not need a Glaze account.</p>
+    <h2>Install Glaze.</h2>
+    <p><a href={store}>Open Glaze in the Chrome Web Store</a> and choose <strong>Add to Chrome</strong>. Then pin it from Chrome’s puzzle-piece menu. No Glaze account needed.</p>
     <aside class="guide-callout">
-      <strong>This guide follows Glaze 2.0.3.</strong>
-      <p><a href={store}>Get Glaze from the Chrome Web Store</a> and choose <strong>Add to Chrome</strong>. Version 2.0.3 is in store review and updates installed copies automatically once approved. Until then the store installs 2.0.2, which has everything here except animated backgrounds, the new gradient and background-color controls, and helpers that start on. For those now, use the <a href={release}>official 2.0.3 GitHub download</a> below.</p>
+      <strong>This guide follows Glaze 2.1.</strong>
+      <p>The store update to 2.1 is in review and installs automatically once approved. To get it now, use the GitHub package below.</p>
     </aside>
-    <p>The 2.0.3 package requires Chrome <strong>113 or newer</strong>. To install that package:</p>
     <ol class="guide-steps">
-      <li><strong>Download and extract.</strong> Get <a href={`${source}/releases/download/v2.0.3/glaze-v2.0.3.zip`}>glaze-v2.0.3.zip</a> from the official release. Extract it into a folder you will keep. The folder should contain <code>manifest.json</code>, <code>popup.html</code> and <code>options.html</code>.</li>
-      <li><strong>Open Chrome’s Extensions page.</strong> Type <code>chrome://extensions</code> into the address bar. Turn on <strong>Developer mode</strong>, then choose <strong>Load unpacked</strong> and select the extracted folder containing <code>manifest.json</code>.</li>
-      <li><strong>Keep one active copy.</strong> If an older Glaze is installed, disable it on the Extensions page before enabling the new copy. Confirm the new card says <strong>2.0.3</strong>.</li>
-      <li><strong>Pin and open.</strong> Open Chrome’s puzzle-piece Extensions menu and pin Glaze. Visit your Blackboard Ultra site, refresh its tab, then click the Glaze icon.</li>
+      <li>Download <a href={`${source}/releases/download/v2.1.1/glaze-v2.1.1.zip`}>glaze-v2.1.1.zip</a> and extract it to a folder you’ll keep.</li>
+      <li>Open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong>, choose <strong>Load unpacked</strong> and select that folder.</li>
+      <li>Disable any other Glaze copy, so only one runs.</li>
     </ol>
-    <p>An unpacked installation uses that local folder and does not receive store updates. To update it, download a newer official package, replace the files in the same folder, choose <strong>Reload</strong> on its extension card and refresh your Ultra tabs. Export settings first. Chrome’s <a href="https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked">unpacked-extension reference</a> illustrates the installation and reload controls.</p>
-    <p>If your managed Chrome profile does not allow unpacked extensions, use the available store version or contact your institution’s administrator. On a Mac using Safari, follow the <a href="/guides/glaze-safari">Safari installation guide</a> instead.</p>
+    <p>An unpacked copy doesn’t update itself. Once the store has 2.1, switch back to the store version: export your settings, remove the unpacked copy and import them. Glaze needs Chrome 113 or newer. On a Mac with Safari, follow the <a href="/guides/glaze-safari">Safari guide</a>.</p>
   </section>
 
   <section id="ultra" class="guide-section">
     <h2>Check your Blackboard page.</h2>
-    <p>Open Blackboard normally and enter a course. Glaze targets secure pages whose address contains the <code>/ultra/</code> path, such as <code>https://your-school.example/ultra/courses/…</code>. It matches that path across institutions, so there is no university selector to configure.</p>
-    <p>The extension needs access to those pages to read and restyle their interface. Its declared Chrome permission is <strong>storage</strong> for your preferences, plus page access for <code>https://*/ultra/*</code>. Review Chrome’s site-access controls if the popup works but the course appearance does not change.</p>
-    <ul class="guide-checklist">
-      <li>Confirm Glaze is enabled on <code>chrome://extensions</code>.</li>
-      <li>Confirm you are in Ultra, beyond the institution’s login page.</li>
-      <li>Refresh a tab that was already open when Glaze was installed or reloaded.</li>
-      <li>Open the popup and leave <strong>Theme on / off</strong> switched on.</li>
-    </ul>
-    <p>Blackboard Original pages and tools opened on other addresses can keep their own appearance. The editor’s built-in preview is a sample course page; use your actual course to check how the theme fits your institution’s interface.</p>
+    <p>Sign in to Blackboard as usual. Glaze works on any school’s Ultra pages, those whose address contains <code>/ultra/</code>, with nothing to configure. Login pages and Classic Blackboard keep their own look.</p>
+    <p>If nothing changes: check Glaze is enabled on <code>chrome://extensions</code>, refresh tabs that were open before you installed it, and make sure the popup’s theme switch is on.</p>
   </section>
 
   <section id="popup" class="guide-section">
-    <h2>Start with the quick controls.</h2>
-    <p>The popup is the place for everyday changes. Under <strong>Palette</strong>, choose one of six built-in swatches: <strong>Frost, Midnight, Forest, Ember, Paper or Rose</strong>. Hover a swatch to see its name. Frost is the default; Paper is a simple light starting point.</p>
-    <p>Under <strong>Motion</strong>, choose <strong>Off, Subtle or Expressive</strong>. Changes apply immediately to open Ultra tabs. Try one course content page and one Grades page before adjusting more settings.</p>
+    <h2>Start with the popup.</h2>
+    <p>Click Glaze for the quick controls: the theme switch, six palettes (<strong>Frost, Midnight, Forest, Ember, Paper, Rose</strong>), motion (<strong>Off, Subtle, Expressive</strong>) and <strong>Open the editor</strong>. Changes apply to open Blackboard tabs at once.</p>
     <figure class="guide-figure guide-figure-compact">
-      <a href="/projects/glaze-popup.webp" aria-label="Open the full-size Glaze popup capture"><img src="/projects/glaze-popup.webp" alt="Glaze popup with palette swatches, Off, Subtle and Expressive motion choices, and Open the editor" width="320" height="297" loading="lazy" /></a>
-      <figcaption>The actual Glaze popup keeps the palette, motion and master switch close at hand.</figcaption>
+      <a href="/projects/glaze-popup.webp" aria-label="Open the full-size Glaze popup capture"><img src="/projects/glaze-popup.webp" alt="Glaze popup with palette swatches, motion choices and Open the editor" width="320" height="297" loading="lazy" /></a>
+      <figcaption>The Glaze popup.</figcaption>
     </figure>
-    <p>The top-right <strong>Theme on / off</strong> switch disables Glaze’s theme and helpers without deleting your preferences. Turn it off to compare with Blackboard’s own appearance, then turn it back on. <strong>Open the editor</strong> stays available while the theme is off.</p>
-    <aside class="guide-callout"><strong>Picking a palette is a manual choice.</strong><p>If automatic light/dark mode is enabled, choosing a popup swatch turns it off. The popup tells you when automatic mode is on; enable it again in the editor when you want the system to choose.</p></aside>
+    <p>Switch the theme off to compare with Blackboard’s own look; your settings stay. Picking a swatch turns off automatic light/dark switching.</p>
   </section>
 
   <section id="palette" class="guide-section">
     <h2>Make a palette your own.</h2>
-    <p>Choose <strong>Open the editor → Palette</strong>. Start with a built-in palette, then change the colour roles you care about. The fourteen controls cover accent colors, surfaces, text, lines and success, warning and error states. The editor and its preview update as you work; there is no separate Apply button.</p>
-    <p>Keep text and surfaces distinct. The editor’s <strong>Contrast checks</strong> show ratios for six colour pairings, including text on surface and text on accent. A red result is a cue to adjust that pair. The main text checks use 4.5:1; secondary text and accent checks use 3:1. These checks cover selected palette colors, so still inspect small labels, buttons and your actual coursework.</p>
-    <ol class="guide-steps">
-      <li><strong>Save your colors.</strong> Enter a unique name in <strong>Name this palette</strong>, then choose <strong>Save as preset</strong>. You can keep up to twelve custom palettes, rename them in the list, or choose <strong>Delete</strong>.</li>
-      <li><strong>Choose automatic switching.</strong> Enable <strong>Follow the system’s light and dark mode</strong>. Select the <strong>Light</strong> and <strong>Dark</strong> palettes; the defaults are Paper and Frost.</li>
-      <li><strong>Check both appearances.</strong> Change your computer’s light/dark mode and inspect a course page. Each mode can use a built-in or saved palette.</li>
-    </ol>
-    <p>A saved preset contains the <strong>palette colors</strong>, not your font, background or Extras. Those other settings remain in place when you pick it. Editing a colour turns automatic mode off so you can see the palette being edited. <strong>Back to Frost</strong> restores Frost’s colors and also turns automatic switching off.</p>
+    <p>The editor puts every setting beside a live preview of a sample course and saves as you go. Type in <strong>Search settings</strong> at the top (or press <kbd>/</kbd>) to find one.</p>
+    <p>Under <strong>Palette</strong>, change any of the fourteen colors and watch the contrast checks. Name it and choose <strong>Save as preset</strong> to keep it (up to twelve). Turn on <strong>Follow the system’s light and dark mode</strong> to switch between a light and a dark palette with your computer.</p>
   </section>
 
   <section id="look" class="guide-section">
-    <h2>Set up comfortable reading.</h2>
-    <p>In <strong>Look</strong>, choose a font before adjusting spacing. Options include <strong>System</strong>, <strong>Blackboard’s own (Open Sans)</strong>, <strong>Inter</strong>, <strong>Atkinson Hyperlegible</strong>, <strong>Serif</strong> and <strong>Monospace</strong>. Inter and Atkinson Hyperlegible are bundled with Glaze.</p>
-    <p>Try <strong>Text size</strong> at 110%, a slightly larger <strong>Line height</strong>, and <strong>Roomy</strong> density for long reading sessions. Use <strong>Compact</strong> if you prefer a shorter course outline. The available text-size range is 85–125%; keep Chrome’s own zoom in mind when comparing.</p>
+    <h2>Fonts and reading.</h2>
+    <p>Under <strong>Look → Fonts</strong>, pick from about forty, each shown in its own face: reading faces such as Lexend, OpenDyslexic and Atkinson Hyperlegible Next, sans, serif and monospace families, and four Nerd Fonts. You can also type any Google Font’s name, or a font installed on your computer. Headings and code can have their own font. Web fonts download only once you choose one.</p>
     <figure class="guide-figure">
-      <a href="/projects/glaze-editor.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-editor.webp" alt="Glaze editor showing palette and reading controls beside its live sample Blackboard course preview" width="1440" height="1000" loading="lazy" /></a>
-      <figcaption>The actual editor includes a live preview using a sample course. It does not display your account’s coursework.</figcaption>
+      <a href="/projects/glaze-editor.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-editor.webp" alt="Glaze editor with palette and look controls beside its live sample course preview" width="1440" height="1000" loading="lazy" /></a>
+      <figcaption>The editor and its sample course.</figcaption>
     </figure>
-    <p><strong>Corner radius</strong>, <strong>Depth</strong> and <strong>Glass blur</strong> change the feel of panels. Depth runs from Flat through Soft, Raised and Floating. Make small adjustments and check a slide-out panel as well as the main page.</p>
-    <p><strong>Themed tooltips</strong> and <strong>Hover hints</strong> start enabled. Hints can reveal a date’s distance, a grade’s percentage or clipped text. Leave Themed tooltips enabled if you want Hover hints, because the hints use that tooltip system. <strong>Show the Glaze footer bar</strong> controls the footer independently.</p>
-    <p>After moving a slider, pause briefly and look for <strong>Saved</strong>. A <strong>Not saved</strong> message means the change has not been stored; read the error before closing the editor.</p>
+    <p>Raise <strong>Text size</strong> and <strong>Line height</strong> if reading feels cramped, and try <strong>Roomy</strong> density. <strong>Corner radius</strong>, <strong>Depth</strong> and <strong>Glass blur</strong> shape the panels. <strong>Hover hints</strong> show how far off a date is or a grade’s percentage.</p>
   </section>
 
   <section id="background" class="guide-section">
-    <h2>Choose background and motion.</h2>
-    <p>Under <strong>Background → Behind the page</strong>, choose <strong>Solid, Gradient, Aurora, Animated or Image</strong>. Solid is the default. The editor shows only the controls the chosen background uses.</p>
-    <p><strong>Gradient</strong> fills the screen. Pick a <strong>Style</strong> (Linear, Radial, Conic or Mesh), then set the <strong>Angle</strong>, <strong>Blend</strong> (how softly the colors melt together; 0 gives crisp bands) and <strong>Spread</strong>. <strong>Aurora</strong> is a set of soft glows that drift when motion is Expressive.</p>
-    <p><strong>Animated</strong> offers eight slow scenes: Mist, Orbs, Borealis, Lava, Waves, Dust, Contours and Horizon. <strong>Intensity</strong> sets how much a scene stands out, from Faint to Bold, adjusting color, contrast and pace together. Scenes are drawn with WebGL at low resolution and at most 30 frames a second. They pause in background tabs and hold still when motion is Off.</p>
-    <p>Gradient, Aurora and Animated backgrounds take their <strong>Colors</strong> from your palette by default. You can also choose one of six ready-made sets (Lagoon, Dusk, Ember, Mint, Lilac or Slate) or pick three colors of your own. <strong>Grain</strong>, on by default, adds a faint noise that hides color banding in soft gradients.</p>
+    <h2>Background and motion.</h2>
+    <ul>
+      <li><strong>Animated:</strong> eight slow scenes (Mist, Orbs, Borealis, Lava, Waves, Dust, Contours, Horizon), with one <strong>Intensity</strong> slider. They pause in background tabs and hold still when motion is off.</li>
+      <li><strong>Gradient:</strong> linear, radial, conic or mesh, with angle, blend and spread.</li>
+      <li><strong>Aurora</strong>, <strong>Solid</strong>, or <strong>Image</strong> from an <code>https://</code> address, with Dim and Blur.</li>
+    </ul>
+    <p>Backgrounds use your palette’s colors, one of six ready-made sets, or three of your own.</p>
     <figure class="guide-figure">
-      <a href="/projects/glaze-backgrounds.webp" aria-label="Open the full-size Glaze background editor capture"><img src="/projects/glaze-backgrounds.webp" alt="Glaze editor’s Background section with a mesh gradient, color sets, Blend, Spread, Dim and Grain controls beside the live sample course" width="1280" height="800" loading="lazy" /></a>
-      <figcaption>The Background section in Glaze 2.0.3, with a mesh gradient on the sample course preview.</figcaption>
+      <a href="/projects/glaze-backgrounds.webp" aria-label="Open the full-size Glaze background editor capture"><img src="/projects/glaze-backgrounds.webp" alt="Glaze editor’s Background section with a mesh gradient beside the live sample course" width="1280" height="800" loading="lazy" /></a>
+      <figcaption>A mesh gradient in the Background section.</figcaption>
     </figure>
-    <p>For <strong>Image</strong>, enter a direct <code>https://</code> picture link in <strong>Image address</strong>. There is no file-upload control. A valid address selects Image automatically. If the picture cannot load, the gradient remains underneath it.</p>
-    <p>Use <strong>Dim</strong> to quiet a bright picture and <strong>Blur</strong> to soften detail. Try a course with a long title, an announcement and a Grades panel; a background should leave those easy to read. The image host receives an ordinary browser request when the picture loads, so choose a link you are comfortable using on your school pages.</p>
-    <p>In <strong>Motion</strong>, Subtle is the default. Expressive adds stronger effects, a moving Aurora, livelier animated scenes and completion feedback. Off is a useful choice for a quiet page. The checkbox <strong>Turn motion off when the system asks for reduced motion</strong> starts enabled and takes priority over the selected level.</p>
-    <p>Use the three <strong>Fine-tune</strong> switches for <strong>Page and card entrances</strong>, <strong>Hover lift and press</strong>, and <strong>Colour and border transitions</strong>. If motion distracts you or feels heavy on your computer, start with Off and a Solid or Gradient background, then add back what you enjoy.</p>
+    <p><strong>Motion</strong> is Off, Subtle (default) or Expressive. With <strong>Turn motion off when the system asks for reduced motion</strong> on, your system setting wins.</p>
   </section>
 
   <section id="courses" class="guide-section">
-    <h2>Keep course colors useful.</h2>
-    <p><strong>Tone Blackboard’s course colors to fit the palette</strong> starts enabled. It softens Ultra’s bright course colors while keeping their hues recognizable. Turn it off if you prefer Blackboard’s original course colors.</p>
-    <p>To choose colors yourself, open <strong>Messages</strong> or <strong>Grades</strong> in Blackboard once, then return to the editor’s <strong>Courses</strong> section. Recognized course names appear with a colour picker. Change a colour and inspect it back in Blackboard; the row’s <strong>Reset</strong> removes that override.</p>
-    <aside class="guide-callout"><strong>Colors follow Blackboard’s ten colour slots.</strong><p>The small “colour” number beside a course is the slot Glaze changes. If two courses share a slot, the override affects both. This is useful for keeping colors consistent across Ultra’s pages, but it is not an independent colour assignment for every course.</p></aside>
-    <p>Course names are remembered on this device so the editor can label those pickers. They are excluded from settings exports and Chrome’s synced settings.</p>
+    <h2>Course colors and tint.</h2>
+    <p>Glaze softens Ultra’s course colors to fit your palette. To set your own, visit Messages or Grades once, then open the editor’s <strong>Courses</strong> section. Ultra has ten color slots, so courses sharing one share its color.</p>
+    <p>Turn on <strong>Tint the theme inside a course</strong> and tick courses: inside each, the accent and background take that course’s color, so you can tell where you are at a glance.</p>
   </section>
 
   <section id="extras" class="guide-section">
-    <h2>Add helpers one at a time.</h2>
-    <p>Four of the eight <strong>Extras</strong> start on: countdowns and percentages, score bars, folder previews and course progress. The rest start off. If you changed any Extra before 2.0.3, your choices are kept. Try each helper on a familiar course, then decide whether it earns a place in your daily view.</p>
+    <h2>Helpers.</h2>
+    <p>Each helper is an Extra in the editor and can be switched off.</p>
     <div class="guide-table-wrap">
       <table>
-        <thead><tr><th scope="col">Control</th><th scope="col">What to try</th></tr></thead>
+        <thead><tr><th scope="col">On by default</th><th scope="col">What it does</th></tr></thead>
         <tbody>
-          <tr><td>Due-date urgency</td><td>Highlights recognized deadlines that are overdue, due today or within three days. Check an item whose due date you already know.</td></tr>
-          <tr><td>Countdowns and percentages</td><td>Adds relative date labels and calculated grade percentages where Glaze recognizes the page’s values.</td></tr>
-          <tr><td>Score bars</td><td>Adds a small proportion bar beneath recognized gradebook scores.</td></tr>
-          <tr><td>Shorter descriptions</td><td>Shows three lines of long course-content descriptions; hover or focus them to read more.</td></tr>
-          <tr><td>Reading width</td><td>Keeps announcements, posts and documents to more comfortable line lengths, centered on their card.</td></tr>
-          <tr><td>Folder previews</td><td>Hover a closed folder in course content to see available items, completion states and deadlines without opening it.</td></tr>
-          <tr><td>Course progress</td><td>Summarizes completion information visible in the course outline. It is not your final grade or an audit of every requirement.</td></tr>
-          <tr><td>Keyboard shortcuts</td><td>Press <kbd>?</kbd> outside a text field to see the navigation shortcuts.</td></tr>
+          <tr><td>Due-date status</td><td>“in 2 days · Unopened”, “Submitted”, “Submitted late”, “Graded · 18/20”, and grade percentages.</td></tr>
+          <tr><td>Grades on course cards</td><td>Your overall grade on the Courses page, where your instructor shares it.</td></tr>
+          <tr><td>New-grade and new-content badges</td><td>“New” beside grades and items added since your last visit, with counts on course cards.</td></tr>
+          <tr><td>What-if calculator</td><td>On a course’s gradebook: the overall grade your scores would make, or the score you’d need.</td></tr>
+          <tr><td>Command palette</td><td><kbd>Ctrl</kbd>+<kbd>K</kbd> jumps to a course, item, page or setting.</td></tr>
+          <tr><td>Download all</td><td>A folder’s files as one zip. Items you haven’t opened are left out, so nothing gets marked as viewed.</td></tr>
+          <tr><td>Back up what you type</td><td>If a page reloads or times out before you post, Glaze offers your text back.</td></tr>
+          <tr><td>Folder previews, course progress, score bars</td><td>A folder’s contents on hover, a course’s completion, and a bar under each score.</td></tr>
+          <tr><td>Document buttons</td><td>Focus mode for course documents, and the dark-documents switch.</td></tr>
         </tbody>
       </table>
     </div>
-    <figure class="guide-figure">
-      <a href="/projects/glaze-preview.webp" aria-label="Open the full-size Glaze sample course preview"><img src="/projects/glaze-preview.webp" alt="Glaze’s themed sample Blackboard course content with fictional assignments" width="1000" height="1020" loading="lazy" /></a>
-      <figcaption>A sample course from Glaze’s built-in preview. Use a real course to check which helpers its page supports.</figcaption>
-    </figure>
-    <p>With Keyboard shortcuts enabled, press <kbd>g</kbd> then <kbd>c</kbd> for Courses, <kbd>a</kbd> for Calendar, <kbd>g</kbd> for Grades, <kbd>m</kbd> for Messages or <kbd>s</kbd> for Activity. <kbd>/</kbd> focuses an available search control. These shortcuts stand down while you are typing; <kbd>Escape</kbd> closes the shortcut list.</p>
-    <p><strong>Declutter</strong> can hide the floating help button, course banner images, an empty Course Faculty box and selected course tabs. Start with one item. Restore a tab by clearing its checkbox; hiding it only changes your view.</p>
-    <aside class="guide-callout"><strong>Use Blackboard’s records to make decisions.</strong><p>The helpers interpret visible page text and completion states. A different language, course layout or Blackboard update can change what they recognize. Check the original due date, submission status and points before relying on a derived label. If one looks wrong, switch that Extra off.</p></aside>
-    <p>Folder previews request contents from your current Blackboard site using your existing session. They can be unavailable when the site does not return that information; opening the folder normally remains the way to inspect it.</p>
+    <p>Off until you want them: due-date urgency, shorter descriptions, reading width, keyboard shortcuts (<kbd>?</kbd> lists them), dark documents (dark PDFs on dark palettes), and <strong>Declutter</strong> for page parts you don’t use.</p>
+    <p>Glaze writes in the language Blackboard is shown in: English, Spanish, French, German, Portuguese (Brazil) or Dutch.</p>
+    <aside class="guide-callout"><strong>Blackboard remains the record.</strong><p>Check due dates and scores against Blackboard before relying on them. If a helper looks wrong, switch it off and tell us.</p></aside>
   </section>
 
   <section id="backup" class="guide-section">
-    <h2>Back up and understand privacy.</h2>
-    <p>Open <strong>Backup → Export settings</strong> to download <code>glaze-settings.json</code>. It includes your palette, saved presets, look, background, motion, course-colour choices and Extras. Keep a copy before importing another setup, replacing an unpacked build or uninstalling.</p>
-    <p><strong>Import settings…</strong> accepts a Glaze JSON export and replaces the current settings with its validated contents. It does not merge two collections of presets. Missing or invalid settings fall back to defaults. Export your current setup first, then check the palette, background and Extras after importing.</p>
-    <p><strong>Reset everything</strong> requires a second click on <strong>Click again to reset</strong>. It restores default options while keeping your custom presets. It does not erase the locally remembered course-name list. For a palette-only reset, use <strong>Back to Frost</strong> instead.</p>
-    <p>Preferences are stored through Chrome’s sync storage and can follow your Chrome profile when synchronization is enabled. Recognized course names stay in local extension storage on the device. Glaze has no analytics or server receiving your coursework, grades or credentials. Its fonts and the three.js library behind animated backgrounds are bundled, so it loads no remote code.</p>
-    <p>Glaze makes two kinds of network request: folder previews, which stay on your Blackboard site and can be switched off under Extras, and your chosen background image, which loads from its image host. Course names are not exported, but a settings backup can include your custom palette names and image address. Review those before sharing a backup. Uninstalling removes the extension’s stored data.</p>
-    <p>Read the <a href={`${source}/blob/main/PRIVACY.md`}>Glaze privacy policy</a> for storage, permissions and request details.</p>
+    <h2>Share, back up, privacy.</h2>
+    <p>In <strong>Share</strong>, <strong>Copy theme code</strong> gives your palette, fonts, look and background as one line of text. Paste someone’s code, check it with <strong>Preview</strong>, then choose <strong>Use this theme</strong> or <strong>Cancel</strong>.</p>
+    <p><strong>Export settings</strong> saves everything to <code>glaze-settings.json</code>; <strong>Import settings…</strong> replaces your setup with a file’s. <strong>Reset everything</strong> needs a second click and keeps your saved palettes. Settings also follow your Chrome profile when sync is on.</p>
+    <p>Glaze has no server and no analytics. What you’ve seen and your typing backups stay on this device. Requests go to your own Blackboard site with your existing session, plus a web font if you choose one and your background image if you set one. Glaze never submits coursework. Details are in the <a href={`${source}/blob/main/PRIVACY.md`}>privacy policy</a>.</p>
   </section>
 
   <section id="recovery" class="guide-section">
-    <h2>Recover a familiar page.</h2>
-    <p>Start with the smallest change: switch <strong>Theme on / off</strong> off in the popup and compare the same page. Then use the symptom below to find the next step.</p>
+    <h2>Fix a problem.</h2>
     <ul class="guide-checklist">
-      <li><strong>No “Open the editor” button:</strong> check Glaze’s version on <code>chrome://extensions</code>. This guide follows 2.0.3. If you have an older store build, wait for its update or follow the official download installation above.</li>
-      <li><strong>Popup changes, Ultra does not:</strong> check the master switch, extension enablement, site access and the page’s <code>/ultra/</code> address. Refresh the course tab after installation or extension reload.</li>
-      <li><strong>Palette keeps switching:</strong> check automatic light/dark mode. A manual swatch choice turns it off; enable it again in the editor if that was accidental.</li>
-      <li><strong>Expressive still looks still:</strong> check your system’s reduced-motion preference and the editor’s motion override checkbox.</li>
-      <li><strong>No Animated option or color sets:</strong> these arrive in 2.0.3. Check the version on <code>chrome://extensions</code>.</li>
-      <li><strong>Animated background is still or missing:</strong> motion Off and the system’s reduced-motion setting hold scenes still. If WebGL is unavailable in Chrome, choose Gradient instead.</li>
-      <li><strong>Image missing:</strong> use a direct HTTPS picture address. Check that the link loads, then adjust Dim and Blur. Choose Gradient or Solid while investigating.</li>
-      <li><strong>Course list empty:</strong> visit Ultra’s Messages or Grades page with Glaze enabled, then return to Courses in the editor.</li>
-      <li><strong>A helper is missing or inaccurate:</strong> check that its Extra is on and inspect the actual Blackboard value. Disable that helper if the page’s structure or language is unsupported.</li>
-      <li><strong>Layout feels crowded or hard to read:</strong> return to a built-in palette, System font, Cozy density and a Solid background. Check Chrome zoom and try the page with Glaze off.</li>
-      <li><strong>“Not saved” appears:</strong> keep the editor open, read the storage error and retry after the problem is resolved. Export the visible settings before a reset or uninstall.</li>
+      <li><strong>Features from this guide missing:</strong> check the version on <code>chrome://extensions</code>. Before 2.1, wait for the store update or use the GitHub package above.</li>
+      <li><strong>Popup works, Blackboard doesn’t change:</strong> check the theme switch and the <code>/ultra/</code> address, then refresh the tab.</li>
+      <li><strong>Palette keeps switching:</strong> automatic light/dark mode is on. Turn it off in Palette.</li>
+      <li><strong>Background is still:</strong> motion is Off or your system asks for reduced motion. Without WebGL, use a gradient.</li>
+      <li><strong>A page is hard to use:</strong> switch Glaze off to compare, go back to a built-in palette, and turn off the last Extra you changed.</li>
+      <li><strong>“Not saved”:</strong> keep the editor open and read the error. Export before resetting or uninstalling.</li>
     </ul>
-    <p>For an issue report, include Chrome and Glaze versions, the affected Ultra page type, the control involved and whether switching Glaze off changes the result. Crop or redact course names, grades and personal details in screenshots. The sample preview is a useful comparison, but it does not prove that every institution’s page has the same layout.</p>
+    <p>When reporting an issue, include your Chrome and Glaze versions and the page type, and hide names and grades in screenshots.</p>
     <div class="guide-sources">
       <h3>Keep exploring Glaze.</h3>
-      <p>Visit the <a href="/glaze">Glaze overview</a>, the <a href="/guides/glaze-safari">Safari guide</a>, the <a href={store}>Chrome Web Store listing</a> or <a href={`${source}/releases`}>official releases</a>. The <a href={`${source}#readme`}>README</a>, <a href={`${source}/blob/main/options.html`}>editor controls</a> and <a href={`${source}/issues`}>issue tracker</a> are the source references for this walkthrough.</p>
-      <p>Glaze is an independent project. It is not affiliated with, endorsed by or sponsored by Anthology Inc.</p>
+      <p>See the <a href="/glaze">Glaze overview</a>, <a href="/guides/glaze-safari">Safari guide</a>, <a href={store}>Chrome Web Store listing</a>, <a href={release}>release notes</a> and <a href={`${source}/issues`}>issue tracker</a>.</p>
+      <p>Glaze is independent and not affiliated with or endorsed by Anthology Inc.</p>
     </div>
   </section>
 </GuideLayout>
