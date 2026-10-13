@@ -5,7 +5,7 @@ The hub `/` links six projects and the guide index. `/rimeward`, `/crosspane`,
 describes current storage, provider connections and local versus shared data.
 
 Glaze's primary install action matches desktop Safari or Chrome and keeps its
-visual guide beside it. Safari on Mac links to the signed 2.1.2 installer disk image;
+visual guide beside it. Safari on Mac links to the signed 2.1.3 installer disk image;
 Chrome links to the extension store. Other browsers and visitors without JavaScript
 retain both platform-labelled choices. Downloads begin only when a link is chosen.
 
