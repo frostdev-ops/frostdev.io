@@ -2,8 +2,8 @@
 import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
-const release = `${source}/releases/tag/v2.1.1`;
-const dmg = `${source}/releases/download/v2.1.1/glaze-2.1.1-safari-macos.dmg`;
+const release = `${source}/releases/tag/v2.1.2`;
+const dmg = `${source}/releases/download/v2.1.2/glaze-2.1.2-safari-macos.dmg`;
 const apple = 'https://support.apple.com/102343';
 const chapters = [
   { id: 'prepare', title: 'Check your Mac and Blackboard' },
@@ -44,9 +44,9 @@ const chapters = [
 
   <section class="guide-section" id="install">
     <h2>Install the Safari app</h2>
-    <p><a href={release}>Glaze 2.1.1</a> is a signed, Apple-notarized Mac app that installs itself.</p>
+    <p><a href={release}>Glaze 2.1.2</a> is a signed, Apple-notarized Mac app that installs itself.</p>
     <ol class="guide-steps">
-      <li><a href={dmg}>Download glaze-2.1.1-safari-macos.dmg</a> and open it.</li>
+      <li><a href={dmg}>Download glaze-2.1.2-safari-macos.dmg</a> and open it.</li>
       <li>Open <strong>Glaze</strong> and click <strong>Install Glaze</strong>. It copies itself into Applications (your own Applications folder if you aren’t an administrator) and reopens from there.</li>
       <li>Glaze opens Safari’s Extensions settings beside a two-step guide, covered next.</li>
     </ol>
@@ -65,7 +65,8 @@ const chapters = [
 
   <section class="guide-section" id="first-theme">
     <h2>Try your first palette</h2>
-    <p>Click Glaze in the toolbar. The popup has the theme switch, six palettes (<strong>Frost, Midnight, Forest, Ember, Paper, Rose</strong>), three motion levels and <strong>Open the editor</strong>. Changes apply to open Blackboard tabs at once.</p>
+    <p>Click Glaze in the toolbar. The popup has the theme switch, eight <strong>Looks</strong>, six palettes (<strong>Frost, Midnight, Forest, Ember, Paper, Rose</strong>), three motion levels and <strong>Open the editor</strong>. Changes apply to open Blackboard tabs at once.</p>
+    <p>A look sets a palette, fonts, shape and background chosen to go together: Aurora Night, Library, Terminal, Lava Lounge, Synthwave, Clear, Lagoon or Rose Garden. Start from one and adjust it in the editor.</p>
     <figure class="guide-figure guide-figure-compact">
       <a href="/projects/glaze-popup.webp" aria-label="Open the full-size Glaze popup capture"><img src="/projects/glaze-popup.webp" alt="Glaze’s popup with palette swatches, motion levels and Open the editor" width="320" height="297" loading="lazy" /></a>
       <figcaption>The Glaze popup.</figcaption>
@@ -100,7 +101,7 @@ const chapters = [
 
   <section class="guide-section" id="courses">
     <h2>Courses and extras</h2>
-    <p>Glaze softens Ultra’s course colors to fit your palette. To set your own, visit Messages or Grades once, then open the editor’s <strong>Courses</strong> section. Turn on <strong>Tint the theme inside a course</strong> and tick courses to give each its own accent while you’re in it.</p>
+    <p>Glaze softens Ultra’s course colors to fit your palette. Every course you haven’t hidden appears in the editor’s <strong>Courses</strong> section once you’ve opened Blackboard; courses sharing one of Ultra’s ten color slots share a row. Turn on <strong>Tint the theme inside a course</strong> and tick courses to give each its own accent while you’re in it.</p>
     <p>Under <strong>Extras</strong>, these start on:</p>
     <ul>
       <li><strong>Due-date status</strong>: “in 2 days · Unopened”, “Submitted”, “Submitted late”, “Graded · 18/20”.</li>
@@ -135,7 +136,7 @@ const chapters = [
       <li><strong>Glaze missing from Extensions:</strong> open Glaze.app from Applications once, then restart Safari.</li>
       <li><strong>Enabled but no theme:</strong> check Edit Websites for your Blackboard address, your Safari profile and private-browsing setting, then reload.</li>
       <li><strong>A page is hard to use:</strong> switch Glaze off to compare, go back to a built-in palette, and turn off the last Extra you changed.</li>
-      <li><strong>No courses in the editor:</strong> visit Messages or Grades with Glaze on.</li>
+      <li><strong>No courses in the editor:</strong> open any Blackboard page with Glaze on, then reopen the editor.</li>
       <li><strong>“Not saved”:</strong> reopen the editor and check the value. Export before reinstalling.</li>
     </ul>
     <h3>Update</h3>
