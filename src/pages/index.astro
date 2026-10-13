@@ -80,7 +80,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
         </a>
       </div>
     </div>
-    <p id="carousel-help" class="carousel-hint"><span class="desktop-help">Drag to explore<span class="sr-only">. Use arrow keys to browse. Press Space to pause or resume.</span></span><span class="mobile-help">Swipe to explore<span class="sr-only">. Use Tab to reach each project.</span></span></p>
+    <p id="carousel-help" class="carousel-hint"><span class="desktop-help">Scroll or drag to explore<span class="sr-only">. Scroll sideways or use arrow keys to browse. Press Space to pause or resume.</span></span><span class="mobile-help">Swipe to explore<span class="sr-only">. Use Tab to reach each project.</span></span></p>
   </section>
 
   <section class="hub-summary" aria-labelledby="about-title">
@@ -226,6 +226,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
   let playbackMode: 'auto' | 'paused' | 'playing' = 'auto';
   let hovering = false;
   let coastFrame = 0;
+  let wheelTimeout = 0;
   let suppressClick = false;
   let drag: {
     id: number; start: number; cross: number; time: number; last: number;
@@ -244,7 +245,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
   function playback() {
     if (!rotation) return;
     const interacting = hovering || carousel.contains(document.activeElement);
-    const paused = Boolean(drag || coastFrame || document.hidden || playbackMode === 'paused' || (playbackMode === 'auto' && interacting));
+    const paused = Boolean(drag || coastFrame || wheelTimeout || document.hidden || playbackMode === 'paused' || (playbackMode === 'auto' && interacting));
     const artwork = paused ? '/projects/frostdev-wordmark-crystal.webp' : '/projects/frostdev-wordmark-crystal-animated.webp';
     if (wordmark.getAttribute('src') !== artwork) wordmark.src = artwork;
     if (paused) rotation.pause();
@@ -304,6 +305,22 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
     rotation.currentTime = elapsed;
     playback();
   }
+
+  stage.addEventListener('wheel', event => {
+    if (!rotation || drag || event.ctrlKey) return;
+    const delta = event.shiftKey && !event.deltaX ? event.deltaY : event.deltaX;
+    if (!delta || (!event.shiftKey && Math.abs(event.deltaY) > Math.abs(delta))) return;
+    event.preventDefault();
+    stopCoast();
+    if (playbackMode === 'playing') playbackMode = 'auto';
+    clearTimeout(wheelTimeout);
+    wheelTimeout = window.setTimeout(() => { wheelTimeout = 0; playback(); }, 180);
+    playback();
+    const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16
+      : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? stage.clientWidth : 1;
+    const pixels = projects[0].offsetWidth + parseFloat(getComputedStyle(ring).columnGap);
+    position(Number(rotation.currentTime) + delta * unit * duration / projects.length / pixels);
+  }, { passive: false });
 
   stage.addEventListener('pointerdown', event => {
     if (!rotation || !event.isPrimary || event.button !== 0 || drag) return;
