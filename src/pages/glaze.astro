@@ -7,7 +7,7 @@ const safariDownload = `${source}/releases/download/safari-v2.0.2/glaze-2.0.2-sa
 const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 ---
 
-<MarketingLayout title="Glaze — Your colors on Blackboard Ultra" description="Make Blackboard Ultra yours with Glaze: palettes, readable fonts, comfortable spacing and optional extras. Get started in Safari or Chrome." path="/glaze" image="/projects/glaze-preview.webp">
+<MarketingLayout title="Glaze — Your colors on Blackboard Ultra" description="Make Blackboard Ultra yours with Glaze: palettes, readable fonts, gradient and animated backgrounds, and at-a-glance extras. Get started in Safari or Chrome." path="/glaze" image="/projects/glaze-preview.webp">
   <div class="product-page glaze-page">
     <section class="product-hero" aria-labelledby="glaze-title">
       <div class="product-intro">
@@ -26,7 +26,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
         <p class="product-meta">Open source · No analytics · No Glaze account</p>
       </div>
       <figure class="glaze-preview">
-        <div class="preview-top"><span class="preview-dots" aria-hidden="true">● ● ●</span><span>Glaze 2.0.1 · Course preview</span></div>
+        <div class="preview-top"><span class="preview-dots" aria-hidden="true">● ● ●</span><span>Glaze · Course preview</span></div>
         <a href="/projects/glaze-preview.webp" aria-label="Open the full-size Glaze sample course preview"><img src="/projects/glaze-preview.webp" width="1000" height="1020" alt="Glaze’s Frost palette on its sample Blackboard Ultra course, with content and grade cards" /></a>
         <figcaption>Glaze’s own preview, styled by the real extension. Sample course data.</figcaption>
       </figure>
@@ -41,8 +41,22 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
       <div class="product-grid">
         <article class="product-card"><span class="glaze-feature" aria-hidden="true">01</span><h3>Find your palette</h3><p>Choose from six presets, adjust individual colors, or save your own. Automatic light and dark palettes follow your system.</p></article>
         <article class="product-card"><span class="glaze-feature" aria-hidden="true">02</span><h3>Settle into reading</h3><p>Try Inter or Atkinson Hyperlegible. Adjust text size, line height and density, then check the result in the live preview.</p></article>
-        <article class="product-card"><span class="glaze-feature" aria-hidden="true">03</span><h3>Choose your extras</h3><p>Due-date countdowns, score bars, course progress and folder previews start off. Turn on the helpers that work for you.</p></article>
+        <article class="product-card"><span class="glaze-feature" aria-hidden="true">03</span><h3>Choose your extras</h3><p>Countdowns, score bars, course progress and folder previews put the details in view. Keep the helpers that work for you and switch off the rest.</p></article>
       </div>
+    </section>
+
+    <section class="product-section product-split" aria-labelledby="backgrounds-heading">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">New in 2.0.3 for Chrome</p>
+        <h2 id="backgrounds-heading">A background that<br />breathes with you.</h2>
+        <p>Pick one of eight slow animated scenes: Mist, Orbs, Borealis, Lava, Waves, Dust, Contours or Horizon. One <strong>Intensity</strong> slider takes a scene from barely there to bold.</p>
+        <p>Prefer stillness? Shape a gradient instead: linear, radial, conic or mesh, with angle, blend and spread. Use your palette’s colors, one of six ready-made sets, or three of your own.</p>
+        <p class="product-caption">Scenes are drawn at low resolution, pause in background tabs and hold still when motion is off. Course documents and assignment pages also sit on centered frosted-glass cards.</p>
+      </div>
+      <figure class="product-panel editor-preview">
+        <a href="/projects/glaze-horizon.webp" aria-label="Open the full-size Glaze Horizon background capture"><img src="/projects/glaze-horizon.webp" width="1280" height="800" loading="lazy" alt="Glaze’s Horizon animated background, a striped sun over a gliding grid, behind a sample Blackboard Ultra course" /></a>
+        <figcaption class="product-caption">The Horizon scene with the Midnight palette, on Glaze’s sample course.</figcaption>
+      </figure>
     </section>
 
     <section class="product-section product-split" aria-labelledby="editor-heading">
@@ -50,10 +64,10 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
         <p class="product-eyebrow">Quick change or full control</p>
         <h2 id="editor-heading">See it as you shape it.</h2>
         <p>The popup keeps palettes and motion close. <strong>Open the editor</strong> puts every setting beside a live preview: colors, backgrounds, course colors and more.</p>
-        <p class="product-caption">These editor features are in Glaze 2.0.2. Safari has a signed, notarized Mac download. The Chrome Web Store rollout is underway; check the version on the <a href={chromeStore}>store listing</a>. The Chrome guide also covers the official 2.0.2 download.</p>
+        <p class="product-caption">Glaze 2.0.3 for Chrome is on <a href={`${source}/releases/tag/v2.0.3`}>GitHub</a> and in Chrome Web Store review; check the version on the <a href={chromeStore}>store listing</a>. Safari has a signed, notarized 2.0.2 Mac download.</p>
       </div>
       <figure class="product-panel editor-preview">
-        <a href="/projects/glaze-editor.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-editor.webp" width="1440" height="1000" loading="lazy" alt="Glaze’s full editor, with palette controls beside its live sample-course preview" /></a>
+        <a href="/projects/glaze-backgrounds.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-backgrounds.webp" width="1280" height="800" loading="lazy" alt="Glaze’s editor with mesh gradient controls beside its live sample-course preview" /></a>
         <figcaption class="product-caption">Actual Glaze editor with its built-in demonstration course.</figcaption>
       </figure>
     </section>
@@ -65,7 +79,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
       </div>
       <div class="browser-guides">
         <a class="product-panel browser-guide" href="/guides/glaze-safari"><span class="product-eyebrow">Safari on Mac</span><h3>Install the app. Enable the extension.</h3><p>Use the signed Mac release, grant access to your Blackboard site, and make your first theme.</p><span class="product-text-link">Follow the Safari guide →</span></a>
-        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Choose your install. Find your look.</h3><p>Start with the store version or load the 2.0.2 package, then explore the editor and back up your settings.</p><span class="product-text-link">Follow the Chrome guide →</span></a>
+        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Choose your install. Find your look.</h3><p>Start with the store version or load the 2.0.3 package, then explore the editor and back up your settings.</p><span class="product-text-link">Follow the Chrome guide →</span></a>
       </div>
     </section>
 
@@ -102,6 +116,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
   .glaze-preview figcaption { padding: .85rem 1rem; color: #8fa8c0; font-size: .72rem; line-height: 1.6; }
   .glaze-feature { display: block; margin-bottom: 1.25rem; color: #6fdcff; font-size: .75rem; }
   .editor-preview { padding: .75rem; }
+  .product-section-heading p + p { margin-top: 1rem; }
   .editor-preview figcaption { padding: 0 .5rem .5rem; }
   .browser-guides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
   .browser-guide { transition: border-color .2s, transform .2s; }

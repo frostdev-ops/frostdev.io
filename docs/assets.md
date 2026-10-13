@@ -37,6 +37,11 @@ they are not part of Git or the static build.
   published images are WebP encodings. The popup is its real extension page rendered
   at its native width. Shared Safari UI sources match byte-for-byte; these images
   do not establish a Safari app installation or a live institution workflow.
+- `glaze-horizon.webp` and `glaze-backgrounds.webp` are WebP encodings of Glaze's
+  2.0.3 store screenshots (`assets/store/screenshots/4-horizon-midnight.jpg` and
+  `2-backgrounds-editor.jpg`, commit `810058e`), rendered by its own
+  `scripts/store-screenshots.js` from the real extension and sample course, 1280 × 800.
+  The Safari guide keeps the 2.0.1 captures because the Safari download is still 2.0.2.
 - The narrow Glaze editor capture records existing behavior: its full page extends
   to 452 pixels at a 390-pixel viewport. Glaze source was not changed for this website
   work. Website guides themselves are checked for horizontal overflow separately.
