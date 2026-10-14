@@ -65,13 +65,20 @@ const chapters = [
 
   <section class="guide-section" id="first-theme">
     <h2>Try your first palette</h2>
-    <p>Click Glaze in the toolbar. The popup has the theme switch, eight <strong>Looks</strong>, six palettes (<strong>Frost, Midnight, Forest, Ember, Paper, Rose</strong>), three motion levels and <strong>Open the editor</strong>. Changes apply to open Blackboard tabs at once.</p>
-    <p>A look sets a palette, fonts, shape and background chosen to go together: Aurora Night, Library, Terminal, Lava Lounge, Synthwave, Clear, Lagoon or Rose Garden. Start from one and adjust it in the editor.</p>
+    <p>Click Glaze in the toolbar. The popup lays out the quick controls as tiles, and changes apply to open Blackboard tabs at once.</p>
+    <ul>
+      <li><strong>Theme</strong> switches Glaze on and off. Your settings stay, so you can compare with Blackboard’s own look.</li>
+      <li><strong>Look</strong> shows the one you’re wearing; click it for all eight. A Look sets a palette, fonts, shape and background chosen to go together: Aurora Night, Library, Terminal, Lava Lounge, Synthwave, Clear, Lagoon or Rose Garden. Start from one and adjust it in the editor.</li>
+      <li><strong>Due this week</strong> counts what’s left in the next seven days and lists the next three. Point at one for its full title, course and due time.</li>
+      <li><strong>Palette</strong> has six: Frost, Midnight, Forest, Ember, Paper and Rose. Picking one turns off automatic light/dark switching.</li>
+      <li><strong>Motion</strong> steps through Off, Subtle and Expressive.</li>
+      <li><strong>Open the editor</strong> has everything else. A dot beside it means a new version has notes for you.</li>
+    </ul>
     <figure class="guide-figure guide-figure-compact">
-      <a href="/projects/glaze-popup.webp" aria-label="Open the full-size Glaze popup capture"><img src="/projects/glaze-popup.webp" alt="Glaze’s popup with palette swatches, motion levels and Open the editor" width="320" height="297" loading="lazy" /></a>
+      <a href="/projects/glaze-popup.webp" aria-label="Open the full-size Glaze popup capture"><img src="/projects/glaze-popup.webp" alt="Glaze popup tiles: Theme on, the Frost look, three items due this week, palette swatches, Subtle motion and Open the editor" width="720" height="962" loading="lazy" /></a>
       <figcaption>The Glaze popup.</figcaption>
     </figure>
-    <p>Switch Glaze off and on to compare with Blackboard’s own look; your settings stay. Picking a swatch turns off automatic light/dark switching.</p>
+    <p>The due list comes from Blackboard’s own To Do list, read when you open a Blackboard page and at most every ten minutes. Nothing pops up and the toolbar button gets no badge. If the tile shows a dash, open any Blackboard page first.</p>
   </section>
 
   <section class="guide-section" id="editor">
@@ -96,24 +103,26 @@ const chapters = [
       <li><strong>Aurora</strong>, <strong>Solid</strong>, or <strong>Image</strong> from an <code>https://</code> address, with Dim and Blur.</li>
     </ul>
     <p>Backgrounds use your palette’s colors, a ready-made set, or three of your own.</p>
-    <p><strong>Motion</strong> is Off, Subtle (default) or Expressive. With <strong>Turn motion off when the system asks for reduced motion</strong> on, your Mac’s setting wins.</p>
+    <p><strong>Motion</strong> is Off, Subtle (default) or Expressive. Glaze shows each Blackboard page once it’s built, not piece by piece, resolving from a blur, or at once with motion off. With <strong>Turn motion off when the system asks for reduced motion</strong> on, your Mac’s setting wins.</p>
   </section>
 
   <section class="guide-section" id="courses">
     <h2>Courses and extras</h2>
-    <p>Glaze softens Ultra’s course colors to fit your palette. Every course you haven’t hidden appears in the editor’s <strong>Courses</strong> section once you’ve opened Blackboard, organizations listed apart. Each has its own color, even where Blackboard repeats one, and you can change it. Turn on <strong>Tint the theme inside a course</strong> and tick courses to give each its own accent while you’re in it.</p>
+    <p>Glaze softens Ultra’s course colors to fit your palette. Every course you haven’t hidden appears in the editor’s <strong>Courses</strong> section once you’ve opened Blackboard, organizations listed apart. Each has its own color, even where Blackboard repeats one, and you can change it; a calendar entry takes its course’s color when its title belongs to one course. Turn on <strong>Tint the theme inside a course</strong> and tick courses to give each its own accent while you’re in it.</p>
+    <p>Each course also has a <strong>Look</strong> menu: keep your theme, or pick one of the eight Looks for that course. Inside that course Glaze wears it; everywhere else keeps your theme.</p>
     <p>Under <strong>Extras</strong>, these start on:</p>
     <ul>
       <li><strong>Due-date status</strong>: “in 2 days · Unopened”, “Submitted”, “Submitted late”, “Graded · 18/20”.</li>
       <li><strong>Grades on course cards</strong>, where your instructor shares the overall grade, and <strong>score bars</strong>.</li>
       <li><strong>New-grade</strong> and <strong>new-content badges</strong>.</li>
-      <li><strong>What-if calculator</strong> on a course’s gradebook: the score you’d need on what’s left.</li>
-      <li><strong>Command palette</strong>: <kbd>⌘K</kbd> jumps to a course, item, page or setting.</li>
+      <li><strong>What-if calculator</strong> on a course’s gradebook: the overall grade your scores would make, or the score you’d need on what’s left. Your scores stay until you choose <strong>Clear scores</strong>, and each goes once that item gets a real grade.</li>
+      <li><strong>Remember your place</strong>: back in a course, even after a reload, the folders you had open reopen and it scrolls to where you were. Folders you close stay closed, and scrolling yourself always wins.</li>
+      <li><strong>Command palette</strong>: <kbd>⌘K</kbd> jumps to a course, item, page or setting, and lists what’s due this week. Type “settings” to open the editor.</li>
       <li><strong>Download all</strong>: a folder’s files as one zip. Items you haven’t opened are left out, so nothing gets marked as viewed.</li>
       <li><strong>Back up what you type</strong>: if a page reloads or times out before you post, Glaze offers your text back.</li>
-      <li><strong>Folder previews</strong>, <strong>course progress</strong>, and <strong>focus mode</strong> for course documents.</li>
+      <li><strong>Folder previews</strong>, <strong>course progress</strong> at the top of a course’s Content page, and <strong>focus mode</strong> for course documents.</li>
     </ul>
-    <p>Off until you want them: due-date urgency, shorter descriptions, reading width, keyboard shortcuts, dark documents (dark PDFs on dark palettes), and <strong>Declutter</strong> for page parts you don’t use.</p>
+    <p>Off until you want them: due-date urgency, shorter descriptions, reading width, keyboard shortcuts (<kbd>?</kbd> lists them), dark documents (dark PDFs on dark palettes), and <strong>Declutter</strong> for page parts you don’t use.</p>
     <p>Glaze writes in the language Blackboard is shown in: English, Spanish, French, German, Portuguese (Brazil) or Dutch.</p>
   </section>
 
@@ -125,7 +134,7 @@ const chapters = [
 
   <section class="guide-section" id="privacy">
     <h2>Know what stays on your Mac</h2>
-    <p>Glaze has no server and no analytics. Settings, which grades and items you’ve seen, and typing backups stay in Safari’s extension storage. Requests go to your own Blackboard site with your existing session, plus a web font if you choose one and your background image if you set one.</p>
+    <p>Glaze has no server and no analytics. Settings, which grades and items you’ve seen, typing backups, your place in each course, what-if scores and the due list stay in Safari’s extension storage. Requests go to your own Blackboard site with your existing session, plus a web font if you choose one and your background image if you set one.</p>
     <aside class="guide-callout"><strong>Blackboard remains the record.</strong> Glaze never submits coursework or changes grades. Check due dates and scores against Blackboard before relying on them.</aside>
     <p>Details are in the <a href={`${source}/blob/main/PRIVACY.md`}>privacy policy</a>.</p>
   </section>
@@ -136,11 +145,13 @@ const chapters = [
       <li><strong>Glaze missing from Extensions:</strong> open Glaze.app from Applications once, then restart Safari.</li>
       <li><strong>Enabled but no theme:</strong> check Edit Websites for your Blackboard address, your Safari profile and private-browsing setting, then reload.</li>
       <li><strong>A page is hard to use:</strong> switch Glaze off to compare, go back to a built-in palette, and turn off the last Extra you changed.</li>
+      <li><strong>One course looks different:</strong> it has its own Look. Set it back to your theme under Courses.</li>
+      <li><strong>Due this week shows a dash:</strong> open any Blackboard page, then the popup again.</li>
       <li><strong>No courses in the editor:</strong> open any Blackboard page with Glaze on, then reopen the editor.</li>
       <li><strong>“Not saved”:</strong> reopen the editor and check the value. Export before reinstalling.</li>
     </ul>
     <h3>Update</h3>
-    <p>Download the newest disk image from <a href={`${source}/releases`}>GitHub Releases</a>, quit Safari, and replace Glaze.app in Applications. Open it once, then check that Glaze is still enabled and allowed.</p>
+    <p>Download the newest disk image from <a href={`${source}/releases`}>GitHub Releases</a>, quit Safari, and replace Glaze.app in Applications. Open it once, then check that Glaze is still enabled and allowed. The editor opens with a few lines on what changed, once.</p>
     <h3>Remove</h3>
     <p>Untick Glaze in Safari → Settings → Extensions to pause it. To remove it, export your settings, then delete Glaze.app from Applications.</p>
     <div class="guide-sources">
