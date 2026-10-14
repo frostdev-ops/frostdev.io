@@ -16,6 +16,8 @@ native horizontal scrolling and snap points. Previous/next controls and the rail
 arrow, Home and End keys select a film; clicking a thumbnail also starts playback.
 Reduced motion disables animated rail movement. Without JavaScript, all eight
 thumbnail links open their films directly. No Seedance concepts are included.
+The public nginx include serves caption files as `text/vtt` and MP4 video with
+byte-range support for seeking.
 
 The desktop project carousel animates and supports dragging, arrow keys and
 pause/resume. Phones use native horizontal scrolling with snap points, so vertical
