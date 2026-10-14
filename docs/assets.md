@@ -49,8 +49,8 @@ they are not part of Git or the static build.
   guides at desktop and phone widths, plus the sixth project card on a phone.
 - Glaze's October 14 media refresh uses the corrected `glaze-cover-v2` artwork and
   all eight generated YouTube thumbnails from `glaze/assets/ads/`. Website images
-  are WebP encodings. The eight motion ads are 1080p H.264/AAC encodings of their
-  final landscape exports, with fast-start metadata and English caption tracks.
+  are WebP encodings. The eight motion ads have 720p, 1080p and 4K H.264/AAC encodings
+  of their final landscape exports, with fast-start metadata and English caption tracks.
   They use sample courses, real product labels and illustrative interface animation;
   artwork is illustrative. Seedance concepts and alternate takes are excluded.
   Media is served locally without a third-party player and loads on selection.

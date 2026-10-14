@@ -11,9 +11,12 @@ retain both platform-labelled choices. Downloads begin only when a link is chose
 
 The Glaze page features its latest cover and eight motion ads in a media carousel.
 One native player shows the chosen film, with sound controlled by the visitor,
-English captions and no automatic playback or advancement. The thumbnail rail uses
+English captions and no automatic playback or advancement. Clicking or tapping the
+poster or a thumbnail starts playback. Each film starts at the smallest resolution
+that covers the player's width in physical pixels: 720p, 1080p or 4K. Resuming a
+paused film preserves its position and quality. The thumbnail rail uses
 native horizontal scrolling and snap points. Previous/next controls and the rail's
-arrow, Home and End keys select a film; clicking a thumbnail also starts playback.
+arrow, Home and End keys select a film.
 Reduced motion disables animated rail movement. Without JavaScript, all eight
 thumbnail links open their films directly. No Seedance concepts are included.
 The public nginx include serves caption files as `text/vtt` and MP4 video with

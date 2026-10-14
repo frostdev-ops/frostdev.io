@@ -1,13 +1,13 @@
 ---
 const films = [
-  { file: 'glaze', thumb: '01-glaze', title: 'Your colors. Your Blackboard.', category: 'Meet Glaze', duration: '0:22', description: 'Eight looks, animated backgrounds and the little things that make a big difference.' },
-  { file: '1158pm', thumb: '02-1158pm', title: '11:58 PM', category: 'Typing backup', duration: '0:20', description: 'A deadline. A session timeout. Your words, right where you left them.' },
-  { file: 'should-have-shown', thumb: '03-should-have-shown', title: 'It should have shown you.', category: 'Grades & due dates', duration: '0:24', description: 'What’s due, what changed and how you’re doing. A little less guesswork.' },
-  { file: 'switchboard', thumb: '04-switchboard', title: 'A little less friction.', category: 'Optional helpers', duration: '0:25', description: 'Focus mode, dark documents, Download all and more. Keep the helpers you want.' },
-  { file: 'pass-it-on', thumb: '05-pass-it-on', title: 'Good looks travel.', category: 'Theme sharing', duration: '0:22', description: 'Your whole look, in one line of text. Copy it, share it, make someone’s day.' },
-  { file: 'read-it-your-way', thumb: '06-read-it-your-way', title: 'Read it your way.', category: 'Fonts & readability', duration: '0:22', description: 'Find your font, give the words some room and settle into reading.' },
-  { file: 'hover-to-know', thumb: '07-hover-to-know', title: 'A little hint. A big help.', category: 'Previews & hints', duration: '0:18', description: 'Peek inside a folder, get a helpful hint and celebrate a little progress.' },
-  { file: 'course-colors', thumb: '08-course-colors', title: 'Every course. Its own color.', category: 'Course colors', duration: '0:21', description: 'Give each course a color of its own. Glaze speaks six languages, too.' },
+  { file: 'glaze', thumb: '01-glaze', title: 'Your colors. Your Blackboard.', category: 'Meet Glaze', duration: '0:22' },
+  { file: '1158pm', thumb: '02-1158pm', title: '11:58 PM', category: 'Typing backup', duration: '0:20' },
+  { file: 'should-have-shown', thumb: '03-should-have-shown', title: 'It should have shown you.', category: 'Grades & due dates', duration: '0:24' },
+  { file: 'switchboard', thumb: '04-switchboard', title: 'A little less friction.', category: 'Optional helpers', duration: '0:25' },
+  { file: 'pass-it-on', thumb: '05-pass-it-on', title: 'Good looks travel.', category: 'Theme sharing', duration: '0:22' },
+  { file: 'read-it-your-way', thumb: '06-read-it-your-way', title: 'Read it your way.', category: 'Fonts & readability', duration: '0:22' },
+  { file: 'hover-to-know', thumb: '07-hover-to-know', title: 'A little hint. A big help.', category: 'Previews & hints', duration: '0:18' },
+  { file: 'course-colors', thumb: '08-course-colors', title: 'Every course. Its own color.', category: 'Course colors', duration: '0:21' },
 ];
 const media = '/projects/glaze/';
 ---
@@ -15,24 +15,24 @@ const media = '/projects/glaze/';
 <section class="glaze-media product-section" id="films" aria-labelledby="films-heading" aria-roledescription="carousel">
   <div class="media-heading">
     <div class="product-section-heading">
-      <p class="product-eyebrow">A little Glaze goes a long way</p>
-      <h2 id="films-heading">See the difference.</h2>
-      <p>Eight short films. A Blackboard that feels like yours.</p>
+      <h2 id="films-heading">Glaze in action.</h2>
     </div>
     <a class="media-jump" href="#film-choices">Explore all 8 <span aria-hidden="true">↓</span></a>
   </div>
 
   <div class="media-stage">
-    <video id="glaze-film" controls playsinline preload="none" poster={`${media}${films[0].thumb}.webp`} width="1920" height="1080" aria-labelledby="film-title" aria-describedby="film-description">
-      <source src={`${media}${films[0].file}.mp4`} type="video/mp4" />
-      <track kind="captions" src={`${media}${films[0].file}.vtt`} srclang="en" label="English" />
-      <p><a href={`${media}${films[0].file}.mp4`}>Watch the Glaze film</a></p>
-    </video>
+    <div class="media-screen">
+      <video id="glaze-film" controls playsinline preload="none" poster={`${media}${films[0].thumb}.webp`} width="1920" height="1080" aria-labelledby="film-title">
+        <source src={`${media}${films[0].file}.mp4`} type="video/mp4" />
+        <track kind="captions" src={`${media}${films[0].file}.vtt`} srclang="en" label="English" />
+        <p><a href={`${media}${films[0].file}.mp4`}>Watch the Glaze film</a></p>
+      </video>
+      <button class="media-start" type="button" aria-label={`Play ${films[0].title}`} aria-controls="glaze-film" hidden><span aria-hidden="true">▶</span></button>
+    </div>
     <div class="media-details">
       <div class="media-copy" aria-live="polite" aria-atomic="true">
         <p class="media-category" id="film-category">{films[0].category}</p>
         <h3 id="film-title">{films[0].title}</h3>
-        <p id="film-description">{films[0].description}</p>
       </div>
       <div class="media-controls" hidden>
         <span id="film-count" aria-label="Film 1 of 8">01 <span aria-hidden="true">/</span> 08</span>
@@ -44,7 +44,7 @@ const media = '/projects/glaze/';
 
   <div class="media-rail" id="film-choices" role="group" aria-label="Choose a Glaze film">
     {films.map((film, index) => (
-      <a class="media-choice" href={`${media}${film.file}.mp4`} aria-current={index === 0 ? 'true' : undefined} aria-controls="glaze-film" data-poster={`${media}${film.thumb}.webp`} data-captions={`${media}${film.file}.vtt`} data-title={film.title} data-description={film.description} data-category={film.category}>
+      <a class="media-choice" href={`${media}${film.file}.mp4`} aria-current={index === 0 ? 'true' : undefined} aria-controls="glaze-film" data-poster={`${media}${film.thumb}.webp`} data-captions={`${media}${film.file}.vtt`} data-title={film.title} data-category={film.category}>
         <div class="media-thumb">
           <img src={`${media}${film.thumb}.webp`} alt="" width="1280" height="720" loading="lazy" />
           <span class="media-play" aria-hidden="true">▶</span>
@@ -55,7 +55,6 @@ const media = '/projects/glaze/';
       </a>
     ))}
   </div>
-  <p class="media-footnote">Swipe or scroll to explore · Product films use sample courses and illustrative interface animation.</p>
 </section>
 
 <script>
@@ -63,29 +62,55 @@ const media = '/projects/glaze/';
   const rail = document.querySelector<HTMLElement>('#film-choices')!;
   const choices = Array.from(rail.querySelectorAll<HTMLAnchorElement>('.media-choice'));
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const start = document.querySelector<HTMLButtonElement>('.media-start')!;
   let current = 0;
+
+  function setFilmSource() {
+    const width = player.getBoundingClientRect().width * window.devicePixelRatio;
+    const suffix = width <= 1280 ? '-720p.mp4' : width <= 1920 ? '.mp4' : '-2160p.mp4';
+    const src = choices[current].href.replace(/\.mp4$/, suffix);
+    const source = player.querySelector('source')!;
+    if (source.src !== src) {
+      source.src = src;
+      player.load();
+    }
+  }
+
+  function playFilm() {
+    // Keep a paused film's position and quality; select resolution when a film starts.
+    if (player.currentTime === 0 || player.ended) setFilmSource();
+    player.controls = true;
+    void player.play().catch(() => { start.hidden = !player.paused; });
+  }
+
+  player.controls = false;
+  start.hidden = false;
+  start.addEventListener('click', playFilm);
+  player.addEventListener('play', () => { start.hidden = true; });
+  player.addEventListener('pause', () => { start.hidden = !player.paused; });
+  player.addEventListener('ended', () => { start.hidden = !player.paused; });
 
   function selectFilm(index: number, play = false) {
     const choice = choices[index];
     if (index !== current) {
       player.pause();
       player.poster = choice.dataset.poster!;
-      player.querySelector('source')!.src = choice.href;
-      player.querySelector('track')!.src = choice.dataset.captions!;
-      player.load();
       choices[current].removeAttribute('aria-current');
-      choice.setAttribute('aria-current', 'true');
       current = index;
+      player.querySelector('track')!.src = choice.dataset.captions!;
+      setFilmSource();
+      choice.setAttribute('aria-current', 'true');
+      start.hidden = false;
+      start.setAttribute('aria-label', `Play ${choice.dataset.title}`);
       document.querySelector('#film-category')!.textContent = choice.dataset.category!;
       document.querySelector('#film-title')!.textContent = choice.dataset.title!;
-      document.querySelector('#film-description')!.textContent = choice.dataset.description!;
       const count = document.querySelector('#film-count')!;
       count.textContent = `${String(index + 1).padStart(2, '0')} / 08`;
       count.setAttribute('aria-label', `Film ${index + 1} of 8`);
     }
     // Scroll only the rail, so choosing a film never moves the page away from the player.
     rail.scrollTo({ left: choice.offsetLeft, behavior: reducedMotion.matches ? 'instant' : 'smooth' });
-    if (play) void player.play().catch(() => { /* Native controls remain available if playback is blocked. */ });
+    if (play) playFilm();
   }
 
   choices.forEach((choice, index) => choice.addEventListener('click', (event) => {
@@ -111,13 +136,19 @@ const media = '/projects/glaze/';
   .glaze-media { scroll-margin-top: 2rem; }
   .media-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; margin-bottom: 2rem; }
   .media-heading .product-section-heading { margin-bottom: 0; }
+  .media-heading h2 { margin-bottom: 0; }
   .media-jump { flex-shrink: 0; display: flex; gap: 1rem; align-items: center; color: #a5e9fa; font-size: .8rem; padding-bottom: .4rem; }
   .media-stage { border: 1px solid #335364; border-radius: 1.25rem; overflow: hidden; background: #081522; box-shadow: 0 24px 80px rgb(0 0 0 / .25); }
+  .media-screen { position: relative; }
+  .media-start { position: absolute; inset: 0 0 3rem; display: grid; place-items: center; width: 100%; border: 0; background: transparent; color: white; cursor: pointer; }
+  .media-start[hidden] { display: none; }
+  video:not([controls]) + .media-start { bottom: 0; }
+  .media-start span { display: grid; place-items: center; width: 4rem; height: 4rem; border: 1px solid rgb(185 235 255 / .65); border-radius: 50%; background: rgb(3 15 25 / .8); font-size: 1.1rem; padding-left: .15rem; }
+  .media-start:focus-visible { outline: 2px solid #6fdcff; outline-offset: -5px; }
   video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #020910; }
   .media-details { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 1.6rem 2rem; background: linear-gradient(115deg, rgb(53 126 148 / .12), transparent); }
   .media-category, .media-choice-category { color: #89c9dc; font-size: .65rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
   .media-copy h3 { margin: .45rem 0; font-size: clamp(1.25rem, 2.5vw, 1.7rem); letter-spacing: -.035em; font-weight: 500; color: #eefaff; }
-  #film-description { color: #a9bfd0; font-size: .85rem; line-height: 1.7; }
   .media-controls { display: flex; align-items: center; gap: .65rem; flex-shrink: 0; }
   .media-controls[hidden] { display: none; }
   #film-count { color: #9bb5c7; font-size: .75rem; font-variant-numeric: tabular-nums; white-space: nowrap; margin-right: .6rem; }
@@ -135,11 +166,9 @@ const media = '/projects/glaze/';
   .media-choice-category, .media-choice-title { display: block; padding-inline: .25rem; }
   .media-choice-category { margin-top: .8rem; font-size: .6rem; }
   .media-choice-title { margin-top: .4rem; color: #e0edf6; font-size: .9rem; line-height: 1.5; }
-  .media-footnote { margin-top: .85rem; color: #8fa8c0; font-size: .7rem; line-height: 1.7; }
   @media (max-width: 700px) {
     .media-heading { align-items: start; }
     .media-jump { font-size: .7rem; gap: .5rem; margin-top: .1rem; }
-    .media-heading .product-eyebrow { max-width: 15rem; line-height: 1.7; }
     .media-details { padding: 1.25rem; flex-direction: column; align-items: start; gap: 1.25rem; }
     .media-controls { width: 100%; justify-content: end; }
     #film-count { margin-right: auto; }
