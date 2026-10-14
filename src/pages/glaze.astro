@@ -1,5 +1,6 @@
 ---
 import MarketingLayout from '../layouts/MarketingLayout.astro';
+import GlazeMedia from '../components/marketing/GlazeMedia.astro';
 import '../styles/products.css';
 
 const source = 'https://github.com/frostdev-ops/glaze';
@@ -7,14 +8,14 @@ const safariDownload = `${source}/releases/download/v2.1.4/glaze-2.1.4-safari-ma
 const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 ---
 
-<MarketingLayout title="Glaze — Your colors on Blackboard Ultra" description="Glaze restyles Blackboard Ultra: one-click looks, your palette and fonts, animated backgrounds, due dates, new-grade badges, a what-if grade calculator, Ctrl+K search and Download all. For Safari and Chrome." path="/glaze" image="/projects/glaze-preview.webp">
+<MarketingLayout title="Glaze — Your colors on Blackboard Ultra" description="Your colors. Your Blackboard. Explore Glaze in eight short films: beautiful themes, animated backgrounds and helpful extras. Free and open source for Chrome and Safari." path="/glaze" image="/projects/glaze/cover.webp">
   <div class="product-page glaze-page">
     <section class="product-hero" aria-labelledby="glaze-title">
       <div class="product-intro">
         <p class="product-eyebrow">Glaze · Blackboard Ultra</p>
         <img class="product-logo" src="/projects/glaze-logo.svg" width="420" height="120" alt="Glaze" />
-        <h1 class="product-title" id="glaze-title">Your courses.<br />Your colors.</h1>
-        <p class="product-lead">Blackboard Ultra, restyled your way, with the things it should have shown you all along.</p>
+        <h1 class="product-title" id="glaze-title">Blackboard.<br /><span>Made yours.</span></h1>
+        <p class="product-lead">Your colors, your fonts, your little corner of campus. Make Blackboard Ultra feel better, and work better.</p>
         <div class="product-actions" data-glaze-install="safari">
           <a class="product-button" href={safariDownload}>Download for Safari on Mac <span aria-hidden="true">↓</span></a>
           <a class="product-button secondary" href="/guides/glaze-safari">Safari guide <span aria-hidden="true">→</span></a>
@@ -23,14 +24,16 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
           <a class="product-button" href={chromeStore}>Get from Chrome Web Store <span aria-hidden="true">↗</span></a>
           <a class="product-button secondary" href="/guides/glaze-chrome">Chrome guide <span aria-hidden="true">→</span></a>
         </div>
-        <p class="product-meta">Version 2.1 · Free and open source · No analytics · No account</p>
+        <p class="product-meta">Version 2.1.4 · Free and open source<br />No analytics. No account. Just yours.</p>
+        <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>
       </div>
       <figure class="glaze-preview">
-        <div class="preview-top"><span class="preview-dots" aria-hidden="true">● ● ●</span><span>Glaze · Course preview</span></div>
-        <a href="/projects/glaze-preview.webp" aria-label="Open the full-size Glaze sample course preview"><img src="/projects/glaze-preview.webp" width="1000" height="1020" alt="Glaze’s Frost palette on its sample Blackboard Ultra course, with content and grade cards" /></a>
-        <figcaption>Glaze’s own preview, sample course data.</figcaption>
+        <a href="#films" aria-label="Explore all eight Glaze films"><img src="/projects/glaze/cover.webp" width="1280" height="800" fetchpriority="high" alt="Glaze: Blackboard. Made yours. Cyan glaze flows around an illustrated course window with due-date and submitted badges." /></a>
+        <figcaption><span>Better looks. Less friction.</span><a href="#films">Explore the films <span aria-hidden="true">→</span></a></figcaption>
       </figure>
     </section>
+
+    <GlazeMedia />
 
     <section class="product-section" aria-labelledby="features-heading">
       <div class="product-section-heading">
@@ -114,11 +117,14 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
 
 <style>
   .glaze-page { --product-accent: #6fdcff; }
+  .product-hero { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 2.5rem; }
+  .product-title span { color: #83e6f4; }
+  .hero-film-link { display: inline-flex; align-items: center; gap: .75rem; margin-top: 1.75rem; color: #a4e5f5; font-size: .8rem; }
+  .hero-film-link > span:first-child { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid #36596c; border-radius: 50%; font-size: .6rem; }
   .glaze-preview { min-width: 0; border: 1px solid #2b4b61; border-radius: 1rem; overflow: hidden; background: #060d18; animation: preview-arrive .8s ease-out both; }
-  .preview-top { display: flex; align-items: center; gap: 1rem; padding: .85rem 1rem; color: #adc8db; font-size: .7rem; border-bottom: 1px solid #23394e; }
-  .preview-dots { color: #40647c; letter-spacing: .2em; }
   .glaze-preview img, .editor-preview img { display: block; width: 100%; height: auto; }
-  .glaze-preview figcaption { padding: .85rem 1rem; color: #8fa8c0; font-size: .72rem; line-height: 1.6; }
+  .glaze-preview figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; padding: 1rem 1.25rem; color: #a0b9ca; font-size: .72rem; line-height: 1.6; }
+  .glaze-preview figcaption a { color: #9ce9fa; }
   .glaze-feature { display: block; margin-bottom: 1.25rem; color: #6fdcff; font-size: .75rem; }
   .editor-preview { padding: .75rem; }
   .glaze-list { display: grid; gap: .6rem; padding: 0; list-style: none; color: #b3c8dc; font-size: .9rem; line-height: 1.6; }
@@ -128,6 +134,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
   .browser-guide:hover { border-color: #6fdcff; transform: translateY(-3px); }
   .browser-guide .product-eyebrow { display: block; }
   @keyframes preview-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  @media (max-width: 700px) { .browser-guides { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .product-hero { gap: 1.75rem; } }
+  @media (max-width: 700px) { .product-hero, .browser-guides { grid-template-columns: 1fr; } }
   @media (prefers-reduced-motion: reduce) { .glaze-preview { animation: none; } .browser-guide { transition: none; } .browser-guide:hover { transform: none; } }
 </style>

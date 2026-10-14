@@ -9,6 +9,14 @@ visual guide beside it. Safari on Mac links to the signed 2.1.4 installer disk i
 Chrome links to the extension store. Other browsers and visitors without JavaScript
 retain both platform-labelled choices. Downloads begin only when a link is chosen.
 
+The Glaze page features its latest cover and eight motion ads in a media carousel.
+One native player shows the chosen film, with sound controlled by the visitor,
+English captions and no automatic playback or advancement. The thumbnail rail uses
+native horizontal scrolling and snap points. Previous/next controls and the rail's
+arrow, Home and End keys select a film; clicking a thumbnail also starts playback.
+Reduced motion disables animated rail movement. Without JavaScript, all eight
+thumbnail links open their films directly. No Seedance concepts are included.
+
 The desktop project carousel animates and supports dragging, arrow keys and
 pause/resume. Phones use native horizontal scrolling with snap points, so vertical
 swipes scroll the page normally. All six project links remain available without
