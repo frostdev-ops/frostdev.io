@@ -1,16 +1,31 @@
 ---
 import MarketingLayout from '../layouts/MarketingLayout.astro';
 import GlazeMedia from '../components/marketing/GlazeMedia.astro';
+import { films } from '../data/glazeFilms';
 import '../styles/products.css';
 
+// Set false to remove the entire Halloween skin, decorations, and seasonal copy.
+const halloween = true;
 const source = 'https://github.com/frostdev-ops/glaze';
 const safariDownload = `${source}/releases/download/v2.1.4/glaze-2.1.4-safari-macos.dmg`;
 const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 ---
 
-<MarketingLayout title="Glaze — Your colors on Blackboard Ultra" description="Your colors. Your Blackboard. Explore Glaze in eight short films: beautiful themes, animated backgrounds and helpful extras. Free and open source for Chrome and Safari." path="/glaze" image="/projects/glaze/cover.webp">
-  <div class="product-page glaze-page">
+<MarketingLayout title="Glaze — Your colors on Blackboard Ultra" description={`Your colors. Your Blackboard. Explore Glaze in ${films.length} short films: beautiful themes, animated backgrounds and helpful extras. Free and open source for Chrome and Safari.`} path="/glaze" image="/projects/glaze/cover.webp">
+  <div class:list={["product-page glaze-page", { "is-halloween": halloween }]}>
     <section class="product-hero" aria-labelledby="glaze-title">
+      {halloween && <div class="halloween-hero" aria-hidden="true">
+        <span class="halloween-moon"></span>
+        <img class="halloween-bat bat-one" src="/projects/glaze/halloween/bat.svg" width="240" height="140" alt="" />
+        <img class="halloween-bat bat-two" src="/projects/glaze/halloween/bat.svg" width="240" height="140" alt="" />
+        <img class="halloween-bat bat-three" src="/projects/glaze/halloween/bat.svg" width="240" height="140" alt="" />
+        <span class="halloween-fog"></span>
+        <div class="halloween-pumpkins">
+          <img src="/projects/glaze/halloween/pumpkin.svg" width="200" height="200" alt="" />
+          <img src="/projects/glaze/halloween/jack-o-lantern.svg" width="200" height="200" alt="" />
+          <img src="/projects/glaze/halloween/pumpkin.svg" width="200" height="200" alt="" />
+        </div>
+      </div>}
       <div class="product-intro">
         <p class="product-eyebrow">Glaze · Blackboard Ultra</p>
         <img class="product-logo" src="/projects/glaze-logo.svg" width="420" height="120" alt="Glaze" />
@@ -24,16 +39,20 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
           <a class="product-button" href={chromeStore}>Get from Chrome Web Store <span aria-hidden="true">↗</span></a>
           <a class="product-button secondary" href="/guides/glaze-chrome">Chrome guide <span aria-hidden="true">→</span></a>
         </div>
+        {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch are coming in the next version.</p>}
         <p class="product-meta">Version 2.1.4 · Free and open source<br />No analytics. No account.</p>
         <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>
       </div>
       <figure class="glaze-preview">
-        <a href="#films" aria-label="Explore all eight Glaze films"><img src="/projects/glaze/cover.webp" width="1280" height="800" fetchpriority="high" alt="Glaze: Blackboard. Made yours. Cyan glaze flows around an illustrated course window with due-date and submitted badges." /></a>
+        <a href="#films" aria-label={`Explore all ${films.length} Glaze films`}><img src="/projects/glaze/cover.webp" width="1280" height="800" fetchpriority="high" alt="Glaze: Blackboard. Made yours. Cyan glaze flows around an illustrated course window with due-date and submitted badges." /></a>
         <figcaption><span>Better looks. Less friction.</span><a href="#films">Explore the films <span aria-hidden="true">→</span></a></figcaption>
       </figure>
     </section>
 
-    <GlazeMedia />
+    <div class="glaze-films">
+      {halloween && <div class="halloween-ghost" aria-hidden="true"><img src="/projects/glaze/halloween/ghost.svg" width="200" height="220" alt="" /></div>}
+      <GlazeMedia />
+    </div>
 
     <section class="product-section" aria-labelledby="features-heading">
       <div class="product-section-heading">
@@ -92,6 +111,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
     </section>
 
     <section class="product-cta">
+      {halloween && <div class="halloween-skeleton" aria-hidden="true"><img src="/projects/glaze/halloween/skeleton.svg" width="200" height="260" alt="" /></div>}
       <p class="product-eyebrow">Glaze by Frostdev</p>
       <h2>Your theme. Your data.</h2>
       <p>No server, no analytics. Settings stay in your browser; Glaze never submits coursework.</p>
@@ -118,21 +138,90 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
 <style>
   .glaze-page { --product-accent: #6fdcff; }
   .product-hero { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 2.5rem; }
-  .product-title span { color: #83e6f4; }
-  .hero-film-link { display: inline-flex; align-items: center; gap: .75rem; margin-top: 1.75rem; color: #a4e5f5; font-size: .8rem; }
-  .hero-film-link > span:first-child { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid #36596c; border-radius: 50%; font-size: .6rem; }
-  .glaze-preview { min-width: 0; border: 1px solid #2b4b61; border-radius: 1rem; overflow: hidden; background: #060d18; animation: preview-arrive .8s ease-out both; }
+  .product-title span { color: var(--glaze-accent, #83e6f4); }
+  .hero-film-link { display: inline-flex; align-items: center; gap: .75rem; margin-top: 1.75rem; color: var(--glaze-accent-secondary, #a4e5f5); font-size: .8rem; }
+  .hero-film-link > span:first-child { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--glaze-line, #36596c); border-radius: 50%; font-size: .6rem; }
+  .glaze-preview { min-width: 0; border: 1px solid var(--glaze-line, #2b4b61); border-radius: 1rem; overflow: hidden; background: var(--glaze-ground, #060d18); animation: preview-arrive .8s ease-out both; }
   .glaze-preview img, .editor-preview img { display: block; width: 100%; height: auto; }
-  .glaze-preview figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; padding: 1rem 1.25rem; color: #a0b9ca; font-size: .72rem; line-height: 1.6; }
-  .glaze-preview figcaption a { color: #9ce9fa; }
-  .glaze-feature { display: block; margin-bottom: 1.25rem; color: #6fdcff; font-size: .75rem; }
+  .glaze-preview figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; padding: 1rem 1.25rem; color: var(--glaze-muted, #a0b9ca); font-size: .72rem; line-height: 1.6; }
+  .glaze-preview figcaption a { color: var(--glaze-accent-secondary, #9ce9fa); }
+  .glaze-feature { display: block; margin-bottom: 1.25rem; color: var(--glaze-accent, #6fdcff); font-size: .75rem; }
   .editor-preview { padding: .75rem; }
-  .glaze-list { display: grid; gap: .6rem; padding: 0; list-style: none; color: #b3c8dc; font-size: .9rem; line-height: 1.6; }
-  .glaze-list strong { color: #e8f2fa; font-weight: 600; }
+  .glaze-list { display: grid; gap: .6rem; padding: 0; list-style: none; color: var(--glaze-muted, #b3c8dc); font-size: .9rem; line-height: 1.6; }
+  .glaze-list strong { color: var(--glaze-ink, #e8f2fa); font-weight: 600; }
   .browser-guides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
   .browser-guide { transition: border-color .2s, transform .2s; }
-  .browser-guide:hover { border-color: #6fdcff; transform: translateY(-3px); }
+  .browser-guide:hover { border-color: var(--glaze-accent, #6fdcff); transform: translateY(-3px); }
   .browser-guide .product-eyebrow { display: block; }
+
+  .glaze-page.is-halloween {
+    --glaze-accent: #fb923c;
+    --glaze-accent-secondary: #6ee7b7;
+    --glaze-surface: #1e1426;
+    --glaze-ground: #120b18;
+    --glaze-ink: #fdf2e9;
+    --glaze-muted: #c9b2a6;
+    --glaze-line: #47334f;
+    --glaze-soft: #171a2e;
+    --glaze-hover: #2f2236;
+    --product-accent: var(--glaze-accent);
+    color: var(--glaze-ink);
+  }
+  :global(body:has(.glaze-page.is-halloween)) { background: #120b18; }
+  :global(body:has(.glaze-page.is-halloween) .marketing) { background: radial-gradient(ellipse at 78% 3%, #302032 0, transparent 35rem), #120b18; }
+  :global(body:has(.glaze-page.is-halloween) .splash-ground),
+  :global(body:has(.glaze-page.is-halloween) #splash-canvas) { display: none; }
+  :global(body:has(.glaze-page.is-halloween) :is(.marketing-nav, .marketing-footer)) { color: #c9b2a6; }
+  :global(body:has(.glaze-page.is-halloween) :is(.marketing-nav, .marketing-footer) a:hover) { color: #6ee7b7; }
+  :global(body:has(.glaze-page.is-halloween) :is(.marketing-nav, .marketing-footer) a:focus-visible) { outline-color: #fb923c; }
+  :global(body:has(.glaze-page.is-halloween) .skip-link) { color: #fdf2e9; background: #120b18; }
+  .is-halloween :is(.product-title, .product-section-heading h2, .product-card h3, .product-panel h3, .product-cta h2) { color: var(--glaze-ink); }
+  .is-halloween :is(.product-lead, .product-meta, .product-caption, .product-section-heading > p:not(.product-eyebrow), .product-panel p, .product-cta > p:not(.product-eyebrow)) { color: var(--glaze-muted); }
+  .is-halloween :is(.product-card, .product-panel) { background: var(--glaze-surface); border-color: var(--glaze-line); }
+  .is-halloween .product-section { border-color: var(--glaze-line); }
+  .is-halloween .product-button { color: var(--glaze-ground); }
+  .is-halloween .product-button:hover { background: #fdba74; border-color: #fdba74; }
+  .is-halloween .product-button.secondary { color: var(--glaze-ink); background: var(--glaze-surface); border-color: var(--glaze-line); }
+  .is-halloween .product-button.secondary:hover { background: var(--glaze-hover); border-color: var(--glaze-accent); }
+  .is-halloween .browser-guide:hover { border-color: var(--glaze-accent); }
+  .is-halloween .product-text-link:hover { color: var(--glaze-ink); }
+  .is-halloween .product-cta { position: relative; isolation: isolate; border-color: var(--glaze-line); background: radial-gradient(ellipse at 50% 0%, #fb923c12, transparent 75%), var(--glaze-surface); }
+  .is-halloween .product-hero { position: relative; isolation: isolate; padding-bottom: 7rem; }
+  .halloween-note { max-width: 27rem; margin-top: 1.25rem; color: var(--glaze-accent-secondary); font-size: .8rem; line-height: 1.65; }
+  .halloween-hero, .halloween-ghost, .halloween-skeleton { position: absolute; pointer-events: none; user-select: none; z-index: -1; }
+  .halloween-hero { inset: 0; overflow: hidden; }
+  .halloween-moon { position: absolute; width: 11rem; aspect-ratio: 1; top: -2rem; right: 8%; border-radius: 50%; background: radial-gradient(circle at 38% 35%, #ffe6ae, #e4b99a 68%, #b48c87); opacity: .3; box-shadow: 0 0 5rem 2rem #fbbf2420; }
+  .halloween-bat { position: absolute; width: 5rem; height: auto; opacity: .75; animation: halloween-drift 9s ease-in-out infinite alternate; }
+  .bat-one { top: 1.5rem; right: 28%; transform: rotate(-12deg); }
+  .bat-two { top: 6rem; right: 2%; width: 3.5rem; animation-delay: -4s; }
+  .bat-three { top: .25rem; right: 4%; width: 2.75rem; animation-delay: -7s; }
+  .halloween-fog { position: absolute; width: 85%; height: 6rem; right: 0; bottom: 0; opacity: .5; background: radial-gradient(ellipse at 65% 80%, #6ee7b71a, transparent 65%), radial-gradient(ellipse at 30% 95%, #c9b2a61c, transparent 70%); animation: halloween-fog 16s ease-in-out infinite alternate; }
+  .halloween-pumpkins { position: absolute; bottom: .65rem; right: 1.5rem; display: flex; align-items: end; gap: .2rem; }
+  .halloween-pumpkins img { display: block; width: 4.5rem; height: auto; }
+  .halloween-pumpkins img:nth-child(2) { width: 6rem; margin-inline: -.65rem; }
+  .halloween-pumpkins img:last-child { width: 3.5rem; }
+  .glaze-films { position: relative; isolation: isolate; }
+  .halloween-ghost { width: 5.5rem; top: -2.65rem; right: 3rem; transform: rotate(12deg); animation: halloween-peek 7s ease-in-out infinite alternate; }
+  .halloween-ghost img, .halloween-skeleton img { display: block; width: 100%; height: auto; }
+  .halloween-skeleton { bottom: 1.25rem; right: 1rem; width: 5.5rem; opacity: .65; transform: rotate(8deg); }
+  @keyframes halloween-drift { to { translate: .75rem -.6rem; rotate: 5deg; } }
+  @keyframes halloween-fog { to { translate: -2rem 0; opacity: .75; } }
+  @keyframes halloween-peek { to { translate: 0 -.5rem; rotate: -6deg; } }
+  @media (max-width: 700px) {
+    .is-halloween .product-hero { padding-bottom: 6rem; }
+    .halloween-moon { width: 8rem; right: -1rem; top: 0; opacity: .17; }
+    .bat-one { right: 8%; top: .5rem; width: 3.5rem; }
+    .bat-two { right: 0; top: 7rem; width: 2.5rem; }
+    .bat-three, .halloween-skeleton { display: none; }
+    .halloween-pumpkins { right: .5rem; bottom: .5rem; }
+    .halloween-pumpkins img { width: 3.5rem; }
+    .halloween-pumpkins img:nth-child(2) { width: 4.75rem; }
+    .halloween-pumpkins img:last-child { width: 2.75rem; }
+    .halloween-ghost { width: 4.5rem; right: 1rem; top: -2.2rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .halloween-bat, .halloween-fog, .halloween-ghost { animation: none; }
+  }
   @keyframes preview-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   @media (max-width: 900px) { .product-hero { gap: 1.75rem; } }
   @media (max-width: 700px) { .product-hero, .browser-guides { grid-template-columns: 1fr; } }
