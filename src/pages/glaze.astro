@@ -11,7 +11,7 @@ const safariDownload = `${source}/releases/download/v2.2.0/glaze-2.2.0-safari-ma
 const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 ---
 
-<MarketingLayout title="Glaze — Your colors on Blackboard Ultra and Canvas" description={`Your colors on Blackboard Ultra and Canvas. Explore Glaze in ${films.length} short films: beautiful themes, animated backgrounds and helpful extras. Free and open source for Chrome and Safari.`} path="/glaze" image="/projects/glaze/cover.webp">
+<MarketingLayout title="Glaze — Your colors on Blackboard Ultra and Canvas" description={`Your colors on Blackboard Ultra and Canvas. Explore Glaze in ${films.length} short films: beautiful themes, animated backgrounds and helpful extras. Open source (MIT) for Chrome and Safari.`} path="/glaze" image="/projects/glaze/cover.webp">
   <div class:list={["product-page glaze-page", { "is-halloween": halloween }]}>
     <section class="product-hero" aria-labelledby="glaze-title">
       {halloween && <div class="halloween-hero" aria-hidden="true">
@@ -40,7 +40,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
           <a class="product-button secondary" href="/guides/glaze-chrome">Chrome guide <span aria-hidden="true">→</span></a>
         </div>
         {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.<br />Glaze 2.2.0 also supports Canvas.</p>}
-        <p class="product-meta">Version 2.2.0 · Free and open source<br />No analytics. No account.</p>
+        <p class="product-meta">Version 2.2.0 · Open source (MIT)<br />No analytics. No account.</p>
         <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>
       </div>
       <figure class="glaze-preview">
