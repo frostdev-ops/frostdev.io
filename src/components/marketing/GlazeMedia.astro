@@ -1,5 +1,10 @@
 ---
 import { films } from '../../data/glazeFilms';
+interface Props { halloween?: boolean; }
+const { halloween = false } = Astro.props;
+const orderedFilms = halloween
+  ? [...films].sort((a, b) => (a.halloweenPriority ?? Infinity) - (b.halloweenPriority ?? Infinity))
+  : films;
 const media = '/projects/glaze/';
 ---
 
@@ -8,25 +13,25 @@ const media = '/projects/glaze/';
     <div class="product-section-heading">
       <h2 id="films-heading">Glaze in action.</h2>
     </div>
-    <a class="media-jump" href="#film-choices">Explore all {films.length} <span aria-hidden="true">↓</span></a>
+    <a class="media-jump" href="#film-choices">Explore all {orderedFilms.length} <span aria-hidden="true">↓</span></a>
   </div>
 
   <div class="media-stage">
     <div class="media-screen">
-      <video id="glaze-film" controls playsinline preload="none" poster={`${media}${films[0].thumb}.webp`} width="1920" height="1080" aria-labelledby="film-title">
-        <source src={`${media}${films[0].file}.mp4`} type="video/mp4" />
-        <track kind="captions" src={`${media}${films[0].file}.vtt`} srclang="en" label="English" />
-        <p><a href={`${media}${films[0].file}.mp4`}>Watch the Glaze film</a></p>
+      <video id="glaze-film" controls playsinline preload="none" poster={`${media}${orderedFilms[0].thumb}.webp`} width="1920" height="1080" aria-labelledby="film-title">
+        <source src={`${media}${orderedFilms[0].file}.mp4`} type="video/mp4" />
+        <track kind="captions" src={`${media}${orderedFilms[0].file}.vtt`} srclang="en" label="English" />
+        <p><a href={`${media}${orderedFilms[0].file}.mp4`}>Watch the Glaze film</a></p>
       </video>
-      <button class="media-start" type="button" aria-label={`Play ${films[0].title}`} aria-controls="glaze-film" hidden><span aria-hidden="true">▶</span></button>
+      <button class="media-start" type="button" aria-label={`Play ${orderedFilms[0].title}`} aria-controls="glaze-film" hidden><span aria-hidden="true">▶</span></button>
     </div>
     <div class="media-details">
       <div class="media-copy" aria-live="polite" aria-atomic="true">
-        <p class="media-category" id="film-category">{films[0].category}</p>
-        <h3 id="film-title">{films[0].title}</h3>
+        <p class="media-category" id="film-category">{orderedFilms[0].category}</p>
+        <h3 id="film-title">{orderedFilms[0].title}</h3>
       </div>
       <div class="media-controls" hidden>
-        <span id="film-count" aria-label={`Film 1 of ${films.length}`}>01 <span aria-hidden="true">/</span> {String(films.length).padStart(2, '0')}</span>
+        <span id="film-count" aria-label={`Film 1 of ${orderedFilms.length}`}>01 <span aria-hidden="true">/</span> {String(orderedFilms.length).padStart(2, '0')}</span>
         <button type="button" id="film-prev" aria-label="Previous film" aria-controls="glaze-film"><span aria-hidden="true">←</span></button>
         <button type="button" id="film-next" aria-label="Next film" aria-controls="glaze-film"><span aria-hidden="true">→</span></button>
       </div>
@@ -34,8 +39,8 @@ const media = '/projects/glaze/';
   </div>
 
   <div class="media-rail" id="film-choices" role="group" aria-label="Choose a Glaze film">
-    {films.map((film, index) => (
-      <a class="media-choice" href={`${media}${film.file}.mp4`} aria-current={index === 0 ? 'true' : undefined} aria-controls="glaze-film" data-poster={`${media}${film.thumb}.webp`} data-captions={`${media}${film.file}.vtt`} data-title={film.title} data-category={film.category}>
+    {orderedFilms.map((film, index) => (
+      <a class="media-choice" href={`${media}${film.file}.mp4`} aria-current={index === 0 ? 'true' : undefined} aria-controls="glaze-film" data-poster={`${media}${film.thumb}.webp`} data-captions={`${media}${film.file}.vtt`} data-title={film.title} data-category={film.category} data-has4k={film.has4k === false ? 'false' : undefined}>
         <div class="media-thumb">
           <img src={`${media}${film.thumb}.webp`} alt="" width="1280" height="720" loading="lazy" />
           <span class="media-play" aria-hidden="true">▶</span>
@@ -58,7 +63,7 @@ const media = '/projects/glaze/';
 
   function setFilmSource() {
     const width = player.getBoundingClientRect().width * window.devicePixelRatio;
-    const suffix = width <= 1280 ? '-720p.mp4' : width <= 1920 ? '.mp4' : '-2160p.mp4';
+    const suffix = width <= 1280 ? '-720p.mp4' : width <= 1920 || choices[current].dataset.has4k === 'false' ? '.mp4' : '-2160p.mp4';
     const src = choices[current].href.replace(/\.mp4$/, suffix);
     const source = player.querySelector('source')!;
     if (source.src !== src) {
