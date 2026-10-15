@@ -17,7 +17,7 @@ export const films: Film[] = [
   { file: 'read-it-your-way', thumb: '06-read-it-your-way', title: 'Read it your way.', category: 'Fonts & readability', duration: '0:22' },
   { file: 'hover-to-know', thumb: '07-hover-to-know', title: 'A little hint. A big help.', category: 'Previews & hints', duration: '0:18' },
   { file: 'course-colors', thumb: '08-course-colors', title: 'Every course. Its own color.', category: 'Course colors', duration: '0:21' },
-  { file: 'glaze-now-on-canvas', thumb: '09-glaze-now-on-canvas', title: 'Glaze is coming to Canvas.', category: 'Canvas · coming soon', duration: '0:30', has4k: false },
-  { file: 'the-haunting-of-canvas', thumb: '10-the-haunting-of-canvas', title: 'The Haunting of Canvas', category: 'Halloween teaser', duration: '0:20', has4k: false, halloweenPriority: 2 },
+  { file: 'glaze-now-on-canvas', thumb: '09-glaze-now-on-canvas', title: 'Glaze on Canvas.', category: 'Canvas', duration: '0:30', has4k: false },
+  { file: 'the-haunting-of-canvas', thumb: '10-the-haunting-of-canvas', title: 'The Haunting of Canvas', category: 'Halloween Looks', duration: '0:20', has4k: false, halloweenPriority: 2 },
   { file: 'night-of-the-living-deadlines', thumb: '11-night-of-the-living-deadlines', title: 'Night of the Living Deadlines', category: 'A Glaze Halloween', duration: '0:30', has4k: false, halloweenPriority: 1 },
 ];

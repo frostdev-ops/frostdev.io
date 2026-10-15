@@ -7,11 +7,11 @@ import '../styles/products.css';
 // Set false to remove the entire Halloween skin, decorations, and seasonal copy.
 const halloween = true;
 const source = 'https://github.com/frostdev-ops/glaze';
-const safariDownload = `${source}/releases/download/v2.1.4/glaze-2.1.4-safari-macos.dmg`;
+const safariDownload = `${source}/releases/download/v2.2.0/glaze-2.2.0-safari-macos.dmg`;
 const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 ---
 
-<MarketingLayout title="Glaze — Your colors on Blackboard Ultra" description={`Your colors. Your Blackboard. Explore Glaze in ${films.length} short films: beautiful themes, animated backgrounds and helpful extras. Free and open source for Chrome and Safari.`} path="/glaze" image="/projects/glaze/cover.webp">
+<MarketingLayout title="Glaze — Your colors on Blackboard Ultra and Canvas" description={`Your colors on Blackboard Ultra and Canvas. Explore Glaze in ${films.length} short films: beautiful themes, animated backgrounds and helpful extras. Free and open source for Chrome and Safari.`} path="/glaze" image="/projects/glaze/cover.webp">
   <div class:list={["product-page glaze-page", { "is-halloween": halloween }]}>
     <section class="product-hero" aria-labelledby="glaze-title">
       {halloween && <div class="halloween-hero" aria-hidden="true">
@@ -27,10 +27,10 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
         </div>
       </div>}
       <div class="product-intro">
-        <p class="product-eyebrow">Glaze · Blackboard Ultra</p>
+        <p class="product-eyebrow">Glaze · Blackboard Ultra & Canvas</p>
         <img class="product-logo" src="/projects/glaze-logo.svg" width="420" height="120" alt="Glaze" />
-        <h1 class="product-title" id="glaze-title">Blackboard.<br /><span>Made yours.</span></h1>
-        <p class="product-lead">Themes, animated backgrounds, grades and due dates for Blackboard Ultra.</p>
+        <h1 class="product-title" id="glaze-title">Blackboard.<br />Canvas.<br /><span>Made yours.</span></h1>
+        <p class="product-lead">Themes, animated backgrounds and optional helpers for Blackboard Ultra and Canvas.</p>
         <div class="product-actions" data-glaze-install="safari">
           <a class="product-button" href={safariDownload}>Download for Safari on Mac <span aria-hidden="true">↓</span></a>
           <a class="product-button secondary" href="/guides/glaze-safari">Safari guide <span aria-hidden="true">→</span></a>
@@ -39,8 +39,8 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
           <a class="product-button" href={chromeStore}>Get from Chrome Web Store <span aria-hidden="true">↗</span></a>
           <a class="product-button secondary" href="/guides/glaze-chrome">Chrome guide <span aria-hidden="true">→</span></a>
         </div>
-        {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch are coming in the next version.<br />Canvas support is coming in the next version.</p>}
-        <p class="product-meta">Version 2.1.4 · Free and open source<br />No analytics. No account.</p>
+        {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.<br />Glaze 2.2.0 also supports Canvas.</p>}
+        <p class="product-meta">Version 2.2.0 · Free and open source<br />No analytics. No account.</p>
         <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>
       </div>
       <figure class="glaze-preview">
@@ -62,14 +62,14 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
       </div>
       <div class="product-grid">
         <article class="product-card"><span class="glaze-feature" aria-hidden="true">01</span><h3>Make it yours</h3><ul class="glaze-list">
-          <li><strong>Looks:</strong> eight ready-made themes, one click each.</li>
+          <li><strong>Looks:</strong> ten ready-made themes, one click each.</li>
           <li><strong>Palettes:</strong> six presets or your own, light and dark.</li>
-          <li><strong>Fonts:</strong> about 40, including dyslexia-friendly ones.</li>
-          <li><strong>Backgrounds:</strong> eight animated scenes or a gradient.</li>
-          <li><strong>Course colors:</strong> every course its own, and its own Look if you like.</li>
+          <li><strong>Fonts:</strong> about 40, including Lexend and OpenDyslexic.</li>
+          <li><strong>Backgrounds:</strong> ten animated scenes or a gradient.</li>
+          <li><strong>Course Looks:</strong> give each course its own Look; Canvas keeps its native course colors.</li>
           <li><strong>Theme codes:</strong> share your look as one line of text.</li>
         </ul></article>
-        <article class="product-card"><span class="glaze-feature" aria-hidden="true">02</span><h3>See what matters</h3><ul class="glaze-list">
+        <article class="product-card"><span class="glaze-feature" aria-hidden="true">02</span><h3>See what matters on Blackboard</h3><ul class="glaze-list">
           <li><strong>Due dates:</strong> countdowns, urgency and “Submitted late”.</li>
           <li><strong>Grades</strong> on course cards, plus score bars.</li>
           <li><strong>“New” badges</strong> on new grades and new content.</li>
@@ -77,7 +77,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
           <li><strong>Folder previews</strong> and course progress.</li>
           <li><strong>Due this week</strong> in the popup and Ctrl+K.</li>
         </ul></article>
-        <article class="product-card"><span class="glaze-feature" aria-hidden="true">03</span><h3>Get there faster</h3><ul class="glaze-list">
+        <article class="product-card"><span class="glaze-feature" aria-hidden="true">03</span><h3>Get there faster on Blackboard</h3><ul class="glaze-list">
           <li><strong>Ctrl+K / ⌘K:</strong> jump to any course, item or page.</li>
           <li><strong>Download all:</strong> a folder’s files as one zip.</li>
           <li><strong>Typing backup:</strong> your post survives a crash or timeout.</li>
@@ -86,6 +86,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
           <li><strong>Six languages</strong>, following Blackboard’s.</li>
         </ul></article>
       </div>
+      <p class="product-caption">On Canvas, Glaze adds progress, previews, new-item badges, your place and Download all on Modules; score bars and percentages on Grades and Assignments; due-date status on Assignments, Modules and To Do; and tint, a Look per course and card grades on the Dashboard. Progress uses module completion requirements. Download all leaves unopened files out. Canvas’s own what-if scores, editor recovery, course nicknames and colors, Files folder zips and unread counts remain Canvas features, restyled by Glaze.</p>
     </section>
 
     <section class="product-section product-split" aria-labelledby="editor-heading">
@@ -105,8 +106,8 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
         <h2 id="browser-heading">Safari or Chrome.</h2>
       </div>
       <div class="browser-guides">
-        <a class="product-panel browser-guide" href="/guides/glaze-safari"><span class="product-eyebrow">Safari on Mac</span><h3>Signed, notarized Mac app.</h3><p>Install, enable the extension, allow your Blackboard site.</p><span class="product-text-link">Safari guide →</span></a>
-        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Chrome Web Store.</h3><p>Add to Chrome and open Blackboard.</p><span class="product-text-link">Chrome guide →</span></a>
+        <a class="product-panel browser-guide" href="/guides/glaze-safari"><span class="product-eyebrow">Safari on Mac</span><h3>Signed, notarized Mac app.</h3><p>Install, enable the extension, allow your Blackboard or Canvas site.</p><span class="product-text-link">Safari guide →</span></a>
+        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Chrome Web Store.</h3><p>Add to Chrome and open Blackboard Ultra or Canvas.</p><span class="product-text-link">Chrome guide →</span></a>
       </div>
     </section>
 

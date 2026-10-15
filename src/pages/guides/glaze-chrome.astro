@@ -3,7 +3,7 @@ import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
 const store = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
-const release = `${source}/releases/tag/v2.1.4`;
+const release = `${source}/releases/tag/v2.2.0`;
 const chapters = [
   { id: 'install', title: 'Install Glaze' },
   { id: 'ultra', title: 'Check your Blackboard page' },
@@ -13,14 +13,15 @@ const chapters = [
   { id: 'background', title: 'Background and motion' },
   { id: 'courses', title: 'Course colors and tint' },
   { id: 'extras', title: 'Helpers' },
+  { id: 'canvas', title: 'Use Glaze on Canvas' },
   { id: 'backup', title: 'Share, back up, privacy' },
   { id: 'recovery', title: 'Fix a problem' },
 ];
 ---
 
 <GuideLayout
-  title="Make Blackboard Ultra yours with Glaze for Chrome"
-  description="Install Glaze, pick a palette and fonts, choose a background, and turn on the helpers that suit your coursework."
+  title="Make Blackboard Ultra and Canvas yours with Glaze for Chrome"
+  description="Install Glaze, pick a palette and fonts, choose a background, and use Glaze 2.2.0 on Blackboard Ultra or Canvas."
   path="/guides/glaze-chrome"
   project="Glaze"
   duration="8 min read"
@@ -40,16 +41,13 @@ const chapters = [
   <section id="install" class="guide-section">
     <h2>Install Glaze.</h2>
     <p><a href={store}>Open Glaze in the Chrome Web Store</a> and choose <strong>Add to Chrome</strong>. Then pin it from Chrome’s puzzle-piece menu. No Glaze account needed.</p>
-    <aside class="guide-callout">
-      <strong>This guide follows Glaze 2.1.</strong>
-      <p>The store has 2.1.1, and 2.1.4 is on its way there. To get it now, use the GitHub package below.</p>
-    </aside>
+    <p>For an unpacked copy of Glaze 2.2.0:</p>
     <ol class="guide-steps">
-      <li>Download <a href={`${source}/releases/download/v2.1.4/glaze-v2.1.4.zip`}>glaze-v2.1.4.zip</a> and extract it to a folder you’ll keep.</li>
+      <li>Download <a href={`${source}/releases/download/v2.2.0/glaze-v2.2.0.zip`}>glaze-v2.2.0.zip</a> and extract it to a folder you’ll keep.</li>
       <li>Open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong>, choose <strong>Load unpacked</strong> and select that folder.</li>
       <li>Disable any other Glaze copy, so only one runs.</li>
     </ol>
-    <p>An unpacked copy doesn’t update itself. Once the store has 2.1.4, switch back to the store version: export your settings, remove the unpacked copy and import them. Glaze needs Chrome 113 or newer. On a Mac with Safari, follow the <a href="/guides/glaze-safari">Safari guide</a>.</p>
+    <p>An unpacked copy doesn’t update itself. To switch back to the store version: export your settings, remove the unpacked copy and import them. Glaze needs Chrome 113 or newer. On a Mac with Safari, follow the <a href="/guides/glaze-safari">Safari guide</a>.</p>
   </section>
 
   <section id="ultra" class="guide-section">
@@ -63,7 +61,7 @@ const chapters = [
     <p>Click Glaze for the quick controls, laid out as tiles. Changes apply to open Blackboard tabs at once.</p>
     <ul>
       <li><strong>Theme</strong> switches Glaze on and off. Your settings stay, so you can compare with Blackboard’s own look.</li>
-      <li><strong>Look</strong> shows the one you’re wearing; click it for all eight. A Look is a palette, fonts, shape and background chosen to go together: Aurora Night, Library, Terminal, Lava Lounge, Synthwave, Clear, Lagoon or Rose Garden.</li>
+      <li><strong>Look</strong> shows the one you’re wearing; click it for all ten. A Look is a palette, fonts, shape and background chosen to go together: Aurora Night, Library, Terminal, Lava Lounge, Synthwave, Clear, Lagoon, Rose Garden, Graveyard or Pumpkin Patch.</li>
       <li><strong>Due this week</strong> counts what’s left in the next seven days and lists the next three. Point at one for its full title, course and due time.</li>
       <li><strong>Palette</strong> has six: Frost, Midnight, Forest, Ember, Paper and Rose. Picking one turns off automatic light/dark switching.</li>
       <li><strong>Motion</strong> steps through Off, Subtle and Expressive.</li>
@@ -95,7 +93,7 @@ const chapters = [
   <section id="background" class="guide-section">
     <h2>Background and motion.</h2>
     <ul>
-      <li><strong>Animated:</strong> eight slow scenes (Mist, Orbs, Borealis, Lava, Waves, Dust, Contours, Horizon), with one <strong>Intensity</strong> slider. They pause in background tabs and hold still when motion is off.</li>
+      <li><strong>Animated:</strong> ten slow scenes (Mist, Orbs, Borealis, Lava, Waves, Dust, Contours, Horizon, Graveyard, Pumpkin Patch), with one <strong>Intensity</strong> slider. They pause in background tabs and hold still when motion is off.</li>
       <li><strong>Gradient:</strong> linear, radial, conic or mesh, with angle, blend and spread.</li>
       <li><strong>Aurora</strong>, <strong>Solid</strong>, or <strong>Image</strong> from an <code>https://</code> address, with Dim and Blur.</li>
     </ul>
@@ -110,7 +108,7 @@ const chapters = [
   <section id="courses" class="guide-section">
     <h2>Course colors and tint.</h2>
     <p>Glaze softens Ultra’s course colors to fit your palette. Every course you haven’t hidden appears in the editor’s <strong>Courses</strong> section once you’ve opened Blackboard, organizations listed apart. Blackboard has only ten course colors; Glaze gives each course its own, and you can change it. A calendar entry takes its course’s color when its title belongs to one course.</p>
-    <p>Each course also has a <strong>Look</strong> menu: keep your theme, or pick one of the eight Looks for that course. Inside that course Glaze wears it; everywhere else keeps your theme.</p>
+    <p>Each course also has a <strong>Look</strong> menu: keep your theme, or pick one of the ten Looks for that course. Inside that course Glaze wears it; everywhere else keeps your theme.</p>
     <p>Turn on <strong>Tint the theme inside a course</strong> and tick courses: inside each, the accent and background take that course’s color, so you can tell where you are at a glance.</p>
   </section>
 
@@ -139,18 +137,30 @@ const chapters = [
     <aside class="guide-callout"><strong>Blackboard remains the record.</strong><p>Check due dates and scores against Blackboard before relying on them. If a helper looks wrong, switch it off and tell us.</p></aside>
   </section>
 
+  <section id="canvas" class="guide-section">
+    <h2>Use Glaze on Canvas</h2>
+    <p>Glaze 2.2.0 also recognizes Canvas on <code>instructure.com</code> and your school’s own domain. Open Canvas, allow Glaze on that site, and reload. The same palettes, ten Looks, fonts, backgrounds and motion apply. The Blackboard walkthrough above uses Ultra’s page names; on Canvas, the helpers appear where Canvas keeps the work:</p>
+    <ul>
+      <li><strong>Modules:</strong> closed-module previews, new-item badges, your place, Download all and course progress from completion requirements. Courses without those requirements show no progress bar; Download all leaves unopened files out.</li>
+      <li><strong>Grades and Assignments:</strong> score bars and percentages. Due-date status and urgency appear on Assignments, Modules and To Do.</li>
+      <li><strong>Dashboard:</strong> card grades, course tint and a Look per course. Use Canvas’s own card menu for course nicknames and colors.</li>
+      <li><strong>Inbox:</strong> device-only draft backup for new messages to individual users in uniquely named courses.</li>
+    </ul>
+    <p>Due this week and the command palette read Canvas’s planner. Canvas’s own what-if scores, rich-editor recovery, course nicknames and colors, Files folder zips and unread counts remain Canvas features, restyled by Glaze. Glaze never changes grades or submits work.</p>
+  </section>
+
   <section id="backup" class="guide-section">
     <h2>Share, back up, privacy.</h2>
     <p>In <strong>Share</strong>, <strong>Copy theme code</strong> gives your palette, fonts, look and background as one line of text. Paste someone’s code, check it with <strong>Preview</strong>, then choose <strong>Use this theme</strong> or <strong>Cancel</strong>.</p>
     <p><strong>Export settings</strong> saves everything to <code>glaze-settings.json</code>; <strong>Import settings…</strong> replaces your setup with a file’s. <strong>Reset everything</strong> needs a second click and keeps your saved palettes. Settings also follow your Chrome profile when sync is on.</p>
-    <p>Glaze has no server and no analytics. What you’ve seen, your typing backups, your place in each course, what-if scores and the due list stay on this device. Requests go to your own Blackboard site with your existing session, plus a web font if you choose one and your background image if you set one. Glaze never submits coursework. Details are in the <a href={`${source}/blob/main/PRIVACY.md`}>privacy policy</a>.</p>
+    <p>Glaze has no server and no analytics. What you’ve seen, your typing backups, your place in each course, what-if scores and the due list stay on this device. Requests go to your own Blackboard or Canvas site with your existing session, plus a web font if you choose one and your background image if you set one. Glaze never submits coursework. Details are in the <a href={`${source}/blob/main/PRIVACY.md`}>privacy policy</a>.</p>
   </section>
 
   <section id="recovery" class="guide-section">
     <h2>Fix a problem.</h2>
     <ul class="guide-checklist">
-      <li><strong>Features from this guide missing:</strong> check the version on <code>chrome://extensions</code>. Before 2.1.4, use the GitHub package above.</li>
-      <li><strong>Courses missing in the editor:</strong> open any Blackboard page with Glaze on, then reopen the editor. Before 2.1.2, open Messages or Grades once.</li>
+      <li><strong>Features from this guide missing:</strong> check the version on <code>chrome://extensions</code>. For Glaze 2.2.0, use the GitHub package above.</li>
+      <li><strong>Courses missing in the editor:</strong> open any Blackboard page with Glaze on, then reopen the editor.</li>
       <li><strong>Popup works, Blackboard doesn’t change:</strong> check the theme switch and the <code>/ultra/</code> address, then refresh the tab.</li>
       <li><strong>One course looks different:</strong> it has its own Look. Set it back to your theme under Courses.</li>
       <li><strong>Due this week shows a dash:</strong> open any Blackboard page, then the popup again.</li>
@@ -163,7 +173,7 @@ const chapters = [
     <div class="guide-sources">
       <h3>Keep exploring Glaze.</h3>
       <p>See the <a href="/glaze">Glaze overview</a>, <a href="/guides/glaze-safari">Safari guide</a>, <a href={store}>Chrome Web Store listing</a>, <a href={release}>release notes</a> and <a href={`${source}/issues`}>issue tracker</a>.</p>
-      <p>Glaze is independent and not affiliated with or endorsed by Anthology Inc.</p>
+      <p>Blackboard is a trademark of Anthology Inc. Canvas is a trademark of Instructure, Inc. Glaze is an independent project and is not affiliated with or endorsed by either.</p>
     </div>
   </section>
 </GuideLayout>
