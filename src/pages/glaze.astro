@@ -39,7 +39,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
           <a class="product-button" href={chromeStore}>Get from Chrome Web Store <span aria-hidden="true">↗</span></a>
           <a class="product-button secondary" href="/guides/glaze-chrome">Chrome guide <span aria-hidden="true">→</span></a>
         </div>
-        {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch are coming in the next version.</p>}
+        {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch are coming in the next version.<br />Canvas support is coming in the next version.</p>}
         <p class="product-meta">Version 2.1.4 · Free and open source<br />No analytics. No account.</p>
         <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>
       </div>
@@ -51,7 +51,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
 
     <div class="glaze-films">
       {halloween && <div class="halloween-ghost" aria-hidden="true"><img src="/projects/glaze/halloween/ghost.svg" width="200" height="220" alt="" /></div>}
-      <GlazeMedia />
+      <GlazeMedia halloween={halloween} />
     </div>
 
     <section class="product-section" aria-labelledby="features-heading">
