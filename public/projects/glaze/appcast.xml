@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+  <channel>
+    <item>
+      <title>Glaze 2.2.0</title>
+      <pubDate>Thu, 15 Oct 2026 04:06:56 +0000</pubDate>
+      <enclosure url="https://github.com/frostdev-ops/glaze/releases/download/v2.2.0/glaze-2.2.0-safari-macos.dmg" sparkle:version="2.2.0" sparkle:shortVersionString="2.2.0" sparkle:edSignature="tedF2N8RbDumzCMnKHwDz96jtRrCiIBYX7ytL8DdlZHJ6ZDEdCiNFct4X0s5dPrq9mfTNag73KzzYRkczlGBCw==" length="2307424" type="application/octet-stream" />
+    </item>
+    <title>Glaze</title>
+    <link>https://frostdev.io/projects/glaze</link>
+    <description>Glaze for Safari updates</description>
+  </channel>
+</rss>
