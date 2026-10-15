@@ -168,7 +168,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
     color: var(--glaze-ink);
   }
   :global(body:has(.glaze-page.is-halloween)) { background: #120b18; }
-  :global(body:has(.glaze-page.is-halloween) .marketing) { background: radial-gradient(ellipse at 78% 3%, #302032 0, transparent 35rem), #120b18; }
+  :global(body:has(.glaze-page.is-halloween) .marketing) { background: radial-gradient(ellipse 42rem 24rem at 78% 8rem, #3b2352, transparent 80%), linear-gradient(180deg, #241431, #160d20 36rem, #0d0912 62rem, #120b18 95rem); }
   :global(body:has(.glaze-page.is-halloween) .splash-ground),
   :global(body:has(.glaze-page.is-halloween) #splash-canvas) { display: none; }
   :global(body:has(.glaze-page.is-halloween) :is(.marketing-nav, .marketing-footer)) { color: #c9b2a6; }
@@ -190,12 +190,13 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
   .halloween-note { max-width: 27rem; margin-top: 1.25rem; color: var(--glaze-accent-secondary); font-size: .8rem; line-height: 1.65; }
   .halloween-hero, .halloween-ghost, .halloween-skeleton { position: absolute; pointer-events: none; user-select: none; z-index: -1; }
   .halloween-hero { inset: 0; overflow: hidden; }
-  .halloween-moon { position: absolute; width: 11rem; aspect-ratio: 1; top: 0; right: 8%; border-radius: 50%; background: radial-gradient(circle at 38% 35%, #ffe6ae, #e4b99a 68%, #b48c87); opacity: .3; box-shadow: 0 0 5rem 2rem #fbbf2420; }
-  .halloween-bat { position: absolute; width: 5rem; height: auto; opacity: .75; animation: halloween-drift 9s ease-in-out infinite alternate; }
-  .bat-one { top: 1.5rem; right: 28%; transform: rotate(-12deg); }
-  .bat-two { top: 6rem; right: 2%; width: 3.5rem; animation-delay: -4s; }
-  .bat-three { top: .25rem; right: 4%; width: 2.75rem; animation-delay: -7s; }
-  .halloween-fog { position: absolute; width: 85%; height: 6rem; right: 0; bottom: 0; opacity: .5; background: radial-gradient(ellipse at 65% 80%, #6ee7b71a, transparent 65%), radial-gradient(ellipse at 30% 95%, #c9b2a61c, transparent 70%); animation: halloween-fog 16s ease-in-out infinite alternate; }
+  .halloween-hero::before { content: ''; position: absolute; inset: 0 0 auto; height: 15rem; background: radial-gradient(circle at 7% 12%, #fef3c74d 0 1px, transparent 1.6px), radial-gradient(circle at 24% 7%, #fef3c733 0 1px, transparent 1.6px), radial-gradient(circle at 45% 20%, #c4b5fd4d 0 1px, transparent 1.6px), radial-gradient(circle at 63% 6%, #fef3c74d 0 1px, transparent 1.6px), radial-gradient(circle at 76% 36%, #c4b5fd33 0 1px, transparent 1.6px), radial-gradient(circle at 95% 11%, #fef3c74d 0 1px, transparent 1.6px); }
+  .halloween-moon { position: absolute; width: 11rem; aspect-ratio: 1; top: 1.5rem; right: 8%; border-radius: 50%; background: radial-gradient(circle at 63% 32%, #a78b5b20 0 8%, transparent 9%), radial-gradient(circle at 36% 65%, #a78b5b18 0 12%, transparent 13%), radial-gradient(circle at 70% 69%, #a78b5b18 0 5%, transparent 6%), radial-gradient(circle at 35% 30%, #fef3c7, #fde68a); opacity: .8; box-shadow: 0 0 2.5rem .75rem #fde68a30, 0 0 7rem 2rem #8b5cf633, inset 0 0 1rem #fff7; }
+  .halloween-bat { position: absolute; left: 0; width: 5rem; height: auto; opacity: .75; animation: halloween-cross 34s linear infinite; }
+  .bat-one { top: 1.5rem; transform: rotate(-12deg); animation-delay: -8s; }
+  .bat-two { top: 6rem; width: 3.5rem; animation-duration: 39s; animation-delay: -25s; }
+  .bat-three { top: .25rem; width: 2.75rem; animation-duration: 43s; animation-delay: -36s; }
+  .halloween-fog { position: absolute; width: 110%; height: 7rem; right: -5%; bottom: -.5rem; opacity: .7; background: radial-gradient(ellipse at 70% 65%, #6ee7b738, transparent 60%), radial-gradient(ellipse at 30% 75%, #c4b5fd38, transparent 65%); filter: blur(10px); animation: halloween-fog 20s ease-in-out infinite alternate; }
   .halloween-pumpkins { position: absolute; bottom: .65rem; right: 1.5rem; display: flex; align-items: end; gap: .2rem; }
   .halloween-pumpkins img { display: block; width: 4.5rem; height: auto; }
   .halloween-pumpkins img:nth-child(2) { width: 6rem; margin-inline: -.65rem; }
@@ -204,14 +205,14 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
   .halloween-ghost { width: 5.5rem; top: -2.65rem; right: 3rem; transform: rotate(12deg); animation: halloween-peek 7s ease-in-out infinite alternate; }
   .halloween-ghost img, .halloween-skeleton img { display: block; width: 100%; height: auto; }
   .halloween-skeleton { bottom: 1.25rem; right: 1rem; width: 5.5rem; opacity: .65; transform: rotate(8deg); }
-  @keyframes halloween-drift { to { translate: .75rem -.6rem; rotate: 5deg; } }
-  @keyframes halloween-fog { to { translate: -2rem 0; opacity: .75; } }
+  @keyframes halloween-cross { from { translate: -6rem 0; } to { translate: calc(min(100vw, 76rem) + 6rem) -.75rem; } }
+  @keyframes halloween-fog { from { translate: -1.5rem 0; } to { translate: 1.5rem -.4rem; opacity: .85; } }
   @keyframes halloween-peek { to { translate: 0 -.5rem; rotate: -6deg; } }
   @media (max-width: 700px) {
     .is-halloween .product-hero { padding-bottom: 6rem; }
-    .halloween-moon { width: 8rem; right: -1rem; top: 0; opacity: .17; }
-    .bat-one { right: 8%; top: .5rem; width: 3.5rem; }
-    .bat-two { right: 0; top: 7rem; width: 2.5rem; }
+    .halloween-moon { width: 8rem; right: .5rem; top: 1rem; opacity: .45; }
+    .bat-one { top: .5rem; width: 3.5rem; }
+    .bat-two { top: 7rem; width: 2.5rem; }
     .bat-three, .halloween-skeleton { display: none; }
     .halloween-pumpkins { right: .5rem; bottom: .5rem; }
     .halloween-pumpkins img { width: 3.5rem; }
@@ -221,6 +222,10 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
   }
   @media (prefers-reduced-motion: reduce) {
     .halloween-bat, .halloween-fog, .halloween-ghost { animation: none; }
+    .halloween-bat { left: auto; }
+    .bat-one { right: 28%; }
+    .bat-two { right: 2%; }
+    .bat-three { right: 4%; }
   }
   @keyframes preview-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   @media (max-width: 900px) { .product-hero { gap: 1.75rem; } }
