@@ -1,14 +1,5 @@
 ---
-const films = [
-  { file: 'glaze', thumb: '01-glaze', title: 'Your colors. Your Blackboard.', category: 'Meet Glaze', duration: '0:22' },
-  { file: '1158pm', thumb: '02-1158pm', title: '11:58 PM', category: 'Typing backup', duration: '0:20' },
-  { file: 'should-have-shown', thumb: '03-should-have-shown', title: 'It should have shown you.', category: 'Grades & due dates', duration: '0:24' },
-  { file: 'switchboard', thumb: '04-switchboard', title: 'A little less friction.', category: 'Optional helpers', duration: '0:25' },
-  { file: 'pass-it-on', thumb: '05-pass-it-on', title: 'Good looks travel.', category: 'Theme sharing', duration: '0:22' },
-  { file: 'read-it-your-way', thumb: '06-read-it-your-way', title: 'Read it your way.', category: 'Fonts & readability', duration: '0:22' },
-  { file: 'hover-to-know', thumb: '07-hover-to-know', title: 'A little hint. A big help.', category: 'Previews & hints', duration: '0:18' },
-  { file: 'course-colors', thumb: '08-course-colors', title: 'Every course. Its own color.', category: 'Course colors', duration: '0:21' },
-];
+import { films } from '../../data/glazeFilms';
 const media = '/projects/glaze/';
 ---
 
@@ -17,7 +8,7 @@ const media = '/projects/glaze/';
     <div class="product-section-heading">
       <h2 id="films-heading">Glaze in action.</h2>
     </div>
-    <a class="media-jump" href="#film-choices">Explore all 8 <span aria-hidden="true">↓</span></a>
+    <a class="media-jump" href="#film-choices">Explore all {films.length} <span aria-hidden="true">↓</span></a>
   </div>
 
   <div class="media-stage">
@@ -35,7 +26,7 @@ const media = '/projects/glaze/';
         <h3 id="film-title">{films[0].title}</h3>
       </div>
       <div class="media-controls" hidden>
-        <span id="film-count" aria-label="Film 1 of 8">01 <span aria-hidden="true">/</span> 08</span>
+        <span id="film-count" aria-label={`Film 1 of ${films.length}`}>01 <span aria-hidden="true">/</span> {String(films.length).padStart(2, '0')}</span>
         <button type="button" id="film-prev" aria-label="Previous film" aria-controls="glaze-film"><span aria-hidden="true">←</span></button>
         <button type="button" id="film-next" aria-label="Next film" aria-controls="glaze-film"><span aria-hidden="true">→</span></button>
       </div>
@@ -105,8 +96,8 @@ const media = '/projects/glaze/';
       document.querySelector('#film-category')!.textContent = choice.dataset.category!;
       document.querySelector('#film-title')!.textContent = choice.dataset.title!;
       const count = document.querySelector('#film-count')!;
-      count.textContent = `${String(index + 1).padStart(2, '0')} / 08`;
-      count.setAttribute('aria-label', `Film ${index + 1} of 8`);
+      count.textContent = `${String(index + 1).padStart(2, '0')} / ${String(choices.length).padStart(2, '0')}`;
+      count.setAttribute('aria-label', `Film ${index + 1} of ${choices.length}`);
     }
     // Scroll only the rail, so choosing a film never moves the page away from the player.
     rail.scrollTo({ left: choice.offsetLeft, behavior: reducedMotion.matches ? 'instant' : 'smooth' });
@@ -137,35 +128,35 @@ const media = '/projects/glaze/';
   .media-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; margin-bottom: 2rem; }
   .media-heading .product-section-heading { margin-bottom: 0; }
   .media-heading h2 { margin-bottom: 0; }
-  .media-jump { flex-shrink: 0; display: flex; gap: 1rem; align-items: center; color: #a5e9fa; font-size: .8rem; padding-bottom: .4rem; }
-  .media-stage { border: 1px solid #335364; border-radius: 1.25rem; overflow: hidden; background: #081522; box-shadow: 0 24px 80px rgb(0 0 0 / .25); }
+  .media-jump { flex-shrink: 0; display: flex; gap: 1rem; align-items: center; color: var(--glaze-accent-secondary, #a5e9fa); font-size: .8rem; padding-bottom: .4rem; }
+  .media-stage { border: 1px solid var(--glaze-line, #335364); border-radius: 1.25rem; overflow: hidden; background: var(--glaze-surface, #081522); box-shadow: 0 24px 80px rgb(0 0 0 / .25); }
   .media-screen { position: relative; }
   .media-start { position: absolute; inset: 0 0 3rem; display: grid; place-items: center; width: 100%; border: 0; background: transparent; color: white; cursor: pointer; }
   .media-start[hidden] { display: none; }
   video:not([controls]) + .media-start { bottom: 0; }
-  .media-start span { display: grid; place-items: center; width: 4rem; height: 4rem; border: 1px solid rgb(185 235 255 / .65); border-radius: 50%; background: rgb(3 15 25 / .8); font-size: 1.1rem; padding-left: .15rem; }
-  .media-start:focus-visible { outline: 2px solid #6fdcff; outline-offset: -5px; }
-  video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #020910; }
-  .media-details { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 1.6rem 2rem; background: linear-gradient(115deg, rgb(53 126 148 / .12), transparent); }
-  .media-category, .media-choice-category { color: #89c9dc; font-size: .65rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
-  .media-copy h3 { margin: .45rem 0; font-size: clamp(1.25rem, 2.5vw, 1.7rem); letter-spacing: -.035em; font-weight: 500; color: #eefaff; }
+  .media-start span { display: grid; place-items: center; width: 4rem; height: 4rem; border: 1px solid var(--glaze-accent-secondary, rgb(185 235 255 / .65)); border-radius: 50%; background: var(--glaze-ground, rgb(3 15 25 / .8)); font-size: 1.1rem; padding-left: .15rem; }
+  .media-start:focus-visible { outline: 2px solid var(--glaze-accent, #6fdcff); outline-offset: -5px; }
+  video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--glaze-ground, #020910); }
+  .media-details { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 1.6rem 2rem; background: linear-gradient(115deg, var(--glaze-soft, rgb(53 126 148 / .12)), transparent); }
+  .media-category, .media-choice-category { color: var(--glaze-accent-secondary, #89c9dc); font-size: .65rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  .media-copy h3 { margin: .45rem 0; font-size: clamp(1.25rem, 2.5vw, 1.7rem); letter-spacing: -.035em; font-weight: 500; color: var(--glaze-ink, #eefaff); }
   .media-controls { display: flex; align-items: center; gap: .65rem; flex-shrink: 0; }
   .media-controls[hidden] { display: none; }
-  #film-count { color: #9bb5c7; font-size: .75rem; font-variant-numeric: tabular-nums; white-space: nowrap; margin-right: .6rem; }
-  .media-controls button { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid #395766; background: #122939; color: #d9f5ff; font: inherit; cursor: pointer; transition: border-color .2s, background .2s; }
-  .media-controls button:hover { border-color: #6fdcff; background: #1c3c50; }
-  .media-controls button:focus-visible, video:focus-visible { outline: 2px solid #6fdcff; outline-offset: -4px; }
-  .media-rail { position: relative; display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: .25rem; scrollbar-color: #395e70 transparent; scrollbar-width: thin; padding: .4rem .25rem 1.1rem; margin: 1.25rem -.25rem 0; }
+  #film-count { color: var(--glaze-muted, #9bb5c7); font-size: .75rem; font-variant-numeric: tabular-nums; white-space: nowrap; margin-right: .6rem; }
+  .media-controls button { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid var(--glaze-line, #395766); background: var(--glaze-surface, #122939); color: var(--glaze-ink, #d9f5ff); font: inherit; cursor: pointer; transition: border-color .2s, background .2s; }
+  .media-controls button:hover { border-color: var(--glaze-accent, #6fdcff); background: var(--glaze-hover, #1c3c50); }
+  .media-controls button:focus-visible, video:focus-visible { outline: 2px solid var(--glaze-accent, #6fdcff); outline-offset: -4px; }
+  .media-rail { position: relative; display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: .25rem; scrollbar-color: var(--glaze-line, #395e70) transparent; scrollbar-width: thin; padding: .4rem .25rem 1.1rem; margin: 1.25rem -.25rem 0; }
   .media-choice { display: block; flex: 0 0 calc((100% - 3rem) / 4); min-width: 14rem; scroll-snap-align: start; border-radius: .75rem; }
-  .media-thumb { position: relative; border: 2px solid transparent; border-radius: .75rem; overflow: hidden; transition: border-color .2s; background: #0c2030; }
+  .media-thumb { position: relative; border: 2px solid transparent; border-radius: .75rem; overflow: hidden; transition: border-color .2s; background: var(--glaze-surface, #0c2030); }
   .media-thumb img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
-  .media-choice[aria-current] .media-thumb { border-color: #6fdcff; }
-  .media-choice:hover .media-thumb { border-color: #a4e5f5; }
-  .media-play { position: absolute; left: .65rem; bottom: .65rem; display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; font-size: .6rem; color: white; background: rgb(3 15 25 / .85); border: 1px solid rgb(188 234 248 / .4); }
-  .media-duration { position: absolute; right: .65rem; bottom: .65rem; padding: .2rem .35rem; border-radius: .25rem; color: #e9f6ff; background: rgb(3 15 25 / .9); font-size: .65rem; font-variant-numeric: tabular-nums; }
+  .media-choice[aria-current] .media-thumb { border-color: var(--glaze-accent, #6fdcff); }
+  .media-choice:hover .media-thumb { border-color: var(--glaze-accent-secondary, #a4e5f5); }
+  .media-play { position: absolute; left: .65rem; bottom: .65rem; display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; font-size: .6rem; color: white; background: var(--glaze-ground, rgb(3 15 25 / .85)); border: 1px solid var(--glaze-line, rgb(188 234 248 / .4)); }
+  .media-duration { position: absolute; right: .65rem; bottom: .65rem; padding: .2rem .35rem; border-radius: .25rem; color: var(--glaze-ink, #e9f6ff); background: var(--glaze-ground, rgb(3 15 25 / .9)); font-size: .65rem; font-variant-numeric: tabular-nums; }
   .media-choice-category, .media-choice-title { display: block; padding-inline: .25rem; }
   .media-choice-category { margin-top: .8rem; font-size: .6rem; }
-  .media-choice-title { margin-top: .4rem; color: #e0edf6; font-size: .9rem; line-height: 1.5; }
+  .media-choice-title { margin-top: .4rem; color: var(--glaze-ink, #e0edf6); font-size: .9rem; line-height: 1.5; }
   @media (max-width: 700px) {
     .media-heading { align-items: start; }
     .media-jump { font-size: .7rem; gap: .5rem; margin-top: .1rem; }
