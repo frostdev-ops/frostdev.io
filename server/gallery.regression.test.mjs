@@ -8,6 +8,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { Readable, Writable } from 'node:stream';
 import { afterEach, mock, test } from 'node:test';
 import zlib from 'node:zlib';
+import vm from 'node:vm';
+import ts from 'typescript';
 import { gallery, networkOf, sendMail } from './gallery.mjs';
 import { checkCode, loadLooks } from '../scripts/looks.mjs';
 
@@ -263,4 +265,70 @@ test('CLI decisions cannot overwrite a concurrent takedown', async () => {
   });
   assert.equal(g.decide(r.body.id, 'published'), false);
   assert.equal(g.db.prepare('SELECT status FROM looks WHERE id = ?').get(r.body.id).status, 'removed');
+});
+
+// A small DOM harness for the submit script's async ordering; no rendering or browser process.
+const submitPage = (fetch) => {
+  class Element {
+    constructor(tag = 'div') { this.tagName = tag; this.value = ''; this.checked = false; this.hidden = false; this.children = []; this.events = {}; this.attrs = {}; this.dataset = {}; this.style = { setProperty() {} }; }
+    addEventListener(type, cb) { this.events[type] = cb; }
+    replaceChildren(...children) { this.children = children; }
+    append(...children) { this.children.push(...children); }
+    setAttribute(key, value) { this.attrs[key] = value; }
+    removeAttribute(key) { delete this.attrs[key]; }
+    querySelector() { return null; }
+    querySelectorAll() { return []; }
+    scrollIntoView() {}
+    focus() {}
+  }
+  const nodes = new Map();
+  const get = (id) => { if (!nodes.has(id)) nodes.set(id, new Element()); return nodes.get(id); };
+  const preview = new Element('button');
+  let timer;
+  const doc = { getElementById: get, createElement: (tag) => new Element(tag), querySelector: () => preview };
+  const source = readFileSync('src/pages/glaze/looks/submit.astro', 'utf8').split('<script>')[1].split('</script>')[0].replace(/import .*? from .*?;/s, '');
+  const js = ts.transpile(source, { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None });
+  vm.runInNewContext(js, {
+    document: doc, location: { hash: '', origin: 'https://frostdev.io' }, URLSearchParams,
+    paintPreview() {}, wireDialog() {}, fontLine: () => 'font', fetch,
+    clearTimeout() { timer = null; }, window: { setTimeout(cb) { timer = cb; return 1; } },
+  });
+  return { get, check: () => timer(), preview };
+};
+
+test('submit result survives an older live check response', async () => {
+  let resolveCheck;
+  const checkResponse = new Promise((r) => { resolveCheck = r; });
+  const ui = submitPage((url) => url.endsWith('/check') ? checkResponse : Promise.resolve(new Response(JSON.stringify({ outcome: 'published', url: '/glaze/looks#c-1234567890', token: 'x'.repeat(32), numbers: { safe: 1, quality: 3, unique: 'distinct', distinct: 0.9 } }))));
+  ui.get('f-code').value = code();
+  ui.get('f-name').value = 'New Look';
+  ui.get('f-credit').value = 'Sam';
+  ui.get('f-license').checked = true;
+  ui.get('f-code').events.input();
+  const checking = ui.check();
+  await ui.get('submit-form').events.submit({ preventDefault() {} });
+  assert.equal(ui.get('submit-status').hidden, false);
+  resolveCheck(new Response(JSON.stringify({ look: null, problems: [], nearest: [] })));
+  await checking;
+  assert.equal(ui.get('submit-status').hidden, false, 'older preview hides the published result and status link');
+});
+
+test('live-check errors announce themselves and credit errors focus credit', async () => {
+  const ui = submitPage(() => Promise.resolve(new Response(JSON.stringify({ look: null, problems: ['the code is invalid'], nearest: [] }))));
+  ui.get('f-code').value = code();
+  ui.get('f-name').value = 'New Look';
+  ui.get('f-code').events.input();
+  await ui.check();
+  // Live checking has its own persistent status so checking never overwrites review outcomes.
+  assert.ok(ui.get('check-status').textContent?.includes('1 problem'));
+  await ui.get('submit-form').events.submit({ preventDefault() {} });
+  assert.equal(ui.get('f-credit').attrs['aria-invalid'], 'true');
+  assert.equal(ui.get('f-code').attrs['aria-invalid'], undefined);
+});
+
+test('submit form cannot leak fields through a default GET before scripts initialize', () => {
+  const page = readFileSync('src/pages/glaze/looks/submit.astro', 'utf8');
+  assert.ok(/<form[^>]*id="submit-form"[^>]*method="post"/.test(page));
+  assert.ok(/<button[^>]*id="f-submit"[^>]*disabled/.test(page));
+  assert.ok(/<noscript>[\s\S]*?issues\/new/.test(page));
 });

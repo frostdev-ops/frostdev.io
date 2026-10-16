@@ -26,7 +26,7 @@ const access: [string, string, string][] = [
     </section>
 
     <div class="submit-grid">
-      <form class="submit-form product-panel" id="submit-form" novalidate>
+      <form class="submit-form product-panel" id="submit-form" method="post" novalidate>
         <div class="field">
           <label for="f-code">Theme code</label>
           <textarea id="f-code" name="code" rows="4" required spellcheck="false" autocomplete="off" placeholder="glaze1:…" aria-describedby="f-code-help f-code-error"></textarea>
@@ -66,10 +66,12 @@ const access: [string, string, string][] = [
           <ul class="error" id="f-license-error"></ul>
         </div>
         <div class="product-actions submit-actions">
-          <button type="submit" class="product-button" id="f-submit">Submit for review</button>
+          <button type="submit" class="product-button" id="f-submit" disabled>Submit for review</button>
           <a class="product-button secondary" href="/glaze/looks">Back to the gallery</a>
         </div>
-        <div class="submit-status" id="submit-status" role="status" aria-live="polite" hidden></div>
+        <p class="help" id="check-status" role="status" aria-live="polite"></p>
+        <div role="status" aria-live="polite"><div class="submit-status" id="submit-status" hidden></div></div>
+        <noscript><p class="help">Submitting needs JavaScript. You can also share your Look through <a class="looks-link" href="https://github.com/frostdev-ops/frostdev.io/issues/new?template=glaze-look.yml">a GitHub issue</a>.</p></noscript>
       </form>
 
       <aside class="submit-side" aria-labelledby="live-title">
@@ -154,7 +156,9 @@ const access: [string, string, string][] = [
   // ---- the live check: debounced, never stored, never uses the day's submission ------------------------------------
   let timer = 0;
   let seq = 0;
+  let reviewing = false;
   const check = async () => {
+    if (reviewing) return;
     const mine = ++seq;
     const value = code.value.trim();
     if (!value) { showProblems([]); paint(null); return; }
@@ -165,12 +169,15 @@ const access: [string, string, string][] = [
     if (mine !== seq) return;
     if (r.status === 429) return;
     if (!r.ok) { closed(); return; }
-    const body = await r.json();
-    statusBox.hidden = true;
+    const body = await r.json().catch(() => null);
+    if (mine !== seq || reviewing) return;
+    if (!body) { closed(); return; }
+    const count = Array.isArray(body.problems) ? body.problems.length : 0;
+    $('check-status').textContent = count ? `${count} problem${count === 1 ? '' : 's'} found. Check the marked fields.` : 'Preview checked. No problems found.';
     showProblems(Array.isArray(body.problems) ? body.problems.map(String) : []);
     paint(body.look || null, Array.isArray(body.nearest) ? body.nearest : []);
   };
-  const later = () => { clearTimeout(timer); timer = window.setTimeout(check, 400); };
+  const later = () => { if (reviewing) return; ++seq; clearTimeout(timer); timer = window.setTimeout(check, 400); };
   for (const input of [code, name, credit]) input.addEventListener('input', later);
   form.addEventListener('change', (e) => { if ((e.target as HTMLInputElement).name === 'tags' && code.value.trim()) later(); });
 
@@ -218,8 +225,11 @@ const access: [string, string, string][] = [
   };
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (reviewing) return;
     const missing = [!code.value.trim() && 'paste your theme code', !name.value.trim() && 'give it a name', !credit.value.trim() && 'say how to credit you', !license.checked && 'you need to agree to share it under CC BY 4.0'].filter(Boolean) as string[];
     if (missing.length) { showProblems(missing.map((m) => m.replace('give it a name', 'the name is missing: give it a name'))); form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(); return; }
+    reviewing = true; ++seq; clearTimeout(timer);
+    $('check-status').textContent = '';
     const button = $<HTMLButtonElement>('f-submit');
     button.disabled = true;
     button.textContent = 'Reviewing…';
@@ -237,7 +247,7 @@ const access: [string, string, string][] = [
       const when = typeof body.resets === 'string' ? new Date(body.resets).toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' }) : 'tomorrow';
       say(el('p', `${String(body.error || 'You can submit one Look a day.')} You can submit again ${when}.`));
     } else if (r.status === 503) {
-      say(el('p', String(body.error || 'Reviews are paused right now; nothing was used up. Try again later.')));
+      say(el('p', String(body.error || 'Reviews are paused right now; nothing was used up. Try again later.')), link(issue, 'Share through a GitHub issue instead'));
     } else if (!r.ok) {
       closed();
     } else if (body.outcome === 'published') {
@@ -253,7 +263,9 @@ const access: [string, string, string][] = [
     }
     done();
   });
-  const done = () => { const b = $<HTMLButtonElement>('f-submit'); b.disabled = false; b.textContent = 'Submit for review'; };
+  const done = () => { reviewing = false; const b = $<HTMLButtonElement>('f-submit'); b.disabled = false; b.textContent = 'Submit for review'; };
+
+  $<HTMLButtonElement>('f-submit').disabled = false;
 
   // ---- #status=<token>: what became of a submission -----------------------------------------------------------------
   const token = hash.get('status');

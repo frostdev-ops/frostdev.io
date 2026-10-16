@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
     exit 1
 }
 node scripts/looks.mjs
-node --test server/gallery.test.mjs
+npm run test:gallery
 host=loothing-vps
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT
