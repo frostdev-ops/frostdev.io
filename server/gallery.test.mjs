@@ -75,9 +75,13 @@ const smtp = net.createServer((sock) => {
   });
 });
 let mockUrl, smtpPort;
+const listenMock = (server) => new Promise((resolve, reject) => {
+  server.once('error', reject);
+  server.listen(0, '127.0.0.1', () => { server.off('error', reject); resolve(); });
+});
 before(async () => {
-  await new Promise((r) => mock.listen(0, '127.0.0.1', r));
-  await new Promise((r) => smtp.listen(0, '127.0.0.1', r));
+  await listenMock(mock);
+  await listenMock(smtp);
   mockUrl = `http://127.0.0.1:${mock.address().port}`;
   smtpPort = smtp.address().port;
 });
