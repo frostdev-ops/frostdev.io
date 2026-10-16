@@ -237,7 +237,9 @@ choose "human" for a genuine judgment call, especially on safety; uniqueness by 
 the Look call's `state` with the credit added, plus the decision model's answers (the four safety numbers, quality,
 the choice and P(distinct)) as the user message. A strict `json_schema` response (`{decision: "accept" | "decline" |
 "human", reason}`), `reasoning: {effort: "xhigh"}` (about 95% of `max_tokens` may go to reasoning), `max_tokens`
-32,000, a 60 s timeout. gpt-6-luna-pro is GPT-6 Luna in its pro reasoning mode. Measured on 2026-10-16 with a green
+32,000, a 60 s timeout, `reasoning.summary: "detailed"` and `provider: {order: ["openai"], allow_fallbacks: true}`:
+OpenAI's endpoint returns a reasoning summary, Azure's (the fallback) only encrypted reasoning, so a review that falls
+back has no summary. The decision records which provider answered. gpt-6-luna-pro is GPT-6 Luna in its pro reasoning mode. Measured on 2026-10-16 with a green
 recolor of Harvest Table: 12.8 s, 1,309 reasoning tokens, about $0.0013. The reasoning is not excluded: its summary
 (`message.reasoning`, up to 6,000 characters, control characters stripped) is kept in the decision as
 `escalation.reasoning` with `escalation.reasoningTokens`, and printed in the maintainer's mail for a Look that

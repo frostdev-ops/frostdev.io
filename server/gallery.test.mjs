@@ -241,7 +241,9 @@ test('the bands: everything between them goes to the LLM', async () => {
   assert.equal(sent.response_format.json_schema.strict, true);
   assert.deepEqual(sent.response_format.json_schema.schema.properties.decision.enum, ['accept', 'decline', 'human']);
   // xhigh reasoning, kept (not excluded): its summary goes with the decision and the maintainer's mail.
-  assert.deepEqual(sent.reasoning, { effort: 'xhigh' });
+  assert.deepEqual(sent.reasoning, { effort: 'xhigh', summary: 'detailed' });
+  // OpenAI's endpoint first: Azure's returns no reasoning summary.
+  assert.deepEqual(sent.provider, { order: ['openai'], allow_fallbacks: true });
   assert.equal(sent.max_tokens, 32000);
   assert.match(sent.messages[0].content, /untrusted data/);
   const user = JSON.parse(sent.messages[1].content);

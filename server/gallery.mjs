@@ -454,7 +454,8 @@ export function gallery({
           { role: 'user', content: JSON.stringify({ ...state, firstReview: { safety: answers.risks, quality: answers.quality, unique: answers.choice, distinct: answers.distinct } }) },
         ],
         response_format: { type: 'json_schema', json_schema: ESCALATION_SCHEMA },
-        reasoning: { effort: 'xhigh' }, max_tokens: 32000,
+        // OpenAI's own endpoint returns a reasoning summary; Azure's (the fallback) returns it encrypted only.
+        reasoning: { effort: 'xhigh', summary: 'detailed' }, max_tokens: 32000, provider: { order: ['openai'], allow_fallbacks: true },
       }, ESCALATION_TIMEOUT);
       const v = JSON.parse(res?.choices?.[0]?.message?.content ?? '');
       if (!v || typeof v !== 'object' || Array.isArray(v) || Object.keys(v).length !== 2
@@ -466,7 +467,7 @@ export function gallery({
         : (Array.isArray(m?.reasoning_details) ? m.reasoning_details.filter((x) => x?.type === 'reasoning.summary' && typeof x.summary === 'string').map((x) => x.summary).join('\n') : '');
       const reasoning = [...summary.replace(/\r\n?/g, '\n').replace(/[^\P{Cc}\n]|\p{Cf}/gu, '')].slice(0, REASONING_MAX).join('').trim();
       const tokens = res?.usage?.completion_tokens_details?.reasoning_tokens;
-      return { decision: v.decision, reason, reasoning, reasoningTokens: Number.isInteger(tokens) ? tokens : null, model: typeof res?.model === 'string' ? res.model.slice(0, 80) : escalationModel };
+      return { decision: v.decision, reason, reasoning, reasoningTokens: Number.isInteger(tokens) ? tokens : null, model: typeof res?.model === 'string' ? res.model.slice(0, 80) : escalationModel, provider: typeof res?.provider === 'string' ? res.provider.slice(0, 40) : '' };
     } catch {
       // An error, a timeout or an answer that isn't one of the three: a person decides.
       return { decision: 'human', reason: 'The second reviewer did not answer usably, so a person will decide.', model: escalationModel, failed: true };
@@ -505,7 +506,7 @@ export function gallery({
         '', 'What it is:', JSON.stringify(s, null, 2),
         '', 'Nearest Looks:', ...(dec.nearest || []).map((n) => `  ${n.name} (${n.source}), distance ${n.distance}`),
         '', `First review (${dec.first?.model}): safety concerns ${Object.entries(dec.first?.risks || {}).map(([k, v]) => `${k} ${v}`).join(', ')}; quality ${dec.first?.quality} of 4, unique "${dec.first?.choice}" (distinct ${dec.first?.distinct})`,
-        `Second review (${dec.escalation?.model}): ${dec.escalation?.decision}`,
+        `Second review (${dec.escalation?.model}${dec.escalation?.provider ? ` via ${dec.escalation.provider}` : ''}): ${dec.escalation?.decision}`,
         ...(dec.escalation?.reasoning ? ['', `Its reasoning (summary, ${dec.escalation.reasoningTokens ?? '?'} reasoning tokens):`, dec.escalation.reasoning] : []),
         '', 'Theme code (paste it into Glaze\'s Share tab to see it):', row.code,
         '', 'To decide, on the server:',
