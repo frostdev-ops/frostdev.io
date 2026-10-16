@@ -11,6 +11,7 @@ export type Described = {
   font: Font; head: Font; mono: Font;
   scale: number; leading: number; density: string; radius: number; glass: number; depth: number;
   bg: { kind: string; style: string; angle: number; blend: number; spread: number; colors: string[]; dim: number; blur: number; scene: string; intensity: number; image: string; imageHost: string };
+  surfaces?: Record<string, unknown>;
   contrast: { label: string; min: number; ratio: number; pass: boolean }[];
 };
 export type Look = Described & {
@@ -58,6 +59,7 @@ export function previewState(d: Partial<Described>) {
   const bg = (d.bg || {}) as Partial<Described['bg']>;
   const kind = word(bg.kind, BG_KINDS, 'solid');
   const style = word(bg.style, STYLES, 'linear');
+  const surface = d.surfaces || {};
   const own = Array.isArray(bg.colors) ? bg.colors : [];
   const vars: Record<string, string> = Object.fromEntries(ROLES.map((r, i) => [r, hex(c[r], FROST[i])]));
   [0, 1, 2].forEach((i) => { vars[`--lp-bg-${i + 1}`] = hex(own[i], vars[['--gz-accent', '--gz-accent-hi', '--gz-ink-muted'][i]]); });
@@ -71,6 +73,14 @@ export function previewState(d: Partial<Described>) {
   vars['--lp-blur'] = String(num(bg.blur, 0, 20, 0));
   vars['--lp-angle'] = `${num(bg.angle, 0, 360, 135)}deg`;
   if (kind === 'gradient') vars['--lp-bg-image'] = gradient(style, num(bg.angle, 0, 360, 135), num(bg.blend, 0, 100, 100), num(bg.spread, 20, 200, 100));
+  vars['--lp-surface-color'] = surface.surfaceCustom === true ? hex(surface.surfaceColor, vars['--gz-surface']) : vars['--gz-surface'];
+  vars['--lp-surface-tint'] = `${num(surface.surfaceTint, 0, 100, 0)}%`;
+  const opacity = num(surface.surfaceOpacity, -1, 100, -1);
+  vars['--lp-opacity'] = `${kind === 'solid' || d.glass === 0 ? 100 : opacity < 0 ? 100 - num(d.glass, 0, 24, 12) * 1.6 : opacity}%`;
+  vars['--lp-shadow-color'] = surface.shadowCustom === true ? hex(surface.shadowColor, '#000000') : '#000000';
+  vars['--lp-shadow-alpha'] = `${num(surface.shadowStrength, 0, 100, 35) / 35 * num(d.depth, 0, 3, 1) * 9}%`;
+  vars['--lp-border'] = `${num(surface.surfaceBorder, 0, 100, 100)}%`;
+  vars['--lp-frost'] = String(num(surface.surfaceFrost, 0, 100, 0) / 100);
   const fam = (f: Font | undefined) => word(f?.family, FAMILIES, 'sans');
   const data = {
     bg: kind, font: fam(d.font), head: fam(d.head ?? d.font), mono: d.mono ? fam(d.mono) : 'mono',

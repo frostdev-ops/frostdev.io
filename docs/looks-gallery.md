@@ -24,7 +24,10 @@ browser ── /glaze/looks, /glaze/looks/submit ──> nginx (static files, /o
 - `scripts/looks.mjs`: the checks and the description of a code, shared by the page build, CI and the
   server: `checkCode(code)`, `checkMeta({name, credit, tags})`, `describe(decoded)`, `distance(a, b)`,
   and `loadLooks()` for the curated entries. `checkCode()` also returns a stable SHA-256 fingerprint
-  of the decoded settings for duplicate blocking.
+  of the decoded settings for duplicate blocking. Surface and shadow overrides travel with the
+  description and reviewer evidence; the preview approximates frost and uses the accent as the
+  stand-in for a course-dependent tint. Contrast ratios remain the named palette pairs; reviewers
+  must also consider custom surface colors, opacity and tint from the shape settings.
 - `src/components/LookPreview.astro` + `looks.ts`: the live preview, a mock course page painted only from
   `describe()`. `LookCard.astro`: one card, built into the page for curated Looks and used as the
   `<template>` community cards are filled from.
@@ -84,7 +87,7 @@ the models choose to use.
 
 - `submission`: name, credit, the claimed tags, kind (Look or palette), light or dark, animated, text
   and heading fonts (name and group), text size, line height, density, shape (corner radius, glass,
-  depth), background (kind; for a gradient its style, angle, blend and spread; for a scene its name and
+  depth, all v3 surface/shadow overrides including custom color, opacity, tint, border and frost), background (kind; for a gradient its style, angle, blend and spread; for a scene its name and
   intensity; for an image only its host; colors, dim and blur), the 14 colors by role name (Accent, Text
   on accent, Surface, Muted text…) as hex, and the six contrast pairs from Glaze's `GZ_CONTRAST` with
   their ratios and minimums.

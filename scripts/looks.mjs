@@ -149,6 +149,7 @@ export function describe(got) {
     mono: kind === 'look' && L('mono') !== 'auto' ? font(L('mono')) : null,
     scale: L('scale'), leading: L('leading'), density: L('density'),
     radius: L('radius'), glass: L('glass'), depth: L('depth'),
+    surfaces: Object.fromEntries(Object.keys(GZ_SPEC.look).filter((k) => /^(surface|shadow)/.test(k)).map((k) => [k, L(k)])),
     bg: {
       kind: bgKind, style: B('style'), angle: B('angle'), blend: B('blend'), spread: B('spread'),
       colors: GZ_BG_COLORS(B('colors'), got.colors), dim: B('dim'), blur: B('blur'), grain: B('grain'),

@@ -494,3 +494,22 @@ test('CLI approves, declines, removes and creates a consistent SQLite backup', a
   assert.equal(saved.prepare('SELECT COUNT(*) n FROM looks').get().n, 2);
   saved.close();
 });
+
+test('v3 surface overrides reach both model evidence and the preview', async () => {
+  let state;
+  mock.method(globalThis, 'fetch', async (url, options) => { state = JSON.parse(options.body).state; return new Response(JSON.stringify(clef())); });
+  const raw = JSON.parse(zlib.inflateRawSync(Buffer.from(code().slice(7), 'base64url')));
+  raw.l = { surfaceCustom: true, surfaceColor: '#ffffff', surfaceOpacity: 100, surfaceTint: 0, shadowCustom: true, shadowColor: '#ff0000', shadowStrength: 80, surfaceBorder: 0, surfaceFrost: 20 };
+  const theme = `glaze1:${zlib.deflateRawSync(Buffer.from(JSON.stringify(raw))).toString('base64url')}`;
+  const g = await create();
+  await post(g, look({ code: theme }));
+  assert.equal(state.submission.shape.surfaceColor, '#ffffff');
+  assert.equal(state.submission.shape.surfaceOpacity, 100);
+  const checked = await post(g, { code: theme }, { route: '/check' });
+  const exports = {};
+  vm.runInNewContext(ts.transpile(readFileSync('src/components/looks.ts', 'utf8'), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS }), { exports });
+  const { vars } = exports.previewState(checked.body.look);
+  assert.equal(vars['--lp-surface-color'], '#ffffff');
+  assert.equal(vars['--lp-opacity'], '100%');
+  assert.equal(vars['--lp-shadow-color'], '#ff0000');
+});
