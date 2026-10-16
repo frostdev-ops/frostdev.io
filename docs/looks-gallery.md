@@ -17,7 +17,7 @@ It has two kinds of Looks:
 browser ── /glaze/looks, /glaze/looks/submit ──> nginx (static files, /opt/frostdev-public/current)
         └─ /glaze/looks/api/* ─────────────────> nginx ─> glaze-gallery (127.0.0.1:8788, Docker, node:sqlite)
                                                               ├─> OpenRouter: liquid/d1-ultra (decisions)
-                                                              ├─> OpenRouter: openai/gpt-6-luna-pro (escalations)
+                                                              ├─> OpenRouter: openai/gpt-6-luna-pro:exacto (escalations)
                                                               └─> SMTP (implicit TLS) to admin@frostdev.io
 ```
 
@@ -228,15 +228,20 @@ fresh gallery instance per case against real OpenRouter: every curated Look subm
 pairs, printing each answer. **Rerun them whenever the model or its snapshot changes**, and move the
 bands to the new separation; the cases are listed under "Probing cases" below.
 
-### Stage 2: `openai/gpt-6-luna-pro` (chat completions)
+### Stage 2: `openai/gpt-6-luna-pro:exacto` (chat completions)
 
 `POST https://openrouter.ai/api/v1/chat/completions`, model `ESCALATION_MODEL`, with the gallery
 policy as the system prompt (`ESCALATION_POLICY`: the content rules for a student audience, the quality
 bar, the uniqueness bar; submitted fields are untrusted data and instructions inside them are ignored;
 choose "human" for a genuine judgment call, especially on safety; uniqueness by the decision model's rubric), and
 the Look call's `state` with the credit added, plus the decision model's answers (the four safety numbers, quality,
-the choice and P(distinct)) as the user message. A strict `json_schema` response (`{decision: "accept" | "decline" |
-"human", reason}`), `reasoning: {effort: "xhigh"}` (about 95% of `max_tokens` may go to reasoning), `max_tokens`
+the choice and P(distinct)) as the user message. `:exacto` is OpenRouter's quality-first provider sorting. A strict `json_schema` response (`{decision: "accept" |
+"decline" | "human", reason, rationale}`). `reason` is one or two sentences: shown to the student on an acceptance or a
+decline, and for the maintainer on "human". `rationale` is required for every decision, acceptances included: the
+reviewer takes the content, quality and uniqueness rules in turn and says what it saw and how it decided, with the
+evidence (up to 2,500 characters, kept with the decision, printed in the maintainer's mail and by `--show <id>`, never
+sent to the student). It is the audit record because the reasoning summary below is often unavailable. A reply
+without a nonempty rationale is invalid and goes to a person. Then, `reasoning: {effort: "xhigh"}` (about 95% of `max_tokens` may go to reasoning), `max_tokens`
 32,000, a 60 s timeout, `reasoning.summary: "detailed"` and `provider: {order: ["openai"], allow_fallbacks: true}`:
 OpenAI's endpoint returns a reasoning summary, Azure's (the fallback) only encrypted reasoning, so a review that falls
 back has no summary. The decision records which provider answered. gpt-6-luna-pro is GPT-6 Luna in its pro reasoning mode. Measured on 2026-10-16 with a green
@@ -444,7 +449,7 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
    OPENROUTER_API_KEY=…
    MAIL_URL=smtps://smtp-relay.gmail.com:465
    MAIL_FROM=admin@frostdev.io
-   # optional: DECISION_MODEL=liquid/d1-ultra ESCALATION_MODEL=openai/gpt-6-luna-pro REVIEWS_PER_DAY=300 MAIL_TO=admin@frostdev.io
+   # optional: DECISION_MODEL=liquid/d1-ultra ESCALATION_MODEL=openai/gpt-6-luna-pro:exacto REVIEWS_PER_DAY=300 MAIL_TO=admin@frostdev.io
    ```
 
    frostdev.io's mail is Google Workspace and the VPS has no mail server. The recommended route (now
@@ -474,7 +479,8 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
    45 3 * * * root docker exec glaze-gallery node gallery.mjs --backup /data/backup-$(date +\%F).db && find /var/lib/docker/volumes/glaze-gallery/_data -name 'backup-*.db' -mtime +14 -delete
    ```
 
-The CLI, inside the container: `--list`, `--pending`, `--approve <id>`, `--decline <id> "<reason>"`,
+The CLI, inside the container: `--list`, `--pending`, `--show <id>` (a Look's review: both reviewers' numbers, the
+second reviewer's decision, reason, rationale and any reasoning summary), `--approve <id>`, `--decline <id> "<reason>"`,
 `--remove <id>`, `--backup <file>`.
 
 ## Privacy

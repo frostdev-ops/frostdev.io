@@ -47,7 +47,7 @@ const safetySays = ({ abuse = 0.04, personal = 0.05, official = 0.01, ad = 0.03 
     answers: Object.fromEntries(Object.entries({ abuse, personal, official, ad }).map(([k, v]) => [k, { type: 'noul', noul: v }])),
   },
 });
-const llmSays = (decision, reason = 'Because.', reasoning) => ({ status: 200, json: { model: 'openai/gpt-6-luna-pro', usage: { completion_tokens_details: { reasoning_tokens: 42 } }, choices: [{ message: { content: JSON.stringify({ decision, reason }), ...(reasoning && { reasoning }) } }] } });
+const llmSays = (decision, reason = 'Because.', reasoning, rationale = 'Content: fine. Quality: readable. Uniqueness: its own idea.') => ({ status: 200, json: { model: 'openai/gpt-6-luna-pro', provider: 'OpenAI', usage: { completion_tokens_details: { reasoning_tokens: 42 } }, choices: [{ message: { content: JSON.stringify({ decision, reason, rationale }), ...(reasoning && { reasoning }) } }] } });
 const mock = http.createServer((req, res) => {
   let b = '';
   req.on('data', (d) => { b += d; });
@@ -237,7 +237,8 @@ test('the bands: everything between them goes to the LLM', async () => {
     assert.equal(calls.chat.length, 1);
   }
   const sent = calls.chat[0].body;
-  assert.equal(sent.model, 'openai/gpt-6-luna-pro');
+  assert.equal(sent.model, 'openai/gpt-6-luna-pro:exacto');
+  assert.deepEqual(sent.response_format.json_schema.schema.required, ['decision', 'reason', 'rationale']);
   assert.equal(sent.response_format.json_schema.strict, true);
   assert.deepEqual(sent.response_format.json_schema.schema.properties.decision.enum, ['accept', 'decline', 'human']);
   // xhigh reasoning, kept (not excluded): its summary goes with the decision and the maintainer's mail.
@@ -283,8 +284,13 @@ test('a palette is summarized without fonts, text size, shape or background', ()
 test('the LLM accepts, declines with its reason, or hands it to a person (who gets mail)', async () => {
   await start();
   plan.decisions = decisionSays({ quality: 2 });
-  plan.chat = llmSays('accept');
-  assert.equal((await post('/submit', look(), fresh())).body.outcome, 'published');
+  plan.chat = llmSays('accept', 'A familiar idiom, readable and its own Look.', undefined, 'Content: an idiom, not a threat. Quality: 3 of 4. Uniqueness: far from the nearest.');
+  const acc = await post('/submit', look(), fresh());
+  assert.equal(acc.body.outcome, 'published');
+  // An acceptance carries its reason to the student; the rationale stays with the record.
+  assert.equal(acc.body.review, 'A familiar idiom, readable and its own Look.');
+  assert.ok(!JSON.stringify(acc.body).includes('not a threat'));
+  assert.equal(g.show(acc.body.id).decision.escalation.rationale, 'Content: an idiom, not a threat. Quality: 3 of 4. Uniqueness: far from the nearest.');
 
   plan.decisions = decisionSays({ quality: 2 });
   plan.chat = llmSays('decline', 'The muted text is\u0007 hard to read on the cards. ' + 'x'.repeat(400), 'Private thoughts about the muted text.');
@@ -295,7 +301,7 @@ test('the LLM accepts, declines with its reason, or hands it to a person (who ge
   assert.ok(!JSON.stringify(d.body).includes('Private thoughts'), 'the reasoning is never sent to the student');
 
   plan.safety = safetySays({ personal: 0.3 });
-  plan.chat = llmSays('human', 'The credit might be a real person.', 'Weighing the credit\u0007: it\r\ncould be a real name.');
+  plan.chat = llmSays('human', 'The credit might be a real person.', 'Weighing the credit\u0007: it\r\ncould be a real name.', 'Content: the credit "Sam" may be a real student.\nQuality: fine. Uniqueness: fine.');
   const sub = look({ name: 'Señor Café' });
   const h = await post('/submit', sub, fresh());
   assert.equal(h.body.outcome, 'pending');
@@ -308,7 +314,8 @@ test('the LLM accepts, declines with its reason, or hands it to a person (who ge
   await waitFor(() => mails.length === 1);
   const m = mails[0];
   assert.match(m, /^Subject: =\?UTF-8\?B\?/m);
-  for (const part of [sub.code, 'The credit might be a real person.', `--approve ${h.body.id}`, `--decline ${h.body.id}`, 'Sam', 'personal 0.3', 'Its reasoning (summary, 42 reasoning tokens):', 'Weighing the credit: it\r\ncould be a real name.']) assert.ok(m.includes(part), part);
+  for (const part of [sub.code, 'The credit might be a real person.', `--approve ${h.body.id}`, `--decline ${h.body.id}`, 'Sam', 'personal 0.3', 'Its reasoning (summary, 42 reasoning tokens):', 'Weighing the credit: it\r\ncould be a real name.', 'Its rationale:', 'Content: the credit "Sam" may be a real student.\r\nQuality: fine.', 'via OpenAI']) assert.ok(m.includes(part), part);
+  assert.equal(g.show(h.body.id).decision.escalation.rationale, 'Content: the credit "Sam" may be a real student.\nQuality: fine. Uniqueness: fine.');
   assert.doesNotMatch(m, /203\.0\.113|198\.51\.100|gz_gallery/);
   assert.equal(g.list('pending')[0].unmailed, 0);
 });

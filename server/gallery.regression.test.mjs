@@ -24,7 +24,8 @@ const decisionAnswers = (over = {}) => ({ answers: { quality: { score: 3 }, uniq
 const safety = (over = {}) => ({ answers: { abuse: { noul: 0.04 }, personal: { noul: 0.05 }, official: { noul: 0.01 }, ad: { noul: 0.03 }, ...over } });
 // A review is two decisions calls at once; each gets the answer to the questions it asked.
 const answer = (options, main = decisionAnswers(), risk = safety()) => (JSON.parse(options.body).questions.abuse ? risk : main);
-const chat = (value) => ({ choices: [{ message: { content: JSON.stringify(value) } }] });
+// The reviewer's reply; every decision carries a rationale unless the test is about its absence.
+const chat = (value) => ({ choices: [{ message: { content: JSON.stringify('rationale' in value ? value : { ...value, rationale: 'Checked content, quality and uniqueness.' }) } }] });
 const create = async (options = {}) => {
   const g = gallery({ db: path.join(tmp, `${++seq}.db`), apiKey: 'mock', ipHeader: 'x-real-ip', ...options });
   galleries.push(g);
@@ -79,6 +80,9 @@ for (const value of [
   { decision: 'accept', reason: 12 },
   { decision: 'accept', reason: ['fine'] },
   { decision: 'accept', reason: 'fine', extra: 'outside schema' },
+  // An acceptance must say why: no rationale, or an empty one, is not an answer.
+  { decision: 'accept', reason: 'fine', rationale: '' },
+  { decision: 'accept', reason: 'fine', rationale: 7 },
 ]) test(`model schema sends invalid LLM response to human: ${JSON.stringify(value)}`, async () => {
   mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(String(url).endsWith('/decisions') ? answer(o, decisionAnswers(), safety({ personal: { noul: 0.3 } })) : chat(value))));
   const g = await create();
@@ -507,6 +511,7 @@ test('CLI approves, declines, removes and creates a consistent SQLite backup', a
   const b = await post(g, look(), { ip: '192.0.2.2' });
   const cli = (...args) => execFileSync(process.execPath, ['server/gallery.mjs', ...args], { cwd: process.cwd(), env: { PATH: process.env.PATH, DB: db }, encoding: 'utf8' });
   assert.match(cli('--pending'), new RegExp(a.body.id));
+  assert.match(cli('--show', a.body.id), /Second review .*: human\nReason: Unsure\nRationale: Checked content, quality and uniqueness\./);
   assert.match(cli('--approve', a.body.id), /published/);
   assert.match(cli('--decline', b.body.id, 'Try different colors'), /declined/);
   assert.match(cli('--remove', a.body.id), /removed/);

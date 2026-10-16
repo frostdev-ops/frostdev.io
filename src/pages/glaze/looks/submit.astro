@@ -100,7 +100,7 @@ const access: [string, string, string][] = [
       <div class="product-section-heading">
         <p class="product-eyebrow">What happens to it</p>
         <h2 id="privacy-heading">What the review sees and keeps.</h2>
-        <p>Your Look is checked by Glaze's own code, then reviewed by a decision model (<code>liquid/d1-ultra</code>) through OpenRouter: is the name and credit right for students, is it polished, is it its own Look. If it's unsure, a larger model (<code>openai/gpt-6-luna-pro</code>) decides, or asks a person, who gets an email. <a class="looks-link" href={guide}>How the review works</a></p>
+        <p>Your Look is checked by Glaze's own code, then reviewed by a decision model (<code>liquid/d1-ultra</code>) through OpenRouter: is the name and credit right for students, is it polished, is it its own Look. If it's unsure, a larger model (<code>openai/gpt-6-luna-pro</code>, which must explain every decision) decides, or asks a person, who gets an email. <a class="looks-link" href={guide}>How the review works</a></p>
       </div>
       <div class="product-panel">
         <h3>What's kept</h3>
@@ -253,7 +253,7 @@ const access: [string, string, string][] = [
     } else if (body.outcome === 'published') {
       const p = el('p', 'Published. ');
       p.append(link(String(body.url).startsWith('/glaze/looks#') ? body.url : '/glaze/looks', 'See it in the gallery'), '.');
-      say(el('h2', 'Your Look is in the gallery.', 'submit-h2'), p, numbers(body.numbers), ...(body.dropped?.length ? [el('p', `Left off: ${body.dropped.join(', ')} (the review didn't see it that way).`, 'help')] : []), statusLink(body.token));
+      say(el('h2', 'Your Look is in the gallery.', 'submit-h2'), p, ...(typeof body.review === 'string' && body.review ? [el('p', `The second reviewer: ${body.review}`)] : []), numbers(body.numbers), ...(body.dropped?.length ? [el('p', `Left off: ${body.dropped.join(', ')} (the review didn't see it that way).`, 'help')] : []), statusLink(body.token));
     } else if (body.outcome === 'pending') {
       say(el('h2', 'A person will look at it.', 'submit-h2'), el('p', 'The automated review wasn\'t sure, so it went to the maintainer. It holds your name and code until then.'), numbers(body.numbers), statusLink(body.token));
     } else {
