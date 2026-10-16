@@ -1,7 +1,9 @@
 ---
 import MarketingLayout from '../../layouts/MarketingLayout.astro';
+import LookCard from '../../components/LookCard.astro';
 import { loadLooks, TAGS, GLAZE_VERSION } from '../../../scripts/looks.mjs';
 import '../../styles/products.css';
+import '../../styles/looks.css';
 
 // Every entry is checked as the page builds (scripts/looks.mjs); one bad entry stops the build.
 const { looks, errors } = await loadLooks();
@@ -9,20 +11,17 @@ if (errors.length) throw new Error(`Looks gallery:\n${errors.join('\n')}`);
 looks.sort((a, b) => b.created.localeCompare(a.created) || a.name.localeCompare(b.name));
 
 const repo = 'https://github.com/frostdev-ops/frostdev.io';
-const submit = `${repo}/issues/new?template=glaze-look.yml`;
 const guide = `${repo}/blob/main/docs/looks-gallery.md`;
-// Filters: one group each for kind and light/dark (either value matches), then each tag on its own.
+// Filters: one group each for source, kind and light/dark (either value matches), then each tag on its own. Every
+// chip is built; the script shows those that some card (curated or community) has.
 const groups: [string, [string, string][]][] = [
+  ['source', [['curated', 'Curated'], ['community', 'Community']]],
   ['kind', [['look', 'Looks'], ['palette', 'Palettes']]],
   ['mode', [['dark', 'Dark'], ['light', 'Light']]],
   ['animated', [['animated', 'Animated']]],
   ...Object.entries(TAGS).map(([tag, label]): [string, [string, string][]] => [tag, [[tag, label]]]),
 ];
-const used = new Set(looks.flatMap((l) => [l.kind, l.mode, ...(l.animated ? ['animated'] : []), ...l.tags]));
-const filters = groups.map(([g, opts]) => [g, opts.filter(([v]) => used.has(v))] as const).filter(([, opts]) => opts.length);
-const label = (tag: string) => (TAGS as Record<string, string>)[tag] || tag;
-const day = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
-const host = (url: string) => new URL(url).hostname;
+const used = new Set(looks.flatMap((l) => ['curated', l.kind, l.mode, ...(l.animated ? ['animated'] : []), ...l.tags]));
 ---
 
 <MarketingLayout title="Glaze Looks — free themes for Blackboard Ultra and Canvas" description={`${looks.length} free Looks and palettes for Glaze, shared openly. Preview one, then wear it on Blackboard Ultra or Canvas. No accounts, no tracking.`} path="/glaze/looks">
@@ -33,7 +32,7 @@ const host = (url: string) => new URL(url).hostname;
       <p class="product-lead">Palettes, fonts and backgrounds for Glaze, shared openly. Pick one and Glaze shows it to you first; nothing changes until you say so. No accounts, no likes, no tracking.</p>
       <div class="product-actions">
         <a class="product-button" href="#using">How to use a Look <span aria-hidden="true">↓</span></a>
-        <a class="product-button secondary" href={submit}>Share your Look <span aria-hidden="true">↗</span></a>
+        <a class="product-button secondary" href="/glaze/looks/submit">Share your Look <span aria-hidden="true">→</span></a>
       </div>
     </section>
 
@@ -44,48 +43,23 @@ const host = (url: string) => new URL(url).hostname;
         <label class="looks-sort">Sort <select id="looks-sort"><option value="new">Newest</option><option value="name">Name</option></select></label>
       </div>
       <div class="looks-filters" role="group" aria-label="Filter by tag">
-        {filters.flatMap(([g, opts]) => opts.map(([v, text]) => <button type="button" class="looks-chip" data-group={g} data-value={v} aria-pressed="false">{text}</button>))}
+        {groups.flatMap(([g, opts]) => opts.map(([v, text]) => <button type="button" class="looks-chip" data-group={g} data-value={v} aria-pressed="false" hidden={!used.has(v)}>{text}</button>))}
       </div>
       <p class="looks-count" id="looks-count" role="status"></p>
     </div>
 
     <ul class="looks-grid" id="looks-grid">
-      {looks.map((l) => {
-        const tags = [l.kind, l.mode, ...(l.animated ? ['animated'] : []), ...l.tags];
-        const search = [l.name, l.author, l.kind, l.mode, ...tags.map(label)].join(' ').toLowerCase();
-        return (
-          <li class="look-card" id={l.id} data-name={l.name} data-created={l.created} data-tags={tags.join(' ')} data-search={search}>
-            <figure class="look-preview">
-              <a href={l.previews[0].src} aria-label={`${l.name}: full-size preview`}><img src={l.previews[0].src} width="960" height="413" loading="lazy" decoding="async" alt={`${l.name} on a Canvas dashboard`} /></a>
-              {l.previews.length > 1 && (
-                <figcaption class="look-modes" role="group" aria-label="Preview">
-                  {l.previews.map((p, i) => <button type="button" data-src={p.src} aria-pressed={i === 0 ? 'true' : 'false'}>{p.mode === 'dark' ? 'Dark' : 'Light'}</button>)}
-                </figcaption>
-              )}
-            </figure>
-            <div class="look-body">
-              <h2><a href={`#${l.id}`}>{l.name}</a></h2>
-              <p class="look-meta">{l.kind === 'look' ? 'Look' : 'Palette'} by <a href={`https://github.com/${l.author}`} rel="nofollow">@{l.author}</a> · <time datetime={l.created}>{day(l.created)}</time></p>
-              <span class="look-chips" role="img" aria-label={`Colors: ${l.chips.join(', ')}`}>
-                {l.chips.map((c) => <i style={`background:${c}`}></i>)}
-              </span>
-              <ul class="look-tags" aria-label="Tags">
-                {tags.filter((t) => t !== l.kind).map((t) => <li>{t === 'dark' ? 'Dark' : t === 'light' ? 'Light' : t === 'animated' ? 'Animated' : label(t)}</li>)}
-              </ul>
-              {l.image && (
-                <p class="look-image">Its background image is on <strong>{host(l.image)}</strong>, which gets your visit when you see it.
-                  <button type="button" data-image={l.image}>Show the image</button></p>
-              )}
-              <div class="look-actions">
-                <a class="product-button" href="#using" data-glaze-use data-code={l.code} data-name={l.name} data-author={l.author}>Use this Look in Glaze</a>
-                <button type="button" class="product-button secondary" data-copy={l.code}>Copy code</button>
-              </div>
-              <details class="look-code"><summary>Theme code</summary><code>{l.code}</code></details>
-            </div>
-          </li>
-        );
-      })}
+      {looks.map((l) => <LookCard look={l} />)}
     </ul>
+    <template id="look-template"><LookCard /></template>
+    <dialog id="look-dialog" class="look-dialog" aria-labelledby="look-dialog-title">
+      <div class="look-dialog-head">
+        <h2 class="look-dialog-title" id="look-dialog-title">Preview</h2>
+        <form method="dialog"><button class="product-button secondary">Close</button></form>
+      </div>
+      <div class="look-dialog-stage"></div>
+      <p class="look-dialog-note">A stand-in course page painted with the Look's colors, text size, shape and background. Glaze paints your real Blackboard, Canvas or Moodle pages the same way.</p>
+    </dialog>
     <p class="looks-none" id="looks-none" hidden>No Looks match. Try fewer filters.</p>
 
     <section class="product-section product-split" id="using" aria-labelledby="using-heading">
@@ -107,14 +81,15 @@ const host = (url: string) => new URL(url).hostname;
       <div class="product-section-heading">
         <p class="product-eyebrow">Open to everyone</p>
         <h2 id="share-heading">Share your Look.</h2>
-        <p>Copy your theme code in Glaze, take a screenshot of it on your Blackboard or Canvas, and send both through a GitHub issue or pull request. Every code is checked by Glaze {GLAZE_VERSION}'s own code before it's published here.</p>
-        <div class="product-actions"><a class="product-button" href={submit}>Share a Look <span aria-hidden="true">↗</span></a><a class="product-button secondary" href={guide}>How it works <span aria-hidden="true">↗</span></a></div>
+        <p>Copy your theme code in Glaze and paste it into the submit page: it shows your Look live and checks it with Glaze {GLAZE_VERSION}'s own code as you type. When you submit, an automated review decides whether it's safe for a school audience, polished and different enough from the Looks already here, and tells you why if not. No account, no screenshot needed.</p>
+        <div class="product-actions"><a class="product-button" href="/glaze/looks/submit">Share a Look <span aria-hidden="true">→</span></a><a class="product-button secondary" href={guide}>How it works <span aria-hidden="true">↗</span></a></div>
       </div>
       <div class="product-panel">
         <h3>License</h3>
         <p>Submitted Looks and their screenshots are shared under <a class="looks-link" href="https://creativecommons.org/licenses/by/4.0/" rel="license">CC BY 4.0</a>. When sharing or adapting one, credit its author, link to the license and say what you changed. Glaze’s built-in Looks and palettes keep their existing license.</p>
         <h3>Privacy</h3>
-        <p>This page is static. It has no accounts, likes, comments or analytics, and it loads nothing from other sites: a Look's own background image loads only when you choose to see it. Glaze sends nothing when you visit.</p>
+        <p>No accounts, likes, comments or analytics, and nothing loads from other sites: a Look's own background image loads only when you choose to see it. The curated Looks are part of this page. To add the community's Looks, the page asks frostdev.io itself for their list, without cookies; that request records nothing about you. Glaze sends nothing when you visit.</p>
+        <p>Submitting is the only thing that keeps anything, and only for a day: see <a class="looks-link" href="/glaze/looks/submit#privacy">what the submit page keeps</a>.</p>
         <h3>Report a Look</h3>
         <p>Something here that shouldn't be? Email <a class="looks-link" href="mailto:admin@frostdev.io?subject=Glaze%20Looks%20gallery%20report">admin@frostdev.io</a> or <a class="looks-link" href={`${repo}/issues/new?title=Report%3A%20`}>open an issue</a> with the Look's name. We take it down first and look into it after.</p>
       </div>
@@ -123,13 +98,16 @@ const host = (url: string) => new URL(url).hostname;
 </MarketingLayout>
 
 <script>
+  import { fillCard, showImage, wireDialog, type Look } from '../../components/looks';
+
   const $ = <T extends Element>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel)!;
   const grid = $<HTMLUListElement>('#looks-grid');
-  const cards = [...grid.children] as HTMLElement[];
+  let cards = [...grid.children] as HTMLElement[];
   const find = $<HTMLInputElement>('#looks-find');
   const sort = $<HTMLSelectElement>('#looks-sort');
   const chips = [...document.querySelectorAll<HTMLButtonElement>('.looks-chip')];
   $<HTMLElement>('#looks-tools').hidden = false;
+  for (const f of document.querySelectorAll<HTMLElement>('.look-modes')) f.hidden = false;
 
   const update = () => {
     const words = find.value.toLowerCase().split(/\s+/).filter(Boolean);
@@ -152,11 +130,30 @@ const host = (url: string) => new URL(url).hostname;
   sort.addEventListener('change', update);
   for (const c of chips) c.addEventListener('click', () => { c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true')); update(); });
   update();
+  wireDialog(grid);
+
+  // The community's Looks, from frostdev.io's gallery server, without cookies. If it doesn't answer, the curated
+  // gallery above is the whole gallery.
+  const tpl = $<HTMLTemplateElement>('#look-template');
+  fetch('/glaze/looks/api/looks', { credentials: 'omit', headers: { accept: 'application/json' } })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((body: { looks?: Look[] } | null) => {
+      const added = (Array.isArray(body?.looks) ? body.looks : []).map((l) => fillCard(tpl, l)).filter((c): c is HTMLElement => !!c && !document.getElementById(c.id));
+      if (!added.length) return;
+      cards = [...cards, ...added];
+      const tags = new Set(cards.flatMap((c) => c.dataset.tags!.split(' ')));
+      for (const c of chips) c.hidden = !tags.has(c.dataset.value!);
+      update();
+      // A link to a community card (#id) works once it's there.
+      if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+    })
+    .catch(() => {});
 
   grid.addEventListener('click', async (e) => {
     const b = (e.target as Element).closest<HTMLButtonElement>('button');
-    if (!b) return;
+    if (!b || b.classList.contains('lp')) return;
     const card = b.closest<HTMLElement>('.look-card')!;
+    const preview = $<HTMLElement>('.lp', card);
     if (b.dataset.copy) {
       try {
         await navigator.clipboard.writeText(b.dataset.copy);
@@ -168,64 +165,17 @@ const host = (url: string) => new URL(url).hostname;
         details.open = true;
         getSelection()?.selectAllChildren($('code', details));
       }
-    } else if (b.dataset.src) {
-      $<HTMLImageElement>('.look-preview img', card).src = b.dataset.src;
-      $<HTMLAnchorElement>('.look-preview a', card).href = b.dataset.src;
-      for (const x of b.parentElement!.children) x.setAttribute('aria-pressed', String(x === b));
+    } else if (b.parentElement?.classList.contains('look-modes')) {
+      // Live preview, or one of a curated Look's screenshots.
+      const shot = $<HTMLImageElement>('.look-shot', card);
+      if (b.dataset.src) shot.src = b.dataset.src;
+      shot.hidden = !b.dataset.src;
+      preview.hidden = !!b.dataset.src;
+      for (const x of b.parentElement.children) x.setAttribute('aria-pressed', String(x === b));
     } else if (b.dataset.image) {
       // Another site's image: fetched only now, on the student's click, without a referrer.
-      const img = Object.assign(document.createElement('img'), { src: b.dataset.image, alt: `Background image of ${card.dataset.name}`, referrerPolicy: 'no-referrer', loading: 'lazy' });
-      img.className = 'look-bg';
-      b.replaceWith(img);
+      showImage(preview, b.dataset.image, card.dataset.name || '');
+      b.replaceWith(Object.assign(document.createElement('span'), { textContent: 'Shown in the preview above.' }));
     }
   });
 </script>
-
-<style>
-  .looks-page { --product-accent: #6fdcff; }
-  .looks-hero { padding: 4rem 0 2.5rem; max-width: 46rem; }
-  .looks-hero .product-eyebrow a:hover { color: #e2f8ff; }
-  .looks-tools { position: sticky; top: .5rem; z-index: 3; display: grid; gap: .85rem; padding: 1rem; margin-bottom: 1.5rem; border: 1px solid #23394e; border-radius: .75rem; background: rgb(6 13 24 / .88); backdrop-filter: blur(10px); }
-  .looks-search { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
-  .looks-search input { flex: 1 1 16rem; min-width: 0; padding: .7rem 1rem; border: 1px solid #35506a; border-radius: .5rem; background: rgb(12 27 44 / .8); color: #e8f2fa; }
-  .looks-search input::placeholder { color: #8fa8c0; }
-  .looks-sort { display: flex; align-items: center; gap: .5rem; color: #b3c8dc; font-size: .85rem; }
-  .looks-sort select { padding: .6rem .75rem; border: 1px solid #35506a; border-radius: .5rem; background: #0a1725; color: #e8f2fa; }
-  .looks-filters { display: flex; flex-wrap: wrap; gap: .5rem; }
-  .looks-chip { padding: .35rem .8rem; border: 1px solid #35506a; border-radius: 999px; color: #b3c8dc; font-size: .8rem; background: rgb(12 27 44 / .6); }
-  .looks-chip:hover { border-color: var(--product-accent); color: #e8f2fa; }
-  .looks-chip[aria-pressed='true'] { background: var(--product-accent); border-color: var(--product-accent); color: #06121c; font-weight: 600; }
-  .looks-count { color: #8fa8c0; font-size: .8rem; }
-  :is(.looks-search input, .looks-sort select, .looks-chip, .look-card button, .look-code summary):focus-visible { outline: 2px solid var(--product-accent); outline-offset: 2px; }
-  .looks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)); gap: 1.25rem; }
-  .look-card { display: flex; flex-direction: column; min-width: 0; border: 1px solid #23394e; border-radius: .75rem; background: rgb(10 23 37 / .85); overflow: hidden; scroll-margin-top: 9rem; }
-  .look-card:target { border-color: var(--product-accent); }
-  .look-preview { position: relative; background: #02060d; }
-  .look-preview img { width: 100%; aspect-ratio: 960 / 413; object-fit: cover; }
-  .look-modes { position: absolute; right: .5rem; bottom: .5rem; display: flex; gap: .25rem; }
-  .look-modes button { padding: .2rem .6rem; border-radius: 999px; font-size: .7rem; color: #e8f2fa; background: rgb(6 13 24 / .8); }
-  .look-modes button[aria-pressed='true'] { color: #06121c; background: var(--product-accent); }
-  .look-body { display: grid; gap: .75rem; padding: 1.1rem 1.25rem 1.25rem; flex: 1; align-content: start; }
-  .look-body h2 { color: #e8f2fa; font-size: 1.15rem; font-weight: 600; letter-spacing: -.02em; overflow-wrap: anywhere; }
-  .look-meta { color: #8fa8c0; font-size: .8rem; }
-  .look-meta a, .looks-link { color: #9be7ff; }
-  .look-meta a:hover, .looks-link:hover { text-decoration: underline; }
-  .look-chips { display: flex; width: max-content; border: 1px solid #35506a; border-radius: 999px; overflow: hidden; }
-  .look-chips i { width: 1.6rem; height: 1.1rem; }
-  .look-tags { display: flex; flex-wrap: wrap; gap: .35rem; }
-  .look-tags li { padding: .1rem .55rem; border: 1px solid #23394e; border-radius: 999px; color: #b3c8dc; font-size: .7rem; }
-  .look-image { color: #b3c8dc; font-size: .8rem; line-height: 1.6; }
-  .look-image button { display: block; margin-top: .35rem; color: #9be7ff; text-decoration: underline; }
-  .look-bg { margin-top: .5rem; border-radius: .5rem; max-height: 12rem; object-fit: cover; }
-  .look-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .25rem; }
-  .look-actions .product-button { padding: .65rem 1rem; font-size: .8rem; }
-  .look-code summary { cursor: pointer; color: #8fa8c0; font-size: .75rem; width: max-content; }
-  .look-code code { display: block; margin-top: .5rem; padding: .75rem; border: 1px solid #23394e; border-radius: .5rem; background: #060d18; color: #c0e6ec; font-size: .7rem; line-height: 1.5; overflow-wrap: anywhere; user-select: all; }
-  .looks-none { padding: 3rem 0; color: #b3c8dc; text-align: center; }
-  #using, #share { margin-top: 4rem; }
-  .product-panel h3 + p { margin-bottom: 1.25rem; }
-  @media (max-width: 700px) {
-    .looks-hero { padding-top: 2.5rem; }
-    .looks-tools { position: static; }
-  }
-</style>

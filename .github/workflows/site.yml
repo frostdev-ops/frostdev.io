@@ -19,6 +19,8 @@ jobs:
       - run: npm ci
       - name: Check the Glaze Looks gallery entries
         run: node scripts/looks.mjs
+      - name: Test the Looks gallery server (mock OpenRouter and mail, nothing leaves the runner)
+        run: npm run test:gallery
       - run: npm run check
       - run: npm run build
       - name: Verify the public static output
@@ -26,7 +28,7 @@ jobs:
           node --input-type=module <<'NODE'
           import assert from 'node:assert/strict';
           import { readdirSync, statSync, lstatSync } from 'node:fs';
-          const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'glaze/privacy', 'glaze/terms', 'glaze/looks', 'privacy', 'guides',
+          const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'glaze/privacy', 'glaze/terms', 'glaze/looks', 'glaze/looks/submit', 'privacy', 'guides',
             'guides/rimeward-first-workspace', 'guides/crosspane-two-computers',
             'guides/rimewire-agent-handoffs', 'guides/frostsim-first-simulation',
             'guides/loothing-raid-loot', 'guides/glaze-safari', 'guides/glaze-chrome'];

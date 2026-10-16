@@ -26,7 +26,7 @@ if [[ $mode != activate ]]; then
     node --input-type=module <<'NODE'
 import assert from 'node:assert/strict';
 import { readdirSync, statSync, lstatSync } from 'node:fs';
-const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'glaze/privacy', 'glaze/terms', 'glaze/looks', 'privacy', 'guides',
+const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'glaze/privacy', 'glaze/terms', 'glaze/looks', 'glaze/looks/submit', 'privacy', 'guides',
   'guides/rimeward-first-workspace', 'guides/crosspane-two-computers',
   'guides/rimewire-agent-handoffs', 'guides/frostsim-first-simulation',
   'guides/loothing-raid-loot', 'guides/glaze-safari', 'guides/glaze-chrome'];
@@ -126,7 +126,7 @@ activated=1
 
 # The origin uses the existing Cloudflare origin certificate. Public TLS is checked normally.
 for origin in origin public; do
-    for route in / /rimeward /rimewire /crosspane /glaze /glaze/privacy /glaze/terms /glaze/looks /privacy /guides \
+    for route in / /rimeward /rimewire /crosspane /glaze /glaze/privacy /glaze/terms /glaze/looks /glaze/looks/submit /privacy /guides \
         /guides/rimeward-first-workspace /guides/crosspane-two-computers \
         /guides/rimewire-agent-handoffs /guides/frostsim-first-simulation \
         /guides/loothing-raid-loot /guides/glaze-safari /guides/glaze-chrome \

@@ -1,0 +1,150 @@
+---
+// A live preview of a Look: a small mock course page painted only with the Look's own values (see looks.ts). Built
+// into the HTML for curated Looks; for community Looks and the submit page the same markup is painted in the
+// browser by paintPreview(). A button: it opens the preview large (wireDialog()).
+import { previewState, type Described } from './looks';
+
+interface Props { look?: Partial<Described>; name?: string }
+const { look = {}, name = '' } = Astro.props;
+const { vars, data } = previewState(look);
+const host = look.bg?.imageHost || '';
+---
+
+<button type="button" class="lp" style={vars} data-bg={data.bg} data-font={data.font} data-head={data.head} data-mono={data.mono}
+  data-animated={data.animated} data-title={name} aria-label={name ? `${name}: open a large preview` : 'Open a large preview'}>
+  <span class="lp-bg" aria-hidden="true"></span>
+  <span class="lp-page" aria-hidden="true">
+    <span class="lp-top">
+      <span class="lp-logo"></span>
+      <span class="lp-course">BIO 201 · Cell Biology</span>
+      <span class="lp-avatar">JR</span>
+    </span>
+    <span class="lp-side">
+      <span class="lp-nav">Home</span>
+      <span class="lp-nav lp-active">Announcements</span>
+      <span class="lp-nav">Modules</span>
+      <span class="lp-nav">Grades</span>
+      <span class="lp-nav">Calendar</span>
+    </span>
+    <span class="lp-main">
+      <span class="lp-card lp-news">
+        <span class="lp-h">Lab 4: Osmosis</span>
+        <span class="lp-p">Bring your notebook. We meet in room 210 on Thursday and start with the potato cores.</span>
+        <span class="lp-muted">Dr. Rivera · 2 hours ago</span>
+        <span class="lp-faint">Visible to 32 students</span>
+        <span class="lp-row">
+          <span class="lp-btn">Start lab</span>
+          <span class="lp-link">Open the lab guide</span>
+        </span>
+        <span class="lp-row">
+          <span class="lp-badge lp-ok">Submitted</span>
+          <span class="lp-badge lp-warn">Due soon</span>
+          <span class="lp-badge lp-err">Late</span>
+        </span>
+        <span class="lp-progress"><span class="lp-muted">Course progress</span><span class="lp-bar"><span></span></span></span>
+      </span>
+      <span class="lp-card lp-due">
+        <span class="lp-h2">Due this week</span>
+        <span class="lp-item"><span class="lp-date">Tue</span><span>Reading quiz 3</span><i class="lp-dot lp-ok"></i></span>
+        <span class="lp-item"><span class="lp-date">Thu</span><span>Lab 4 report</span><i class="lp-dot lp-warn"></i></span>
+        <span class="lp-item"><span class="lp-date">Fri</span><span>Problem set 5</span><i class="lp-dot lp-err"></i></span>
+      </span>
+    </span>
+  </span>
+  <span class="lp-label lp-scene-label" aria-hidden="true">3D scene in Glaze</span>
+  <span class="lp-label lp-image-label" aria-hidden="true">Background image from <span data-f="host">{host}</span></span>
+</button>
+
+<style is:global>
+  /* Sizes are in cqi (1% of the preview's width), so the mock scales like a picture: the same at 320 px and large. */
+  .lp {
+    --lp-u: 1cqi;
+    --lp-px: .078cqi; /* one pixel of a 1280-pixel-wide course page */
+    --lp-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --lp-serif: ui-serif, "Iowan Old Style", Georgia, serif;
+    --lp-mono-stack: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --lp-card-bg: var(--gz-surface);
+    position: relative; display: block; width: 100%; aspect-ratio: 16 / 10; padding: 0; border: 0; overflow: hidden;
+    container-type: inline-size; cursor: zoom-in; text-align: left; isolation: isolate;
+    background: var(--gz-surface-2); color: var(--gz-ink);
+    font-family: var(--lp-sans); line-height: var(--lp-leading, 1.5);
+  }
+  /* cqi on the container itself would be the page's, so text sizes start one level in. */
+  .lp-page { font-size: calc(1.9cqi * var(--lp-scale, 1)); font-weight: 400; }
+  .lp[data-font='serif'] { font-family: var(--lp-serif); }
+  .lp[data-font='mono'] { font-family: var(--lp-mono-stack); }
+  .lp:not([data-bg='solid']) { --lp-card-bg: color-mix(in srgb, var(--gz-surface) calc(100% - var(--lp-glass, 12) * 1.6%), transparent); }
+  .lp:focus-visible { outline: 3px solid #6fdcff; outline-offset: 3px; }
+  :where(.lp) :where(span, i) { display: block; font-style: normal; }
+
+  /* Background: solid, Glaze's gradient, an aurora, an animated stand-in for a 3D scene, or an image placeholder. */
+  .lp-bg { position: absolute; inset: 0; z-index: -1; background: var(--gz-surface-2); overflow: hidden; }
+  .lp-bg::before, .lp-bg::after { content: ''; position: absolute; inset: 0; }
+  .lp-bg::after { background: var(--gz-surface-2); opacity: var(--lp-dim, .6); }
+  .lp[data-bg='solid'] .lp-bg::after { display: none; }
+  .lp[data-bg='gradient'] .lp-bg::before { background: var(--lp-bg-image); filter: blur(calc(var(--lp-blur) * var(--lp-px))); }
+  .lp[data-bg='aurora'] .lp-bg::before {
+    inset: -30%;
+    background: radial-gradient(40% 30% at 30% 40%, var(--lp-bg-1), transparent 70%), radial-gradient(35% 28% at 70% 35%, var(--lp-bg-2), transparent 70%), radial-gradient(45% 30% at 50% 75%, var(--lp-bg-3), transparent 70%);
+    filter: blur(4cqi); animation: lp-aurora 16s ease-in-out infinite alternate;
+  }
+  .lp[data-bg='scene'] .lp-bg::before {
+    inset: -10%;
+    background: radial-gradient(9% 14% at 20% 30%, var(--lp-bg-1), transparent), radial-gradient(12% 18% at 75% 25%, var(--lp-bg-2), transparent),
+      radial-gradient(10% 15% at 60% 80%, var(--lp-bg-3), transparent), radial-gradient(7% 11% at 35% 75%, var(--lp-bg-2), transparent),
+      linear-gradient(to top, color-mix(in srgb, var(--lp-bg-1) 35%, transparent), transparent 55%);
+    filter: blur(1.2cqi); animation: lp-scene 12s ease-in-out infinite alternate;
+  }
+  .lp[data-bg='image'] .lp-bg::before { background: repeating-linear-gradient(135deg, var(--gz-surface) 0 2cqi, var(--gz-line) 2cqi 4cqi); }
+  .lp-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(calc(var(--lp-blur) * var(--lp-px))); }
+  @keyframes lp-aurora { from { transform: translate(-6%, -3%) rotate(-6deg) scale(1); } to { transform: translate(6%, 4%) rotate(8deg) scale(1.15); } }
+  @keyframes lp-scene { from { transform: translateY(2%) scale(1); } to { transform: translateY(-4%) scale(1.08) rotate(3deg); } }
+  @media (prefers-reduced-motion: reduce) { .lp .lp-bg::before { animation: none; } }
+
+  .lp-label { position: absolute; right: 1.6cqi; bottom: 1.6cqi; padding: .5cqi 1.4cqi; border-radius: 99px; font: 600 1.7cqi/1.4 var(--lp-sans);
+    color: var(--gz-ink); background: color-mix(in srgb, var(--gz-surface-2) 82%, transparent); border: 1px solid var(--gz-line-strong); display: none; }
+  .lp[data-bg='scene'] .lp-scene-label, .lp[data-bg='image']:not([data-image-shown]) .lp-image-label { display: block; }
+  .lp-image-label span { display: inline; }
+
+  /* The mock course page. Shape follows the Look: corner radius, glass, depth and density. */
+  .lp-page { display: grid; grid-template: 'top top' 7.5cqi 'side main' 1fr / 21% 1fr; height: 100%; }
+  .lp-top { grid-area: top; display: flex; align-items: center; gap: 1.4cqi; padding: 0 2cqi; background: var(--lp-card-bg); border-bottom: 1px solid var(--gz-line); }
+  .lp-logo { width: 3.4cqi; height: 3.4cqi; border-radius: calc(var(--lp-radius) * var(--lp-px) * 1.5); background: linear-gradient(135deg, var(--gz-accent), var(--gz-accent-hi)); }
+  .lp-course { flex: 1; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lp[data-head='serif'] :is(.lp-course, .lp-h, .lp-h2) { font-family: var(--lp-serif); }
+  .lp[data-head='mono'] :is(.lp-course, .lp-h, .lp-h2) { font-family: var(--lp-mono-stack); }
+  .lp[data-head='sans'] :is(.lp-course, .lp-h, .lp-h2) { font-family: var(--lp-sans); }
+  .lp-avatar { width: 3.6cqi; height: 3.6cqi; border-radius: 50%; display: grid; place-items: center; font-size: 1.4cqi; font-weight: 700; background: var(--gz-accent-soft); color: var(--gz-accent-hi); }
+  .lp-side { grid-area: side; padding: calc(1.6cqi * var(--lp-pad)) 1.2cqi; display: grid; align-content: start; gap: calc(.5cqi * var(--lp-pad));
+    background: color-mix(in srgb, var(--lp-card-bg) 70%, transparent); border-right: 1px solid var(--gz-line); }
+  .lp-nav { padding: calc(.6cqi * var(--lp-pad)) 1.2cqi; border-radius: calc(var(--lp-radius) * var(--lp-px) * 1.5); color: var(--gz-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .92em; }
+  .lp-active { color: var(--gz-ink); background: var(--gz-accent-soft); box-shadow: inset .5cqi 0 var(--gz-accent); font-weight: 600; }
+  .lp-main { grid-area: main; display: grid; grid-template-columns: 1.55fr 1fr; gap: calc(1.8cqi * var(--lp-pad)); padding: calc(2cqi * var(--lp-pad)); align-items: start; min-height: 0; }
+  .lp-card { display: grid; gap: calc(.7cqi * var(--lp-pad)); padding: calc(1.8cqi * var(--lp-pad)); min-width: 0; background: var(--lp-card-bg);
+    border: 1px solid var(--gz-line); border-radius: calc(var(--lp-radius) * var(--lp-px) * 2);
+    box-shadow: 0 calc(var(--lp-depth) * .35cqi) calc(var(--lp-depth) * 1.4cqi) rgb(0 0 0 / calc(var(--lp-depth) * 9%)); }
+  .lp-h { font-size: 1.4em; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; }
+  .lp-h2 { font-weight: 700; padding-bottom: .6cqi; border-bottom: 1px solid var(--gz-line-strong); }
+  .lp-p { color: var(--gz-ink); }
+  .lp-muted { color: var(--gz-ink-muted); font-size: .9em; }
+  .lp-faint { color: var(--gz-ink-faint); font-size: .85em; }
+  .lp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 1cqi; }
+  .lp-btn { padding: calc(.5cqi * var(--lp-pad)) 1.6cqi; border-radius: calc(var(--lp-radius) * var(--lp-px) * 1.5); background: var(--gz-accent); color: var(--gz-accent-ink); font-weight: 650; font-size: .92em; }
+  .lp-link { color: var(--gz-accent-hi); text-decoration: underline; text-underline-offset: .25em; font-size: .92em; }
+  .lp-badge { padding: .15cqi 1cqi; border-radius: 99px; font-size: .78em; font-weight: 650; }
+  .lp-badge.lp-ok { color: var(--gz-ok); background: color-mix(in srgb, var(--gz-ok) 16%, transparent); }
+  .lp-badge.lp-warn { color: var(--gz-warn); background: color-mix(in srgb, var(--gz-warn) 16%, transparent); }
+  .lp-badge.lp-err { color: var(--gz-err); background: color-mix(in srgb, var(--gz-err) 16%, transparent); }
+  .lp-progress { display: grid; gap: .5cqi; }
+  .lp-bar { height: .9cqi; border-radius: 99px; background: var(--gz-line); overflow: hidden; }
+  .lp-bar span { width: 64%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--gz-accent), var(--gz-accent-hi)); }
+  .lp-item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1cqi; padding: calc(.6cqi * var(--lp-pad)) 0; border-bottom: 1px solid var(--gz-line); font-size: .9em; }
+  .lp-item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lp-date { font-family: var(--lp-mono-stack); color: var(--gz-ink-muted); font-size: .9em; }
+  .lp[data-mono='serif'] .lp-date { font-family: var(--lp-serif); }
+  .lp[data-mono='sans'] .lp-date { font-family: var(--lp-sans); }
+  .lp-dot { width: 1cqi; height: 1cqi; border-radius: 50%; }
+  .lp-dot.lp-ok { background: var(--gz-ok); }
+  .lp-dot.lp-warn { background: var(--gz-warn); }
+  .lp-dot.lp-err { background: var(--gz-err); }
+</style>

@@ -1,0 +1,318 @@
+---
+import MarketingLayout from '../../../layouts/MarketingLayout.astro';
+import LookPreview from '../../../components/LookPreview.astro';
+import { GLAZE_VERSION } from '../../../../scripts/looks.mjs';
+import '../../../styles/products.css';
+import '../../../styles/looks.css';
+
+const guide = 'https://github.com/frostdev-ops/frostdev.io/blob/main/docs/looks-gallery.md';
+const style: [string, string, string][] = [
+  ['minimal', 'Minimal', 'judged by the review'], ['colorful', 'Colorful', 'judged by the review'], ['seasonal', 'Seasonal', 'judged by the review'],
+  ['gradient', 'Gradient', 'a gradient background'], ['serif', 'Serif', 'a serif text font'], ['monospace', 'Monospace', 'a monospace text font'],
+];
+const access: [string, string, string][] = [
+  ['high-contrast', 'High contrast', 'text 7:1 on the surface, muted text and text on the accent 4.5:1'],
+  ['low-vision', 'Low vision', 'text size 110% or more'],
+  ['dyslexia-friendly', 'Dyslexia-friendly', "one of Glaze's Readable fonts or Atkinson Hyperlegible"],
+];
+---
+
+<MarketingLayout title="Share a Glaze Look" description="Submit your Glaze theme to the free Looks gallery. See it live as you paste it; an automated review decides in seconds." path="/glaze/looks/submit">
+  <div class="product-page looks-page submit-page">
+    <section class="looks-hero" aria-labelledby="submit-title">
+      <p class="product-eyebrow"><a href="/glaze">Glaze</a> · <a href="/glaze/looks">Looks gallery</a> · Share</p>
+      <h1 class="product-title" id="submit-title">Share your Look.</h1>
+      <p class="product-lead">In Glaze, open the editor, go to <strong>Share</strong> and choose <strong>Copy theme code</strong>. Paste it here to see it live. When you submit, an automated review checks it's right for students, polished and its own, and publishes it in seconds. One a day.</p>
+    </section>
+
+    <div class="submit-grid">
+      <form class="submit-form product-panel" id="submit-form" novalidate>
+        <div class="field">
+          <label for="f-code">Theme code</label>
+          <textarea id="f-code" name="code" rows="4" required spellcheck="false" autocomplete="off" placeholder="glaze1:…" aria-describedby="f-code-help f-code-error"></textarea>
+          <p class="help" id="f-code-help">Starts with <code>glaze1:</code>. Checked by Glaze {GLAZE_VERSION}'s own code as you type.</p>
+          <p class="help" id="f-code-prefilled" hidden>This code came with the link you opened. Nothing has been sent yet. <button type="button" class="looks-link" id="f-code-check">Preview it</button></p>
+          <ul class="error" id="f-code-error"></ul>
+        </div>
+        <div class="field">
+          <label for="f-name">Name</label>
+          <input id="f-name" name="name" required maxlength="40" autocomplete="off" aria-describedby="f-name-help f-name-error" />
+          <p class="help" id="f-name-help">Up to 40 characters, shown as the Look's title. It has to fit a school audience.</p>
+          <ul class="error" id="f-name-error"></ul>
+        </div>
+        <div class="field">
+          <label for="f-credit">Credit</label>
+          <input id="f-credit" name="credit" required maxlength="32" autocomplete="nickname" aria-describedby="f-credit-help f-credit-error" />
+          <p class="help" id="f-credit-help">The name shown as "by …". Up to 32 letters, digits, spaces, dots, dashes or underscores; not a link or an @handle. It's public, so a nickname is fine.</p>
+          <ul class="error" id="f-credit-error"></ul>
+        </div>
+        <fieldset class="field" aria-describedby="f-tags-help f-tags-error">
+          <legend>Style</legend>
+          <div class="tag-grid">
+            {style.map(([v, label, note]) => <label class="tag"><input type="checkbox" name="tags" value={v} /> {label} <small>{note}</small></label>)}
+          </div>
+          <p class="help" id="f-tags-help">Up to 6 tags in all. Minimal, colorful and seasonal are the review's call: one it doesn't agree with is left off, not held against you.</p>
+        </fieldset>
+        <fieldset class="field" aria-describedby="f-access-help f-tags-error">
+          <legend>Accessibility</legend>
+          <div class="tag-grid">
+            {access.map(([v, label, note]) => <label class="tag"><input type="checkbox" name="tags" value={v} /> {label} <small>{note}</small></label>)}
+          </div>
+          <p class="help" id="f-access-help">These are checked against your code, so a student who filters by them can rely on them.</p>
+          <ul class="error" id="f-tags-error"></ul>
+        </fieldset>
+        <div class="field">
+          <label class="tag license"><input type="checkbox" id="f-license" name="license" required aria-describedby="f-license-error" /> I made this theme or have the right to share it, and I license it under <a class="looks-link" href="https://creativecommons.org/licenses/by/4.0/" rel="license">CC BY 4.0</a>: anyone may wear, share and adapt it, crediting me.</label>
+          <ul class="error" id="f-license-error"></ul>
+        </div>
+        <div class="product-actions submit-actions">
+          <button type="submit" class="product-button" id="f-submit">Submit for review</button>
+          <a class="product-button secondary" href="/glaze/looks">Back to the gallery</a>
+        </div>
+        <div class="submit-status" id="submit-status" role="status" aria-live="polite" hidden></div>
+      </form>
+
+      <aside class="submit-side" aria-labelledby="live-title">
+        <h2 class="submit-h2" id="live-title">Live preview</h2>
+        <div class="submit-preview">
+          <LookPreview name="Your Look" />
+          <p class="submit-empty" id="live-empty">Paste a theme code to see it here.</p>
+        </div>
+        <p class="look-font" id="live-font"></p>
+        <ul class="submit-contrast" id="live-contrast" aria-label="Contrast"></ul>
+        <h2 class="submit-h2">Nearest Looks in the gallery</h2>
+        <p class="help">The review compares yours with these. 0 is identical; Glaze's Frost and Midnight palettes are 4.6 apart.</p>
+        <ol class="submit-near" id="live-near"><li class="help">None yet.</li></ol>
+      </aside>
+    </div>
+    <dialog id="look-dialog" class="look-dialog" aria-labelledby="look-dialog-title">
+      <div class="look-dialog-head">
+        <h2 class="look-dialog-title" id="look-dialog-title">Preview</h2>
+        <form method="dialog"><button class="product-button secondary">Close</button></form>
+      </div>
+      <div class="look-dialog-stage"></div>
+      <p class="look-dialog-note">A stand-in course page painted with the Look's colors, text size, shape and background.</p>
+    </dialog>
+
+    <section class="product-section product-split" id="privacy" aria-labelledby="privacy-heading">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">What happens to it</p>
+        <h2 id="privacy-heading">Reviewed in seconds, kept for a day.</h2>
+        <p>Your Look is checked by Glaze's own code, then reviewed by a decision model (<code>cloudflare/clef-omni</code>) through OpenRouter: is the name and credit right for students, is it polished, is it its own Look. If it's unsure, a larger model (<code>openai/gpt-6-luna</code>) decides, or asks a person, who gets an email. <a class="looks-link" href={guide}>How the review works</a></p>
+      </div>
+      <div class="product-panel">
+        <h3>What's kept</h3>
+        <p>Previewing sends your code and fields to frostdev.io to check them; nothing is stored. Submitting sets a one-day cookie on this page's address, so the gallery can hold each browser to one Look a day; your network address counts too, but is kept only as a keyed hash whose key is replaced every day. Neither is ever shown to anyone or sent to the reviewers: OpenRouter sees the Look, its name, credit and tags, and the nearest Looks, nothing else.</p>
+        <p>A published Look shows its name, credit, tags, date and code. A declined one is kept 30 days without anything that identifies you, to tune the review, then deleted.</p>
+        <h3>Changed your mind?</h3>
+        <p>Email <a class="looks-link" href="mailto:admin@frostdev.io?subject=Glaze%20Looks%20gallery">admin@frostdev.io</a> with the Look's name to have it taken down.</p>
+      </div>
+    </section>
+  </div>
+</MarketingLayout>
+
+<script>
+  import { paintPreview, wireDialog, fontLine, type Described } from '../../../components/looks';
+
+  const API = '/glaze/looks/api';
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>('submit-form');
+  const code = $<HTMLTextAreaElement>('f-code');
+  const name = $<HTMLInputElement>('f-name');
+  const credit = $<HTMLInputElement>('f-credit');
+  const license = $<HTMLInputElement>('f-license');
+  const statusBox = $<HTMLElement>('submit-status');
+  const preview = document.querySelector<HTMLElement>('.submit-preview .lp')!;
+  // While the gallery server is down, the GitHub issue form is the way in: a maintainer adds the Look by hand.
+  const issue = 'https://github.com/frostdev-ops/frostdev.io/issues/new?template=glaze-look.yml';
+  wireDialog(document);
+
+  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text = '', cls = '') => { const e = document.createElement(tag); if (text) e.textContent = text; if (cls) e.className = cls; return e; };
+  const link = (href: string, text: string) => Object.assign(el('a', text, 'looks-link'), { href });
+  const pct = (v: number) => `${Math.round(v * 100)}%`;
+  const tags = () => [...form.querySelectorAll<HTMLInputElement>('input[name="tags"]:checked')].map((i) => i.value);
+
+  // Problems from the server, each under the field it's about.
+  const fields: [RegExp, string, HTMLElement | null][] = [
+    [/\bname\b/, 'f-name-error', name], [/credit/, 'f-credit-error', credit], [/tag/, 'f-tags-error', null], [/agree|license/, 'f-license-error', license], [/./, 'f-code-error', code],
+  ];
+  const showProblems = (problems: string[]) => {
+    for (const [, id, input] of fields) { $(id).replaceChildren(); input?.removeAttribute('aria-invalid'); }
+    for (const p of problems) {
+      const [, id, input] = fields.find(([re]) => re.test(p))!;
+      $(id).append(el('li', p.charAt(0).toUpperCase() + p.slice(1) + '.'));
+      input?.setAttribute('aria-invalid', 'true');
+    }
+  };
+  const say = (...nodes: (Node | string)[]) => { statusBox.replaceChildren(...nodes); statusBox.hidden = false; statusBox.scrollIntoView({ block: 'nearest' }); };
+  const closed = () => {
+    const p = el('p', 'You can still share it through ');
+    p.append(link(issue, 'a GitHub issue'), '; a maintainer adds it by hand.');
+    say(el('p', "Submissions are closed for now: the gallery server isn't answering."), p);
+  };
+
+  // ---- the live check: debounced, never stored, never uses the day's submission ------------------------------------
+  let timer = 0;
+  let seq = 0;
+  const check = async () => {
+    const mine = ++seq;
+    const value = code.value.trim();
+    if (!value) { showProblems([]); paint(null); return; }
+    let r: Response;
+    try {
+      r = await fetch(`${API}/check`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: value, ...(name.value && { name: name.value }), ...(credit.value && { credit: credit.value }), tags: tags() }) });
+    } catch { if (mine === seq) closed(); return; }
+    if (mine !== seq) return;
+    if (r.status === 429) return;
+    if (!r.ok) { closed(); return; }
+    const body = await r.json();
+    statusBox.hidden = true;
+    showProblems(Array.isArray(body.problems) ? body.problems.map(String) : []);
+    paint(body.look || null, Array.isArray(body.nearest) ? body.nearest : []);
+  };
+  const later = () => { clearTimeout(timer); timer = window.setTimeout(check, 400); };
+  for (const input of [code, name, credit]) input.addEventListener('input', later);
+  form.addEventListener('change', (e) => { if ((e.target as HTMLInputElement).name === 'tags' && code.value.trim()) later(); });
+
+  const paint = (look: Described | null, near: { id: string; name: string; source: string; distance: number; chips?: string[] }[] = []) => {
+    $('live-empty').hidden = !!look;
+    preview.hidden = !look;
+    $('live-contrast').replaceChildren();
+    $('live-font').textContent = look ? fontLine(look) : '';
+    const list = $('live-near');
+    list.replaceChildren();
+    if (!look) { list.append(el('li', 'None yet.', 'help')); return; }
+    paintPreview(preview, look);
+    for (const c of Array.isArray(look.contrast) ? look.contrast : []) {
+      const li = el('li', `${c.label}: ${Number(c.ratio).toFixed(2)}:1`, c.pass ? 'pass' : 'fail');
+      li.append(el('span', c.pass ? ` (needs ${c.min}:1, passes)` : ` (needs ${c.min}:1)`));
+      $('live-contrast').append(li);
+    }
+    for (const n of near) {
+      const li = el('li');
+      const chips = el('span', '', 'look-chips');
+      for (const c of (n.chips || []).filter((x) => /^#[0-9a-f]{6}$/i.test(x))) { const i = el('i'); i.style.setProperty('background', c); chips.append(i); }
+      const a = /^[a-z0-9-]+$/.test(n.id) ? link(`/glaze/looks#${n.id}`, n.name) : el('span', n.name);
+      li.append(chips, a, el('span', ` · ${n.source === 'community' ? 'community' : 'curated'} · distance ${Number(n.distance).toFixed(1)}`, 'help'));
+      list.append(li);
+    }
+  };
+  paint(null);
+
+  // A code in the link (#code=…, how Glaze can open this page): filled in, but nothing is sent until the student asks.
+  const hash = new URLSearchParams(location.hash.slice(1));
+  if (hash.get('code')) {
+    code.value = hash.get('code')!.slice(0, 4000);
+    $('f-code-prefilled').hidden = false;
+    $('f-code-check').addEventListener('click', () => { $('f-code-prefilled').hidden = true; check(); });
+  }
+
+  // ---- submitting -----------------------------------------------------------------------------------------------------
+  const numbers = (n: { safe: number; quality: number; unique: string; distinct: number }) =>
+    el('p', `The review's numbers: right for students ${pct(n.safe)}, quality ${Number(n.quality).toFixed(1)} of 4, ${pct(n.distinct)} distinct (${n.unique}).`, 'help');
+  const statusLink = (token: string) => {
+    const href = `/glaze/looks/submit#status=${encodeURIComponent(token)}`;
+    const p = el('p', 'Keep this link to see what happens: ');
+    p.append(link(href, `${location.origin}${href}`));
+    return p;
+  };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const missing = [!code.value.trim() && 'paste your theme code', !name.value.trim() && 'give it a name', !credit.value.trim() && 'say how to credit you', !license.checked && 'you need to agree to share it under CC BY 4.0'].filter(Boolean) as string[];
+    if (missing.length) { showProblems(missing.map((m) => m.replace('give it a name', 'the name is missing: give it a name'))); form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(); return; }
+    const button = $<HTMLButtonElement>('f-submit');
+    button.disabled = true;
+    button.textContent = 'Reviewing…';
+    say(el('p', 'Reviewing your Look. This takes a few seconds.'));
+    let r: Response;
+    try {
+      r = await fetch(`${API}/submit`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: code.value.trim(), name: name.value, credit: credit.value, tags: tags(), license: license.checked }) });
+    } catch { closed(); return done(); }
+    const body = await r.json().catch(() => ({}));
+    if (r.status === 422) {
+      showProblems(Array.isArray(body.problems) ? body.problems.map(String) : []);
+      say(el('p', 'Fix the problems marked below; nothing was used up.'));
+      form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    } else if (r.status === 429) {
+      const when = typeof body.resets === 'string' ? new Date(body.resets).toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' }) : 'tomorrow';
+      say(el('p', `${String(body.error || 'You can submit one Look a day.')} You can submit again ${when}.`));
+    } else if (r.status === 503) {
+      say(el('p', String(body.error || 'Reviews are paused right now; nothing was used up. Try again later.')));
+    } else if (!r.ok) {
+      closed();
+    } else if (body.outcome === 'published') {
+      const p = el('p', 'Published. ');
+      p.append(link(String(body.url).startsWith('/glaze/looks#') ? body.url : '/glaze/looks', 'See it in the gallery'), '.');
+      say(el('h2', 'Your Look is in the gallery.', 'submit-h2'), p, numbers(body.numbers), ...(body.dropped?.length ? [el('p', `Left off: ${body.dropped.join(', ')} (the review didn't see it that way).`, 'help')] : []), statusLink(body.token));
+    } else if (body.outcome === 'pending') {
+      say(el('h2', 'A person will look at it.', 'submit-h2'), el('p', 'The automated review wasn\'t sure, so it went to the maintainer. It holds your name and code until then.'), numbers(body.numbers), statusLink(body.token));
+    } else {
+      const ul = el('ul', '', 'submit-reasons');
+      for (const reason of Array.isArray(body.reasons) ? body.reasons : []) ul.append(el('li', String(reason)));
+      say(el('h2', 'Not this time.', 'submit-h2'), ul, numbers(body.numbers), el('p', 'You can change it and submit again tomorrow.', 'help'));
+    }
+    done();
+  });
+  const done = () => { const b = $<HTMLButtonElement>('f-submit'); b.disabled = false; b.textContent = 'Submit for review'; };
+
+  // ---- #status=<token>: what became of a submission -----------------------------------------------------------------
+  const token = hash.get('status');
+  if (token && /^[\w-]{32}$/.test(token)) {
+    fetch(`${API}/status/${token}`).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((s) => {
+      const title = el('h2', '', 'submit-h2');
+      title.textContent = `“${String(s.name)}”: ${s.status === 'published' ? 'published' : s.status === 'pending' ? 'waiting for a person' : s.status === 'declined' ? 'declined' : 'taken down'}`;
+      const out: Node[] = [title];
+      if (s.status === 'published') { const p = el('p'); p.append(link(String(s.url).startsWith('/glaze/looks#') ? s.url : '/glaze/looks', 'See it in the gallery'), '.'); out.push(p); }
+      if (s.status === 'declined' && s.reason) out.push(el('p', `The reason: ${String(s.reason)}`));
+      if (s.status === 'pending') out.push(el('p', 'Check back later; this link keeps working.'));
+      say(...out);
+    }, (status) => say(el('p', status === 404 ? 'That status link is unknown, or its Look was declined more than 30 days ago.' : 'The gallery server isn\'t answering; try the link again later.')));
+  }
+</script>
+
+<style is:global>
+  .submit-page .looks-hero { padding-bottom: 1.5rem; }
+  .submit-page .looks-hero a { color: inherit; }
+  .submit-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+  .submit-form { display: grid; gap: 1.35rem; }
+  .field { display: grid; gap: .45rem; min-width: 0; border: 0; padding: 0; margin: 0; }
+  .field > label, .field legend { color: #e8f2fa; font-weight: 600; font-size: .9rem; margin-bottom: .1rem; }
+  .field textarea, .field input:not([type='checkbox']) { width: 100%; min-width: 0; padding: .7rem .85rem; border: 1px solid #35506a; border-radius: .5rem; background: rgb(12 27 44 / .8); color: #e8f2fa; font: inherit; font-size: .9rem; }
+  .field textarea { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: .78rem; line-height: 1.5; resize: vertical; overflow-wrap: anywhere; }
+  .field [aria-invalid='true'] { border-color: #f87171; }
+  .help { color: #8fa8c0; font-size: .78rem; line-height: 1.6; }
+  .help code { color: #c0e6ec; }
+  .error { color: #fca5a5; font-size: .8rem; line-height: 1.55; display: grid; gap: .2rem; }
+  .error:empty { display: none; }
+  .tag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr)); gap: .5rem; }
+  .tag { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .45rem; padding: .55rem .7rem; border: 1px solid #23394e; border-radius: .5rem; color: #d5e5f2; font-size: .85rem; cursor: pointer; }
+  .tag:has(input:checked) { border-color: var(--product-accent); background: rgb(111 220 255 / .07); }
+  .tag small { flex-basis: 100%; padding-left: 1.4rem; color: #8fa8c0; font-size: .72rem; }
+  .tag.license { display: block; line-height: 1.6; }
+  .tag input { accent-color: #6fdcff; }
+  .submit-actions { margin-top: .25rem; }
+  .submit-form :focus-visible, .submit-side :focus-visible, .submit-status :focus-visible { outline: 2px solid var(--product-accent); outline-offset: 2px; }
+  .submit-form button:disabled { opacity: .6; cursor: progress; }
+  .submit-side { position: sticky; top: 1rem; display: grid; gap: .75rem; min-width: 0; }
+  .submit-h2 { color: #e8f2fa; font-size: 1.05rem; font-weight: 600; letter-spacing: -.01em; }
+  .submit-preview { position: relative; border: 1px solid #23394e; border-radius: .75rem; overflow: hidden; background: #02060d; }
+  .submit-empty { display: grid; place-items: center; aspect-ratio: 16 / 10; padding: 1rem; color: #8fa8c0; font-size: .9rem; text-align: center; }
+  .submit-contrast { display: grid; gap: .2rem; font-size: .78rem; color: #b3c8dc; }
+  .submit-contrast .fail { color: #fca5a5; }
+  .submit-contrast span { color: #8fa8c0; }
+  .submit-near { display: grid; gap: .5rem; font-size: .85rem; color: #d5e5f2; }
+  .submit-near li { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+  .submit-page .product-panel p + h3 { margin-top: 1.5rem; }
+  .submit-status { padding: 1.1rem 1.25rem; border: 1px solid var(--product-accent); border-radius: .75rem; background: rgb(10 23 37 / .9); color: #d5e5f2; font-size: .9rem; line-height: 1.65; display: grid; gap: .5rem; overflow-wrap: anywhere; }
+  .submit-reasons { display: grid; gap: .35rem; padding-left: 1.1rem; list-style: disc; }
+  .submit-page #privacy { margin-top: 4rem; }
+  .submit-page button.looks-link { padding: 0; text-decoration: underline; }
+  @media (max-width: 860px) {
+    .submit-grid { grid-template-columns: minmax(0, 1fr); }
+    .submit-side { position: static; order: -1; }
+  }
+  @media (max-width: 700px) {
+    .submit-page .product-panel { padding: 1.25rem; }
+    .submit-page .product-split { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

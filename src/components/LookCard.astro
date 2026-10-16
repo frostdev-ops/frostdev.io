@@ -1,0 +1,51 @@
+---
+// One gallery card. With a curated look it is built into the page; with none it renders empty, as the <template>
+// community cards are filled from (fillCard() in looks.ts: textContent and setProperty only). data-f marks what
+// fillCard fills.
+import LookPreview from './LookPreview.astro';
+import { cardTags, day, fontLine, TAG_LABELS, type Look } from './looks';
+
+interface Props { look?: Look }
+const { look: l } = Astro.props;
+const source = l ? 'curated' : 'community';
+const tags = l ? cardTags(l, source) : [];
+const search = l ? [l.name, l.author, ...tags.map((t) => TAG_LABELS[t] || t)].join(' ').toLowerCase() : '';
+const shots = l?.previews || [];
+---
+
+<li class="look-card" id={l?.id} data-name={l?.name} data-created={l?.created} data-tags={tags.join(' ')} data-search={search}>
+  <figure class="look-preview">
+    <LookPreview look={l} name={l?.name} />
+    {shots.length > 0 && (
+      <>
+        <img class="look-shot" hidden width="960" height="413" alt={`${l!.name} on a Canvas dashboard`} decoding="async" />
+        <figcaption class="look-modes" role="group" aria-label="Preview" hidden>
+          <button type="button" aria-pressed="true">Live</button>
+          {shots.map((p) => <button type="button" data-src={p.src} aria-pressed="false">{shots.length > 1 ? `${p.mode === 'dark' ? 'Dark' : 'Light'} screenshot` : 'Screenshot'}</button>)}
+        </figcaption>
+      </>
+    )}
+  </figure>
+  <div class="look-body">
+    <h2><a href={l ? `#${l.id}` : undefined} data-f="name">{l?.name}</a></h2>
+    <p class="look-meta"><span data-f="kind">{l?.kind === 'palette' ? 'Palette' : 'Look'}</span> by {l
+      ? <a href={`https://github.com/${l.author}`} rel="nofollow">@{l.author}</a>
+      : <span data-f="credit"></span>} · <time datetime={l?.created} data-f="date">{l && day(l.created)}</time></p>
+    <p class="look-font" data-f="font">{l && fontLine(l)}</p>
+    <span class="look-chips" role="img" data-f="chips" aria-label={l ? `Colors: ${l.chips.join(', ')}` : undefined}>
+      {l?.chips.map((c) => <i style={{ background: c }}></i>)}
+    </span>
+    <ul class="look-tags" aria-label="Tags" data-f="tags">
+      {tags.filter((t) => t !== l?.kind && t !== source).map((t) => <li>{TAG_LABELS[t] || t}</li>)}
+    </ul>
+    {(!l || l.bg.kind === 'image') && (
+      <p class="look-image" data-f="image" hidden={!l}>Its background image is on <strong data-f="imagehost">{l?.bg.imageHost}</strong>, which gets your visit when you see it.
+        <button type="button" data-f="show" data-image={l?.bg.image}>Show the image</button></p>
+    )}
+    <div class="look-actions">
+      <a class="product-button" href="#using" data-glaze-use data-f="use" data-code={l?.code} data-name={l?.name} data-author={l?.author}>Use this Look in Glaze</a>
+      <button type="button" class="product-button secondary" data-f="copy" data-copy={l?.code}>Copy code</button>
+    </div>
+    <details class="look-code"><summary>Theme code</summary><code data-f="code">{l?.code}</code></details>
+  </div>
+</li>
