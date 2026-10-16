@@ -4,6 +4,7 @@ import { EventEmitter } from 'node:events';
 import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import { Readable, Writable } from 'node:stream';
 import { afterEach, mock, test } from 'node:test';
 import zlib from 'node:zlib';
@@ -240,4 +241,26 @@ test('retention deletes rejected reviews at the thirty-day cutoff', async () => 
   clock += 30 * 864e5;
   g.sweep();
   assert.equal(g.db.prepare('SELECT COUNT(*) n FROM rejected').get().n, 0);
+});
+
+test('CLI decisions cannot overwrite a concurrent takedown', async () => {
+  mock.method(globalThis, 'fetch', async (url) => new Response(JSON.stringify(String(url).endsWith('/decisions') ? clef({ safe: { noul: 0.8 } }) : chat({ decision: 'human', reason: 'Unsure' }))));
+  const db = path.join(tmp, `cli-race-${++seq}.db`);
+  const g = await create({ db });
+  const g2 = await create({ db });
+  const r = await post(g, look());
+  const proto = Object.getPrototypeOf(g.db.prepare('SELECT 1'));
+  const get = proto.get;
+  let raced = false;
+  mock.method(proto, 'get', function (...args) {
+    const row = get.apply(this, args);
+    // A second CLI takes it down after the first reads pending, before its UPDATE.
+    if (!raced && args[0] === r.body.id && row?.status === 'pending') {
+      raced = true;
+      assert.equal(g2.decide(r.body.id, 'removed'), true);
+    }
+    return row;
+  });
+  assert.equal(g.decide(r.body.id, 'published'), false);
+  assert.equal(g.db.prepare('SELECT status FROM looks WHERE id = ?').get(r.body.id).status, 'removed');
 });

@@ -256,7 +256,7 @@ export function gallery({
     byId: 'SELECT * FROM looks WHERE id = ?',
     byToken: 'SELECT * FROM looks WHERE token = ?',
     insert: 'INSERT INTO looks (id, name, credit, created, tags, code, described, status, decision, reason, token, unmailed, decided) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    setStatus: 'UPDATE looks SET status = ?, reason = ?, decided = ? WHERE id = ?',
+    setStatus: 'UPDATE looks SET status = ?, reason = ?, decided = ? WHERE id = ? AND status = ?',
     mailed: 'UPDATE looks SET unmailed = 0 WHERE id = ?',
     unmailed: "SELECT * FROM looks WHERE status = 'pending' AND unmailed = 1",
     reject: 'INSERT INTO rejected (name, code, decision, day) VALUES (?, ?, ?, ?)',
@@ -622,8 +622,7 @@ export function gallery({
       const row = q.byId.get(id);
       const from = { published: ['pending'], declined: ['pending'], removed: ['published', 'pending'] }[to];
       if (!row || !from.includes(row.status)) return false;
-      q.setStatus.run(to, cleanReason(reason), now(), id);
-      return true;
+      return q.setStatus.run(to, cleanReason(reason), now(), id, row.status).changes === 1;
     },
   };
 }
