@@ -37,12 +37,14 @@ The background redraws immediately after drawing-buffer changes and blends quali
 reductions. A controlled 260-frame WebGL replay reproduced a blank frame and an
 abrupt detail change before the fix; the fixed replay contains no blank frames.
 
-`/glaze/looks` is the Glaze Looks gallery: Glaze's built-in Looks and palettes plus
-submitted ones, each with a real screenshot, palette chips, Copy code and "Use this Look
-in Glaze". Search, tag filters and sorting need JavaScript; without it every Look and
-its code are still listed. The page loads nothing from other sites. See
-[docs/looks-gallery.md](looks-gallery.md). Production nginx needs the `/glaze/looks`
-location from `ops/public-site.nginx.conf`.
+`/glaze/looks` is the Glaze Looks gallery: curated Looks built into the page, each with a live
+preview painted from its code (and optional screenshots), palette chips, Copy code and "Use this Look
+in Glaze", plus community Looks added in the browser from the gallery server. `/glaze/looks/submit` is
+where students submit one for automated review. Search, filters, community Looks and submitting need
+JavaScript; without it every curated Look and its code are still listed. The pages load nothing from
+other sites. See [docs/looks-gallery.md](looks-gallery.md). Production nginx needs the `/glaze/looks`,
+`/glaze/looks/submit` and `/glaze/looks/api/` locations from `ops/public-site.nginx.conf`, and the
+gallery server (`ops/deploy-gallery.sh`).
 
 `/guides` links seven comprehensive project guides:
 
