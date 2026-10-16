@@ -9,7 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { after, afterEach, before, test } from 'node:test';
 import zlib from 'node:zlib';
-import { BANDS, cleanReason, gallery, mailMessage, networkOf } from './gallery.mjs';
+import { BANDS, SAFETY_QUESTIONS, cleanReason, gallery, mailMessage, networkOf, summarize } from './gallery.mjs';
 
 const ORIGIN = 'https://frostdev.io';
 const tmp = mkdtempSync(path.join(os.tmpdir(), 'glaze-gallery-test-'));
@@ -26,18 +26,25 @@ const code = (look) => {
 };
 
 // ---- mocks ----------------------------------------------------------------------------------------------------------
-const calls = { decisions: [], chat: [] };
+// The two decisions calls of a review run at once; the mock tells them apart by the questions asked.
+const calls = { decisions: [], safety: [], chat: [] };
 const plan = {};
-const clefSays = ({ safe = 0.99, quality = 3.4, distinct = 0.9, choice = 'distinct', tags = {} } = {}) => ({
+const clefSays = ({ quality = 3.4, distinct = 0.9, choice = 'distinct', tags = {} } = {}) => ({
   status: 200,
   json: {
     id: 'd1', model: 'cloudflare/clef-omni', provider: 'Cloudflare', usage: { cost: 0.0004, input_tokens: 2600, output_tokens: 0 },
     answers: {
-      safe: { type: 'noul', noul: safe },
       quality: { score: quality, legend: [], probabilities: [], confidence: 0.8 },
       unique: { choice, probabilities: { distinct, variant: (1 - distinct) * 0.7, copy: (1 - distinct) * 0.3 }, confidence: 0.7 },
       ...Object.fromEntries(Object.entries(tags).map(([t, v]) => [`tag.${t}`, { type: 'noul', noul: v }])),
     },
+  },
+});
+const safetySays = ({ abuse = 0.04, personal = 0.05, official = 0.01, ad = 0.03 } = {}) => ({
+  status: 200,
+  json: {
+    id: 'd2', model: 'cloudflare/clef-omni', provider: 'Cloudflare', usage: { cost: 0.0001, input_tokens: 700, output_tokens: 0 },
+    answers: Object.fromEntries(Object.entries({ abuse, personal, official, ad }).map(([k, v]) => [k, { type: 'noul', noul: v }])),
   },
 });
 const llmSays = (decision, reason = 'Because.') => ({ status: 200, json: { model: 'openai/gpt-6-luna', choices: [{ message: { content: JSON.stringify({ decision, reason }) } }] } });
@@ -46,7 +53,7 @@ const mock = http.createServer((req, res) => {
   req.on('data', (d) => { b += d; });
   req.on('end', () => {
     const body = JSON.parse(b);
-    const kind = req.url === '/alpha/decisions' ? 'decisions' : req.url === '/v1/chat/completions' ? 'chat' : '';
+    const kind = req.url === '/alpha/decisions' ? (body.questions?.abuse ? 'safety' : 'decisions') : req.url === '/v1/chat/completions' ? 'chat' : '';
     calls[kind]?.push({ body, auth: req.headers.authorization });
     const next = (Array.isArray(plan[kind]) ? plan[kind].shift() : plan[kind]) || { status: 404, json: { error: { code: 404, message: 'no' } } };
     res.writeHead(next.status, { 'content-type': 'application/json' });
@@ -98,8 +105,8 @@ const start = async (opts = {}) => {
   });
   const a = await g.listen(0, '127.0.0.1');
   base = `http://127.0.0.1:${a.port}/glaze/looks/api`;
-  calls.decisions = []; calls.chat = []; mails.length = 0; smtpRefuse = false;
-  plan.decisions = clefSays(); plan.chat = llmSays('accept');
+  calls.decisions = []; calls.safety = []; calls.chat = []; mails.length = 0; smtpRefuse = false;
+  plan.decisions = clefSays(); plan.safety = safetySays(); plan.chat = llmSays('accept');
 };
 afterEach(async () => { await g?.close(); g = null; });
 
@@ -130,10 +137,19 @@ test('a clear accept publishes the Look, and GET /looks lists it with its descri
   assert.equal(sent.body.model, 'cloudflare/clef-omni');
   assert.equal(sent.body.state.submission.name, sub.name);
   assert.equal(sent.body.state.nearest.length, 3);
-  assert.deepEqual(Object.keys(sent.body.questions).sort(), ['quality', 'safe', 'unique']);
-  assert.ok(sent.body.questions.safe.criteria.true && sent.body.questions.safe.criteria.false);
+  assert.deepEqual(Object.keys(sent.body.questions).sort(), ['quality', 'unique']);
+  assert.equal('credit' in sent.body.state.submission, false);
+  // Safety is its own call, at the same time, on the name and credit alone, with the calibrated questions.
+  const risk = calls.safety[0];
+  assert.equal(calls.safety.length, 1);
+  assert.equal(risk.auth, 'Bearer test-key');
+  assert.deepEqual(risk.body.state, { name: sub.name, credit: sub.credit });
+  assert.deepEqual(risk.body.questions, SAFETY_QUESTIONS);
+  assert.deepEqual(Object.keys(SAFETY_QUESTIONS).sort(), ['abuse', 'ad', 'official', 'personal']);
+  for (const q of Object.values(SAFETY_QUESTIONS)) assert.ok(q.type === 'noul' && q.criteria.true && q.criteria.false);
+  assert.ok(r.body.numbers.safe > 0.9 && r.body.numbers.safety.personal === 0.05);
   assert.equal(sent.body.questions.quality.criteria.length, 5);
-  assert.doesNotMatch(JSON.stringify(sent.body), /203\.0\.113|198\.51\.100|gz_gallery/);
+  assert.doesNotMatch(JSON.stringify([sent.body, risk.body]), /203\.0\.113|198\.51\.100|gz_gallery/);
 
   const list = await fetch(`${base}/looks`);
   assert.equal(list.headers.get('cache-control'), 'public, max-age=60');
@@ -179,18 +195,21 @@ test('check: problems, the description and the 3 nearest Looks, without a model 
   assert.ok(bad.body.problems.length);
 });
 
-for (const [gate, says, pattern] of [
-  ['safe', { safe: 0.2 }, /name or credit.*20%.*50%/],
-  ['quality', { quality: 1.1 }, /rated it 1\.1 out of 4/],
-  ['unique', { distinct: 0.1, choice: 'variant' }, /light variant of ".+".*10% distinct/],
+for (const [gate, says, risks, pattern] of [
+  ['safety', {}, { personal: 0.85, official: 0.72, abuse: 0.4 }, /^The name or credit looks like it has personal information and claims to be official,.*85% sure; it declines from 70%/],
+  ['quality', { quality: 1.1 }, {}, /rated it 1\.1 out of 4/],
+  ['unique', { distinct: 0.1, choice: 'variant' }, {}, /light variant of ".+".*10% distinct/],
 ]) {
   test(`a clear decline on ${gate} says why in plain words, with the numbers`, async () => {
     await start();
     plan.decisions = clefSays(says);
+    plan.safety = safetySays(risks);
     const sub = look();
     const r = await post('/submit', sub, fresh());
     assert.equal(r.body.outcome, 'declined');
     assert.match(r.body.reasons.join(' '), pattern);
+    assert.equal(r.body.reasons.length, 1);
+    assert.ok(!r.body.reasons.join(' ').includes(sub.name));
     assert.equal(r.body.escalated, false);
     assert.equal(calls.chat.length, 0);
     // Kept 30 days for tuning, with no identifiers.
@@ -204,14 +223,16 @@ for (const [gate, says, pattern] of [
 }
 
 test('the bands: everything between them goes to the LLM', async () => {
-  assert.deepEqual(BANDS.accept, { safe: 0.95, quality: 2.5, distinct: 0.75 });
-  assert.deepEqual(BANDS.decline, { safe: 0.5, quality: 1.5, distinct: 0.25 });
+  assert.deepEqual(BANDS.accept, { safety: 0.10, quality: 2.5, distinct: 0.6 });
+  assert.deepEqual(BANDS.decline, { safety: 0.70, quality: 1.5, distinct: 0.25 });
   await start();
-  for (const unsure of [{ safe: 0.9 }, { quality: 2 }, { distinct: 0.6 }, { distinct: 0.8, choice: 'variant' }]) {
+  // From the calibration: "Exam Hell" (abuse 0.34) and "Sexy Study Time" (0.33) are unsure, not accepted.
+  for (const [unsure, risks] of [[{}, { abuse: 0.34 }], [{}, { personal: 0.1 }], [{}, { ad: 0.69 }], [{ quality: 2.4 }, {}], [{ distinct: 0.59 }, {}], [{ distinct: 0.8, choice: 'variant' }, {}]]) {
     calls.chat = [];
     plan.decisions = clefSays(unsure);
+    plan.safety = safetySays(risks);
     const r = await post('/submit', look(), fresh());
-    assert.equal(r.body.escalated, true, JSON.stringify(unsure));
+    assert.equal(r.body.escalated, true, JSON.stringify([unsure, risks]));
     assert.equal(calls.chat.length, 1);
   }
   const sent = calls.chat[0].body;
@@ -222,6 +243,36 @@ test('the bands: everything between them goes to the LLM', async () => {
   assert.match(sent.messages[0].content, /untrusted data/);
   const user = JSON.parse(sent.messages[1].content);
   assert.ok(user.submission && user.nearest && user.firstReview);
+  // The second reviewer judges the credit too, and gets all four safety numbers.
+  assert.equal(user.submission.credit, 'Sam');
+  assert.deepEqual(user.firstReview.safety, { abuse: 0.04, personal: 0.05, official: 0.01, ad: 0.03 });
+});
+
+test('each kind of safety problem declines in plain words, without quoting', async () => {
+  await start();
+  for (const [kind, words] of [['abuse', 'has inappropriate words'], ['personal', 'has personal information'], ['official', 'claims to be official'], ['ad', 'is advertising']]) {
+    plan.safety = safetySays({ [kind]: 0.7 });
+    const sub = look({ name: `Probe ${kind} ${nameSeq}` });
+    const r = await post('/submit', sub, fresh());
+    assert.equal(r.body.outcome, 'declined', kind);
+    assert.match(r.body.reasons[0], new RegExp(`looks like it ${words}, `));
+    assert.ok(!r.body.reasons[0].includes(sub.name) && !r.body.reasons[0].includes(sub.credit));
+  }
+  // All four just under the accept edge: published without a second reviewer.
+  plan.safety = safetySays({ abuse: 0.099, personal: 0.099, official: 0.099, ad: 0.099 });
+  assert.equal((await post('/submit', look(), fresh())).body.outcome, 'published');
+  assert.equal(calls.chat.length, 0);
+});
+
+test('a palette is summarized without fonts, text size, shape or background', () => {
+  const base = { mode: 'dark', animated: false, colors: {}, contrast: [], scale: 1, leading: 1.5, density: 'normal', radius: 8, glass: 0, depth: 1, surfaces: { surfaceColor: '#101010' }, bg: { kind: 'solid' } };
+  const p = summarize({ ...base, kind: 'palette', font: null, head: null });
+  for (const k of ['font', 'headings', 'textSize', 'lineHeight', 'density', 'shape', 'background']) assert.equal(k in p, false, k);
+  assert.match(p.kind, /keeps their own fonts, text size, shape and background/);
+  const l = summarize({ ...base, kind: 'look', font: { name: 'Lora', group: 'Serif' }, head: { name: 'Lora', group: 'Serif' } });
+  assert.equal(l.font, 'Lora (Serif)');
+  assert.equal(l.shape.surfaceColor, '#101010');
+  assert.equal(l.background.kind, 'solid');
 });
 
 test('the LLM accepts, declines with its reason, or hands it to a person (who gets mail)', async () => {
@@ -237,7 +288,7 @@ test('the LLM accepts, declines with its reason, or hands it to a person (who ge
   assert.match(d.body.reasons[0], /^The muted text is hard to read/);
   assert.ok(d.body.reasons[0].length <= 300);
 
-  plan.decisions = clefSays({ safe: 0.7 });
+  plan.safety = safetySays({ personal: 0.3 });
   plan.chat = llmSays('human', 'The credit might be a real person.');
   const sub = look({ name: 'Señor Café' });
   const h = await post('/submit', sub, fresh());
@@ -250,7 +301,7 @@ test('the LLM accepts, declines with its reason, or hands it to a person (who ge
   await waitFor(() => mails.length === 1);
   const m = mails[0];
   assert.match(m, /^Subject: =\?UTF-8\?B\?/m);
-  for (const part of [sub.code, 'The credit might be a real person.', `--approve ${h.body.id}`, `--decline ${h.body.id}`, 'Sam', 'safe 0.7']) assert.ok(m.includes(part), part);
+  for (const part of [sub.code, 'The credit might be a real person.', `--approve ${h.body.id}`, `--decline ${h.body.id}`, 'Sam', 'personal 0.3']) assert.ok(m.includes(part), part);
   assert.doesNotMatch(m, /203\.0\.113|198\.51\.100|gz_gallery/);
   assert.equal(g.list('pending')[0].unmailed, 0);
 });
@@ -338,6 +389,16 @@ test('deterministic failures and 503s use no quota', async () => {
   plan.decisions = { status: 200, json: { answers: {} } };
   assert.equal((await post('/submit', look(), who)).status, 503);
   plan.decisions = clefSays();
+  // Either call failing fails the whole review: the safety call down, or answering outside its questions.
+  plan.safety = [{ status: 500, json: {} }, { status: 500, json: {} }];
+  assert.equal((await post('/submit', look(), who)).status, 503);
+  for (const bad of [{ abuse: 1.2 }, { personal: 'low' }]) {
+    plan.safety = safetySays(bad);
+    assert.equal((await post('/submit', look(), who)).status, 503, JSON.stringify(bad));
+  }
+  plan.safety = { status: 200, json: { answers: { abuse: { noul: 0.01 } } } };
+  assert.equal((await post('/submit', look(), who)).status, 503);
+  plan.safety = safetySays();
   assert.equal((await post('/submit', look(), who)).body.outcome, 'published');
   await g.close();
   await start({ apiKey: '' });
@@ -403,7 +464,7 @@ test('mail: one-line subject (no header injection), RFC 2047 for non-ASCII, CRLF
 test('a failed send leaves the Look pending and unmailed, and the next try sends it', async () => {
   await start();
   smtpRefuse = true;
-  plan.decisions = clefSays({ safe: 0.8 });
+  plan.safety = safetySays({ official: 0.2 });
   plan.chat = llmSays('human', 'Unsure.');
   const r = await post('/submit', look(), fresh());
   assert.equal(r.body.outcome, 'pending');
@@ -418,10 +479,10 @@ test('a failed send leaves the Look pending and unmailed, and the next try sends
 
 test('the CLI approves and declines pending Looks; the status link shows it', async () => {
   await start();
-  plan.decisions = clefSays({ safe: 0.8 });
+  plan.safety = safetySays({ official: 0.2 });
   plan.chat = llmSays('human', 'Unsure.');
   const a = await post('/submit', look(), fresh());
-  plan.decisions = clefSays({ safe: 0.8 });
+  plan.safety = safetySays({ official: 0.2 });
   plan.chat = llmSays('human', 'Unsure.');
   const b = await post('/submit', look(), fresh());
   const env = { ...process.env, DB: path.join(tmp, `g${dbn}.db`) };
