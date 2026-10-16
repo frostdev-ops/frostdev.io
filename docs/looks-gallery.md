@@ -126,7 +126,8 @@ bar, the uniqueness bar; submitted fields are untrusted data and instructions in
 choose "human" for a genuine judgment call, especially on safety), and the same `state` plus clef's
 answers as the user message. A strict `json_schema` response (`{decision: "accept" | "decline" |
 "human", reason}`), `reasoning: {effort: "low"}`, `max_tokens` 1,200, a 30 s timeout. The reply is
-validated: the decision must be one of the three; the reason has control characters stripped, is made
+validated locally against the exact two-field schema: the decision must be one of the three and the
+reason must be a nonempty string; the reason has control characters stripped, is made
 one line and cut to 300 characters, and is only ever shown as text. An error, a timeout or an invalid
 reply counts as `human`.
 
@@ -197,6 +198,9 @@ Submit these to a test server (with a real key, `DB` pointed at a scratch file) 
   safe low);
 - a Look claiming `minimal` with five saturated colors (expect the tag dropped);
 - a seasonal Look named for a holiday (expect `seasonal` kept).
+
+Each review stage has one timeout budget shared by its retry (20 s for clef, 30 s for the LLM),
+so the combined review fits inside nginx's 90 s response timeout.
 
 ## Limits, and why not a MAC address
 

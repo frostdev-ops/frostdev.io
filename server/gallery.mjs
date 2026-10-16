@@ -349,16 +349,17 @@ export function gallery({
 
   const openrouterPost = async (pathname, payload, timeout) => {
     if (!apiKey) throw new Error('no key');
+    const signal = AbortSignal.timeout(timeout);
     for (let attempt = 0; ; attempt++) {
       let r;
       try {
         r = await fetch(`${openrouter}${pathname}`, {
-          method: 'POST', signal: AbortSignal.timeout(timeout),
+          method: 'POST', signal,
           headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
           body: JSON.stringify(payload),
         });
       } catch (e) {
-        if (attempt === 0 && e.name !== 'TimeoutError') continue;
+        if (attempt === 0 && !signal.aborted && e.name !== 'TimeoutError') continue;
         throw e;
       }
       if (r.ok) return r.json();
@@ -371,13 +372,15 @@ export function gallery({
     const a = res?.answers || {};
     const p = (v) => (typeof v === 'number' && v >= 0 && v <= 1 ? v : NaN);
     const out = {
-      safe: p(a.safe?.noul), quality: typeof a.quality?.score === 'number' ? a.quality.score : NaN,
+      safe: p(a.safe?.noul), quality: typeof a.quality?.score === 'number' && a.quality.score >= 0 && a.quality.score <= 4 ? a.quality.score : NaN,
       choice: typeof a.unique?.choice === 'string' ? a.unique.choice : '', distinct: p(a.unique?.probabilities?.distinct),
       tags: Object.fromEntries(claimed.filter((t) => TAG_QUESTIONS[t]).map((t) => [t, p(a[`tag.${t}`]?.noul)])),
       model: typeof res?.model === 'string' ? res.model.slice(0, 80) : decisionModel,
       cost: typeof res?.usage?.cost === 'number' ? res.usage.cost : null,
     };
-    if ([out.safe, out.quality, out.distinct, ...Object.values(out.tags)].some(Number.isNaN)) throw new Error('the decision model answered something unexpected');
+    const probs = ['distinct', 'variant', 'copy'].map((k) => p(a.unique?.probabilities?.[k]));
+    if (!['distinct', 'variant', 'copy'].includes(out.choice) || probs.some(Number.isNaN) || Math.abs(probs.reduce((s, v) => s + v, 0) - 1) > 0.01
+      || [out.safe, out.quality, out.distinct, ...Object.values(out.tags)].some(Number.isNaN)) throw new Error('the decision model answered something unexpected');
     return out;
   };
   const escalate = async (state, answers) => {
@@ -392,8 +395,10 @@ export function gallery({
         reasoning: { effort: 'low', exclude: true }, max_tokens: 1200,
       }, ESCALATION_TIMEOUT);
       const v = JSON.parse(res?.choices?.[0]?.message?.content ?? '');
-      const reason = cleanReason(v?.reason);
-      if (!['accept', 'decline', 'human'].includes(v?.decision) || !reason) throw new Error('invalid');
+      if (!v || typeof v !== 'object' || Array.isArray(v) || Object.keys(v).length !== 2
+        || !['accept', 'decline', 'human'].includes(v.decision) || typeof v.reason !== 'string') throw new Error('invalid');
+      const reason = cleanReason(v.reason);
+      if (!reason) throw new Error('invalid');
       return { decision: v.decision, reason, model: typeof res?.model === 'string' ? res.model.slice(0, 80) : escalationModel };
     } catch {
       // An error, a timeout or an answer that isn't one of the three: a person decides.
