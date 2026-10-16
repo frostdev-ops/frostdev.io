@@ -251,9 +251,9 @@ page build runs the same checks and fails on any problem, so a bad entry can't b
 server runs the code and field checks on every submission.
 
 - The code is read by Glaze's own `lib/share.js` and `defaults.js`, which refuse a code whole when any
-  value doesn't come through `GZ_SANITIZE` unchanged. Before that, the checker inflates the code itself
-  and refuses a look or background group that isn't an object (Glaze up to 2.2.0 would have dropped its
-  settings instead of refusing them). The code must also fit 1,200 characters and be unique.
+  value doesn't come through `GZ_SANITIZE` unchanged. Its decoder caps inflated data at 8,192 bytes
+  and refuses groups that are not objects. The shared checker requires a single code without whitespace,
+  at most 1,200 characters; stored codes must be unique.
 - A background image address must be `https:` and only present when the background is that image.
   Pictures for the course menu or course cards (Glaze 3) are refused: they would load from other sites
   with no host shown.

@@ -85,25 +85,9 @@ const preview = async (file) => {
   return fits('width') && fits('height') ? '' : `is ${info.width}×${info.height}; previews are ${PREVIEW_SIZE.width.join('–')} wide and ${PREVIEW_SIZE.height.join('–')} tall`;
 };
 
-// The code's shape, checked here before Glaze's decoder: Glaze up to v2.2.0 reads a look or background
-// group that isn't an object as an empty one, so its settings would be dropped instead of refused.
-const shape = async (code) => {
-  let raw;
-  try {
-    const bytes = Buffer.from(code.slice(SHARE.PREFIX.length), 'base64url');
-    raw = JSON.parse(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text());
-  } catch { return ''; } // Glaze's decoder says what's wrong with it.
-  const isObj = (o) => !!o && typeof o === 'object' && !Array.isArray(o);
-  if (!isObj(raw)) return 'the code is not a group of settings';
-  const odd = ['l', 'b'].filter((k) => k in raw && !isObj(raw[k])).map((k) => (k === 'l' ? 'look' : 'background'));
-  return odd.length ? `the code's ${odd.join(' and ')} settings are not a group of settings, so Glaze would drop them` : '';
-};
-
 // One theme code: { problems, look } where look is what Glaze decodes it to (null when it refuses it).
 export async function checkCode(code) {
-  if (typeof code !== 'string' || !code || code.length > MAX_CODE) return { problems: [`the code must be a Glaze theme code of at most ${MAX_CODE} characters`], look: null };
-  const why = await shape(code);
-  if (why) return { problems: [why], look: null };
+  if (typeof code !== 'string' || !/^glaze1:[\w-]+$/.test(code) || code !== code.trim() || code.length > MAX_CODE) return { problems: [`the code must be a Glaze theme code of at most ${MAX_CODE} characters`], look: null };
   let got;
   try { got = await SHARE.decode(code); } catch (err) { return { problems: [`Glaze ${GLAZE_VERSION} refuses the code: ${err.message}`], look: null }; }
   const problems = [];
