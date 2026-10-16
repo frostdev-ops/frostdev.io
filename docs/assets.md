@@ -46,7 +46,7 @@ they are not part of Git or the static build.
   work. Website guides themselves are checked for horizontal overflow separately.
 - Glaze 3.0.0's editor and background images (`glaze-editor-3.0.0.webp` and
   `glaze-backgrounds-3.0.0.webp`) come from a ZIP built with `package.sh` at Glaze
-  source `444083c`, the release candidate before its version bump. They show the
+  source `66b98d4`, the release candidate before its version bump. They show the
   real extension editor and its fictional local Ultra preview at 1440 × 1000,
   Frost, reduced motion, in an isolated headless Chromium profile. External
   network access was blocked. PNG evidence and the capture script are in the
