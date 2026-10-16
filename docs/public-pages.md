@@ -10,9 +10,10 @@ Only these two nested Glaze paths are added to the public nginx routes; the exis
 `/glaze/looks` gallery keeps its separate handler.
 
 Glaze's primary install action matches desktop Safari or Chrome and keeps its
-visual guide beside it. Safari on Mac links to the signed 3.0.0 installer disk image;
+visual guide beside it. Safari on Mac links to the signed 3.0.2 installer disk image;
 Chrome links to the extension store. Other browsers and visitors without JavaScript
-retain both platform-labelled choices. Downloads begin only when a link is chosen.
+retain both platform-labelled choices. A separate Firefox preview link explains the
+Firefox 140+ temporary desktop installation and its session-only lifetime. Downloads begin only when a link is chosen.
 
 The Glaze page features its latest cover and eight motion ads in a media carousel.
 One native player shows the chosen film, with sound controlled by the visitor,

@@ -6,11 +6,14 @@ const store = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ult
 const release = `${source}/releases/tag/v3.0.2`;
 const chapters = [
   { id: 'install', title: 'Install Glaze' },
+  { id: 'firefox', title: 'Try the Firefox preview' },
   { id: 'ultra', title: 'Check your Blackboard page' },
   { id: 'popup', title: 'Start with the popup' },
   { id: 'palette', title: 'Make a palette your own' },
   { id: 'look', title: 'Fonts and reading' },
   { id: 'background', title: 'Background and motion' },
+  { id: 'surfaces', title: 'Glass, frost and surfaces' },
+  { id: 'pets', title: 'Choose a pet' },
   { id: 'courses', title: 'Course colors and tint' },
   { id: 'extras', title: 'Helpers' },
   { id: 'workspace', title: 'Your Ultra workspace' },
@@ -22,12 +25,12 @@ const chapters = [
 ---
 
 <GuideLayout
-  title="Glaze 3.0.2 on Blackboard, Canvas and Moodle in Chrome"
-  description="Install Glaze, pick a palette and fonts, choose a background, and use Glaze 3.0.2 on Blackboard Ultra, Canvas or Moodle."
+  title="Glaze 3.0.2 in Chrome, with Firefox preview setup"
+  description="Set up Glaze on Blackboard Ultra, Canvas or Moodle: Chrome installation, Firefox preview, glass and frost controls, animated pets and study tools."
   path="/guides/glaze-chrome"
   project="Glaze"
-  duration="12 min read"
-  updated="2026-10-15"
+  duration="15 min read"
+  updated="2026-10-16"
   chapters={chapters}
 >
   <div slot="visual" class="guide-overview" aria-label="Glaze setup overview">
@@ -45,7 +48,7 @@ const chapters = [
     <p><a href={store}>Open Glaze in the Chrome Web Store</a> and choose <strong>Add to Chrome</strong>. Then pin it from Chrome’s puzzle-piece menu. No Glaze account needed.</p>
     <aside class="guide-callout">
       <strong>This guide follows Glaze 3.0.2.</strong>
-      <p>3.0.2 is coming to the Chrome Web Store soon. Use the GitHub package below for this release now; the listing’s version may differ.</p>
+      <p>The Chrome Web Store version may differ. Check the version shown there; use the GitHub package below for the 3.0.2 features in this guide.</p>
     </aside>
     <p>For an unpacked copy of Glaze 3.0.2:</p>
     <ol class="guide-steps">
@@ -53,7 +56,19 @@ const chapters = [
       <li>Open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong>, choose <strong>Load unpacked</strong> and select that folder.</li>
       <li>Disable any other Glaze copy, so only one runs.</li>
     </ol>
-    <p>An unpacked copy doesn’t update itself. Once 3.0.2 reaches the store, switch back by first using <strong>Export settings</strong> and Notes <strong>Export all</strong> to save both backups. Remove the unpacked copy, install the store copy, then import both backups. Keep them private: they include share keys. Glaze needs Chrome 113 or newer. On a Mac with Safari, follow the <a href="/guides/glaze-safari">Safari guide</a>.</p>
+    <p>An unpacked copy doesn’t update itself. To switch to a store copy that includes these features, first use <strong>Export settings</strong> and Notes <strong>Export all</strong> to save both backups. Remove the unpacked copy, install the store copy, then import both backups. Keep them private: they include share keys. Glaze needs Chrome 113 or newer. On a Mac with Safari, follow the <a href="/guides/glaze-safari">Safari guide</a>.</p>
+  </section>
+
+  <section id="firefox" class="guide-section">
+    <h2>Try the Firefox preview</h2>
+    <p>Glaze 3.0.2 includes a Firefox package for <strong>desktop Firefox 140 or newer</strong>. This is a temporary development installation; it is not an Add-ons store installation. Mozilla explains the difference in its <a href="https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/">temporary-installation guide</a>.</p>
+    <ol class="guide-steps">
+      <li>Download <a href={`${source}/releases/download/v3.0.2/glaze-v3.0.2-firefox.zip`}>glaze-v3.0.2-firefox.zip</a>.</li>
+      <li>Open <code>about:debugging#/runtime/this-firefox</code>, choose <strong>Load Temporary Add-on…</strong> and select the ZIP.</li>
+      <li>Open your school’s Blackboard Ultra, Canvas or Moodle site and reload. Check Glaze’s site access if it does not appear.</li>
+    </ol>
+    <p>Firefox removes temporary add-ons when it quits, so load the package again for a later session. Back up settings and notes before removing or changing copies; do not rely on this temporary installation as your only copy of study data. Google Calendar sync is not included. Local <strong>Export calendar (.ics)</strong> is available.</p>
+    <p>The theme, surfaces, pets and school-specific sections below apply to this package too. The <code>chrome://extensions</code> instructions elsewhere in this guide apply to Chrome.</p>
   </section>
 
   <section id="ultra" class="guide-section">
@@ -111,6 +126,34 @@ const chapters = [
     <p><strong>Motion</strong> is Off, Subtle (default) or Expressive. Ultra page changes show immediately. Background scenes pause in hidden tabs; reduced motion keeps animations still. With <strong>Turn motion off when the system asks for reduced motion</strong> on, your system setting wins.</p>
   </section>
 
+  <section id="surfaces" class="guide-section">
+    <h2>Glass, frost and surfaces</h2>
+    <p>Open <strong>Look → Surfaces</strong>, or search settings for “Surfaces”. These controls style the panels behind your content on Blackboard Ultra, Canvas and Moodle, including Glaze’s widgets, notes and menus.</p>
+    <ol class="guide-steps">
+      <li>Keep <strong>Surface opacity</strong> on <strong>Automatic</strong> to retain your Look’s original fills. For custom transparency, choose a picture, gradient or animated background and set <strong>Glass blur</strong> above zero. Solid backgrounds and zero blur keep custom surfaces opaque.</li>
+      <li>Adjust <strong>Surface tint</strong> and choose <strong>Accent color</strong> or <strong>Course color</strong> as its source. Enable <strong>Use a custom surface color</strong> if you want to choose the fill yourself.</li>
+      <li>Use <strong>Shadow strength</strong>, optional <strong>Shadow color</strong>, <strong>Surface frost</strong>, <strong>Border strength</strong> and <strong>Depth</strong> to make sections easier to distinguish. Corners follow <strong>Look → Fonts and shape → Corner radius</strong>.</li>
+    </ol>
+    <figure class="guide-figure">
+      <a href="/projects/glaze-surfaces-3.0.2.webp" aria-label="Open the full-size Glaze surface controls capture"><img src="/projects/glaze-surfaces-3.0.2.webp" alt="Look → Surfaces in the released Glaze 3.0.2 editor, with opacity, tint, frost and shadow controls beside its fictional Blackboard preview" width="1440" height="1000" loading="lazy" /></a>
+      <figcaption>The shared Surfaces controls, captured in Glaze 3.0.2 with sample courses.</figcaption>
+    </figure>
+    <p>Switch the live preview between sites and pages to check readability. Each control has <strong>Reset</strong>; <strong>Reset section</strong> restores the surface defaults. Small content rows use a fill without extra backdrop blur.</p>
+  </section>
+
+  <section id="pets" class="guide-section">
+    <h2>Choose a pet</h2>
+    <p>On Canvas or Blackboard Ultra, turn on <strong>Study tools → Pet habitat</strong> in the editor. Back on your school page, open <strong>Pet habitat</strong> from the command palette or <strong>What Glaze can do</strong>, then use <strong>Pet character</strong> to choose Ember the fox, Luna the owl, Mochi the cat, Sprout the dragon, Pebble the capybara, Rime the arctic fox or the Glaze droplet, or keep the Classic buddy.</p>
+    <p>To import a pet you already have, return to <strong>Study tools → Pet habitat</strong> in the editor and use <strong>Import a pet package</strong>. Choose its <code>pet.json</code> and PNG or WebP sprite sheet together, a ZIP containing them, or the sprite sheet alone. ChatGPT v1 and v2 layouts are supported. Files stay on this device; no account connection or upload is involved. Importing a character keeps your existing XP and decorations.</p>
+    <figure class="guide-figure">
+      <a href="/projects/glaze-pets-3.0.2.webp" aria-label="Open the full-size Glaze pet library capture"><img src="/projects/glaze-pets-3.0.2.webp" alt="Glaze 3.0.2’s Pet habitat settings and local import control, with Ember the fox, Luna the owl and Mochi the cat in the animation library" width="1440" height="1000" loading="lazy" /></a>
+      <figcaption>Import and preview pets in the editor; choose your character in the habitat on your school page.</figcaption>
+    </figure>
+    <p>Click an animated pet to wave, or focus it and press <kbd>Enter</kbd> or <kbd>Space</kbd> to jump. Animation pauses when hidden or offscreen. Reduced motion and Glaze Motion off show a still frame.</p>
+    <p>The habitat earns XP from stored handed-in work, kept “do on” plans and verified streak days when Streak is enabled. Focus sessions and petting add no XP. There are no notifications or missed-day penalties. Progress and decorations belong to your signed-in school account.</p>
+    <aside class="guide-callout"><strong>Coming in 3.0.3: the same pet everywhere.</strong><p>Your character choice will also drive the Study buddy widget, navigation badge and course-card pet, including the original Cat and Bunny choices. Each display keeps its own visibility switch. Pets will react to focus timers and completed tasks; these reactions add no XP. Removing a selected imported pet will return to Classic buddy while keeping progress and decorations. These changes are not in the 3.0.2 downloads.</p></aside>
+  </section>
+
   <section id="courses" class="guide-section">
     <h2>Course colors and tint.</h2>
     <p>Glaze softens Ultra’s course colors to fit your palette. Every course you haven’t hidden appears in the editor’s <strong>Courses</strong> section once you’ve opened Blackboard, organizations listed apart. Blackboard has only ten course colors; Glaze gives each course its own, and you can change it. A calendar entry takes its course’s color when its title belongs to one course.</p>
@@ -147,7 +190,7 @@ const chapters = [
     <h2>Your Ultra workspace</h2>
     <p>Open <strong>Dashboard</strong> in Ultra’s rail for Glaze’s board; the <strong>Institution page</strong> tab keeps your school’s page reachable. On Courses, use the Glaze toolbar’s <strong>Edit layout</strong>. Add, move, resize, fold or remove tiles. <strong>+ Course cards</strong> replaces the native course list with individual cards grouped by term; remove the course tiles to bring the native list back. The Dashboard can add individual courses too.</p>
     <p><strong>Better To Do</strong> is a tile on both boards, with your due work and your own tasks, steps, plans and focus sessions. Ultra ticks stay on this device. Reminders, streaks and Insights are optional; check your school’s own dates and grades when something looks incomplete.</p>
-    <p><strong>Course tabs</strong> keep up to four additional course pages live alongside the page you started on. Older unedited pages may reopen at their saved URL and scroll; when all four have been edited, save and close one before opening another. These sit inside Ultra rather than being browser tabs: the address bar and browser Back are not a separate history for each one. Save your work before closing a course tab, reloading, or turning course tabs or Glaze off. Glaze cannot guarantee that every native operation or unsaved change will survive.</p>
+    <p><strong>Course tabs</strong> keep up to four additional course pages live alongside the page you started on. Hidden pages no longer close after ten idle minutes, including on smaller computers. When the four-page limit is reached, an older unedited page may reopen at its saved URL and scroll; when all four have been edited, save and close one before opening another. These sit inside Ultra rather than being browser tabs: the address bar and browser Back are not a separate history for each one. Save your work before closing a course tab, reloading, or turning course tabs or Glaze off. Glaze cannot guarantee that every native operation or unsaved change will survive.</p>
     <p>Use <kbd>Ctrl</kbd>+<kbd>K</kbd> (<kbd>⌘K</kbd> on a Mac) for course search and tools. On an outline, a folder’s eye hides it only for you. <strong>Show hidden folders</strong> reveals dimmed folders and their unhide controls; the brief action message offers <strong>Undo</strong>.</p>
     <p>In the editor’s <strong>Blackboard</strong> tab, customize the navigation’s links, order, icons, widths and text. A collapsed rail can expand on hover or keyboard focus without moving the page. Turn Dashboard off there to restore Ultra’s Institution Page label and icon.</p>
     <p>In <strong>Study tools</strong>, opt into <strong>Notes</strong> for rich text, pictures and attachments, or <strong>Pet habitat</strong> for a buddy that earns decorations from stored hand-ins and kept plans. The pet starts off, never nags, and doesn’t penalize missed days.</p>
@@ -188,6 +231,7 @@ const chapters = [
       <li><strong>Features from this guide missing:</strong> check the version on <code>chrome://extensions</code>. For Glaze 3.0.2, use the GitHub package above.</li>
       <li><strong>Courses missing in the editor:</strong> open any Blackboard page with Glaze on, then reopen the editor.</li>
       <li><strong>Popup works, Blackboard doesn’t change:</strong> check the theme switch and the <code>/ultra/</code> address, then refresh the tab.</li>
+      <li><strong>A Blackboard file preview is blank:</strong> in the upcoming 3.0.3 update, Glaze refreshes expired viewer tickets for the same document and retries previews while an uploaded file converts, for up to five minutes. On 3.0.2, save any work before reloading the page. Glaze does not resubmit the file.</li>
       <li><strong>One course looks different:</strong> it has its own Look. Set it back to your theme under Courses.</li>
       <li><strong>Due this week shows a dash:</strong> open any Blackboard page, then the popup again.</li>
       <li><strong>Palette keeps switching:</strong> automatic light/dark mode is on. Turn it off in Palette.</li>

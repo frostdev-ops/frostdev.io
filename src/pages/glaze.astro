@@ -10,10 +10,11 @@ const source = 'https://github.com/frostdev-ops/glaze';
 const safariDownload = `${source}/releases/download/v3.0.2/glaze-3.0.2-safari-macos.dmg`;
 const safariZip = `${source}/releases/download/v3.0.2/glaze-3.0.2-safari-macos.zip`;
 const chromeZip = `${source}/releases/download/v3.0.2/glaze-v3.0.2.zip`;
+const firefoxZip = `${source}/releases/download/v3.0.2/glaze-v3.0.2-firefox.zip`;
 const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 ---
 
-<MarketingLayout title="Glaze 3.0.2 — Blackboard, Canvas and Moodle, made yours" description={`Themes and study tools for Blackboard Ultra, Canvas and Moodle: your Dashboard, widgets, course tabs, notes and planning. Free and open source for Chrome and Safari.`} path="/glaze" image="/projects/glaze/cover.webp">
+<MarketingLayout title="Glaze 3.0.2 — Blackboard, Canvas and Moodle, made yours" description="Make your school site yours: themes, glass and frost controls, animated pets, live course tabs, notes and planning. Free for Chrome and Safari, with a Firefox preview." path="/glaze" image="/projects/glaze/cover.webp">
   <div class:list={["product-page glaze-page", { "is-halloween": halloween }]}>
     <section class="product-hero" aria-labelledby="glaze-title">
       {halloween && <div class="halloween-hero" aria-hidden="true">
@@ -43,6 +44,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
         </div>
         {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.<br />A little Halloween for your study space.</p>}
         <p class="product-meta">Version 3.0.2 · Free and open source<br />No analytics. No account.</p>
+        <p class="product-caption"><a href="/guides/glaze-chrome#firefox">Try the Firefox preview →</a></p>
         <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>
       </div>
       <figure class="glaze-preview">
@@ -101,32 +103,47 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
       </div>
       <div class="product-grid">
         <article class="product-card"><h3>Plan on your device</h3><p>Better To Do brings due work and your own tasks together. Add plans and focus sessions, import a timetable, or export a calendar file. Reminders, streaks and term Insights are there when you turn them on.</p></article>
-        <article class="product-card"><h3>Notes and a study buddy</h3><p>Opt into rich-text notes with pictures and attachments. Turn on the pet habitat to earn decorations from work handed in and plans kept. No nags or missed-day penalties.</p></article>
+        <article class="product-card"><h3>Notes that stay with you</h3><p>Opt into rich-text notes with pictures, attachments and course folders. Search your notes, link school content, and export Markdown, HTML or a backup of everything.</p></article>
         <article class="product-card"><h3>Share by invitation</h3><p>Optional end-to-end encrypted sessions share selected notes and tasks by link. Use your chosen relay or <a href={`${source}/blob/main/server/README.md`}>host your own</a>. Glaze works fully without sharing or a server.</p></article>
       </div>
+    </section>
+
+    <section class="product-section" aria-labelledby="personal-heading">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">A space that feels like you</p>
+        <h2 id="personal-heading">A little frost.<br />A little company.</h2>
+        <p>Shape the panels around your work and pick a companion for your study space.</p>
+      </div>
+      <div class="product-grid">
+        <article class="product-card"><h3>Glass, color and texture</h3><p>In <strong>Look → Surfaces</strong>, adjust opacity, blur, tint, shadows, frost and borders across Blackboard Ultra, Canvas and Moodle. Match your accent or course color, with rounded corners that follow your Look.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#surfaces">Shape your surfaces →</a></article>
+        <article class="product-card"><h3>Choose your study companion</h3><p>Meet Ember, Luna, Mochi, Sprout, Pebble, Rime and the Glaze droplet, or import a pet sprite sheet from your device. The optional Canvas and Ultra habitat keeps your XP and decorations. No uploads, nags or missed-day penalties.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#pets">Meet the pets →</a></article>
+        <article class="product-card"><h3>Keep your place, keep moving</h3><p>Glaze 3.0.2 reduces Blackboard’s styling work during clicks, hovers and page changes. Keep up to four additional course pages live on every computer; hidden pages no longer close just because they have been idle.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#workspace">Set up your workspace →</a></article>
+      </div>
+      <p class="product-caption"><strong>Coming in 3.0.3:</strong> one pet choice for your habitat, Study buddy, navigation badge and course-card pet, with shared timer and task reactions. Each display keeps its own on/off switch; XP and decorations stay with your school account. These changes are being prepared and are not in the 3.0.2 downloads.</p>
     </section>
 
     <section class="product-section product-split" aria-labelledby="editor-heading">
       <div class="product-section-heading">
         <p class="product-eyebrow">The editor</p>
         <h2 id="editor-heading">See it as you shape it.</h2>
-        <p>Quick switches in the popup. Eight editor tabs, search across every setting, section resets and a live preview that switches site, page, light or dark, and width.</p>
+        <p>Quick switches in the popup. Eight editor tabs, search across every setting and a live preview for each school site. Shape your surfaces, check the result, and reset any control without starting over.</p>
       </div>
       <figure class="product-panel editor-preview">
-        <a href="/projects/glaze-backgrounds-3.0.0.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-backgrounds-3.0.0.webp" width="1440" height="1000" loading="lazy" alt="Glaze’s tabbed editor with mesh gradient controls beside its live sample-course preview" /></a>
+        <a href="/projects/glaze-surfaces-3.0.2.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-surfaces-3.0.2.webp" width="1440" height="1000" loading="lazy" alt="Glaze 3.0.2’s Surfaces editor with opacity, tint, frost, blur and shadow controls beside a fictional Blackboard course preview" /></a>
       </figure>
     </section>
 
     <section class="product-section" aria-labelledby="browser-heading">
       <div class="product-section-heading">
         <p class="product-eyebrow">Install</p>
-        <h2 id="browser-heading">Safari or Chrome.</h2>
+        <h2 id="browser-heading">Choose your browser.</h2>
       </div>
       <div class="browser-guides">
         <a class="product-panel browser-guide" href="/guides/glaze-safari"><span class="product-eyebrow">Safari on Mac</span><h3>Signed, notarized Mac app.</h3><p>Install, enable the extension, allow your Blackboard, Canvas or Moodle site.</p><span class="product-text-link">Safari guide →</span></a>
-        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Chrome Web Store.</h3><p>3.0.2 is coming to the store soon. Use the GitHub package for this release now.</p><span class="product-text-link">Chrome guide →</span></a>
+        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Store or GitHub package.</h3><p>The store version may differ. Load the GitHub package unpacked for the 3.0.2 features in this guide.</p><span class="product-text-link">Chrome guide →</span></a>
+        <a class="product-panel browser-guide" href="/guides/glaze-chrome#firefox"><span class="product-eyebrow">Firefox preview</span><h3>Try the Firefox package.</h3><p>Firefox 140 or newer on desktop. Load it temporarily for this browser session; it is removed when Firefox quits.</p><span class="product-text-link">Firefox setup →</span></a>
       </div>
-      <p class="product-caption">GitHub downloads: <a href={safariZip}>Safari Mac ZIP</a> · <a href={chromeZip}>Chrome extension ZIP</a> · <a href={`${source}/releases/tag/v3.0.2`}>3.0.2 release notes</a>.</p>
+      <p class="product-caption">GitHub downloads: <a href={safariZip}>Safari Mac ZIP</a> · <a href={chromeZip}>Chrome extension ZIP</a> · <a href={firefoxZip}>Firefox preview ZIP</a> · <a href={`${source}/releases/tag/v3.0.2`}>3.0.2 release notes</a>.</p>
     </section>
 
     <section class="product-cta">
@@ -175,7 +192,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
   .glaze-list { display: grid; gap: .6rem; padding: 0; list-style: none; color: var(--glaze-muted, #b3c8dc); font-size: .9rem; line-height: 1.6; }
   .glaze-list strong { color: var(--glaze-ink, #e8f2fa); font-weight: 600; }
   .glaze-inline-link { color: var(--glaze-accent-secondary, #9ce9fa); text-decoration: underline; text-underline-offset: .2em; }
-  .browser-guides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+  .browser-guides { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
   .browser-guide { transition: border-color .2s, transform .2s; }
   .browser-guide:hover { border-color: var(--glaze-accent, #6fdcff); transform: translateY(-3px); }
   .browser-guide .product-eyebrow { display: block; }

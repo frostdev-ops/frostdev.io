@@ -52,6 +52,13 @@ they are not part of Git or the static build.
   network access was blocked. PNG evidence and the capture script are in the
   T30 notes folder; the published files are WebP encodings. These demonstrate
   the shared editor UI, not a Safari installation or an authenticated LMS session.
+- `glaze-surfaces-3.0.2.webp` and `glaze-pets-3.0.2.webp` show the actual published
+  Glaze 3.0.2 Chrome package from GitHub Releases, not the concurrent 3.0.3 work.
+  Captured at 1440 × 1000, device scale 1, Frost with a mesh gradient, reduced
+  motion and external requests blocked in a disposable Chromium profile. These
+  are editor and fictional preview captures, not authenticated LMS or Safari
+  acceptance. PNG receipts and capture code are in the October 16 website review
+  folder; the published WebPs are encodings of those screenshots.
 - Requested website goldens cover the hub, guide index, Glaze page and both browser
   guides at desktop and phone widths, plus the sixth project card on a phone.
 - Glaze's October 14 media refresh uses the corrected `glaze-cover-v2` artwork and
