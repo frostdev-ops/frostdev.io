@@ -21,7 +21,7 @@ npm run build
 npm run preview
 ```
 
-Astro generates fourteen static pages with independent `/_site/` assets. No database,
+Astro generates fifteen static pages with independent `/_site/` assets. No database,
 authentication service, native runtime or account data is included. `/login` and
 other application routes are provided by the existing Rimeward server in production.
 
@@ -60,6 +60,11 @@ separate Safari and Chrome walkthroughs. Their source is
 in `src/pages/guides/`, shared presentation in `GuideLayout.astro` and `guides.css`.
 Examples use demonstration data and make no provider or model calls. Interface
 images are public product captures; see [asset provenance](docs/assets.md).
+
+The Glaze Looks gallery (`/glaze/looks`) is built from `src/data/looks/`; see
+[how entries are submitted, checked and taken down](docs/looks-gallery.md). Submitted
+Looks and their screenshots use [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/);
+website source and Glaze’s built-in Looks retain their existing licenses.
 
 See [public routes and validation](docs/public-pages.md) and
 [AdSense follow-up](docs/adsense-review.md). Review captures live in

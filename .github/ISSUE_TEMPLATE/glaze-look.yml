@@ -1,0 +1,57 @@
+name: Share a Glaze Look
+description: Add your Glaze theme to the free Looks gallery at frostdev.io/glaze/looks.
+title: "Look: "
+labels: ["glaze-look"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing. Everything here is public: your GitHub username is shown as the Look's author, and your submitted theme code and screenshot are published under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). The gallery has no accounts, likes or comments.
+
+        In Glaze, open the editor, go to **Share** and choose **Copy theme code**. If your Look uses a background image, it has to be an `https:` address, and anyone who wears your Look will load it from that site.
+  - type: input
+    id: name
+    attributes:
+      label: Name
+      description: Up to 40 characters, shown as the Look's title.
+      placeholder: Midnight Library
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Theme code
+      description: Starts with glaze1:
+      render: text
+    validations:
+      required: true
+  - type: checkboxes
+    id: tags
+    attributes:
+      label: Tags
+      description: Dark or light, animated, and Look or palette are worked out from the code. Accessibility tags are checked against it.
+      options:
+        - label: minimal
+        - label: colorful
+        - label: gradient
+        - label: serif
+        - label: monospace
+        - label: seasonal
+        - label: high-contrast (text 7:1 on the surface, muted text and text on the accent 4.5:1)
+        - label: low-vision (text size 110% or more)
+        - label: dyslexia-friendly (one of Glaze's Readable fonts)
+        - label: color-blind-safe (a maintainer checks the success, warning and error colors)
+  - type: textarea
+    id: preview
+    attributes:
+      label: Screenshot
+      description: Your Look on a Blackboard Ultra or Canvas page, at least 1280 pixels wide. Drag the image in. Hide or blur anything personal, like your name, grades or classmates. If your Look has light and dark versions, add one of each.
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Before you send it
+      options:
+        - label: I have the right to publish this theme code and screenshot under CC BY 4.0, and the screenshot shows nothing personal.
+          required: true
