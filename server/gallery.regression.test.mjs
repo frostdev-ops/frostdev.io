@@ -216,3 +216,28 @@ test('SMTP authenticates, sends dot-stuffed DATA, and completes after acceptance
   assert.match(data, /Subject: Hi Injected: no\r\n/);
   assert.match(data, /\r\n\.\.one\r\n\.\.\r\nlast\r\n\.\r\n$/);
 });
+
+for (const type of ['application/json-patch+json', 'application/json.evil']) test(`HTTP rejects non-JSON media type ${type}`, async () => {
+  const g = await create();
+  assert.equal((await post(g, { code: code() }, { route: '/check', type })).status, 415);
+});
+
+test('retention deletes quota at two days and rejected reviews at thirty days', async () => {
+  let clock = Date.parse('2026-10-16T12:00:00Z');
+  mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify(clef({ safe: { noul: 0.2 } }))));
+  const g = await create({ now: () => clock });
+  assert.equal((await post(g, look())).body.outcome, 'declined');
+  clock += 2 * 864e5;
+  g.sweep();
+  assert.equal(g.db.prepare('SELECT COUNT(*) n FROM quota').get().n, 0);
+});
+
+test('retention deletes rejected reviews at the thirty-day cutoff', async () => {
+  let clock = Date.parse('2026-10-16T12:00:00Z');
+  mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify(clef({ safe: { noul: 0.2 } }))));
+  const g = await create({ now: () => clock });
+  await post(g, look());
+  clock += 30 * 864e5;
+  g.sweep();
+  assert.equal(g.db.prepare('SELECT COUNT(*) n FROM rejected').get().n, 0);
+});

@@ -266,8 +266,8 @@ export function gallery({
     salt: 'SELECT salt FROM salts WHERE day = ?',
     addSalt: 'INSERT OR IGNORE INTO salts (day, salt) VALUES (?, ?)',
     oldSalts: 'DELETE FROM salts WHERE day < ?',
-    oldQuota: 'DELETE FROM quota WHERE day < ?',
-    oldRejected: 'DELETE FROM rejected WHERE day < ?',
+    oldQuota: 'DELETE FROM quota WHERE day <= ?',
+    oldRejected: 'DELETE FROM rejected WHERE day <= ?',
     oldDeclined: "DELETE FROM looks WHERE status = 'declined' AND decided < ?",
     meta: 'SELECT v FROM meta WHERE k = ?',
     setMeta: 'INSERT OR IGNORE INTO meta (k, v) VALUES (?, ?)',
@@ -342,7 +342,7 @@ export function gallery({
     res.end(JSON.stringify(body));
   };
   const readJson = (req) => new Promise((resolve, reject) => {
-    if (!/^application\/json\b/i.test(req.headers['content-type'] || '')) return reject(fail(415, 'Send JSON.'));
+    if (String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase() !== 'application/json') return reject(fail(415, 'Send JSON.'));
     if (Number(req.headers['content-length']) > BODY_MAX) return reject(fail(413, 'That is too big.'));
     const parts = [];
     let size = 0;
