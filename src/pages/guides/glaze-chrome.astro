@@ -3,7 +3,7 @@ import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
 const store = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
-const release = `${source}/releases/tag/v3.0.0`;
+const release = `${source}/releases/tag/v3.0.1`;
 const chapters = [
   { id: 'install', title: 'Install Glaze' },
   { id: 'ultra', title: 'Check your Blackboard page' },
@@ -22,8 +22,8 @@ const chapters = [
 ---
 
 <GuideLayout
-  title="Glaze 3.0.0 on Blackboard, Canvas and Moodle in Chrome"
-  description="Install Glaze, pick a palette and fonts, choose a background, and use Glaze 3.0.0 on Blackboard Ultra, Canvas or Moodle."
+  title="Glaze 3.0.1 on Blackboard, Canvas and Moodle in Chrome"
+  description="Install Glaze, pick a palette and fonts, choose a background, and use Glaze 3.0.1 on Blackboard Ultra, Canvas or Moodle."
   path="/guides/glaze-chrome"
   project="Glaze"
   duration="12 min read"
@@ -44,16 +44,16 @@ const chapters = [
     <h2>Install Glaze.</h2>
     <p><a href={store}>Open Glaze in the Chrome Web Store</a> and choose <strong>Add to Chrome</strong>. Then pin it from Chrome’s puzzle-piece menu. No Glaze account needed.</p>
     <aside class="guide-callout">
-      <strong>This guide follows Glaze 3.0.0.</strong>
-      <p>3.0.0 is coming to the Chrome Web Store soon. Use the GitHub package below for this release now; the listing’s version may differ.</p>
+      <strong>This guide follows Glaze 3.0.1.</strong>
+      <p>3.0.1 is coming to the Chrome Web Store soon. Use the GitHub package below for this release now; the listing’s version may differ.</p>
     </aside>
-    <p>For an unpacked copy of Glaze 3.0.0:</p>
+    <p>For an unpacked copy of Glaze 3.0.1:</p>
     <ol class="guide-steps">
-      <li>Download <a href={`${source}/releases/download/v3.0.0/glaze-v3.0.0.zip`}>glaze-v3.0.0.zip</a> and extract it to a folder you’ll keep.</li>
+      <li>Download <a href={`${source}/releases/download/v3.0.1/glaze-v3.0.1.zip`}>glaze-v3.0.1.zip</a> and extract it to a folder you’ll keep.</li>
       <li>Open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong>, choose <strong>Load unpacked</strong> and select that folder.</li>
       <li>Disable any other Glaze copy, so only one runs.</li>
     </ol>
-    <p>An unpacked copy doesn’t update itself. Once 3.0.0 reaches the store, switch back by first using <strong>Export settings</strong> and Notes <strong>Export all</strong> to save both backups. Remove the unpacked copy, install the store copy, then import both backups. Keep them private: they include share keys. Glaze needs Chrome 113 or newer. On a Mac with Safari, follow the <a href="/guides/glaze-safari">Safari guide</a>.</p>
+    <p>An unpacked copy doesn’t update itself. Once 3.0.1 reaches the store, switch back by first using <strong>Export settings</strong> and Notes <strong>Export all</strong> to save both backups. Remove the unpacked copy, install the store copy, then import both backups. Keep them private: they include share keys. Glaze needs Chrome 113 or newer. On a Mac with Safari, follow the <a href="/guides/glaze-safari">Safari guide</a>.</p>
   </section>
 
   <section id="ultra" class="guide-section">
@@ -185,7 +185,7 @@ const chapters = [
   <section id="recovery" class="guide-section">
     <h2>Fix a problem.</h2>
     <ul class="guide-checklist">
-      <li><strong>Features from this guide missing:</strong> check the version on <code>chrome://extensions</code>. For Glaze 3.0.0, use the GitHub package above.</li>
+      <li><strong>Features from this guide missing:</strong> check the version on <code>chrome://extensions</code>. For Glaze 3.0.1, use the GitHub package above.</li>
       <li><strong>Courses missing in the editor:</strong> open any Blackboard page with Glaze on, then reopen the editor.</li>
       <li><strong>Popup works, Blackboard doesn’t change:</strong> check the theme switch and the <code>/ultra/</code> address, then refresh the tab.</li>
       <li><strong>One course looks different:</strong> it has its own Look. Set it back to your theme under Courses.</li>

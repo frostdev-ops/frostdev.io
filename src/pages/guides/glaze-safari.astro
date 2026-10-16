@@ -2,8 +2,8 @@
 import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
-const release = `${source}/releases/tag/v3.0.0`;
-const dmg = `${source}/releases/download/v3.0.0/glaze-3.0.0-safari-macos.dmg`;
+const release = `${source}/releases/tag/v3.0.1`;
+const dmg = `${source}/releases/download/v3.0.1/glaze-3.0.1-safari-macos.dmg`;
 const apple = 'https://support.apple.com/102343';
 const chapters = [
   { id: 'prepare', title: 'Check your Mac and school site' },
@@ -23,7 +23,7 @@ const chapters = [
 ---
 
 <GuideLayout
-  title="Glaze 3.0.0 on Blackboard, Canvas and Moodle in Safari"
+  title="Glaze 3.0.1 on Blackboard, Canvas and Moodle in Safari"
   description="Install Glaze on your Mac, allow it on your school’s Blackboard Ultra, Canvas or Moodle site, and set up your palette, fonts, background and helpers."
   path="/guides/glaze-safari"
   project="Glaze"
@@ -47,9 +47,9 @@ const chapters = [
 
   <section class="guide-section" id="install">
     <h2>Install the Safari app</h2>
-    <p><a href={release}>Glaze 3.0.0</a> is a signed, Apple-notarized Mac app that installs itself.</p>
+    <p><a href={release}>Glaze 3.0.1</a> is a signed, Apple-notarized Mac app that installs itself.</p>
     <ol class="guide-steps">
-      <li><a href={dmg}>Download glaze-3.0.0-safari-macos.dmg</a> and open it.</li>
+      <li><a href={dmg}>Download glaze-3.0.1-safari-macos.dmg</a> and open it.</li>
       <li>Open <strong>Glaze</strong> and click <strong>Install Glaze</strong>. It copies itself into Applications (your own Applications folder if you aren’t an administrator) and reopens from there.</li>
       <li>Glaze opens Safari’s Extensions settings beside a two-step guide, covered next.</li>
     </ol>
