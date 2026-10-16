@@ -62,6 +62,11 @@ they are not part of Git or the static build.
   artwork is illustrative. Seedance concepts and alternate takes are excluded.
   Media is served locally without a third-party player and loads on selection.
 
+- Glaze Looks gallery previews (`public/projects/glaze/looks/`) of the built-in Looks and
+  palettes are screenshots of the actual Glaze extension on a local Canvas LMS with seeded
+  sample courses (`scripts/canvas-shots.js` in Glaze), cropped to 1440×620 and encoded
+  as 960-pixel WebP. Submitted previews come from their submitters.
+
 The inline UI icons retain their Lucide/Feather attribution in
 [`public/_site/lucide-license.txt`](../public/_site/lucide-license.txt). Project
 code and Frostdev assets are covered by the root MIT license.

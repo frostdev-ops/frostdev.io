@@ -36,6 +36,13 @@ The background redraws immediately after drawing-buffer changes and blends quali
 reductions. A controlled 260-frame WebGL replay reproduced a blank frame and an
 abrupt detail change before the fix; the fixed replay contains no blank frames.
 
+`/glaze/looks` is the Glaze Looks gallery: Glaze's built-in Looks and palettes plus
+submitted ones, each with a real screenshot, palette chips, Copy code and "Use this Look
+in Glaze". Search, tag filters and sorting need JavaScript; without it every Look and
+its code are still listed. The page loads nothing from other sites. See
+[docs/looks-gallery.md](looks-gallery.md). Production nginx needs the `/glaze/looks`
+location from `ops/public-site.nginx.conf`.
+
 `/guides` links seven comprehensive project guides:
 
 - `/guides/rimeward-first-workspace`
@@ -51,7 +58,7 @@ references. Animated examples are finite or offer pause/play, respect reduced
 motion and make no real application or model calls. Chapter navigation follows
 scrolling and remains usable on small screens. Content is present without JavaScript.
 
-All sixteen routes have HTTPS canonical URLs, anonymous access and indexable
+All seventeen routes have HTTPS canonical URLs, anonymous access and indexable
 metadata. Robots and sitemap list the public content. Existing publisher metadata
 and ads.txt are inert; the site loads no advertising script.
 
@@ -61,7 +68,7 @@ Rimeward `/_astro/` assets and remote runtime routes keep their existing server
 handling and authentication. Crawler directives do not provide access control.
 
 The Website workflow runs Node 22, a clean install, TypeScript checking, an Astro
-build and static artifact assertions. Public browser acceptance covers all sixteen
+build and static artifact assertions. Public browser acceptance covers all seventeen
 pages at 1440, 390 and 320 pixels, canonical metadata, all 59 chapter anchors,
 mobile navigation, demo controls and loaded assets. Publication additionally
 checks every HTML page and crawler file against the immutable release at the
