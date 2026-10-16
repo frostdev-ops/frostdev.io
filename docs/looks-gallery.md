@@ -150,7 +150,8 @@ docker exec glaze-gallery node gallery.mjs --decline <id> "<reason the student w
 No addresses, cookies or hashes. Anything that reaches the Subject has control characters (CR and LF
 included) stripped and is RFC 2047-encoded when not ASCII; the body is CRLF-normalized and dot-stuffed.
 The client is a minimal SMTP over implicit TLS (`smtps://user:pass@host:465`, AUTH PLAIN), built on
-`node:tls`. A failed or unconfigured send leaves the Look pending with `unmailed` set; it's retried every
+`node:tls`, with certificate and hostname verification enabled. The entire exchange has a 30 s
+deadline, replies are bounded, and an early disconnect fails the send. A failed or unconfigured send leaves the Look pending with `unmailed` set; it's retried every
 hour, and `--pending` shows which ones haven't gone out.
 
 ### Cost

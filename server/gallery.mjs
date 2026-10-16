@@ -180,21 +180,40 @@ export const sendMail = (mailUrl, { from, to, subject, text }) => new Promise((r
   if (!(u.protocol === 'smtps:' || (plain && u.hostname === '127.0.0.1'))) return reject(new Error('MAIL_URL must be smtps://'));
   const port = Number(u.port) || 465;
   const sock = plain ? net.connect(port, u.hostname) : tls.connect({ port, host: u.hostname, servername: u.hostname });
-  sock.setTimeout(30e3, () => sock.destroy(new Error('mail server timed out')));
-  let buf = '';
-  let waiting = null;
+  let buf = '', waiting = null, done = false;
+  const finish = (error) => {
+    if (done) return;
+    done = true;
+    clearTimeout(deadline);
+    if (error) {
+      waiting?.reject(error); waiting = null;
+      sock.destroy(); reject(error);
+    } else { resolve(); sock.end('QUIT\r\n'); }
+  };
+  const deadline = setTimeout(() => finish(new Error('mail server timed out')), 30e3);
+  deadline.unref();
+  sock.setTimeout(30e3, () => finish(new Error('mail server timed out')));
+  const flush = () => {
+    const m = /(?:^|\r\n)(\d{3}) [^\r\n]*\r\n/.exec(buf);
+    if (m && waiting) {
+      const end = m.index + m[0].length;
+      const reply = buf.slice(0, end); buf = buf.slice(end);
+      const w = waiting; waiting = null; w.resolve(reply);
+    }
+  };
   sock.on('data', (d) => {
     buf += d.toString('utf8');
-    // A reply is complete at a line "NNN text" (continuation lines are "NNN-text").
-    const m = /(?:^|\r\n)(\d{3}) [^\r\n]*\r\n$/.exec(buf);
-    if (m && waiting) { const w = waiting; waiting = null; const reply = buf; buf = ''; w(reply); }
+    if (buf.length > 64 * 1024) return finish(new Error('mail reply too large'));
+    flush();
   });
-  sock.on('error', reject);
-  const read = () => new Promise((res) => { waiting = res; });
+  sock.on('error', finish);
+  sock.on('close', () => finish(new Error('mail server closed before accepting the message')));
+  const read = () => new Promise((resolve, reject) => { waiting = { resolve, reject }; flush(); });
   const step = async (line, want) => {
+    const pending = read();
     if (line !== null) sock.write(`${line}\r\n`);
-    const reply = await read();
-    if (!reply.startsWith(String(want))) throw new Error(`mail server said ${reply.slice(0, 3)} to ${line === null ? 'hello' : line.split(' ')[0]}`);
+    const reply = await pending;
+    if (!reply.trimEnd().split('\r\n').at(-1).startsWith(String(want))) throw new Error(`mail server said ${reply.slice(0, 3)} to ${line === null ? 'hello' : line.split(' ')[0]}`);
     return reply;
   };
   (async () => {
@@ -207,8 +226,7 @@ export const sendMail = (mailUrl, { from, to, subject, text }) => new Promise((r
     await step('DATA', 354);
     sock.write(mailMessage({ from, to, subject, text }));
     await step(null, 250);
-    sock.end('QUIT\r\n');
-  })().then(resolve, (e) => { sock.destroy(); reject(e); });
+  })().then(() => finish(), finish);
 });
 
 // ---- the server ---------------------------------------------------------------------------------------------------

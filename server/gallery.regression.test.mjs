@@ -34,7 +34,7 @@ const post = (g, body, { ip = '192.0.2.1', cookie = '', type = 'application/json
   res.on('error', reject);
   g.server.emit('request', req, res);
 });
-afterEach(async () => { mock.restoreAll(); for (const g of galleries.splice(0)) await g.close(); });
+afterEach(async () => { mock.restoreAll(); mock.timers.reset(); for (const g of galleries.splice(0)) await g.close(); });
 process.on('exit', () => rmSync(tmp, { recursive: true, force: true }));
 
 // Each group is run against the immutable baseline before its fix is committed.
@@ -155,4 +155,64 @@ test('failed reviews release reservations so a corrected retry works', async () 
   assert.equal((await post(g, sub)).status, 503);
   broken = false;
   assert.equal((await post(g, sub)).body.outcome, 'published');
+});
+
+const mailSocket = () => {
+  const sock = new EventEmitter();
+  sock.setTimeout = () => sock;
+  sock.write = () => true;
+  sock.destroy = (error) => { if (error) sock.emit('error', error); sock.emit('close'); };
+  sock.end = () => sock.emit('close');
+  return sock;
+};
+
+test('SMTP close rejects so later pending mail can be retried', async () => {
+  const sock = mailSocket();
+  mock.method(net, 'connect', () => sock);
+  const sending = sendMail('smtp://127.0.0.1:465', { from: 'a@b', to: 'c@d', subject: 'test', text: 'body' });
+  sock.emit('close');
+  const outcome = await Promise.race([sending.then(() => 'sent', () => 'failed'), new Promise((r) => setTimeout(() => r('hung'), 50))]);
+  assert.equal(outcome, 'failed');
+});
+
+test('SMTP total deadline survives a peer that dribbles incomplete replies', async () => {
+  const sock = mailSocket();
+  mock.method(net, 'connect', () => sock);
+  mock.timers.enable({ apis: ['setTimeout'] });
+  const sending = sendMail('smtp://127.0.0.1:465', { from: 'a@b', to: 'c@d', subject: 'test', text: 'body' }).then(() => 'sent', () => 'failed');
+  for (let i = 0; i < 4; i++) { sock.emit('data', Buffer.from('220-not done\r\n')); mock.timers.tick(10000); }
+  // A microtask race lets an already-settled rejection win, without waiting on a real socket or clock.
+  let outcome = 'hung';
+  sending.then((s) => { outcome = s; });
+  await new Promise((r) => setImmediate(r));
+  assert.equal(outcome, 'failed');
+});
+
+test('SMTP checks the final status of a multiline response', async () => {
+  const sock = mailSocket();
+  sock.write = (line) => { queueMicrotask(() => sock.emit('data', Buffer.from(line.startsWith('EHLO') ? '250-mock\r\n550 refused\r\n' : '250 ok\r\n'))); return true; };
+  mock.method(net, 'connect', () => sock);
+  const sending = sendMail('smtp://127.0.0.1:465', { from: 'a@b', to: 'c@d', subject: 'test', text: 'body' });
+  sock.emit('data', Buffer.from('220 mock\r\n'));
+  await assert.rejects(sending, /EHLO/);
+});
+
+test('SMTP authenticates, sends dot-stuffed DATA, and completes after acceptance', async () => {
+  const sock = mailSocket();
+  const commands = [];
+  sock.write = (line) => {
+    commands.push(line);
+    const reply = line.startsWith('EHLO') ? '250-mock\r\n250-8BITMIME\r\n250 AUTH PLAIN\r\n' : line.startsWith('AUTH') ? '235 ok\r\n' : line === 'DATA\r\n' ? '354 go\r\n' : '250 ok\r\n';
+    queueMicrotask(() => sock.emit('data', Buffer.from(reply)));
+    return true;
+  };
+  mock.method(net, 'connect', () => sock);
+  const sending = sendMail('smtp://bot:mock@127.0.0.1:465', { from: 'a@b', to: 'c@d', subject: 'Hi\r\nInjected: no', text: '.one\n.\nlast' });
+  sock.emit('data', Buffer.from('220 mock\r\n'));
+  await sending;
+  assert.ok(commands.includes(`AUTH PLAIN ${Buffer.from('\0bot\0mock').toString('base64')}\r\n`));
+  assert.ok(commands.includes('MAIL FROM:<a@b> BODY=8BITMIME\r\n'));
+  const data = commands.find((c) => c.startsWith('From:'));
+  assert.match(data, /Subject: Hi Injected: no\r\n/);
+  assert.match(data, /\r\n\.\.one\r\n\.\.\r\nlast\r\n\.\r\n$/);
 });
