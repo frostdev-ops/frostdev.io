@@ -51,6 +51,11 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
       </figure>
     </section>
 
+    <section class="glaze-promise" aria-labelledby="promise-heading">
+      <div><p class="product-eyebrow">No Pro. No telemetry. No data sales.</p><h2 id="promise-heading">Free isn't a trial.<br />Privacy isn't an upsell.</h2><p>Glaze will stay free, with no paid feature gates. Your coursework stays out of our analytics—because we don't have any. Optional encrypted sharing is your choice.</p></div>
+      <div class="promise-links"><a class="product-button" href="/glaze/privacy">Our privacy promise <span aria-hidden="true">→</span></a><a class="product-text-link" href="/glaze/terms">Read the terms</a></div>
+    </section>
+
     <div class="glaze-films">
       {halloween && <div class="halloween-ghost" aria-hidden="true"><img src="/projects/glaze/halloween/ghost.svg" width="200" height="220" alt="" /></div>}
       <GlazeMedia halloween={halloween} />
@@ -129,7 +134,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
       <p class="product-eyebrow">Glaze by Frostdev</p>
       <h2>Your theme. Your data.</h2>
       <p>No analytics. No account. Your work stays local unless you choose to share it. Encrypted sharing uses an optional relay; Glaze never submits coursework.</p>
-      <div class="product-actions"><a class="product-button" href={source}>View source <span aria-hidden="true">↗</span></a><a class="product-button secondary" href={`${source}/blob/main/PRIVACY.md`}>Privacy policy <span aria-hidden="true">↗</span></a></div>
+      <div class="product-actions"><a class="product-button" href={source}>View source <span aria-hidden="true">↗</span></a><a class="product-button secondary" href="/glaze/privacy">Privacy policy <span aria-hidden="true">→</span></a><a class="product-button secondary" href="/glaze/terms">Terms <span aria-hidden="true">→</span></a></div>
       <p class="product-caption">Blackboard is a trademark of Anthology Inc. Canvas is a trademark of Instructure, Inc. Glaze is an independent project and is not affiliated with or endorsed by Blackboard, Canvas or Moodle.</p>
     </section>
   </div>
@@ -150,6 +155,12 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
 </script>
 
 <style>
+  .glaze-promise { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2rem; padding: 2.5rem; margin-bottom: 3rem; border: 1px solid var(--glaze-line, #2b4b61); border-radius: 1rem; background: linear-gradient(120deg, #17413b55, #171127aa); }
+  .glaze-promise > div:first-child { max-width: 36rem; }
+  .glaze-promise h2 { font-size: clamp(1.7rem, 3vw, 2.5rem); letter-spacing: -.04em; line-height: 1.15; margin-bottom: 1rem; }
+  .glaze-promise p:not(.product-eyebrow) { color: var(--glaze-muted, #b3c8dc); font-size: .92rem; line-height: 1.8; }
+  .promise-links { display: grid; justify-items: start; }
+  @media (max-width: 700px) { .glaze-promise { padding: 1.5rem; } }
   .glaze-page { --product-accent: #6fdcff; }
   .product-hero { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 2.5rem; }
   .product-title span { color: var(--glaze-accent, #83e6f4); }

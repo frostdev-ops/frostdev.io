@@ -6,8 +6,10 @@ interface Props {
   description: string;
   path?: string;
   image?: string;
+  ambient?: boolean;
 }
-const { title, description, path = '/', image = '/projects/frostdev-wordmark-crystal.webp' } = Astro.props;
+const { title, description, path = '/', image = '/projects/frostdev-wordmark-crystal.webp', ambient = true } = Astro.props;
+const glaze = path === '/glaze' || path.startsWith('/glaze/') || path.startsWith('/guides/glaze-');
 ---
 
 <BaseLayout title={title} description={description}>
@@ -20,8 +22,8 @@ const { title, description, path = '/', image = '/projects/frostdev-wordmark-cry
   <meta slot="head" name="twitter:card" content="summary_large_image" />
   <meta slot="head" name="google-adsense-account" content="ca-pub-1806642805052030" />
 
-  <div class="splash-ground"></div>
-  <canvas id="splash-canvas" aria-hidden="true"></canvas>
+  {ambient && <div class="splash-ground"></div>}
+  {ambient && <canvas id="splash-canvas" aria-hidden="true"></canvas>}
 
   <div class="marketing">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -32,7 +34,7 @@ const { title, description, path = '/', image = '/projects/frostdev-wordmark-cry
       <nav aria-label="Main navigation">
         <a href="/#projects">Projects</a>
         <a href="/guides">Guides</a>
-        <a href="/login">Sign in <span aria-hidden="true">↗</span></a>
+        <a href={glaze ? "/glaze" : "/login"}>{glaze ? "Get Glaze" : "Sign in"} <span aria-hidden="true">↗</span></a>
       </nav>
     </header>
     <main id="main"><slot /></main>
@@ -40,7 +42,8 @@ const { title, description, path = '/', image = '/projects/frostdev-wordmark-cry
       <span>© {new Date().getFullYear()} Frostdev</span>
       <nav aria-label="Footer navigation">
         <a href="https://github.com/frostdev-ops">GitHub</a>
-        <a href="/privacy">Privacy</a>
+        <a href={glaze ? "/glaze/privacy" : "/privacy"}>{glaze ? "Glaze privacy" : "Privacy"}</a>
+        {glaze && <a href="/glaze/terms">Terms</a>}
         <a href="mailto:admin@frostdev.io">Contact</a>
       </nav>
     </footer>
@@ -68,6 +71,7 @@ const { title, description, path = '/', image = '/projects/frostdev-wordmark-cry
   a:hover { color: #9be7ff; }
   a:focus-visible { outline: 2px solid #9be7ff; outline-offset: 6px; border-radius: 3px; }
   .marketing-footer { flex-wrap: wrap; padding-top: 2.5rem; padding-bottom: 2rem; color: #8fa8c0; }
+  .marketing-footer nav { flex-wrap: wrap; }
   .skip-link { position: absolute; left: 1rem; top: -5rem; z-index: 10; background: #060d18; padding: 0.75rem; }
   .skip-link:focus { top: 1rem; }
   @media (max-width: 600px) {

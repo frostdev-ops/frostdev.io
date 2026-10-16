@@ -3,8 +3,8 @@
   <channel>
     <item>
       <title>Glaze 3.0.0</title>
-      <pubDate>Fri, 16 Oct 2026 00:21:12 +0000</pubDate>
-      <enclosure url="https://github.com/frostdev-ops/glaze/releases/download/v3.0.0/glaze-3.0.0-safari-macos.dmg" sparkle:version="3.0.0" sparkle:shortVersionString="3.0.0" sparkle:edSignature="VFYThFwFuZj1pmg5QEYItd1AaWdfNwJGy/aKcizOTrU9Kgaw0zRsDaek4VWXBoxu4oO8KI+jPcOO08hChSc2Aw==" length="15796490" type="application/octet-stream" />
+      <pubDate>Fri, 16 Oct 2026 01:00:17 +0000</pubDate>
+      <enclosure url="https://github.com/frostdev-ops/glaze/releases/download/v3.0.0/glaze-3.0.0-safari-macos.dmg" sparkle:version="3.0.0" sparkle:shortVersionString="3.0.0" sparkle:edSignature="0M1gM7owLKHSpQi6XrgGg+YYMPNsJlue1k/rWhWwtEQ0+qc5Ezv5SMtxZVRXWUupdEb26KyIKjypxxBanXdnBw==" length="15796569" type="application/octet-stream" />
     </item>
     <item>
       <title>Glaze 2.2.0</title>

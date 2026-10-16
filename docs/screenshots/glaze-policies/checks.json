@@ -1,0 +1,45 @@
+{
+  "cases": 48,
+  "widths": [
+    1440,
+    390,
+    320
+  ],
+  "pages": 16,
+  "overflow": 0,
+  "broken_images": 0,
+  "page_errors": 0,
+  "unexpected_external_requests": 0,
+  "anchors": "all present",
+  "canonical_urls": "all correct",
+  "motion": [
+    {
+      "name": "policy-arrive",
+      "end": 800
+    },
+    {
+      "name": "policy-orbit",
+      "end": 5000
+    },
+    {
+      "name": "policy-float",
+      "end": 4000
+    },
+    {
+      "name": "policy-arrive",
+      "end": 850
+    },
+    {
+      "name": "policy-arrive",
+      "end": 950
+    },
+    {
+      "name": "policy-arrive",
+      "end": 1050
+    }
+  ],
+  "reduced_motion": "no policy animations",
+  "keyboard_table": true,
+  "forced_colors": true,
+  "source": "Local static build; no account or private content"
+}

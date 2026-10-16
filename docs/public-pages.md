@@ -2,10 +2,15 @@
 
 The hub `/` links six projects and the guide index. `/rimeward`, `/crosspane`,
 `/rimewire` and `/glaze` contain public product descriptions and demonstrations. `/privacy`
-describes current storage, provider connections and local versus shared data.
+describes current website storage, provider connections and local versus shared data.
+Glaze has dedicated `/glaze/privacy` and `/glaze/terms` pages with its permanent
+free/no-paid-gates commitment, local-processing and optional-sharing disclosures. Motion is finite
+and disabled under reduced motion. The Glaze footer, overview and guides link both.
+Only these two nested Glaze paths are added to the public nginx routes; the existing
+`/glaze/looks` gallery keeps its separate handler.
 
 Glaze's primary install action matches desktop Safari or Chrome and keeps its
-visual guide beside it. Safari on Mac links to the signed 2.1.4 installer disk image;
+visual guide beside it. Safari on Mac links to the signed 3.0.0 installer disk image;
 Chrome links to the extension store. Other browsers and visitors without JavaScript
 retain both platform-labelled choices. Downloads begin only when a link is chosen.
 
@@ -46,7 +51,7 @@ references. Animated examples are finite or offer pause/play, respect reduced
 motion and make no real application or model calls. Chapter navigation follows
 scrolling and remains usable on small screens. Content is present without JavaScript.
 
-All fourteen routes have HTTPS canonical URLs, anonymous access and indexable
+All sixteen routes have HTTPS canonical URLs, anonymous access and indexable
 metadata. Robots and sitemap list the public content. Existing publisher metadata
 and ads.txt are inert; the site loads no advertising script.
 
@@ -56,7 +61,7 @@ Rimeward `/_astro/` assets and remote runtime routes keep their existing server
 handling and authentication. Crawler directives do not provide access control.
 
 The Website workflow runs Node 22, a clean install, TypeScript checking, an Astro
-build and static artifact assertions. Public browser acceptance covers all fourteen
+build and static artifact assertions. Public browser acceptance covers all sixteen
 pages at 1440, 390 and 320 pixels, canonical metadata, all 59 chapter anchors,
 mobile navigation, demo controls and loaded assets. Publication additionally
 checks every HTML page and crawler file against the immutable release at the

@@ -1,0 +1,21 @@
+---
+import MarketingLayout from './MarketingLayout.astro';
+import '../styles/glaze-policy.css';
+
+interface Props { title: string; description: string; page: 'privacy' | 'terms'; }
+const { title, description, page } = Astro.props;
+---
+
+<MarketingLayout title={title} description={description} path={`/glaze/${page}`} image="/projects/glaze/cover.webp" ambient={false}>
+  <article class="glaze-policy">
+    <nav class="policy-nav" aria-label="Glaze policies">
+      <a class="policy-brand" href="/glaze"><img src="/projects/glaze-logo.svg" width="420" height="120" alt="Glaze" /></a>
+      <div><a href="/glaze/privacy" aria-current={page === 'privacy' ? 'page' : undefined}>Privacy</a><a href="/glaze/terms" aria-current={page === 'terms' ? 'page' : undefined}>Terms</a><a href="https://github.com/frostdev-ops/glaze">Open source <span aria-hidden="true">↗</span></a></div>
+    </nav>
+    <slot />
+    <section class="policy-contact" aria-labelledby="contact-heading">
+      <div><p class="policy-kicker">A person, not a ticket wall</p><h2 id="contact-heading">Questions deserve answers.</h2><p>Ask about privacy, request deletion of information we actually hold, or report something that doesn't match this promise.</p></div>
+      <a href="mailto:admin@frostdev.io">admin@frostdev.io <span aria-hidden="true">↗</span></a>
+    </section>
+  </article>
+</MarketingLayout>
