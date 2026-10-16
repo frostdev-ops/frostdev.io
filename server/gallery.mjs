@@ -152,8 +152,10 @@ const fail = (status, error, extra = {}) => Object.assign(new Error(error), { st
 // The client's network, as the share relay finds it: X-Real-IP (or IP_HEADER) only from a trusted proxy; IPv4 as is,
 // IPv6 by its /64, which one subscriber usually holds whole.
 export const networkOf = (ip) => {
-  ip = ip.replace(/^::ffff:(?=\d+\.)/, '');
   if (!ip.includes(':')) return ip;
+  ip = new URL(`http://[${ip.split('%')[0]}]`).hostname.slice(1, -1);
+  const mapped = /^::ffff:([a-f0-9]+):([a-f0-9]+)$/.exec(ip);
+  if (mapped) return mapped.slice(1).flatMap((v) => { const n = parseInt(v, 16); return [n >> 8, n & 255]; }).join('.');
   const [a, b = ''] = ip.split('%')[0].split('::');
   const head = a ? a.split(':') : [], tail = b ? b.split(':') : [];
   const all = ip.includes('::') ? [...head, ...Array(Math.max(0, 8 - head.length - tail.length)).fill('0'), ...tail] : head;
@@ -259,6 +261,7 @@ export function gallery({
     q.oldQuota.run(today(t - 2 * DAY));
     q.oldRejected.run(today(t - 30 * DAY));
     q.oldDeclined.run(t - 30 * DAY);
+    for (const [key, b] of buckets) if (t - b.at >= CHECK_RATE[1]) buckets.delete(key);
   };
   const saltOf = (day) => {
     q.oldSalts.run(day);
@@ -296,12 +299,13 @@ export function gallery({
   const allowCheck = (net_) => {
     const [burst, ms] = CHECK_RATE;
     const t = now();
-    const b = buckets.get(net_) || { left: burst, at: t };
+    const key = hmac(saltOf(today(t)), net_);
+    const b = buckets.get(key) || { left: burst, at: t };
     b.left = Math.min(burst, b.left + ((t - b.at) / ms) * burst);
     b.at = t;
     if (b.left < 1) return false;
     b.left -= 1;
-    buckets.set(net_, b);
+    buckets.set(key, b);
     return true;
   };
 

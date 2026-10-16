@@ -90,3 +90,44 @@ test('model retries share one stage deadline', async () => {
   assert.equal(signals.length, 2);
   assert.equal(signals[0], signals[1], 'retry resets the stage timeout');
 });
+
+test('network identity canonicalizes mapped IPv4 aliases', async () => {
+  assert.equal(networkOf('::ffff:c000:201'), '192.0.2.1');
+  assert.equal(networkOf('::FFFF:192.0.2.1'), '192.0.2.1');
+  mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify(clef())));
+  const g = await create();
+  assert.equal((await post(g, look())).status, 200);
+  assert.equal((await post(g, look(), { ip: '::ffff:c000:201' })).status, 429);
+});
+
+test('check limiter keeps only expiring keyed network hashes', async () => {
+  const nativeSet = Map.prototype.set;
+  const seen = [];
+  mock.method(Map.prototype, 'set', function (key, value) {
+    if (value && typeof value === 'object' && 'left' in value) seen.push({ map: this, key });
+    return nativeSet.call(this, key, value);
+  });
+  let clock = Date.parse('2026-10-16T12:00:00Z');
+  const g = await create({ now: () => clock });
+  await post(g, { code: code() }, { route: '/check' });
+  assert.equal(seen.length, 1);
+  assert.match(seen[0].key, /^[\w-]{43}$/);
+  clock += 60001;
+  g.sweep();
+  assert.equal(seen[0].map.size, 0);
+});
+
+test('check limiter evicts inactive network buckets', async () => {
+  const nativeSet = Map.prototype.set;
+  let buckets;
+  mock.method(Map.prototype, 'set', function (key, value) {
+    if (value && typeof value === 'object' && 'left' in value) buckets = this;
+    return nativeSet.call(this, key, value);
+  });
+  let clock = Date.parse('2026-10-16T12:00:00Z');
+  const g = await create({ now: () => clock });
+  await post(g, { code: code() }, { route: '/check' });
+  clock += 60001;
+  g.sweep();
+  assert.equal(buckets.size, 0);
+});
