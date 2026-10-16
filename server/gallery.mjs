@@ -223,6 +223,7 @@ export function gallery({
       tags TEXT NOT NULL, code TEXT NOT NULL, described TEXT NOT NULL, status TEXT NOT NULL, decision TEXT NOT NULL,
       reason TEXT NOT NULL DEFAULT '', token TEXT NOT NULL, unmailed INTEGER NOT NULL DEFAULT 0, decided INTEGER NOT NULL);
     CREATE INDEX IF NOT EXISTS looks_token ON looks (token);
+    CREATE TABLE IF NOT EXISTS reviewing (id TEXT PRIMARY KEY, name TEXT UNIQUE NOT NULL, code TEXT UNIQUE NOT NULL, expires INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS rejected (name TEXT NOT NULL, code TEXT NOT NULL, decision TEXT NOT NULL, day TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS quota (kind TEXT NOT NULL, key TEXT NOT NULL, day TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (kind, key, day));
     CREATE TABLE IF NOT EXISTS salts (day TEXT PRIMARY KEY, salt BLOB NOT NULL);
@@ -230,6 +231,10 @@ export function gallery({
   const q = Object.fromEntries(Object.entries({
     published: "SELECT * FROM looks WHERE status = 'published' ORDER BY created DESC, name",
     blocking: "SELECT id, name, code, status FROM looks WHERE status IN ('published', 'pending', 'removed')",
+    reservations: 'SELECT name, code FROM reviewing WHERE expires > ?',
+    reserve: 'INSERT INTO reviewing (id, name, code, expires) VALUES (?, ?, ?, ?)',
+    release: 'DELETE FROM reviewing WHERE id = ?',
+    expiredReviews: 'DELETE FROM reviewing WHERE expires <= ?',
     byId: 'SELECT * FROM looks WHERE id = ?',
     byToken: 'SELECT * FROM looks WHERE token = ?',
     insert: 'INSERT INTO looks (id, name, credit, created, tags, code, described, status, decision, reason, token, unmailed, decided) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -257,6 +262,7 @@ export function gallery({
   // Housekeeping: today's network key, made when first needed; old keys, quota, rejected reviews and human declines go.
   const sweep = () => {
     const t = now();
+    q.expiredReviews.run(t);
     q.oldSalts.run(today(t));
     q.oldQuota.run(today(t - 2 * DAY));
     q.oldRejected.run(today(t - 30 * DAY));
@@ -336,6 +342,13 @@ export function gallery({
 
   // The deterministic part, shared by check and submit: the code, the fields given, and name and code against every
   // Look the gallery has or had (curated, published, pending and removed).
+  const duplicateProblems = (body) => {
+    const problems = [];
+    const taken = [...curated.map((l) => ({ name: l.name, code: l.code, status: 'published' })), ...q.blocking.all(), ...q.reservations.all(now())];
+    if (typeof body.name === 'string' && taken.some((l) => l.name.toLowerCase() === body.name.toLowerCase())) problems.push('a Look with that name is already in the gallery (or was); choose another name');
+    if (typeof body.code === 'string' && taken.some((l) => l.code === body.code)) problems.push('this exact code is already in the gallery (or was taken down)');
+    return problems;
+  };
   const deterministic = async (body, { partial }) => {
     await ready;
     const { problems: codeProblems, look } = await L.checkCode(body.code);
@@ -344,9 +357,7 @@ export function gallery({
     const credit = body.credit === undefined && !partial ? '' : body.credit;
     problems.push(...L.checkMeta({ name: body.name, credit, tags: body.tags }, look, { community: true, partial }));
     if (!partial && body.license !== true) problems.push('you need to agree to share it under CC BY 4.0');
-    const taken = [...curated.map((l) => ({ name: l.name, code: l.code, status: 'published' })), ...q.blocking.all()];
-    if (typeof body.name === 'string' && taken.some((l) => l.name.toLowerCase() === body.name.toLowerCase())) problems.push('a Look with that name is already in the gallery (or was); choose another name');
-    if (typeof body.code === 'string' && taken.some((l) => l.code === body.code)) problems.push('this exact code is already in the gallery (or was taken down)');
+    problems.push(...duplicateProblems(body));
     return { problems, described: look && !codeProblems.length ? L.describe(look) : null };
   };
   const neighbours = (described) => L.nearest(described, [...curated, ...community()], 3);
@@ -467,56 +478,68 @@ export function gallery({
     const t = now();
     const day = today(t);
     const keys = [['cookie', hmac(cookieKey, cookie.value), COOKIE_PER_DAY], ['network', hmac(saltOf(day), clientOf(req)), NETWORK_PER_DAY], ['all', '', reviewsPerDay]];
-    const over = tx(() => {
+    const reservation = crypto.randomUUID();
+    const quota = tx(() => {
+      const problems = duplicateProblems(body);
+      if (problems.length) return { problems };
+      q.expiredReviews.run(t);
       const full = keys.find(([k, key, max]) => (q.used.get(k, key, day)?.n || 0) >= max);
-      if (!full) for (const [k, key] of keys) q.take.run(k, key, day);
-      return full?.[0];
+      if (!full) {
+        // Five minutes outlives both review deadlines; a crashed process cannot hold a name forever.
+        q.reserve.run(reservation, body.name.toLowerCase(), body.code, t + 5 * 60e3);
+        for (const [k, key] of keys) q.take.run(k, key, day);
+      }
+      return { over: full?.[0] };
     });
+    if (quota.problems) return send(res, 422, { error: 'Fix these first; nothing was used up.', problems: quota.problems }, setCookie);
+    const { over } = quota;
     if (over) {
       const msg = over === 'all' ? 'The gallery has reviewed as many Looks as it can today.' : over === 'cookie' ? 'You can submit one Look a day.' : 'One Look a day can be submitted from your network.';
       return send(res, 429, { error: msg, limit: over, resets: nextReset(t) }, { ...setCookie, 'retry-after': String(Math.ceil((Date.parse(nextReset(t)) - t) / 1000)) });
     }
     const giveBack = () => { for (const [k, key] of keys) q.give.run(k, key, day); };
 
-    const near = neighbours(described);
-    const claimed = body.tags.filter((x) => L.SUBJECTIVE.includes(x));
-    const state = {
-      submission: { name: body.name, credit: body.credit, claimedTags: body.tags, ...summarize(described) },
-      nearest: near.map((n) => ({ name: n.look.name, distance: n.distance, ...summarize(n.look.described) })),
-    };
-    let a;
-    try { a = await clef(state, claimed); } catch (e) {
-      giveBack();
-      console.error('gallery: decision model:', e.message);
-      return send(res, 503, { error: 'Reviews are paused right now; nothing was used up. Try again later.' }, setCookie);
-    }
-    const kept = body.tags.filter((x) => !(x in a.tags) || a.tags[x] >= BANDS.tag);
-    const dropped = body.tags.filter((x) => !kept.includes(x));
-    let outcome = band(a);
-    let escalation = null;
-    if (outcome === 'unsure') {
-      escalation = await escalate(state, a);
-      outcome = { accept: 'accept', decline: 'decline', human: 'human' }[escalation.decision];
-    }
-    const nearestOut = near.map((n) => ({ id: n.look.id, name: n.look.name, source: n.look.source, distance: n.distance }));
-    const decision = { clef: a, escalation, nearest: nearestOut, dropped, at: new Date(t).toISOString() };
-    const numbers = { safe: a.safe, quality: a.quality, unique: a.choice, distinct: a.distinct, tags: a.tags };
-    const reasons = outcome === 'decline' ? (escalation ? [escalation.reason] : why(a, near[0])) : [];
-
-    if (outcome === 'decline') {
-      q.reject.run(body.name, body.code, JSON.stringify(decision), day);
-      return send(res, 200, { outcome: 'declined', reasons, numbers, escalated: !!escalation, dropped, nearest: nearestOut }, setCookie);
-    }
-    const id = `c-${crypto.randomBytes(5).toString('hex')}`;
-    const token = crypto.randomBytes(24).toString('base64url');
-    const status = outcome === 'accept' ? 'published' : 'pending';
-    q.insert.run(id, body.name, body.credit, day, JSON.stringify(kept), body.code, JSON.stringify(described), status, JSON.stringify(decision), '', sha(token), status === 'pending' ? 1 : 0, t);
-    if (status === 'pending') mailPending();
-    return send(res, 200, {
-      outcome: status, id, token, escalated: !!escalation, numbers, tags: kept, dropped, nearest: nearestOut,
-      ...(status === 'published' && { url: `/glaze/looks#${id}` }),
-      ...(status === 'pending' && { message: 'A person will look at it. Your status link shows the outcome.' }),
-    }, setCookie);
+    try {
+      const near = neighbours(described);
+      const claimed = body.tags.filter((x) => L.SUBJECTIVE.includes(x));
+      const state = {
+        submission: { name: body.name, credit: body.credit, claimedTags: body.tags, ...summarize(described) },
+        nearest: near.map((n) => ({ name: n.look.name, distance: n.distance, ...summarize(n.look.described) })),
+      };
+      let a;
+      try { a = await clef(state, claimed); } catch (e) {
+        giveBack();
+        console.error('gallery: decision model:', e.message);
+        return send(res, 503, { error: 'Reviews are paused right now; nothing was used up. Try again later.' }, setCookie);
+      }
+      const kept = body.tags.filter((x) => !(x in a.tags) || a.tags[x] >= BANDS.tag);
+      const dropped = body.tags.filter((x) => !kept.includes(x));
+      let outcome = band(a);
+      let escalation = null;
+      if (outcome === 'unsure') {
+        escalation = await escalate(state, a);
+        outcome = { accept: 'accept', decline: 'decline', human: 'human' }[escalation.decision];
+      }
+      const nearestOut = near.map((n) => ({ id: n.look.id, name: n.look.name, source: n.look.source, distance: n.distance }));
+      const decision = { clef: a, escalation, nearest: nearestOut, dropped, at: new Date(t).toISOString() };
+      const numbers = { safe: a.safe, quality: a.quality, unique: a.choice, distinct: a.distinct, tags: a.tags };
+      const reasons = outcome === 'decline' ? (escalation ? [escalation.reason] : why(a, near[0])) : [];
+  
+      if (outcome === 'decline') {
+        q.reject.run(body.name, body.code, JSON.stringify(decision), day);
+        return send(res, 200, { outcome: 'declined', reasons, numbers, escalated: !!escalation, dropped, nearest: nearestOut }, setCookie);
+      }
+      const id = `c-${crypto.randomBytes(5).toString('hex')}`;
+      const token = crypto.randomBytes(24).toString('base64url');
+      const status = outcome === 'accept' ? 'published' : 'pending';
+      q.insert.run(id, body.name, body.credit, day, JSON.stringify(kept), body.code, JSON.stringify(described), status, JSON.stringify(decision), '', sha(token), status === 'pending' ? 1 : 0, t);
+      if (status === 'pending') mailPending();
+      return send(res, 200, {
+        outcome: status, id, token, escalated: !!escalation, numbers, tags: kept, dropped, nearest: nearestOut,
+        ...(status === 'published' && { url: `/glaze/looks#${id}` }),
+        ...(status === 'pending' && { message: 'A person will look at it. Your status link shows the outcome.' }),
+      }, setCookie);
+    } finally { q.release.run(reservation); }
   };
 
   const handle = async (req, res) => {

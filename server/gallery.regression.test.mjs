@@ -131,3 +131,28 @@ test('check limiter evicts inactive network buckets', async () => {
   g.sweep();
   assert.equal(buckets.size, 0);
 });
+
+for (const same of ['name', 'code']) test(`concurrent submissions reserve the same ${same} across SQLite connections`, async () => {
+  let calls = 0;
+  mock.method(globalThis, 'fetch', async () => { calls++; await new Promise((r) => setTimeout(r, 20)); return new Response(JSON.stringify(clef())); });
+  const db = path.join(tmp, `shared-${++seq}.db`);
+  const g = await create({ db });
+  const g2 = await create({ db });
+  const first = look();
+  const second = look({ [same]: same === 'name' ? first.name.toUpperCase() : first.code });
+  const responses = await Promise.all([post(g, first), post(g2, second, { ip: '192.0.2.2' })]);
+  assert.deepEqual(responses.map((r) => r.status).sort(), [200, 422]);
+  assert.equal(calls, 1);
+  assert.equal(g.db.prepare("SELECT n FROM quota WHERE kind = 'all'").get().n, 1);
+  assert.equal(g.db.prepare('SELECT COUNT(*) n FROM looks').get().n, 1);
+});
+
+test('failed reviews release reservations so a corrected retry works', async () => {
+  let broken = true;
+  mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify(broken ? {} : clef())));
+  const g = await create();
+  const sub = look();
+  assert.equal((await post(g, sub)).status, 503);
+  broken = false;
+  assert.equal((await post(g, sub)).body.outcome, 'published');
+});

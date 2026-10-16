@@ -56,7 +56,9 @@ All JSON, `X-Content-Type-Options: nosniff`, no CORS. POSTs need `Origin: https:
    insensitively) and the code unique against curated, published, pending **and removed** Looks, so a
    taken-down code can't come back.
 3. **Quota** (see Limits). Taken before the review so two tabs can't both pass; given back if the review
-   can't happen.
+   can't happen. The same transaction reserves the lowercase name and exact code in SQLite,
+   so simultaneous requests on separate connections cannot review the same entry twice. Reservations
+   are released on completion and expire after five minutes if the process crashes.
 4. **Neighbours.** `distance()` against every published Look: the mean OKLab difference over the 14
    palette roles (×100, so ~1 is a just-noticeable step), +10 for a different text font (+5 if the same
    kind of font), +10 for a different background kind (+5 for a different scene or gradient style, else
