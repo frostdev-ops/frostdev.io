@@ -20,10 +20,10 @@ const galleries = [];
 let seq = 0;
 const code = () => `glaze1:${zlib.deflateRawSync(Buffer.from(JSON.stringify({ c: `${(0x2a7fd4 + ++seq * 4099).toString(16)}6fb6ff0a244004121f101a24070c12e9eef39aa7b466727f1b27332b3a4a34d399fbbf24f87171` }))).toString('base64url')}`;
 const look = (over = {}) => ({ code: code(), name: `Adversarial ${seq}`, credit: 'Sam', tags: [], license: true, ...over });
-const clef = (over = {}) => ({ answers: { quality: { score: 3 }, unique: { choice: 'distinct', probabilities: { distinct: 0.9, variant: 0.07, copy: 0.03 } }, ...over } });
+const decisionAnswers = (over = {}) => ({ answers: { quality: { score: 3 }, unique: { choice: 'distinct', probabilities: { distinct: 0.9, variant: 0.07, copy: 0.03 } }, ...over } });
 const safety = (over = {}) => ({ answers: { abuse: { noul: 0.04 }, personal: { noul: 0.05 }, official: { noul: 0.01 }, ad: { noul: 0.03 }, ...over } });
 // A review is two decisions calls at once; each gets the answer to the questions it asked.
-const answer = (options, main = clef(), risk = safety()) => (JSON.parse(options.body).questions.abuse ? risk : main);
+const answer = (options, main = decisionAnswers(), risk = safety()) => (JSON.parse(options.body).questions.abuse ? risk : main);
 const chat = (value) => ({ choices: [{ message: { content: JSON.stringify(value) } }] });
 const create = async (options = {}) => {
   const g = gallery({ db: path.join(tmp, `${++seq}.db`), apiKey: 'mock', ipHeader: 'x-real-ip', ...options });
@@ -68,7 +68,7 @@ for (const [label, answers] of [
   ['unknown choice', { unique: { choice: 'publish', probabilities: { distinct: 0.9 } } }],
   ['invalid choice probabilities', { unique: { choice: 'distinct', probabilities: { distinct: 0.9, variant: -2, copy: 5 } } }],
 ]) test(`model schema rejects ${label} without quota`, async () => {
-  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(answer(o, clef(answers)))));
+  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(answer(o, decisionAnswers(answers)))));
   const g = await create();
   const r = await post(g, look());
   assert.equal(r.status, 503);
@@ -80,7 +80,7 @@ for (const value of [
   { decision: 'accept', reason: ['fine'] },
   { decision: 'accept', reason: 'fine', extra: 'outside schema' },
 ]) test(`model schema sends invalid LLM response to human: ${JSON.stringify(value)}`, async () => {
-  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(String(url).endsWith('/decisions') ? answer(o, clef(), safety({ personal: { noul: 0.3 } })) : chat(value))));
+  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(String(url).endsWith('/decisions') ? answer(o, decisionAnswers(), safety({ personal: { noul: 0.3 } })) : chat(value))));
   const g = await create();
   const r = await post(g, look());
   assert.equal(r.body.outcome, 'pending');
@@ -246,7 +246,7 @@ for (const type of ['application/json-patch+json', 'application/json.evil']) tes
 
 test('retention deletes quota at two days and rejected reviews at thirty days', async () => {
   let clock = Date.parse('2026-10-16T12:00:00Z');
-  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(answer(o, clef(), safety({ abuse: { noul: 0.9 } })))));
+  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(answer(o, decisionAnswers(), safety({ abuse: { noul: 0.9 } })))));
   const g = await create({ now: () => clock });
   assert.equal((await post(g, look())).body.outcome, 'declined');
   clock += 2 * 864e5;
@@ -256,7 +256,7 @@ test('retention deletes quota at two days and rejected reviews at thirty days', 
 
 test('retention deletes rejected reviews at the thirty-day cutoff', async () => {
   let clock = Date.parse('2026-10-16T12:00:00Z');
-  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(answer(o, clef(), safety({ abuse: { noul: 0.9 } })))));
+  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(answer(o, decisionAnswers(), safety({ abuse: { noul: 0.9 } })))));
   const g = await create({ now: () => clock });
   await post(g, look());
   clock += 30 * 864e5;
@@ -265,7 +265,7 @@ test('retention deletes rejected reviews at the thirty-day cutoff', async () => 
 });
 
 test('CLI decisions cannot overwrite a concurrent takedown', async () => {
-  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(String(url).endsWith('/decisions') ? answer(o, clef(), safety({ personal: { noul: 0.3 } })) : chat({ decision: 'human', reason: 'Unsure' }))));
+  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(String(url).endsWith('/decisions') ? answer(o, decisionAnswers(), safety({ personal: { noul: 0.3 } })) : chat({ decision: 'human', reason: 'Unsure' }))));
   const db = path.join(tmp, `cli-race-${++seq}.db`);
   const g = await create({ db });
   const g2 = await create({ db });
@@ -414,19 +414,19 @@ test('cookie-less clients, IPv6 /64 peers and concurrent global quota remain lim
 test('bands follow the calibrated thresholds including exact boundary values', async () => {
   // [largest P(safety problem), quality, P(distinct), outcome, LLM calls]
   const cases = [
-    [0.099, 2.5, 0.6, 'published', 0],
-    [0.1, 3, 0.9, 'pending', 1],
+    [0.299, 2.5, 0.4, 'published', 0],
+    [0.3, 3, 0.9, 'pending', 1],
     [0.05, 2.499, 0.9, 'pending', 1],
-    [0.05, 3, 0.599, 'pending', 1],
-    [0.699, 1.5, 0.25, 'pending', 1],
+    [0.05, 3, 0.399, 'pending', 1],
+    [0.699, 1.5, 0.1, 'pending', 1],
     [0.7, 3, 0.9, 'declined', 0],
     [0.05, 1.499, 0.9, 'declined', 0],
-    [0.05, 3, 0.249, 'declined', 0],
+    [0.05, 3, 0.099, 'declined', 0],
   ];
   for (const [risk, quality, distinct, outcome, chats] of cases) {
     let chatCalls = 0;
     mock.method(globalThis, 'fetch', async (url, o) => {
-      if (String(url).endsWith('/decisions')) return new Response(JSON.stringify(answer(o, clef({ quality: { score: quality }, unique: { choice: 'distinct', probabilities: { distinct, variant: 1 - distinct, copy: 0 } } }), safety({ official: { noul: risk } }))));
+      if (String(url).endsWith('/decisions')) return new Response(JSON.stringify(answer(o, decisionAnswers({ quality: { score: quality }, unique: { choice: 'distinct', probabilities: { distinct, variant: 1 - distinct, copy: 0 } } }), safety({ official: { noul: risk } }))));
       chatCalls++;
       return new Response(JSON.stringify(chat({ decision: 'human', reason: 'Boundary needs review' })));
     });
@@ -440,7 +440,7 @@ test('bands follow the calibrated thresholds including exact boundary values', a
 test('escalation puts injected instructions in JSON data and never sends visitor identifiers', async () => {
   let payload;
   mock.method(globalThis, 'fetch', async (url, options) => {
-    if (String(url).endsWith('/decisions')) return new Response(JSON.stringify(answer(options, clef(), safety({ personal: { noul: 0.3 } }))));
+    if (String(url).endsWith('/decisions')) return new Response(JSON.stringify(answer(options, decisionAnswers(), safety({ personal: { noul: 0.3 } }))));
     payload = JSON.parse(options.body);
     return new Response(JSON.stringify(chat({ decision: 'human', reason: 'Unsure' })));
   });
@@ -462,7 +462,7 @@ test('escalation puts injected instructions in JSON data and never sends visitor
 
 test('salts rotate and subjective tags drop without declining', async () => {
   let clock = Date.parse('2026-10-16T12:00:00Z');
-  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(answer(o, clef({ 'tag.minimal': { noul: 0.49 } })))));
+  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(answer(o, decisionAnswers({ 'tag.minimal': { noul: 0.49 } })))));
   const g = await create({ now: () => clock });
   const r = await post(g, look({ tags: ['minimal'] }));
   assert.equal(r.body.outcome, 'published');
@@ -500,7 +500,7 @@ test('preview CSS rejects external URLs, injected declarations and nonfinite num
 });
 
 test('CLI approves, declines, removes and creates a consistent SQLite backup', async () => {
-  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(String(url).endsWith('/decisions') ? answer(o, clef(), safety({ personal: { noul: 0.3 } })) : chat({ decision: 'human', reason: 'Unsure' }))));
+  mock.method(globalThis, 'fetch', async (url, o) => new Response(JSON.stringify(String(url).endsWith('/decisions') ? answer(o, decisionAnswers(), safety({ personal: { noul: 0.3 } })) : chat({ decision: 'human', reason: 'Unsure' }))));
   const db = path.join(tmp, `cli-${++seq}.db`);
   const g = await create({ db });
   const a = await post(g, look());

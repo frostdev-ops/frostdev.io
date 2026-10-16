@@ -29,10 +29,10 @@ const code = (look) => {
 // The two decisions calls of a review run at once; the mock tells them apart by the questions asked.
 const calls = { decisions: [], safety: [], chat: [] };
 const plan = {};
-const clefSays = ({ quality = 3.4, distinct = 0.9, choice = 'distinct', tags = {} } = {}) => ({
+const decisionSays = ({ quality = 3.4, distinct = 0.9, choice = 'distinct', tags = {} } = {}) => ({
   status: 200,
   json: {
-    id: 'd1', model: 'cloudflare/clef-omni', provider: 'Cloudflare', usage: { cost: 0.0004, input_tokens: 2600, output_tokens: 0 },
+    id: 'd1', model: 'liquid/d1-ultra', provider: 'Cloudflare', usage: { cost: 0.0004, input_tokens: 2600, output_tokens: 0 },
     answers: {
       quality: { score: quality, legend: [], probabilities: [], confidence: 0.8 },
       unique: { choice, probabilities: { distinct, variant: (1 - distinct) * 0.7, copy: (1 - distinct) * 0.3 }, confidence: 0.7 },
@@ -43,7 +43,7 @@ const clefSays = ({ quality = 3.4, distinct = 0.9, choice = 'distinct', tags = {
 const safetySays = ({ abuse = 0.04, personal = 0.05, official = 0.01, ad = 0.03 } = {}) => ({
   status: 200,
   json: {
-    id: 'd2', model: 'cloudflare/clef-omni', provider: 'Cloudflare', usage: { cost: 0.0001, input_tokens: 700, output_tokens: 0 },
+    id: 'd2', model: 'liquid/d1-ultra', provider: 'Cloudflare', usage: { cost: 0.0001, input_tokens: 700, output_tokens: 0 },
     answers: Object.fromEntries(Object.entries({ abuse, personal, official, ad }).map(([k, v]) => [k, { type: 'noul', noul: v }])),
   },
 });
@@ -106,7 +106,7 @@ const start = async (opts = {}) => {
   const a = await g.listen(0, '127.0.0.1');
   base = `http://127.0.0.1:${a.port}/glaze/looks/api`;
   calls.decisions = []; calls.safety = []; calls.chat = []; mails.length = 0; smtpRefuse = false;
-  plan.decisions = clefSays(); plan.safety = safetySays(); plan.chat = llmSays('accept');
+  plan.decisions = decisionSays(); plan.safety = safetySays(); plan.chat = llmSays('accept');
 };
 afterEach(async () => { await g?.close(); g = null; });
 
@@ -131,10 +131,10 @@ test('a clear accept publishes the Look, and GET /looks lists it with its descri
   assert.match(r.body.url, /^\/glaze\/looks#c-[0-9a-f]{10}$/);
   assert.equal(r.body.escalated, false);
   assert.equal(calls.chat.length, 0);
-  // What clef saw: the submission and its neighbours, never a cookie or an address.
+  // What the decision model saw: the submission and its neighbours, never a cookie or an address.
   const sent = calls.decisions[0];
   assert.equal(sent.auth, 'Bearer test-key');
-  assert.equal(sent.body.model, 'cloudflare/clef-omni');
+  assert.equal(sent.body.model, 'liquid/d1-ultra');
   assert.equal(sent.body.state.submission.name, sub.name);
   assert.equal(sent.body.state.nearest.length, 3);
   assert.deepEqual(Object.keys(sent.body.questions).sort(), ['quality', 'unique']);
@@ -198,11 +198,11 @@ test('check: problems, the description and the 3 nearest Looks, without a model 
 for (const [gate, says, risks, pattern] of [
   ['safety', {}, { personal: 0.85, official: 0.72, abuse: 0.4 }, /^The name or credit looks like it has personal information and claims to be official,.*85% sure; it declines from 70%/],
   ['quality', { quality: 1.1 }, {}, /rated it 1\.1 out of 4/],
-  ['unique', { distinct: 0.1, choice: 'variant' }, {}, /light variant of ".+".*10% distinct/],
+  ['unique', { distinct: 0.05, choice: 'variant' }, {}, /light variant of ".+".*5% distinct/],
 ]) {
   test(`a clear decline on ${gate} says why in plain words, with the numbers`, async () => {
     await start();
-    plan.decisions = clefSays(says);
+    plan.decisions = decisionSays(says);
     plan.safety = safetySays(risks);
     const sub = look();
     const r = await post('/submit', sub, fresh());
@@ -223,13 +223,14 @@ for (const [gate, says, risks, pattern] of [
 }
 
 test('the bands: everything between them goes to the LLM', async () => {
-  assert.deepEqual(BANDS.accept, { safety: 0.10, quality: 2.5, distinct: 0.6 });
-  assert.deepEqual(BANDS.decline, { safety: 0.70, quality: 1.5, distinct: 0.25 });
+  assert.deepEqual(BANDS.accept, { safety: 0.30, quality: 2.5, distinct: 0.40 });
+  assert.deepEqual(BANDS.decline, { safety: 0.70, quality: 1.5, distinct: 0.10 });
   await start();
-  // From the calibration: "Exam Hell" (abuse 0.34) and "Sexy Study Time" (0.33) are unsure, not accepted.
-  for (const [unsure, risks] of [[{}, { abuse: 0.34 }], [{}, { personal: 0.1 }], [{}, { ad: 0.69 }], [{ quality: 2.4 }, {}], [{ distinct: 0.59 }, {}], [{ distinct: 0.8, choice: 'variant' }, {}]]) {
+  // Between the edges: a safety concern from 0.30 to under 0.70, quality under 2.5, P(distinct) under 0.40, or a
+  // confident Look that the model still calls a variant.
+  for (const [unsure, risks] of [[{}, { abuse: 0.34 }], [{}, { personal: 0.3 }], [{}, { ad: 0.69 }], [{ quality: 2.4 }, {}], [{ distinct: 0.39 }, {}], [{ distinct: 0.8, choice: 'variant' }, {}]]) {
     calls.chat = [];
-    plan.decisions = clefSays(unsure);
+    plan.decisions = decisionSays(unsure);
     plan.safety = safetySays(risks);
     const r = await post('/submit', look(), fresh());
     assert.equal(r.body.escalated, true, JSON.stringify([unsure, risks]));
@@ -259,7 +260,7 @@ test('each kind of safety problem declines in plain words, without quoting', asy
     assert.ok(!r.body.reasons[0].includes(sub.name) && !r.body.reasons[0].includes(sub.credit));
   }
   // All four just under the accept edge: published without a second reviewer.
-  plan.safety = safetySays({ abuse: 0.099, personal: 0.099, official: 0.099, ad: 0.099 });
+  plan.safety = safetySays({ abuse: 0.299, personal: 0.299, official: 0.299, ad: 0.299 });
   assert.equal((await post('/submit', look(), fresh())).body.outcome, 'published');
   assert.equal(calls.chat.length, 0);
 });
@@ -277,11 +278,11 @@ test('a palette is summarized without fonts, text size, shape or background', ()
 
 test('the LLM accepts, declines with its reason, or hands it to a person (who gets mail)', async () => {
   await start();
-  plan.decisions = clefSays({ quality: 2 });
+  plan.decisions = decisionSays({ quality: 2 });
   plan.chat = llmSays('accept');
   assert.equal((await post('/submit', look(), fresh())).body.outcome, 'published');
 
-  plan.decisions = clefSays({ quality: 2 });
+  plan.decisions = decisionSays({ quality: 2 });
   plan.chat = llmSays('decline', 'The muted text is\u0007 hard to read on the cards. ' + 'x'.repeat(400));
   const d = await post('/submit', look(), fresh());
   assert.equal(d.body.outcome, 'declined');
@@ -309,7 +310,7 @@ test('the LLM accepts, declines with its reason, or hands it to a person (who ge
 test('an LLM error or an invalid answer goes to a person; quota is used once', async () => {
   await start();
   for (const bad of [{ status: 500, json: { error: { code: 500, message: 'x' } } }, { status: 200, json: { choices: [{ message: { content: '{"decision":"publish","reason":"x"}' } }] } }, { status: 200, json: { choices: [{ message: { content: 'not json' } }] } }]) {
-    plan.decisions = clefSays({ quality: 2.2 });
+    plan.decisions = decisionSays({ quality: 2.2 });
     plan.chat = [bad, bad];
     const who = fresh();
     const r = await post('/submit', look(), who);
@@ -321,9 +322,9 @@ test('an LLM error or an invalid answer goes to a person; quota is used once', a
   assert.equal(g.db.prepare("SELECT n FROM quota WHERE kind = 'all'").get().n, 3);
 });
 
-test('a subjective tag clef doubts is dropped, not a rejection', async () => {
+test('a subjective tag the decision model doubts is dropped, not a rejection', async () => {
   await start();
-  plan.decisions = clefSays({ tags: { colorful: 0.3, minimal: 0.8 } });
+  plan.decisions = decisionSays({ tags: { colorful: 0.3, minimal: 0.8 } });
   const r = await post('/submit', look({ tags: ['colorful', 'minimal'] }), fresh());
   assert.equal(r.body.outcome, 'published');
   assert.deepEqual(r.body.tags, ['minimal']);
@@ -388,7 +389,7 @@ test('deterministic failures and 503s use no quota', async () => {
   assert.equal(calls.decisions.length, 2);
   plan.decisions = { status: 200, json: { answers: {} } };
   assert.equal((await post('/submit', look(), who)).status, 503);
-  plan.decisions = clefSays();
+  plan.decisions = decisionSays();
   // Either call failing fails the whole review: the safety call down, or answering outside its questions.
   plan.safety = [{ status: 500, json: {} }, { status: 500, json: {} }];
   assert.equal((await post('/submit', look(), who)).status, 503);
@@ -464,7 +465,7 @@ test('mail: one-line subject (no header injection), RFC 2047 for non-ASCII, CRLF
 test('a failed send leaves the Look pending and unmailed, and the next try sends it', async () => {
   await start();
   smtpRefuse = true;
-  plan.safety = safetySays({ official: 0.2 });
+  plan.safety = safetySays({ official: 0.4 });
   plan.chat = llmSays('human', 'Unsure.');
   const r = await post('/submit', look(), fresh());
   assert.equal(r.body.outcome, 'pending');
@@ -479,10 +480,10 @@ test('a failed send leaves the Look pending and unmailed, and the next try sends
 
 test('the CLI approves and declines pending Looks; the status link shows it', async () => {
   await start();
-  plan.safety = safetySays({ official: 0.2 });
+  plan.safety = safetySays({ official: 0.4 });
   plan.chat = llmSays('human', 'Unsure.');
   const a = await post('/submit', look(), fresh());
-  plan.safety = safetySays({ official: 0.2 });
+  plan.safety = safetySays({ official: 0.4 });
   plan.chat = llmSays('human', 'Unsure.');
   const b = await post('/submit', look(), fresh());
   const env = { ...process.env, DB: path.join(tmp, `g${dbn}.db`) };
