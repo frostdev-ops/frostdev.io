@@ -17,7 +17,7 @@ It has two kinds of Looks:
 browser ── /glaze/looks, /glaze/looks/submit ──> nginx (static files, /opt/frostdev-public/current)
         └─ /glaze/looks/api/* ─────────────────> nginx ─> glaze-gallery (127.0.0.1:8788, Docker, node:sqlite)
                                                               ├─> OpenRouter: liquid/d1-ultra (decisions)
-                                                              ├─> OpenRouter: openai/gpt-6-luna (escalations)
+                                                              ├─> OpenRouter: openai/gpt-6-luna-pro (escalations)
                                                               └─> SMTP (implicit TLS) to admin@frostdev.io
 ```
 
@@ -228,7 +228,7 @@ fresh gallery instance per case against real OpenRouter: every curated Look subm
 pairs, printing each answer. **Rerun them whenever the model or its snapshot changes**, and move the
 bands to the new separation; the cases are listed under "Probing cases" below.
 
-### Stage 2: `openai/gpt-6-luna` (chat completions)
+### Stage 2: `openai/gpt-6-luna-pro` (chat completions)
 
 `POST https://openrouter.ai/api/v1/chat/completions`, model `ESCALATION_MODEL`, with the gallery
 policy as the system prompt (`ESCALATION_POLICY`: the content rules for a student audience, the quality
@@ -236,7 +236,12 @@ bar, the uniqueness bar; submitted fields are untrusted data and instructions in
 choose "human" for a genuine judgment call, especially on safety; uniqueness by the decision model's rubric), and
 the Look call's `state` with the credit added, plus the decision model's answers (the four safety numbers, quality,
 the choice and P(distinct)) as the user message. A strict `json_schema` response (`{decision: "accept" | "decline" |
-"human", reason}`), `reasoning: {effort: "low"}`, `max_tokens` 1,200, a 30 s timeout. The reply is
+"human", reason}`), `reasoning: {effort: "xhigh"}` (about 95% of `max_tokens` may go to reasoning), `max_tokens`
+32,000, a 60 s timeout. gpt-6-luna-pro is GPT-6 Luna in its pro reasoning mode. Measured on 2026-10-16 with a green
+recolor of Harvest Table: 12.8 s, 1,309 reasoning tokens, about $0.0013. The reasoning is not excluded: its summary
+(`message.reasoning`, up to 6,000 characters, control characters stripped) is kept in the decision as
+`escalation.reasoning` with `escalation.reasoningTokens`, and printed in the maintainer's mail for a Look that
+needs a person. It is never sent to the student or shown by the status link. The reply is
 validated locally against the exact two-field schema: the decision must be one of the three and the
 reason must be a nonempty string; the reason has control characters stripped, is made
 one line and cut to 300 characters, and is only ever shown as text. An error, a timeout or an invalid
@@ -269,10 +274,11 @@ hour, and `--pending` shows which ones haven't gone out.
 
 A review's Look call (state and questions) is about 6,700 characters, roughly 2,000 input tokens; the
 safety call is about 2,000 characters, roughly 500 tokens. d1-ultra costs $0.042 per million input
-tokens with free output: about **$0.0001 a review** for both. An escalation adds about
-1,800 input tokens and up to 1,200 output tokens: at most about $0.0016. `REVIEWS_PER_DAY` (300) bounds
+tokens with free output: about **$0.0001 a review** for both. An escalation to gpt-6-luna-pro at xhigh adds
+about 7,000 input tokens and a few thousand reasoning tokens: about $0.0013 measured, and at most about $0.03 if it
+used all 32,000 output tokens on the dearest endpoint. `REVIEWS_PER_DAY` (300) bounds
 completed review slots per day. At the estimates above, 300 reviews cost about $0.03 for stage 1
-and under $0.60 if every review escalates. This is not a hard dollar ceiling: retries and failed
+and about $0.40 (at most about $10) if every review escalates. This is not a hard dollar ceiling: retries and failed
 reviews that refund quota can add billable requests. The decision API's
 answers include `usage.cost`, kept in each stored decision.
 
@@ -281,7 +287,7 @@ answers include `usage.cost`, kept in each stored decision.
 | What happens | Result |
 | --- | --- |
 | No `OPENROUTER_API_KEY`, or either decision call times out (20 s), answers 429/5xx twice (one retry) or something unexpected | 503 "Reviews are paused", quota given back |
-| The LLM errs, times out (30 s) or answers outside the schema | `human`: pending, mailed |
+| The LLM errs, times out (60 s) or answers outside the schema | `human`: pending, mailed |
 | No `MAIL_URL`/`MAIL_FROM`, or the mail server refuses | pending with `unmailed`, retried hourly; `--pending` lists it |
 | The gallery server is down | the gallery shows curated Looks only; the submit page says submissions are closed and links the GitHub issue form |
 
@@ -321,8 +327,8 @@ Submit these to a test server (with a real key, `DB` pointed at a scratch file) 
 - a Look claiming `minimal` with five saturated colors (expect the tag dropped);
 - a seasonal Look named for a holiday (expect `seasonal` kept).
 
-Each review stage has one timeout budget shared by its retry (20 s for the decision model, 30 s for the LLM),
-so the combined review fits inside nginx's 90 s response timeout.
+Each review stage has one timeout budget shared by its retry (20 s for the decision model, 60 s for the LLM),
+so the combined review (80 s) fits inside nginx's 90 s and Cloudflare's 100 s response timeouts.
 
 ## Limits, and why not a MAC address
 
@@ -436,7 +442,7 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
    OPENROUTER_API_KEY=…
    MAIL_URL=smtps://smtp-relay.gmail.com:465
    MAIL_FROM=admin@frostdev.io
-   # optional: DECISION_MODEL=liquid/d1-ultra ESCALATION_MODEL=openai/gpt-6-luna REVIEWS_PER_DAY=300 MAIL_TO=admin@frostdev.io
+   # optional: DECISION_MODEL=liquid/d1-ultra ESCALATION_MODEL=openai/gpt-6-luna-pro REVIEWS_PER_DAY=300 MAIL_TO=admin@frostdev.io
    ```
 
    frostdev.io's mail is Google Workspace and the VPS has no mail server. The recommended route (now

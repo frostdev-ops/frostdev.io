@@ -12,7 +12,7 @@
 //   node server/gallery.mjs                     PORT (8788), HOST (127.0.0.1), DB (./gallery.db), SITE_ORIGIN
 //                                               (https://frostdev.io), IP_HEADER, TRUSTED_PROXIES (as the share relay),
 //                                               OPENROUTER_API_KEY, DECISION_MODEL (liquid/d1-ultra),
-//                                               ESCALATION_MODEL (openai/gpt-6-luna), REVIEWS_PER_DAY (300),
+//                                               ESCALATION_MODEL (openai/gpt-6-luna-pro), REVIEWS_PER_DAY (300),
 //                                               MAIL_URL (smtps://user:pass@host:465), MAIL_FROM, MAIL_TO
 //                                               (admin@frostdev.io). OPENROUTER_BASE overrides the API's address, for
 //                                               tests only.
@@ -45,7 +45,12 @@ export const NETWORK_PER_DAY = 1;
 // The live check on the submit page: per network, [burst, refilled over ms]. It never calls a model.
 const CHECK_RATE = [30, 60e3];
 export const DECISION_TIMEOUT = 20e3;
-export const ESCALATION_TIMEOUT = 30e3;
+// The second review reasons at xhigh effort (~13 s, ~1,300 reasoning tokens measured on 2026-10-16). Both deadlines
+// together (80 s) stay under nginx's 90 s and Cloudflare's 100 s; a review that runs out goes to a person.
+export const ESCALATION_TIMEOUT = 60e3;
+// The second reviewer's reasoning summary, kept with the decision and mailed with a Look that needs a person; never
+// shown to the student.
+const REASONING_MAX = 6000;
 const REASON_MAX = 300;
 
 // ---- the review -------------------------------------------------------------------------------------------------
@@ -136,7 +141,8 @@ export const summarize = (d) => ({
     font: d.font ? `${d.font.name} (${d.font.group})` : "the wearer's own",
     headings: d.head ? `${d.head.name} (${d.head.group})` : "the wearer's own",
     textSize: `${Math.round(d.scale * 100)}%`, lineHeight: d.leading, density: d.density,
-    shape: { cornerRadius: d.radius, glass: d.glass, depth: d.depth, ...d.surfaces },
+    // surfaceOpacity -1 is Glaze's "keep the theme's own", not a number to judge.
+    shape: { cornerRadius: d.radius, glass: d.glass, depth: d.depth, ...d.surfaces, ...(d.surfaces?.surfaceOpacity < 0 && { surfaceOpacity: 'theme default' }) },
     background: {
       kind: d.bg.kind,
       ...(d.bg.kind === 'gradient' && { style: d.bg.style, angle: d.bg.angle, blend: d.bg.blend, spread: d.bg.spread }),
@@ -241,7 +247,7 @@ export const sendMail = (mailUrl, { from, to, subject, text }) => new Promise((r
 // ---- the server ---------------------------------------------------------------------------------------------------
 export function gallery({
   db: file = 'gallery.db', looksDir = 'src/data/looks', siteOrigin = 'https://frostdev.io', ipHeader = '', trustedProxies = '127.0.0.1,::1',
-  apiKey = '', decisionModel = 'liquid/d1-ultra', escalationModel = 'openai/gpt-6-luna', openrouter = 'https://openrouter.ai/api',
+  apiKey = '', decisionModel = 'liquid/d1-ultra', escalationModel = 'openai/gpt-6-luna-pro', openrouter = 'https://openrouter.ai/api',
   reviewsPerDay = 300, mailUrl = '', mailFrom = '', mailTo = 'admin@frostdev.io', now = () => Date.now(),
 } = {}) {
   const db = new DatabaseSync(file);
@@ -448,14 +454,19 @@ export function gallery({
           { role: 'user', content: JSON.stringify({ ...state, firstReview: { safety: answers.risks, quality: answers.quality, unique: answers.choice, distinct: answers.distinct } }) },
         ],
         response_format: { type: 'json_schema', json_schema: ESCALATION_SCHEMA },
-        reasoning: { effort: 'low', exclude: true }, max_tokens: 1200,
+        reasoning: { effort: 'xhigh' }, max_tokens: 32000,
       }, ESCALATION_TIMEOUT);
       const v = JSON.parse(res?.choices?.[0]?.message?.content ?? '');
       if (!v || typeof v !== 'object' || Array.isArray(v) || Object.keys(v).length !== 2
         || !['accept', 'decline', 'human'].includes(v.decision) || typeof v.reason !== 'string') throw new Error('invalid');
       const reason = cleanReason(v.reason);
       if (!reason) throw new Error('invalid');
-      return { decision: v.decision, reason, model: typeof res?.model === 'string' ? res.model.slice(0, 80) : escalationModel };
+      const m = res?.choices?.[0]?.message;
+      const summary = typeof m?.reasoning === 'string' ? m.reasoning
+        : (Array.isArray(m?.reasoning_details) ? m.reasoning_details.filter((x) => x?.type === 'reasoning.summary' && typeof x.summary === 'string').map((x) => x.summary).join('\n') : '');
+      const reasoning = [...summary.replace(/\r\n?/g, '\n').replace(/[^\P{Cc}\n]|\p{Cf}/gu, '')].slice(0, REASONING_MAX).join('').trim();
+      const tokens = res?.usage?.completion_tokens_details?.reasoning_tokens;
+      return { decision: v.decision, reason, reasoning, reasoningTokens: Number.isInteger(tokens) ? tokens : null, model: typeof res?.model === 'string' ? res.model.slice(0, 80) : escalationModel };
     } catch {
       // An error, a timeout or an answer that isn't one of the three: a person decides.
       return { decision: 'human', reason: 'The second reviewer did not answer usably, so a person will decide.', model: escalationModel, failed: true };
@@ -495,6 +506,7 @@ export function gallery({
         '', 'Nearest Looks:', ...(dec.nearest || []).map((n) => `  ${n.name} (${n.source}), distance ${n.distance}`),
         '', `First review (${dec.first?.model}): safety concerns ${Object.entries(dec.first?.risks || {}).map(([k, v]) => `${k} ${v}`).join(', ')}; quality ${dec.first?.quality} of 4, unique "${dec.first?.choice}" (distinct ${dec.first?.distinct})`,
         `Second review (${dec.escalation?.model}): ${dec.escalation?.decision}`,
+        ...(dec.escalation?.reasoning ? ['', `Its reasoning (summary, ${dec.escalation.reasoningTokens ?? '?'} reasoning tokens):`, dec.escalation.reasoning] : []),
         '', 'Theme code (paste it into Glaze\'s Share tab to see it):', row.code,
         '', 'To decide, on the server:',
         `  docker exec glaze-gallery node gallery.mjs --approve ${row.id}`,
