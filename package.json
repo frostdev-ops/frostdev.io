@@ -11,7 +11,8 @@
     "dev": "astro dev",
     "check": "astro sync && tsc --noEmit",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test:gallery": "node --test server/gallery.test.mjs"
   },
   "dependencies": {
     "astro": "7.3.1",
