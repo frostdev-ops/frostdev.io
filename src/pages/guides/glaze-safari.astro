@@ -2,8 +2,8 @@
 import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
-const release = `${source}/releases/tag/v3.0.2`;
-const dmg = `${source}/releases/download/v3.0.2/glaze-3.0.2-safari-macos.dmg`;
+const release = `${source}/releases/tag/v3.0.3`;
+const dmg = `${source}/releases/download/v3.0.3/glaze-3.0.3-safari-macos.dmg`;
 const apple = 'https://support.apple.com/102343';
 const chapters = [
   { id: 'prepare', title: 'Check your Mac and school site' },
@@ -25,7 +25,7 @@ const chapters = [
 ---
 
 <GuideLayout
-  title="Glaze 3.0.2 on Blackboard, Canvas and Moodle in Safari"
+  title="Glaze 3.0.3 on Blackboard, Canvas and Moodle in Safari"
   description="Install Glaze on your Mac, allow it on your school’s Blackboard Ultra, Canvas or Moodle site, and set up your palette, fonts, background and helpers."
   path="/guides/glaze-safari"
   project="Glaze"
@@ -49,9 +49,9 @@ const chapters = [
 
   <section class="guide-section" id="install">
     <h2>Install the Safari app</h2>
-    <p><a href={release}>Glaze 3.0.2</a> is a signed, Apple-notarized Mac app that installs itself.</p>
+    <p><a href={release}>Glaze 3.0.3</a> is a signed, Apple-notarized Mac app that installs itself.</p>
     <ol class="guide-steps">
-      <li><a href={dmg}>Download glaze-3.0.2-safari-macos.dmg</a> and open it.</li>
+      <li><a href={dmg}>Download glaze-3.0.3-safari-macos.dmg</a> and open it.</li>
       <li>Open <strong>Glaze</strong> and click <strong>Install Glaze</strong>. It copies itself into Applications (your own Applications folder if you aren’t an administrator) and reopens from there.</li>
       <li>Glaze opens Safari’s Extensions settings beside a two-step guide, covered next.</li>
     </ol>
@@ -136,7 +136,7 @@ const chapters = [
     </figure>
     <p>Click an animated pet to wave, or focus it and press <kbd>Enter</kbd> or <kbd>Space</kbd> to jump. Animation pauses when hidden or offscreen. Reduced motion and Glaze Motion off show a still frame.</p>
     <p>The habitat earns XP from stored handed-in work, kept “do on” plans and verified streak days when Streak is enabled. Focus sessions and petting add no XP. There are no notifications or missed-day penalties. Progress and decorations belong to your signed-in school account.</p>
-    <aside class="guide-callout"><strong>Coming in 3.0.3: the same pet everywhere.</strong><p>Your character choice will also drive the Study buddy widget, navigation badge and course-card pet, including the original Cat and Bunny choices. Each display keeps its own visibility switch. Pets will react to focus timers and completed tasks; these reactions add no XP. Removing a selected imported pet will return to Classic buddy while keeping progress and decorations. These changes are not in the 3.0.2 downloads.</p></aside>
+    <aside class="guide-callout"><strong>New in 3.0.3: the same pet everywhere.</strong><p>Your character choice also drives the Study buddy widget, navigation badge and course-card pet, including the original Cat and Bunny choices. Each display keeps its own visibility switch. Pets react to focus timers and completed tasks; these reactions add no XP. Removing a selected imported pet returns to Classic buddy while keeping progress and decorations.</p></aside>
   </section>
 
   <section class="guide-section" id="courses">
@@ -210,7 +210,7 @@ const chapters = [
       <li><strong>Glaze missing from Extensions:</strong> open Glaze.app from Applications once, then restart Safari.</li>
       <li><strong>Enabled but no theme:</strong> check Edit Websites for your Blackboard address, your Safari profile and private-browsing setting, then reload.</li>
       <li><strong>A page is hard to use:</strong> switch Glaze off to compare, go back to a built-in palette, and turn off the last helper you changed.</li>
-      <li><strong>A Blackboard file preview is blank:</strong> in the upcoming 3.0.3 update, Glaze refreshes expired viewer tickets for the same document and retries previews while an uploaded file converts, for up to five minutes. On 3.0.2, save any work before reloading the page. Glaze does not resubmit the file.</li>
+      <li><strong>A Blackboard file preview is blank:</strong> Glaze 3.0.3 refreshes expired viewer tickets for the same document and retries previews while an uploaded file converts, for up to five minutes. Save any unsaved work before manually reloading the page. Glaze does not resubmit the file.</li>
       <li><strong>One course looks different:</strong> it has its own Look. Set it back to your theme under Courses.</li>
       <li><strong>Due this week shows a dash:</strong> open any Blackboard page, then the popup again.</li>
       <li><strong>No courses in the editor:</strong> open any Blackboard page with Glaze on, then reopen the editor.</li>
