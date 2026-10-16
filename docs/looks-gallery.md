@@ -67,8 +67,10 @@ All JSON, `X-Content-Type-Options: nosniff`, no CORS. POSTs need `Origin: https:
    Exact duplicates were already refused in step 2.
 5. **The review** (next section): published, declined with reasons, or pending for a person.
 6. **Stored**: published and pending Looks (with their decision and a hashed status token); declined ones
-   in `rejected` (name, code, decision, day; nothing that identifies anyone), deleted after 30 days; quota
-   rows, deleted after 2 days; the day's network key.
+   in `rejected` (submitted name, code, decision, day), deleted at the 30-day cutoff. Human declines
+   remain in `looks`, including credit and hashed status token, until 30 days after the decision.
+   Cookie and network hashes are not attached to Look/review records; quota day buckets are removed
+   at the two-day cutoff. Removed Looks retain their fields and review indefinitely to block reuse.
 
 ## The automated review
 
@@ -159,7 +161,9 @@ hour, and `--pending` shows which ones haven't gone out.
 A review's state and questions are about 6,700 characters, roughly 2,000 input tokens. clef-omni costs
 $0.15 per million input tokens with free output: about **$0.0003 a review**. An escalation adds about
 1,800 input tokens and up to 1,200 output tokens: at most about $0.0016. `REVIEWS_PER_DAY` (300) bounds
-a day at about $0.09 for stage 1, and under $0.60 even if every review escalated. The decision API's
+completed review slots per day. At the estimates above, 300 reviews cost about $0.09 for stage 1
+and under $0.60 if every review escalates. This is not a hard dollar ceiling: retries and failed
+reviews that refund quota can add billable requests. The decision API's
 answers include `usage.cost`, kept in each stored decision.
 
 ### Failure modes
@@ -335,7 +339,7 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
    The API location needs nginx's realip module on the frostdev.io server block (Cloudflare's ranges in
    `set_real_ip_from`, `real_ip_header CF-Connecting-IP`), as share.frostdev.io has, so `$remote_addr`,
    passed on as `X-Real-IP`, is the visitor. It logs nothing.
-4. Backups, nightly, kept 14 days, like the relay's (`/etc/cron.d/glaze-gallery-backup`):
+4. Backups, nightly; files older than 14 days are deleted on the next nightly run, like the relay's (`/etc/cron.d/glaze-gallery-backup`):
 
    ```
    45 3 * * * root docker exec glaze-gallery node gallery.mjs --backup /data/backup-$(date +\%F).db && find /var/lib/docker/volumes/glaze-gallery/_data -name 'backup-*.db' -mtime +14 -delete
@@ -349,13 +353,21 @@ The CLI, inside the container: `--list`, `--pending`, `--approve <id>`, `--decli
 - The gallery page asks frostdev.io itself for the community list, without cookies; the request is
   answered from the database and recorded nowhere. No request logs, in nginx or the server.
 - Previewing on the submit page sends the code and fields to frostdev.io to check them; nothing is
-  stored, and the check sets the one-day cookie if there isn't one.
+  saved as submission records. The check sets the one-day cookie if there is none, and keeps a daily
+  keyed network hash in memory for rate limiting. Inactive rate-limit buckets are purged by the
+  hourly sweep once idle for at least a minute; raw network addresses are not retained.
 - Submitting stores the cookie and the network address only as keyed hashes for the day's limit (the
-  address's key replaced daily); quota rows go after 2 days.
+  address's key replaced daily); quota day buckets are purged at the two-day cutoff by the hourly sweep.
 - The reviewers on OpenRouter see the submission and its nearest Looks, never a cookie or an address.
   An escalated one may be read by the maintainer in the email.
 - A published Look shows its name, credit, tags, date and code. A declined one is kept 30 days without
-  identifiers, then deleted.
+  cookie or network hashes attached, then deleted from the live database. Submitted names and code
+  can themselves contain personal data; human declines also keep credit and the hashed status token.
+- Published, pending and removed records have no automatic expiry. Removed records keep submitted
+  fields and review data to block reuse. The maintainer can act on pending entries at any time.
+- Deletion from the live database does not erase older backups, SQLite free pages/WAL history, or
+  notification emails. Nightly backup rotation removes files older than 14 days on the next run;
+  the gallery has no email-deletion mechanism.
 
 ## License
 

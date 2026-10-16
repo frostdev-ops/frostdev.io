@@ -99,13 +99,13 @@ const access: [string, string, string][] = [
     <section class="product-section product-split" id="privacy" aria-labelledby="privacy-heading">
       <div class="product-section-heading">
         <p class="product-eyebrow">What happens to it</p>
-        <h2 id="privacy-heading">Reviewed in seconds, kept for a day.</h2>
+        <h2 id="privacy-heading">What the review sees and keeps.</h2>
         <p>Your Look is checked by Glaze's own code, then reviewed by a decision model (<code>cloudflare/clef-omni</code>) through OpenRouter: is the name and credit right for students, is it polished, is it its own Look. If it's unsure, a larger model (<code>openai/gpt-6-luna</code>) decides, or asks a person, who gets an email. <a class="looks-link" href={guide}>How the review works</a></p>
       </div>
       <div class="product-panel">
         <h3>What's kept</h3>
-        <p>Previewing sends your code and fields to frostdev.io to check them; nothing is stored. Submitting sets a one-day cookie on this page's address, so the gallery can hold each browser to one Look a day; your network address counts too, but is kept only as a keyed hash whose key is replaced every day. Neither is ever shown to anyone or sent to the reviewers: OpenRouter sees the Look, its name, credit and tags, and the nearest Looks, nothing else.</p>
-        <p>A published Look shows its name, credit, tags, date and code. A declined one is kept 30 days without anything that identifies you, to tune the review, then deleted.</p>
+        <p>Previewing sends your code and fields to frostdev.io to check them; those fields are not saved. Previewing or submitting sets a one-day cookie scoped to the gallery API. The preview rate limit keeps a short-lived keyed network hash in memory; submissions keep cookie and network hashes for the daily limit, with quota rows removed at the two-day cutoff. The network key is replaced daily. These identifiers are not included in review requests or notification emails: OpenRouter sees the Look, its name, credit and tags, and the nearest Looks.</p>
+        <p>Published and pending Looks retain their submitted fields, review and hashed status token until acted on; published fields are public. Removed records are retained to block resubmission. Automated declines keep the submitted name, code and review for 30 days; human declines also retain the credit and status record for 30 days after the decision. Cookie and network hashes are not attached to these records. Backups and notification emails have separate retention; the gallery does not delete email copies.</p>
         <h3>Changed your mind?</h3>
         <p>Email <a class="looks-link" href="mailto:admin@frostdev.io?subject=Glaze%20Looks%20gallery">admin@frostdev.io</a> with the Look's name to have it taken down.</p>
       </div>
