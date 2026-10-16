@@ -41,10 +41,17 @@ they are not part of Git or the static build.
   2.0.3 store screenshots (`assets/store/screenshots/4-horizon-midnight.jpg` and
   `2-backgrounds-editor.jpg`, commit `810058e`), rendered by its own
   `scripts/store-screenshots.js` from the real extension and sample course, 1280 × 800.
-  The Safari guide keeps the 2.0.1 captures because the Safari download is still 2.0.2.
-- The narrow Glaze editor capture records existing behavior: its full page extends
+- The older narrow Glaze editor capture records its version’s behavior: its full page extends
   to 452 pixels at a 390-pixel viewport. Glaze source was not changed for this website
   work. Website guides themselves are checked for horizontal overflow separately.
+- Glaze 3.0.0's editor and background images (`glaze-editor-3.0.0.webp` and
+  `glaze-backgrounds-3.0.0.webp`) come from a ZIP built with `package.sh` at Glaze
+  source `66b98d4`, the release candidate before its version bump. They show the
+  real extension editor and its fictional local Ultra preview at 1440 × 1000,
+  Frost, reduced motion, in an isolated headless Chromium profile. External
+  network access was blocked. PNG evidence and the capture script are in the
+  T30 notes folder; the published files are WebP encodings. These demonstrate
+  the shared editor UI, not a Safari installation or an authenticated LMS session.
 - Requested website goldens cover the hub, guide index, Glaze page and both browser
   guides at desktop and phone widths, plus the sixth project card on a phone.
 - Glaze's October 14 media refresh uses the corrected `glaze-cover-v2` artwork and

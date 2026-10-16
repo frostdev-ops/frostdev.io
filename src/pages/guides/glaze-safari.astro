@@ -2,18 +2,20 @@
 import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
-const release = `${source}/releases/tag/v2.2.0`;
-const dmg = `${source}/releases/download/v2.2.0/glaze-2.2.0-safari-macos.dmg`;
+const release = `${source}/releases/tag/v3.0.0`;
+const dmg = `${source}/releases/download/v3.0.0/glaze-3.0.0-safari-macos.dmg`;
 const apple = 'https://support.apple.com/102343';
 const chapters = [
-  { id: 'prepare', title: 'Check your Mac and Blackboard' },
+  { id: 'prepare', title: 'Check your Mac and school site' },
   { id: 'install', title: 'Install the Safari app' },
   { id: 'permissions', title: 'Enable Glaze for your school' },
   { id: 'first-theme', title: 'Try your first palette' },
   { id: 'editor', title: 'Fonts and reading' },
   { id: 'automatic', title: 'Light, dark, background and motion' },
   { id: 'courses', title: 'Courses and extras' },
+  { id: 'workspace', title: 'Your Ultra workspace' },
   { id: 'canvas', title: 'Use Glaze on Canvas' },
+  { id: 'moodle', title: 'Use Glaze on Moodle' },
   { id: 'backup', title: 'Share and back up' },
   { id: 'privacy', title: 'Know what stays on your Mac' },
   { id: 'troubleshooting', title: 'Recover, update or remove' },
@@ -21,23 +23,23 @@ const chapters = [
 ---
 
 <GuideLayout
-  title="Make Blackboard and Canvas feel at home in Safari"
-  description="Install Glaze on your Mac, allow it on your school’s Blackboard Ultra or Canvas site, and set up your palette, fonts, background and helpers."
+  title="Glaze 3.0.0 on Blackboard, Canvas and Moodle in Safari"
+  description="Install Glaze on your Mac, allow it on your school’s Blackboard Ultra, Canvas or Moodle site, and set up your palette, fonts, background and helpers."
   path="/guides/glaze-safari"
   project="Glaze"
-  duration="8 min read"
-  updated="2026-10-14"
+  duration="12 min read"
+  updated="2026-10-15"
   chapters={chapters}
 >
   <section class="guide-section" id="prepare">
-    <h2>Check your Mac and Blackboard</h2>
+    <h2>Check your Mac and school site</h2>
     <p>Sign in to Blackboard as usual and open Courses. The address should contain <code>/ultra/</code>: Glaze works on any school’s Ultra pages (<code>https://*/ultra/*</code>), with nothing to configure. Login pages and Classic Blackboard keep their own look.</p>
     <div class="guide-table-wrap"><table>
       <thead><tr><th scope="col">Requirement</th><th scope="col">What to check</th></tr></thead>
       <tbody>
         <tr><th scope="row">Mac</th><td>Intel or Apple Silicon, macOS 12 or newer.</td></tr>
         <tr><th scope="row">Safari</th><td>17.2 or newer (Safari → About Safari). The frosted-glass blur needs Safari 18.</td></tr>
-        <tr><th scope="row">Blackboard</th><td>Your school’s HTTPS Blackboard Ultra site.</td></tr>
+        <tr><th scope="row">School site</th><td>Blackboard Ultra, recognized Canvas, or Moodle Boost on HTTPS.</td></tr>
       </tbody>
     </table></div>
     <p>Using Chrome? Follow the <a href="/guides/glaze-chrome">Chrome guide</a>.</p>
@@ -45,9 +47,9 @@ const chapters = [
 
   <section class="guide-section" id="install">
     <h2>Install the Safari app</h2>
-    <p><a href={release}>Glaze 2.2.0</a> is a signed, Apple-notarized Mac app that installs itself.</p>
+    <p><a href={release}>Glaze 3.0.0</a> is a signed, Apple-notarized Mac app that installs itself.</p>
     <ol class="guide-steps">
-      <li><a href={dmg}>Download glaze-2.2.0-safari-macos.dmg</a> and open it.</li>
+      <li><a href={dmg}>Download glaze-3.0.0-safari-macos.dmg</a> and open it.</li>
       <li>Open <strong>Glaze</strong> and click <strong>Install Glaze</strong>. It copies itself into Applications (your own Applications folder if you aren’t an administrator) and reopens from there.</li>
       <li>Glaze opens Safari’s Extensions settings beside a two-step guide, covered next.</li>
     </ol>
@@ -57,11 +59,11 @@ const chapters = [
   <section class="guide-section" id="permissions">
     <h2>Enable Glaze for your school</h2>
     <ol class="guide-steps">
-      <li>In <strong>Safari → Settings → Extensions</strong>, tick <strong>Glaze for Blackboard Ultra</strong>. The app’s guide ticks off this step by itself.</li>
-      <li>In your Blackboard tab, click the Glaze toolbar button and choose <strong>Always Allow on This Website</strong>.</li>
+      <li>In <strong>Safari → Settings → Extensions</strong>, tick <strong>Glaze</strong>. The app’s guide ticks off this step by itself.</li>
+      <li>In your school tab, click the Glaze toolbar button and choose <strong>Always Allow on This Website</strong>.</li>
       <li>Reload the tab.</li>
     </ol>
-    <p>To review access later, select Glaze in Extensions settings and choose <strong>Edit Websites</strong>. Safari’s prompt covers the whole site, but Glaze only restyles Blackboard Ultra’s <code>/ultra/</code> pages or recognized Canvas pages. With Safari profiles, enable Glaze in the profile you use for school; for private windows, turn on <strong>Allow in Private Browsing</strong>. Apple explains these controls in its <a href={apple}>Safari extensions guide</a>.</p>
+    <p>To review access later, select Glaze in Extensions settings and choose <strong>Edit Websites</strong>. Safari’s prompt covers the whole site, but Glaze only restyles Blackboard Ultra’s <code>/ultra/</code> pages or recognized Canvas and Moodle pages. With Safari profiles, enable Glaze in the profile you use for school; for private windows, turn on <strong>Allow in Private Browsing</strong>. Apple explains these controls in its <a href={apple}>Safari extensions guide</a>.</p>
   </section>
 
   <section class="guide-section" id="first-theme">
@@ -79,17 +81,17 @@ const chapters = [
       <a href="/projects/glaze-popup.webp" aria-label="Open the full-size Glaze popup capture"><img src="/projects/glaze-popup.webp" alt="Glaze popup tiles: Theme on, the Frost look, three items due this week, palette swatches, Subtle motion and Open the editor" width="720" height="962" loading="lazy" /></a>
       <figcaption>The Glaze popup.</figcaption>
     </figure>
-    <p>The due list comes from Blackboard’s own To Do list, read when you open a Blackboard page and at most every ten minutes. Nothing pops up and the toolbar button gets no badge. If the tile shows a dash, open any Blackboard page first.</p>
+    <p>The due list uses Glaze’s cached course and planner reads. Open your school’s site to let it refresh. Nothing pops up and the toolbar button gets no badge. If the tile shows a dash, open any Blackboard page first.</p>
   </section>
 
   <section class="guide-section" id="editor">
     <h2>Fonts and reading</h2>
-    <p>The editor puts every setting beside a live preview of a sample course and saves as you go. Type in <strong>Search settings</strong> at the top (or press <kbd>/</kbd>) to find one.</p>
+    <p>The editor has eight tabs: Look, Blackboard, Canvas, Moodle, Study tools, Sharing and sync, Backup and privacy, and About. It saves as you go. The sticky live preview switches between fictional LMS pages, light or dark mode, and desktop or phone widths. Section resets change only that section’s preferences. Type in <strong>Search settings</strong> at the top (or press <kbd>/</kbd>) to find one.</p>
     <figure class="guide-figure">
-      <a href="/projects/glaze-editor.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-editor.webp" alt="Glaze editor with palette and look controls beside its sample course preview" width="1440" height="1000" loading="lazy" /></a>
+      <a href="/projects/glaze-editor-3.0.0.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-editor-3.0.0.webp" alt="Glaze editor with palette and look controls beside its sample course preview" width="1440" height="1000" loading="lazy" /></a>
       <figcaption>The editor and its sample course.</figcaption>
     </figure>
-    <p>Under <strong>Look → Fonts</strong>, pick from about forty, each shown in its own face: reading faces such as Lexend, OpenDyslexic and Atkinson Hyperlegible Next, sans, serif and monospace families, and four Nerd Fonts. You can also type any Google Font’s name, or a font installed on your Mac. Headings and code can have their own font. Web fonts download only once you choose one.</p>
+    <p>Under <strong>Look → Fonts and shape</strong>, pick from about forty, each shown in its own face: reading faces such as Lexend, OpenDyslexic and Atkinson Hyperlegible Next, sans, serif and monospace families, and four Nerd Fonts. You can also type any Google Font’s name, or a font installed on your Mac. Headings and code can have their own font. Opening the font list loads small previews from Google Fonts; choosing a web font downloads its full font files.</p>
     <p>Raise <strong>Text size</strong> and <strong>Line height</strong> if reading feels cramped, and try <strong>Roomy</strong> density. <strong>Corner radius</strong>, <strong>Depth</strong> and <strong>Glass blur</strong> shape the panels.</p>
     <p>Under <strong>Palette</strong>, change any of the fourteen colors and watch the contrast checks. Name it and choose <strong>Save as preset</strong> to keep it (up to twelve).</p>
   </section>
@@ -104,14 +106,14 @@ const chapters = [
       <li><strong>Aurora</strong>, <strong>Solid</strong>, or <strong>Image</strong> from an <code>https://</code> address, with Dim and Blur.</li>
     </ul>
     <p>Backgrounds use your palette’s colors, a ready-made set, or three of your own.</p>
-    <p><strong>Motion</strong> is Off, Subtle (default) or Expressive. Glaze shows each Blackboard page once it’s built, not piece by piece, resolving from a blur, or at once with motion off. With <strong>Turn motion off when the system asks for reduced motion</strong> on, your Mac’s setting wins.</p>
+    <p><strong>Motion</strong> is Off, Subtle (default) or Expressive. Ultra page changes show immediately. Background scenes pause in hidden tabs; reduced motion keeps animations still. With <strong>Turn motion off when the system asks for reduced motion</strong> on, your Mac’s setting wins.</p>
   </section>
 
   <section class="guide-section" id="courses">
     <h2>Courses and extras</h2>
     <p>Glaze softens Ultra’s course colors to fit your palette. Every course you haven’t hidden appears in the editor’s <strong>Courses</strong> section once you’ve opened Blackboard, organizations listed apart. Each has its own color, even where Blackboard repeats one, and you can change it; a calendar entry takes its course’s color when its title belongs to one course. Turn on <strong>Tint the theme inside a course</strong> and tick courses to give each its own accent while you’re in it.</p>
     <p>Each course also has a <strong>Look</strong> menu: keep your theme, or pick one of the ten Looks for that course. Inside that course Glaze wears it; everywhere else keeps your theme.</p>
-    <p>Under <strong>Extras</strong>, these start on:</p>
+    <p>Alongside the new workspace, these helpers start on:</p>
     <ul>
       <li><strong>Due-date status</strong>: “in 2 days · Unopened”, “Submitted”, “Submitted late”, “Graded · 18/20”.</li>
       <li><strong>Grades on course cards</strong>, where your instructor shares the overall grade, and <strong>score bars</strong>.</li>
@@ -124,30 +126,50 @@ const chapters = [
       <li><strong>Folder previews</strong>, <strong>course progress</strong> at the top of a course’s Content page, and <strong>focus mode</strong> for course documents.</li>
     </ul>
     <p>Off until you want them: due-date urgency, shorter descriptions, reading width, keyboard shortcuts (<kbd>?</kbd> lists them), dark documents (dark PDFs on dark palettes), and <strong>Declutter</strong> for page parts you don’t use.</p>
-    <p>Glaze writes in the language Blackboard is shown in: English, Spanish, French, German, Portuguese (Brazil) or Dutch.</p>
+    <p>Glaze follows your school site’s language: English, Spanish, French, German, Portuguese (Brazil) or Dutch.</p>
+  </section>
+
+  <section id="workspace" class="guide-section">
+    <h2>Your Ultra workspace</h2>
+    <p>Open <strong>Dashboard</strong> in Ultra’s rail for Glaze’s board; the <strong>Institution page</strong> tab keeps your school’s page reachable. On Courses, use the Glaze toolbar’s <strong>Edit layout</strong>. Add, move, resize, fold or remove tiles. <strong>+ Course cards</strong> replaces the native course list with individual cards grouped by term; remove the course tiles to bring the native list back. The Dashboard can add individual courses too.</p>
+    <p><strong>Better To Do</strong> is a tile on both boards, with your due work and your own tasks, steps, plans and focus sessions. Ultra ticks stay on this device. Reminders, streaks and Insights are optional; check your school’s own dates and grades when something looks incomplete.</p>
+    <p><strong>Course tabs</strong> keep up to four additional course pages live alongside the page you started on. Older unedited pages may reopen at their saved URL and scroll; when all four have been edited, save and close one before opening another. These sit inside Ultra rather than being browser tabs: the address bar and browser Back are not a separate history for each one. Save your work before closing a course tab, reloading, or turning course tabs or Glaze off. Glaze cannot guarantee that every native operation or unsaved change will survive.</p>
+    <p>Use <kbd>Ctrl</kbd>+<kbd>K</kbd> (<kbd>⌘K</kbd> on a Mac) for course search and tools. On an outline, a folder’s eye hides it only for you. <strong>Show hidden folders</strong> reveals dimmed folders and their unhide controls; the brief action message offers <strong>Undo</strong>.</p>
+    <p>In the editor’s <strong>Blackboard</strong> tab, customize the navigation’s links, order, icons, widths and text. A collapsed rail can expand on hover or keyboard focus without moving the page. Turn Dashboard off there to restore Ultra’s Institution Page label and icon.</p>
+    <p>In <strong>Study tools</strong>, opt into <strong>Notes</strong> for rich text, pictures and attachments, or <strong>Pet habitat</strong> for a buddy that earns decorations from stored hand-ins and kept plans. The pet starts off, never nags, and doesn’t penalize missed days.</p>
   </section>
 
   <section id="canvas" class="guide-section">
     <h2>Use Glaze on Canvas</h2>
-    <p>Glaze 2.2.0 also recognizes Canvas on <code>instructure.com</code> and your school’s own domain. Open Canvas, allow Glaze on that site, and reload. The same palettes, ten Looks, fonts, backgrounds and motion apply. The Blackboard walkthrough above uses Ultra’s page names; on Canvas, the helpers appear where Canvas keeps the work:</p>
+    <p>Glaze recognizes Canvas on <code>instructure.com</code> and your school’s own domain. Allow Glaze on that site and reload. The same themes apply, with helpers where Canvas keeps your work:</p>
     <ul>
-      <li><strong>Modules:</strong> closed-module previews, new-item badges, your place, Download all and course progress from completion requirements. Courses without those requirements show no progress bar; Download all leaves unopened files out.</li>
-      <li><strong>Grades and Assignments:</strong> score bars and percentages. Due-date status and urgency appear on Assignments, Modules and To Do.</li>
-      <li><strong>Dashboard:</strong> card grades, course tint and a Look per course. Use Canvas’s own card menu for course nicknames and colors.</li>
-      <li><strong>Inbox:</strong> device-only draft backup for new messages to individual users in uniquely named courses.</li>
+      <li><strong>Dashboard:</strong> Better To Do and optional notes, agenda, focus timer and study-buddy widgets. Arrange the widgets with <strong>Edit widgets</strong>.</li>
+      <li><strong>Courses:</strong> search inside course content; module previews, new-item badges, your place, Download all and progress from completion requirements. Download all leaves unopened files out.</li>
+      <li><strong>Grades:</strong> Glaze’s what-if calculator uses Canvas’s grading rules; an unmatched total is labelled as an estimate. Your real grades stay unchanged.</li>
+      <li><strong>Study tools:</strong> review an imported class schedule, syllabus or past GPA terms before saving. PDF and photo text extraction happens on your device; correct the result before using it.</li>
     </ul>
-    <p>Due this week and the command palette read Canvas’s planner. Canvas’s own what-if scores, rich-editor recovery, course nicknames and colors, Files folder zips and unread counts remain Canvas features, restyled by Glaze. Glaze never changes grades or submits work.</p>
+    <p>Better To Do ticks stay local unless you choose <strong>Tick off in Canvas too</strong>. That option writes only your planner’s done state, never a submission or a grade. Local calendar-file export needs no Google connection.</p>
+  </section>
+
+  <section id="moodle" class="guide-section">
+    <h2>Use Glaze on Moodle</h2>
+    <p>Open your school’s Moodle site, allow Glaze there and reload. Glaze recognizes Boost pages on Moodle 5 and compatible Moodle 4.x markup: Dashboard, My courses, course and activity pages, grades, calendar and messages.</p>
+    <p>The same Looks, palettes, fonts, backgrounds and motion apply. Course cards can show the total Moodle makes available. <strong>Due this week</strong> reads your Timeline; the command palette lists courses and Moodle pages. Set a course’s tint and Look from its card menu or the editor. Optional keyboard shortcuts pause while you type or take a quiz.</p>
+    <p>Moodle’s helpers are distinct: the Ultra live tabs, Dashboard board, rich notes and pet habitat described above are not Moodle features.</p>
   </section>
 
   <section class="guide-section" id="backup">
     <h2>Share and back up</h2>
-    <p>In <strong>Share</strong>, <strong>Copy theme code</strong> gives your palette, fonts, look and background as one line of text. Paste someone’s code, check it with <strong>Preview</strong>, then choose <strong>Use this theme</strong> or <strong>Cancel</strong>.</p>
-    <p><strong>Export settings</strong> saves everything to <code>glaze-settings.json</code>; <strong>Import settings…</strong> replaces your setup with a file’s. Use them to move between Macs or to Chrome. <strong>Reset everything</strong> needs a second click and keeps your saved palettes.</p>
+    <p><strong>Share sessions</strong> is separate from theme codes and starts disconnected. Create or join an invitation to share selected notes and tasks with end-to-end encryption. The invitation contains its key: keep it private. You can choose a custom relay for new sessions; existing sessions keep their original server. A link on another server asks for confirmation before joining. See <a href={`${source}/blob/main/server/README.md`}>Run your own relay</a>.</p>
+    <p>Settings backups and Notes <strong>Export all</strong> include share keys and creator delete tokens, even while sharing is paused. Notes Export all opens a confirmation on Glaze’s own extension page; settings backups are made in the extension editor. Anyone with that backup may open, edit or delete those sessions, so keep it private. Importing keys stays offline until you explicitly resume.</p>
+
+    <p>In <strong>Look → Palette and Looks</strong>, <strong>Copy theme code</strong> gives your palette, fonts, look and background as one line of text. Paste someone’s code, check it with <strong>Preview</strong>, then choose <strong>Use this theme</strong> or <strong>Cancel</strong>.</p>
+    <p><strong>Export settings</strong> saves your preferences, card setup, Better To Do data, hidden-folder choices and share keys to <code>glaze-settings.json</code>; <strong>Import settings…</strong> restores a file’s setup. Use Notes <strong>Export all</strong> separately for rich notes and their attachments. Use them to move between Macs or to Chrome. <strong>Reset everything</strong> needs a second click and keeps your saved palettes.</p>
   </section>
 
   <section class="guide-section" id="privacy">
     <h2>Know what stays on your Mac</h2>
-    <p>Glaze has no server and no analytics. Settings, which grades and items you’ve seen, typing backups, your place in each course, what-if scores and the due list stay in Safari’s extension storage. Requests go to your own Blackboard or Canvas site with your existing session, plus a web font if you choose one and your background image if you set one. The downloaded Mac app also checks the Frostdev update feed and downloads updates from GitHub; system profiling is off.</p>
+    <p>Glaze has no analytics and needs no account or server for local tools. Notes, tasks, what-if scores and course history stay in extension storage unless you explicitly share or export them. Read-only requests use your school session; the optional Canvas planner tick is the exception described above. Chosen web fonts and background images load from their source. Optional sharing sends encrypted content and connection metadata to your chosen relay; keep invitation links and backups private. The downloaded Mac app also checks the Frostdev update feed and downloads updates from GitHub; system profiling is off.</p>
     <aside class="guide-callout"><strong>Blackboard remains the record.</strong> Glaze never submits coursework or changes grades. Check due dates and scores against Blackboard before relying on them.</aside>
     <p>Details are in the <a href={`${source}/blob/main/PRIVACY.md`}>privacy policy</a>.</p>
   </section>
@@ -157,19 +179,19 @@ const chapters = [
     <ul class="guide-checklist">
       <li><strong>Glaze missing from Extensions:</strong> open Glaze.app from Applications once, then restart Safari.</li>
       <li><strong>Enabled but no theme:</strong> check Edit Websites for your Blackboard address, your Safari profile and private-browsing setting, then reload.</li>
-      <li><strong>A page is hard to use:</strong> switch Glaze off to compare, go back to a built-in palette, and turn off the last Extra you changed.</li>
+      <li><strong>A page is hard to use:</strong> switch Glaze off to compare, go back to a built-in palette, and turn off the last helper you changed.</li>
       <li><strong>One course looks different:</strong> it has its own Look. Set it back to your theme under Courses.</li>
       <li><strong>Due this week shows a dash:</strong> open any Blackboard page, then the popup again.</li>
       <li><strong>No courses in the editor:</strong> open any Blackboard page with Glaze on, then reopen the editor.</li>
-      <li><strong>“Not saved”:</strong> reopen the editor and check the value. Export before reinstalling.</li>
+      <li><strong>“Not saved”:</strong> reopen the editor and check the value. Use <strong>Export settings</strong> and Notes <strong>Export all</strong> before reinstalling.</li>
     </ul>
     <h3>Update</h3>
     <p>The downloaded Mac app checks for updates about once a day while Glaze is in use. Background checks stay silent and skip updates that need your input. Open Glaze to check manually; you can also download the newest disk image from <a href={`${source}/releases`}>GitHub Releases</a>, quit Safari, and replace Glaze.app in Applications. Open it once, then check that Glaze is still enabled and allowed. The editor opens with a few lines on what changed, once.</p>
     <h3>Remove</h3>
-    <p>Untick Glaze in Safari → Settings → Extensions to pause it. To remove it, export your settings, then delete Glaze.app from Applications.</p>
+    <p>Untick Glaze in Safari → Settings → Extensions to pause it. Before removing it, use <strong>Export settings</strong> and Notes <strong>Export all</strong> to save your preferences, tasks, rich notes and attachments, then delete Glaze.app from Applications. Keep both backups private: they include share keys.</p>
     <div class="guide-sources">
       <p>See also the <a href="/glaze">Glaze overview</a>, <a href="/guides/glaze-chrome">Chrome guide</a>, <a href={release}>release notes</a>, <a href={source}>source</a> and <a href={`${source}/issues`}>issue tracker</a>.</p>
-      <p>Blackboard is a trademark of Anthology Inc. Canvas is a trademark of Instructure, Inc. Glaze is an independent project and is not affiliated with or endorsed by either.</p>
+      <p>Blackboard is a trademark of Anthology Inc. Canvas is a trademark of Instructure, Inc. Glaze is an independent project and is not affiliated with or endorsed by Blackboard, Canvas or Moodle.</p>
     </div>
   </section>
 </GuideLayout>

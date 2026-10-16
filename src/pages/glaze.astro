@@ -7,11 +7,13 @@ import '../styles/products.css';
 // Set false to remove the entire Halloween skin, decorations, and seasonal copy.
 const halloween = true;
 const source = 'https://github.com/frostdev-ops/glaze';
-const safariDownload = `${source}/releases/download/v2.2.0/glaze-2.2.0-safari-macos.dmg`;
+const safariDownload = `${source}/releases/download/v3.0.0/glaze-3.0.0-safari-macos.dmg`;
+const safariZip = `${source}/releases/download/v3.0.0/glaze-3.0.0-safari-macos.zip`;
+const chromeZip = `${source}/releases/download/v3.0.0/glaze-v3.0.0.zip`;
 const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 ---
 
-<MarketingLayout title="Glaze — Your colors on Blackboard Ultra and Canvas" description={`Your colors on Blackboard Ultra and Canvas. Explore Glaze in ${films.length} short films: beautiful themes, animated backgrounds and helpful extras. Free and open source for Chrome and Safari.`} path="/glaze" image="/projects/glaze/cover.webp">
+<MarketingLayout title="Glaze 3.0.0 — Blackboard, Canvas and Moodle, made yours" description={`Themes and study tools for Blackboard Ultra, Canvas and Moodle: your Dashboard, widgets, course tabs, notes and planning. Free and open source for Chrome and Safari.`} path="/glaze" image="/projects/glaze/cover.webp">
   <div class:list={["product-page glaze-page", { "is-halloween": halloween }]}>
     <section class="product-hero" aria-labelledby="glaze-title">
       {halloween && <div class="halloween-hero" aria-hidden="true">
@@ -27,10 +29,10 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
         </div>
       </div>}
       <div class="product-intro">
-        <p class="product-eyebrow">Glaze · Blackboard Ultra & Canvas</p>
+        <p class="product-eyebrow">Glaze · Blackboard Ultra · Canvas · Moodle</p>
         <img class="product-logo" src="/projects/glaze-logo.svg" width="420" height="120" alt="Glaze" />
-        <h1 class="product-title" id="glaze-title">Blackboard.<br />Canvas.<br /><span>Made yours.</span></h1>
-        <p class="product-lead">Themes, animated backgrounds and optional helpers for Blackboard Ultra and Canvas.</p>
+        <h1 class="product-title" id="glaze-title">Your courses.<br /><span>Your space.</span></h1>
+        <p class="product-lead">Themes, animated backgrounds and study tools for Blackboard Ultra, Canvas and Moodle. Build a Dashboard that works the way you do.</p>
         <div class="product-actions" data-glaze-install="safari">
           <a class="product-button" href={safariDownload}>Download for Safari on Mac <span aria-hidden="true">↓</span></a>
           <a class="product-button secondary" href="/guides/glaze-safari">Safari guide <span aria-hidden="true">→</span></a>
@@ -39,8 +41,8 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
           <a class="product-button" href={chromeStore}>Get from Chrome Web Store <span aria-hidden="true">↗</span></a>
           <a class="product-button secondary" href="/guides/glaze-chrome">Chrome guide <span aria-hidden="true">→</span></a>
         </div>
-        {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.<br />Glaze 2.2.0 also supports Canvas.</p>}
-        <p class="product-meta">Version 2.2.0 · Free and open source<br />No analytics. No account.</p>
+        {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.<br />A little Halloween for your study space.</p>}
+        <p class="product-meta">Version 3.0.0 · Free and open source<br />No analytics. No account.</p>
         <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>
       </div>
       <figure class="glaze-preview">
@@ -61,42 +63,52 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
         <p>Every helper can be switched off.</p>
       </div>
       <div class="product-grid">
-        <article class="product-card"><span class="glaze-feature" aria-hidden="true">01</span><h3>Make it yours</h3><ul class="glaze-list">
-          <li><strong>Looks:</strong> ten ready-made themes, one click each.</li>
-          <li><strong>Palettes:</strong> six presets or your own, light and dark.</li>
-          <li><strong>Fonts:</strong> about 40, including Lexend and OpenDyslexic.</li>
-          <li><strong>Backgrounds:</strong> ten animated scenes or a gradient.</li>
-          <li><strong>Course Looks:</strong> give each course its own Look; Canvas keeps its native course colors.</li>
-          <li><strong>Theme codes:</strong> share your look as one line of text.</li>
+        <article class="product-card"><span class="glaze-feature" aria-hidden="true">01</span><h3>Blackboard Ultra</h3><ul class="glaze-list">
+          <li><strong>Your Dashboard:</strong> arrange notes, an agenda, a focus timer and Better To Do.</li>
+          <li><strong>Course cards as widgets:</strong> add them to Courses or your Dashboard, then move, resize and fold them.</li>
+          <li><strong>Live course tabs:</strong> keep up to four additional course pages live while you switch.</li>
+          <li><strong>Find and focus:</strong> search inside courses and hide folders locally, with Undo.</li>
+          <li><strong>Your navigation:</strong> custom links, icons, sizes and a rail that expands on hover or focus.</li>
         </ul></article>
-        <article class="product-card"><span class="glaze-feature" aria-hidden="true">02</span><h3>See what matters on Blackboard</h3><ul class="glaze-list">
-          <li><strong>Due dates:</strong> countdowns, urgency and “Submitted late”.</li>
-          <li><strong>Grades</strong> on course cards, plus score bars.</li>
-          <li><strong>“New” badges</strong> on new grades and new content.</li>
-          <li><strong>What-if calculator:</strong> the score you need on what’s left.</li>
-          <li><strong>Folder previews</strong> and course progress.</li>
-          <li><strong>Due this week</strong> in the popup and Ctrl+K.</li>
+        <article class="product-card"><span class="glaze-feature" aria-hidden="true">02</span><h3>Canvas</h3><ul class="glaze-list">
+          <li><strong>Better To Do:</strong> tasks, steps, “do on” days and focus sessions.</li>
+          <li><strong>Dashboard widgets:</strong> notes, agenda, timer and a study buddy, arranged your way.</li>
+          <li><strong>What-if grades:</strong> try scores against Canvas’s rules, with estimates labelled when totals don’t match.</li>
+          <li><strong>Course tools:</strong> search, module previews, your place and folder downloads.</li>
+          <li><strong>Local imports:</strong> review a class schedule, syllabus or past GPA terms before saving.</li>
         </ul></article>
-        <article class="product-card"><span class="glaze-feature" aria-hidden="true">03</span><h3>Get there faster on Blackboard</h3><ul class="glaze-list">
-          <li><strong>Ctrl+K / ⌘K:</strong> jump to any course, item or page.</li>
-          <li><strong>Download all:</strong> a folder’s files as one zip.</li>
-          <li><strong>Typing backup:</strong> your post survives a crash or timeout.</li>
-          <li><strong>Focus mode</strong> and dark PDFs for reading.</li>
-          <li><strong>Your place kept:</strong> folders reopen where you left them.</li>
-          <li><strong>Six languages</strong>, following Blackboard’s.</li>
+        <article class="product-card"><span class="glaze-feature" aria-hidden="true">03</span><h3>Moodle</h3><ul class="glaze-list">
+          <li><strong>The same theme:</strong> Looks, palettes, fonts and backgrounds on Boost pages.</li>
+          <li><strong>Across your day:</strong> Dashboard, My courses, activities, grades, calendar and messages.</li>
+          <li><strong>Course totals:</strong> grades on cards, as Moodle makes them available.</li>
+          <li><strong>Due this week:</strong> your Timeline in the popup and command palette.</li>
+          <li><strong>A Look per course:</strong> tint, course menus and keyboard shortcuts.</li>
         </ul></article>
       </div>
-      <p class="product-caption">On Canvas, Glaze adds progress, previews, new-item badges, your place and Download all on Modules; score bars and percentages on Grades and Assignments; due-date status on Assignments, Modules and To Do; and tint, a Look per course and card grades on the Dashboard. Progress uses module completion requirements. Download all leaves unopened files out. Canvas’s own what-if scores, editor recovery, course nicknames and colors, Files folder zips and unread counts remain Canvas features, restyled by Glaze.</p>
+      <p class="product-caption">Moodle support targets Boost on Moodle 5 and compatible 4.x pages. Its helpers differ from Canvas and Ultra; the guides explain each site. Glaze never submits coursework or changes your real grades.</p>
+    </section>
+
+    <section class="product-section" aria-labelledby="study-heading">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">More room to study</p>
+        <h2 id="study-heading">Keep the tools you need.</h2>
+        <p>On Canvas and Ultra, make room for your work without adding another account.</p>
+      </div>
+      <div class="product-grid">
+        <article class="product-card"><h3>Plan on your device</h3><p>Better To Do brings due work and your own tasks together. Add plans and focus sessions, import a timetable, or export a calendar file. Reminders, streaks and term Insights are there when you turn them on.</p></article>
+        <article class="product-card"><h3>Notes and a study buddy</h3><p>Opt into rich-text notes with pictures and attachments. Turn on the pet habitat to earn decorations from work handed in and plans kept. No nags or missed-day penalties.</p></article>
+        <article class="product-card"><h3>Share by invitation</h3><p>Optional end-to-end encrypted sessions share selected notes and tasks by link. Use your chosen relay or <a href={`${source}/blob/main/server/README.md`}>host your own</a>. Glaze works fully without sharing or a server.</p></article>
+      </div>
     </section>
 
     <section class="product-section product-split" aria-labelledby="editor-heading">
       <div class="product-section-heading">
         <p class="product-eyebrow">The editor</p>
         <h2 id="editor-heading">See it as you shape it.</h2>
-        <p>Quick switches in the popup. Every setting, searchable, beside a live preview in the editor.</p>
+        <p>Quick switches in the popup. Eight editor tabs, search across every setting, section resets and a live preview that switches site, page, light or dark, and width.</p>
       </div>
       <figure class="product-panel editor-preview">
-        <a href="/projects/glaze-backgrounds.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-backgrounds.webp" width="1280" height="800" loading="lazy" alt="Glaze’s editor with mesh gradient controls beside its live sample-course preview" /></a>
+        <a href="/projects/glaze-backgrounds-3.0.0.webp" aria-label="Open the full-size Glaze editor capture"><img src="/projects/glaze-backgrounds-3.0.0.webp" width="1440" height="1000" loading="lazy" alt="Glaze’s tabbed editor with mesh gradient controls beside its live sample-course preview" /></a>
       </figure>
     </section>
 
@@ -106,18 +118,19 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
         <h2 id="browser-heading">Safari or Chrome.</h2>
       </div>
       <div class="browser-guides">
-        <a class="product-panel browser-guide" href="/guides/glaze-safari"><span class="product-eyebrow">Safari on Mac</span><h3>Signed, notarized Mac app.</h3><p>Install, enable the extension, allow your Blackboard or Canvas site.</p><span class="product-text-link">Safari guide →</span></a>
-        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Chrome Web Store.</h3><p>Add to Chrome and open Blackboard Ultra or Canvas.</p><span class="product-text-link">Chrome guide →</span></a>
+        <a class="product-panel browser-guide" href="/guides/glaze-safari"><span class="product-eyebrow">Safari on Mac</span><h3>Signed, notarized Mac app.</h3><p>Install, enable the extension, allow your Blackboard, Canvas or Moodle site.</p><span class="product-text-link">Safari guide →</span></a>
+        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Chrome Web Store.</h3><p>3.0.0 is coming to the store soon. Use the GitHub package for this release now.</p><span class="product-text-link">Chrome guide →</span></a>
       </div>
+      <p class="product-caption">GitHub downloads: <a href={safariZip}>Safari Mac ZIP</a> · <a href={chromeZip}>Chrome extension ZIP</a> · <a href={`${source}/releases/tag/v3.0.0`}>3.0.0 release notes</a>.</p>
     </section>
 
     <section class="product-cta">
       {halloween && <div class="halloween-skeleton" aria-hidden="true"><img src="/projects/glaze/halloween/skeleton.svg" width="200" height="260" alt="" /></div>}
       <p class="product-eyebrow">Glaze by Frostdev</p>
       <h2>Your theme. Your data.</h2>
-      <p>No server, no analytics. Settings stay in your browser; Glaze never submits coursework.</p>
+      <p>No analytics. No account. Your work stays local unless you choose to share it. Encrypted sharing uses an optional relay; Glaze never submits coursework.</p>
       <div class="product-actions"><a class="product-button" href={source}>View source <span aria-hidden="true">↗</span></a><a class="product-button secondary" href={`${source}/blob/main/PRIVACY.md`}>Privacy policy <span aria-hidden="true">↗</span></a></div>
-      <p class="product-caption">Blackboard is a trademark of Anthology Inc. Canvas is a trademark of Instructure, Inc. Glaze is an independent project and is not affiliated with or endorsed by either.</p>
+      <p class="product-caption">Blackboard is a trademark of Anthology Inc. Canvas is a trademark of Instructure, Inc. Glaze is an independent project and is not affiliated with or endorsed by Blackboard, Canvas or Moodle.</p>
     </section>
   </div>
 </MarketingLayout>
