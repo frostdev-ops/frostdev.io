@@ -23,7 +23,8 @@ browser ── /glaze/looks, /glaze/looks/submit ──> nginx (static files, /o
 
 - `scripts/looks.mjs`: the checks and the description of a code, shared by the page build, CI and the
   server: `checkCode(code)`, `checkMeta({name, credit, tags})`, `describe(decoded)`, `distance(a, b)`,
-  and `loadLooks()` for the curated entries.
+  and `loadLooks()` for the curated entries. `checkCode()` also returns a stable SHA-256 fingerprint
+  of the decoded settings for duplicate blocking.
 - `src/components/LookPreview.astro` + `looks.ts`: the live preview, a mock course page painted only from
   `describe()`. `LookCard.astro`: one card, built into the page for curated Looks and used as the
   `<template>` community cards are filled from.
@@ -53,10 +54,10 @@ All JSON, `X-Content-Type-Options: nosniff`, no CORS. POSTs need `Origin: https:
    1 to 40 plain characters; the credit 1 to 32 letters, digits, spaces, `.`, `_` or `-`, and nothing
    that looks like a link or an @handle; `license: true`; tags from the fixed list, the checkable ones
    checked against the code, `color-blind-safe` refused (a maintainer's call); the name unique (case
-   insensitively) and the code unique against curated, published, pending **and removed** Looks, so a
-   taken-down code can't come back.
+   insensitively) and the code unique against curated, published, pending **and removed** Looks, using a stable fingerprint of the decoded settings, so recompressing or reordering a code cannot
+   reintroduce a taken-down Look.
 3. **Quota** (see Limits). Taken before the review so two tabs can't both pass; given back if the review
-   can't happen. The same transaction reserves the lowercase name and exact code in SQLite,
+   can't happen. The same transaction reserves the lowercase name and decoded-settings fingerprint in SQLite,
    so simultaneous requests on separate connections cannot review the same entry twice. Reservations
    are released on completion and expire after five minutes if the process crashes.
 4. **Neighbours.** `distance()` against every published Look: the mean OKLab difference over the 14
@@ -283,7 +284,9 @@ that public Glaze release tag: `defaults.js` and the `lib/` files it and `lib/sh
 repeatable, puts any change to the checker in review, and checks codes against the Glaze students run,
 not unreleased code. It is at **v3.0.3**. Raise the tag after a Glaze release that changes its settings
 (check the new `share.js`'s requires against the script's file list), then run the checks and the
-gallery tests, and redeploy the server.
+gallery tests, and redeploy the server. On opening an existing gallery database, the server adds the
+fingerprint column if needed and backfills existing published, pending and removed records before
+serving; CLI commands also wait for that migration.
 
 ## Content safety
 

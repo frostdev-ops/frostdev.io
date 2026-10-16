@@ -238,7 +238,7 @@ export function gallery({
   const db = new DatabaseSync(file);
   db.exec(`PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;
     CREATE TABLE IF NOT EXISTS looks (id TEXT PRIMARY KEY, name TEXT NOT NULL, credit TEXT NOT NULL, created TEXT NOT NULL,
-      tags TEXT NOT NULL, code TEXT NOT NULL, described TEXT NOT NULL, status TEXT NOT NULL, decision TEXT NOT NULL,
+      tags TEXT NOT NULL, code TEXT NOT NULL, fingerprint TEXT NOT NULL DEFAULT '', described TEXT NOT NULL, status TEXT NOT NULL, decision TEXT NOT NULL,
       reason TEXT NOT NULL DEFAULT '', token TEXT NOT NULL, unmailed INTEGER NOT NULL DEFAULT 0, decided INTEGER NOT NULL);
     CREATE INDEX IF NOT EXISTS looks_token ON looks (token);
     CREATE TABLE IF NOT EXISTS reviewing (id TEXT PRIMARY KEY, name TEXT UNIQUE NOT NULL, code TEXT UNIQUE NOT NULL, expires INTEGER NOT NULL);
@@ -246,16 +246,18 @@ export function gallery({
     CREATE TABLE IF NOT EXISTS quota (kind TEXT NOT NULL, key TEXT NOT NULL, day TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (kind, key, day));
     CREATE TABLE IF NOT EXISTS salts (day TEXT PRIMARY KEY, salt BLOB NOT NULL);
     CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v BLOB NOT NULL);`);
+  if (!db.prepare('PRAGMA table_info(looks)').all().some((c) => c.name === 'fingerprint')) db.exec("ALTER TABLE looks ADD COLUMN fingerprint TEXT NOT NULL DEFAULT ''");
   const q = Object.fromEntries(Object.entries({
     published: "SELECT * FROM looks WHERE status = 'published' ORDER BY created DESC, name",
-    blocking: "SELECT id, name, code, status FROM looks WHERE status IN ('published', 'pending', 'removed')",
-    reservations: 'SELECT name, code FROM reviewing WHERE expires > ?',
+    blocking: "SELECT id, name, code, fingerprint, status FROM looks WHERE status IN ('published', 'pending', 'removed')",
+    reservations: 'SELECT name, code AS fingerprint FROM reviewing WHERE expires > ?',
     reserve: 'INSERT INTO reviewing (id, name, code, expires) VALUES (?, ?, ?, ?)',
     release: 'DELETE FROM reviewing WHERE id = ?',
     expiredReviews: 'DELETE FROM reviewing WHERE expires <= ?',
+    setFingerprint: 'UPDATE looks SET fingerprint = ? WHERE id = ?',
     byId: 'SELECT * FROM looks WHERE id = ?',
     byToken: 'SELECT * FROM looks WHERE token = ?',
-    insert: 'INSERT INTO looks (id, name, credit, created, tags, code, described, status, decision, reason, token, unmailed, decided) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    insert: 'INSERT INTO looks (id, name, credit, created, tags, code, fingerprint, described, status, decision, reason, token, unmailed, decided) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     setStatus: 'UPDATE looks SET status = ?, reason = ?, decided = ? WHERE id = ? AND status = ?',
     mailed: 'UPDATE looks SET unmailed = 0 WHERE id = ?',
     unmailed: "SELECT * FROM looks WHERE status = 'pending' AND unmailed = 1",
@@ -298,8 +300,13 @@ export function gallery({
   const ready = (async () => {
     for (const f of readdirSync(looksDir).filter((x) => x.endsWith('.json')).sort()) {
       const e = JSON.parse(readFileSync(path.join(looksDir, f), 'utf8'));
-      const { look } = await L.checkCode(e.code);
-      if (look) curated.push({ id: f.slice(0, -5), name: e.name, code: e.code, source: 'curated', described: L.describe(look) });
+      const { look, fingerprint } = await L.checkCode(e.code);
+      if (look) curated.push({ id: f.slice(0, -5), name: e.name, code: e.code, fingerprint, source: 'curated', described: L.describe(look) });
+    }
+    for (const row of q.blocking.all()) if (!row.fingerprint) {
+      const { problems, fingerprint } = await L.checkCode(row.code);
+      if (problems.length) throw new Error('an existing Look has an invalid code');
+      q.setFingerprint.run(fingerprint, row.id);
     }
   })();
   const community = () => q.published.all().map((r) => ({ id: r.id, name: r.name, code: r.code, source: 'community', described: JSON.parse(r.described) }));
@@ -360,23 +367,23 @@ export function gallery({
 
   // The deterministic part, shared by check and submit: the code, the fields given, and name and code against every
   // Look the gallery has or had (curated, published, pending and removed).
-  const duplicateProblems = (body) => {
+  const duplicateProblems = (body, fingerprint) => {
     const problems = [];
-    const taken = [...curated.map((l) => ({ name: l.name, code: l.code, status: 'published' })), ...q.blocking.all(), ...q.reservations.all(now())];
+    const taken = [...curated.map((l) => ({ name: l.name, code: l.code, fingerprint: l.fingerprint, status: 'published' })), ...q.blocking.all(), ...q.reservations.all(now())];
     if (typeof body.name === 'string' && taken.some((l) => l.name.toLowerCase() === body.name.toLowerCase())) problems.push('a Look with that name is already in the gallery (or was); choose another name');
-    if (typeof body.code === 'string' && taken.some((l) => l.code === body.code)) problems.push('this exact code is already in the gallery (or was taken down)');
+    if (typeof body.code === 'string' && taken.some((l) => l.fingerprint === fingerprint)) problems.push('this exact code is already in the gallery (or was taken down)');
     return problems;
   };
   const deterministic = async (body, { partial }) => {
     await ready;
-    const { problems: codeProblems, look } = await L.checkCode(body.code);
+    const { problems: codeProblems, look, fingerprint } = await L.checkCode(body.code);
     const problems = [...codeProblems];
     // On submit a credit is required; checkMeta checks one whenever it's given.
     const credit = body.credit === undefined && !partial ? '' : body.credit;
     problems.push(...L.checkMeta({ name: body.name, credit, tags: body.tags }, look, { community: true, partial }));
     if (!partial && body.license !== true) problems.push('you need to agree to share it under CC BY 4.0');
-    problems.push(...duplicateProblems(body));
-    return { problems, described: look && !codeProblems.length ? L.describe(look) : null };
+    problems.push(...duplicateProblems(body, fingerprint));
+    return { problems, fingerprint, described: look && !codeProblems.length ? L.describe(look) : null };
   };
   const neighbours = (described) => L.nearest(described, [...curated, ...community()], 3);
 
@@ -487,7 +494,7 @@ export function gallery({
   }));
 
   const submit = async (req, res, body) => {
-    const { problems, described } = await deterministic(body, { partial: false });
+    const { problems, described, fingerprint } = await deterministic(body, { partial: false });
     const cookie = cookieOf(req);
     const setCookie = cookie.set ? { 'set-cookie': cookie.set } : {};
     if (problems.length) return send(res, 422, { error: 'Fix these first; nothing was used up.', problems }, setCookie);
@@ -498,13 +505,13 @@ export function gallery({
     const keys = [['cookie', hmac(cookieKey, cookie.value), COOKIE_PER_DAY], ['network', hmac(saltOf(day), clientOf(req)), NETWORK_PER_DAY], ['all', '', reviewsPerDay]];
     const reservation = crypto.randomUUID();
     const quota = tx(() => {
-      const problems = duplicateProblems(body);
+      const problems = duplicateProblems(body, fingerprint);
       if (problems.length) return { problems };
       q.expiredReviews.run(t);
       const full = keys.find(([k, key, max]) => (q.used.get(k, key, day)?.n || 0) >= max);
       if (!full) {
         // Five minutes outlives both review deadlines; a crashed process cannot hold a name forever.
-        q.reserve.run(reservation, body.name.toLowerCase(), body.code, t + 5 * 60e3);
+        q.reserve.run(reservation, body.name.toLowerCase(), fingerprint, t + 5 * 60e3);
         for (const [k, key] of keys) q.take.run(k, key, day);
       }
       return { over: full?.[0] };
@@ -550,7 +557,7 @@ export function gallery({
       const id = `c-${crypto.randomBytes(5).toString('hex')}`;
       const token = crypto.randomBytes(24).toString('base64url');
       const status = outcome === 'accept' ? 'published' : 'pending';
-      q.insert.run(id, body.name, body.credit, day, JSON.stringify(kept), body.code, JSON.stringify(described), status, JSON.stringify(decision), '', sha(token), status === 'pending' ? 1 : 0, t);
+      q.insert.run(id, body.name, body.credit, day, JSON.stringify(kept), body.code, fingerprint, JSON.stringify(described), status, JSON.stringify(decision), '', sha(token), status === 'pending' ? 1 : 0, t);
       if (status === 'pending') mailPending();
       return send(res, 200, {
         outcome: status, id, token, escalated: !!escalation, numbers, tags: kept, dropped, nearest: nearestOut,
@@ -647,10 +654,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   if (cmd === '--backup' && arg) backup(process.env.DB || 'gallery.db', arg).then(() => console.log('backed up'), failCli);
   else if (['--list', '--pending'].includes(cmd)) {
     const g = gallery(fromEnv(process.env));
+    await g.ready;
     for (const r of g.list(cmd === '--pending' ? 'pending' : '')) console.log(`${r.id}\t${r.status}${r.unmailed ? ' (not mailed yet)' : ''}\t${r.created}\t${JSON.stringify(r.name)} by ${JSON.stringify(r.credit)}`);
     g.db.close();
   } else if (['--approve', '--decline', '--remove'].includes(cmd) && /^c-[0-9a-f]{10}$/.test(arg || '') && (cmd !== '--decline' || cleanReason(reason))) {
     const g = gallery(fromEnv(process.env));
+    await g.ready;
     const to = { '--approve': 'published', '--decline': 'declined', '--remove': 'removed' }[cmd];
     console.log(g.decide(arg, to, reason) ? `${arg}: ${to}` : `${arg}: no such Look in a state that can become ${to}`);
     g.db.close();

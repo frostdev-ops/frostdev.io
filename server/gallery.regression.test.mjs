@@ -332,3 +332,36 @@ test('submit form cannot leak fields through a default GET before scripts initia
   assert.ok(/<button[^>]*id="f-submit"[^>]*disabled/.test(page));
   assert.ok(/<noscript>[\s\S]*?issues\/new/.test(page));
 });
+
+test('removed Look cannot return through a recompressed code alias', async () => {
+  mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify(clef())));
+  const g = await create();
+  const sub = look();
+  const published = await post(g, sub);
+  assert.equal(g.decide(published.body.id, 'removed'), true);
+  const raw = zlib.inflateRawSync(Buffer.from(sub.code.slice(7), 'base64url'));
+  const alias = `glaze1:${zlib.deflateRawSync(raw, { level: 0 }).toString('base64url')}`;
+  assert.notEqual(alias, sub.code);
+  const r = await post(g, look({ code: alias }), { ip: '192.0.2.2' });
+  assert.equal(r.status, 422);
+  assert.equal(g.db.prepare("SELECT n FROM quota WHERE kind = 'all'").get().n, 1);
+});
+
+test('fingerprint migration backfills existing rows before serving', async () => {
+  mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify(clef())));
+  const db = path.join(tmp, `migration-${++seq}.db`);
+  const g = await create({ db });
+  const sub = look();
+  const r = await post(g, sub);
+  assert.equal(g.decide(r.body.id, 'removed'), true);
+  await g.close();
+  galleries.splice(galleries.indexOf(g), 1);
+  const legacy = new DatabaseSync(db);
+  legacy.exec('ALTER TABLE looks DROP COLUMN fingerprint');
+  legacy.close();
+  const reopened = await create({ db });
+  assert.match(reopened.db.prepare('SELECT fingerprint FROM looks').get().fingerprint, /^[\w-]{43}$/);
+  const raw = JSON.parse(zlib.inflateRawSync(Buffer.from(sub.code.slice(7), 'base64url')));
+  const alias = `glaze1:${zlib.deflateRawSync(Buffer.from(JSON.stringify(raw, null, 2))).toString('base64url')}`;
+  assert.equal((await post(reopened, look({ code: alias }))).status, 422);
+});

@@ -6,6 +6,7 @@
 //   node scripts/looks.mjs [entries dir] [previews dir]
 // Theme codes are read by Glaze's own code, pinned in vendor/glaze (scripts/vendor-glaze.sh), so a code
 // passes here exactly when that Glaze would take it whole.
+import crypto from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -96,7 +97,8 @@ export async function checkCode(code) {
   if (got.bg.image && !got.bg.image.startsWith('https:')) problems.push('a background image must be an https: address');
   // Pictures for the course menu or the course cards would load from other sites too, with no host shown here.
   if (got.nav.u || got.cards.some((c) => c.u)) problems.push('the code links pictures for the course menu or course cards; the gallery takes a background image only, so remove those pictures in Glaze and copy the code again');
-  return { problems, look: got };
+  const canonical = JSON.stringify(got, (_, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) : v);
+  return { problems, look: got, fingerprint: crypto.createHash('sha256').update(canonical).digest('base64url') };
 }
 
 // A name, a community credit (when given) and tags, the tags checked against the decoded code. partial: check only
@@ -208,7 +210,7 @@ export async function loadLooks(entries = 'src/data/looks', previews = 'public/p
     if (missing.length) { bad(`missing fields: ${missing.join(', ')}`); continue; }
 
     const { name, author, created, tags, previews: modes = [], code } = e;
-    const { problems, look: got } = await checkCode(code);
+    const { problems, look: got, fingerprint } = await checkCode(code);
     for (const p of problems) bad(p);
     for (const p of checkMeta({ name, tags }, got)) bad(p);
     if (typeof name === 'string' && name.trim()) {
@@ -216,8 +218,8 @@ export async function loadLooks(entries = 'src/data/looks', previews = 'public/p
       else names.set(name.toLowerCase(), file);
     }
     if (typeof code === 'string') {
-      if (codes.has(code)) bad(`the same code is also in ${codes.get(code)}`);
-      codes.set(code, file);
+      if (fingerprint && codes.has(fingerprint)) bad(`the same code is also in ${codes.get(fingerprint)}`);
+      if (fingerprint) codes.set(fingerprint, file);
     }
     if (typeof author !== 'string' || !HANDLE.test(author)) bad('author must be a GitHub username');
     const day = typeof created === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(created) ? new Date(`${created}T00:00:00Z`) : null;
