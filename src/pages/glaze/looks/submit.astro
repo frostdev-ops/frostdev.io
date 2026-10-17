@@ -34,6 +34,12 @@ const access: [string, string, string][] = [
           <p class="help" id="f-code-prefilled" hidden>This code came with the link you opened. Nothing has been sent yet. <button type="button" class="looks-link" id="f-code-check">Preview it</button></p>
           <ul class="error" id="f-code-error"></ul>
         </div>
+        <div class="field" id="f-media-field" hidden>
+          <label for="f-media">Background file</label>
+          <input id="f-media" name="media" type="file" accept="video/webm,video/mp4,image/webp,image/avif,application/json,.json" aria-describedby="f-media-help f-media-error" />
+          <p class="help" id="f-media-help">This Look's background is a video or animation file, which its code only names. Add the same file you chose in Glaze's editor (Background, a file from this computer). The gallery checks it is exactly that file, keeps it with your Look and serves it to students who use it. A person always looks at a Look with a file before it is published.</p>
+          <ul class="error" id="f-media-error"></ul>
+        </div>
         <div class="field">
           <label for="f-name">Name</label>
           <input id="f-name" name="name" required maxlength="40" autocomplete="off" aria-describedby="f-name-help f-name-error" />
@@ -104,8 +110,8 @@ const access: [string, string, string][] = [
       </div>
       <div class="product-panel">
         <h3>What's kept</h3>
-        <p>Previewing sends your code and fields to frostdev.io to check them; those fields are not saved. Previewing or submitting sets a one-day cookie scoped to the gallery API. The preview rate limit keeps a short-lived keyed network hash in memory; submissions keep cookie and network hashes for the daily limit, with quota rows removed at the two-day cutoff. The network key is replaced daily. These identifiers are not included in review requests or notification emails: OpenRouter sees the Look, its name, credit and tags, and the nearest Looks. For a Look with extras that includes a description of them, never a shader's source; the text they carry (navigation labels, link names and addresses, rule labels) goes to the first reviewer's safety check with the name and credit.</p>
-        <p>Published and pending Looks retain their submitted fields, review and hashed status token until acted on; published fields are public. Removed records are retained to block resubmission. Automated declines keep the submitted name, code and review for 30 days; human declines also retain the credit and status record for 30 days after the decision. Cookie and network hashes are not attached to these records. Backups and notification emails have separate retention; the gallery does not delete email copies.</p>
+        <p>Previewing sends your code and fields to frostdev.io to check them; those fields are not saved. Previewing or submitting sets a one-day cookie scoped to the gallery API. The preview rate limit keeps a short-lived keyed network hash in memory; submissions keep cookie and network hashes for the daily limit, with quota rows removed at the two-day cutoff. The network key is replaced daily. These identifiers are not included in review requests or notification emails: OpenRouter sees the Look, its name, credit and tags, and the nearest Looks. For a Look with extras that includes a description of them, never a shader's source; the text they carry (navigation labels, link names and addresses, rule labels) goes to the first reviewer's safety check with the name and credit. A background file is sent only when you submit, and never to OpenRouter: the reviewers are told only that there is one, and the maintainer looks at it.</p>
+        <p>Published and pending Looks retain their submitted fields, review and hashed status token until acted on; published fields are public. Removed records are retained to block resubmission. A background file is kept while a published or pending Look uses it, and deleted when that Look is declined or taken down. Automated declines keep the submitted name, code and review for 30 days; human declines also retain the credit and status record for 30 days after the decision. Cookie and network hashes are not attached to these records. Backups and notification emails have separate retention; the gallery does not delete email copies.</p>
         <h3>Changed your mind?</h3>
         <p>Email <a class="looks-link" href="mailto:admin@frostdev.io?subject=Glaze%20Looks%20gallery">admin@frostdev.io</a> with the Look's name to have it taken down.</p>
       </div>
@@ -123,6 +129,7 @@ const access: [string, string, string][] = [
   const name = $<HTMLInputElement>('f-name');
   const credit = $<HTMLInputElement>('f-credit');
   const license = $<HTMLInputElement>('f-license');
+  const mediaInput = $<HTMLInputElement>('f-media');
   const statusBox = $<HTMLElement>('submit-status');
   const preview = document.querySelector<HTMLElement>('.submit-preview .lp')!;
   // While the gallery server is down, the GitHub issue form is the way in: a maintainer adds the Look by hand.
@@ -136,7 +143,7 @@ const access: [string, string, string][] = [
 
   // Problems from the server, each under the field it's about.
   const fields: [RegExp, string, HTMLElement | null][] = [
-    [/\bname\b/, 'f-name-error', name], [/credit/, 'f-credit-error', credit], [/tag/, 'f-tags-error', null], [/agree|license/, 'f-license-error', license], [/./, 'f-code-error', code],
+    [/\bname\b/, 'f-name-error', name], [/credit/, 'f-credit-error', credit], [/tag/, 'f-tags-error', null], [/agree|license/, 'f-license-error', license], [/background file/, 'f-media-error', mediaInput], [/./, 'f-code-error', code],
   ];
   const showProblems = (problems: string[]) => {
     for (const [, id, input] of fields) { $(id).replaceChildren(); input?.removeAttribute('aria-invalid'); }
@@ -181,7 +188,28 @@ const access: [string, string, string][] = [
   for (const input of [code, name, credit]) input.addEventListener('input', later);
   form.addEventListener('change', (e) => { if ((e.target as HTMLInputElement).name === 'tags' && code.value.trim()) later(); });
 
+  // The background file the student chose: shown in the live preview from this computer, sent only with the submission.
+  let lastLook: Described | null = null;
+  let mediaUrl = '';
+  const needsFile = () => !!lastLook?.media;
+  mediaInput.addEventListener('change', () => {
+    if (mediaUrl) URL.revokeObjectURL(mediaUrl);
+    const f = mediaInput.files?.[0];
+    mediaUrl = f ? URL.createObjectURL(f) : '';
+    $('f-media-error').replaceChildren();
+    mediaInput.removeAttribute('aria-invalid');
+    if (lastLook) paintPreview(preview, lastLook, mediaUrl || undefined);
+  });
+  const base64 = (f: File) => new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).replace(/^data:[^,]*,/, ''));
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(f);
+  });
+
   const paint = (look: Described | null, near: { id: string; name: string; source: string; distance: number; chips?: string[] }[] = []) => {
+    lastLook = look;
+    $('f-media-field').hidden = !look?.media;
     $('live-empty').hidden = !!look;
     preview.hidden = !look;
     $('live-contrast').replaceChildren();
@@ -189,7 +217,7 @@ const access: [string, string, string][] = [
     const list = $('live-near');
     list.replaceChildren();
     if (!look) { list.append(el('li', 'None yet.', 'help')); return; }
-    paintPreview(preview, look);
+    paintPreview(preview, look, mediaUrl || undefined);
     for (const c of Array.isArray(look.contrast) ? look.contrast : []) {
       const li = el('li', `${c.label}: ${Number(c.ratio).toFixed(2)}:1`, c.pass ? 'pass' : 'fail');
       li.append(el('span', c.pass ? ` (needs ${c.min}:1, passes)` : ` (needs ${c.min}:1)`));
@@ -226,7 +254,7 @@ const access: [string, string, string][] = [
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (reviewing) return;
-    const missing = [!code.value.trim() && 'paste your theme code', !name.value.trim() && 'give it a name', !credit.value.trim() && 'say how to credit you', !license.checked && 'you need to agree to share it under CC BY 4.0'].filter(Boolean) as string[];
+    const missing = [!code.value.trim() && 'paste your theme code', !name.value.trim() && 'give it a name', !credit.value.trim() && 'say how to credit you', !license.checked && 'you need to agree to share it under CC BY 4.0', needsFile() && !mediaInput.files?.length && 'add the background file this Look names'].filter(Boolean) as string[];
     if (missing.length) { showProblems(missing.map((m) => m.replace('give it a name', 'the name is missing: give it a name'))); form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(); return; }
     reviewing = true; ++seq; clearTimeout(timer);
     $('check-status').textContent = '';
@@ -236,7 +264,9 @@ const access: [string, string, string][] = [
     say(el('p', 'Reviewing your Look. This takes a few seconds.'));
     let r: Response;
     try {
-      r = await fetch(`${API}/submit`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: code.value.trim(), name: name.value, credit: credit.value, tags: tags(), license: license.checked }) });
+      const file = needsFile() ? mediaInput.files?.[0] : undefined;
+      const media = file ? await base64(file) : undefined;
+      r = await fetch(`${API}/submit`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: code.value.trim(), name: name.value, credit: credit.value, tags: tags(), license: license.checked, ...(media && { media }) }) });
     } catch { closed(); return done(); }
     const body = await r.json().catch(() => ({}));
     if (r.status === 422) {
@@ -246,6 +276,8 @@ const access: [string, string, string][] = [
     } else if (r.status === 429) {
       const when = typeof body.resets === 'string' ? new Date(body.resets).toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' }) : 'tomorrow';
       say(el('p', `${String(body.error || 'You can submit one Look a day.')} You can submit again ${when}.`));
+    } else if (r.status === 413) {
+      say(el('p', 'That background file is too big for the gallery. Glaze takes a video up to 12 MiB, an animated picture up to 6 MiB and a Lottie animation up to 1 MiB.'));
     } else if (r.status === 503) {
       say(el('p', String(body.error || 'Reviews are paused right now; nothing was used up. Try again later.')), link(issue, 'Share through a GitHub issue instead'));
     } else if (!r.ok) {
@@ -255,7 +287,7 @@ const access: [string, string, string][] = [
       p.append(link(String(body.url).startsWith('/glaze/looks#') ? body.url : '/glaze/looks', 'See it in the gallery'), '.');
       say(el('h2', 'Your Look is in the gallery.', 'submit-h2'), p, ...(typeof body.review === 'string' && body.review ? [el('p', `The second reviewer: ${body.review}`)] : []), numbers(body.numbers), ...(body.dropped?.length ? [el('p', `Left off: ${body.dropped.join(', ')} (the review didn't see it that way).`, 'help')] : []), statusLink(body.token));
     } else if (body.outcome === 'pending') {
-      say(el('h2', 'A person will look at it.', 'submit-h2'), el('p', 'The automated review wasn\'t sure, so it went to the maintainer. It holds your name and code until then.'), numbers(body.numbers), statusLink(body.token));
+      say(el('h2', 'A person will look at it.', 'submit-h2'), el('p', needsFile() ? 'A Look with a background file always goes to the maintainer, who looks at the file. The gallery holds your name, code and file until then.' : 'The automated review wasn\'t sure, so it went to the maintainer. It holds your name and code until then.'), numbers(body.numbers), statusLink(body.token));
     } else {
       const ul = el('ul', '', 'submit-reasons');
       for (const reason of Array.isArray(body.reasons) ? body.reasons : []) ul.append(el('li', String(reason)));

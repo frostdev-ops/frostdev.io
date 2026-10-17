@@ -19,6 +19,8 @@ export type Described = {
   // Look parts (a glaze2 code): what the Look adds, and how to draw a shader or layers background. Both are optional.
   parts?: { background?: unknown; animations?: unknown[]; effects?: unknown[]; cursor?: unknown; nav?: unknown; rules?: unknown };
   live?: unknown;
+  // A background file the gallery serves (bg.kind 'media'): its type, its SHA-256 name, how it fits and how far it is dimmed.
+  media?: { type: string; hash: string; fit: string; dim: number };
 };
 export type Look = Described & {
   id: string; name: string; created: string; tags: string[]; code: string;
@@ -33,7 +35,7 @@ const hex = (v: unknown, d: string) => (typeof v === 'string' && HEX.test(v) ? v
 const num = (v: unknown, lo: number, hi: number, d: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
 const word = <T extends string>(v: unknown, list: readonly T[], d: T): T => (list.includes(v as T) ? (v as T) : d);
 const FAMILIES = ['sans', 'serif', 'mono'] as const;
-export const BG_KINDS = ['solid', 'gradient', 'image', 'aurora', 'scene', 'shader', 'layers'] as const;
+export const BG_KINDS = ['solid', 'gradient', 'image', 'aurora', 'scene', 'shader', 'layers', 'media'] as const;
 const STYLES = ['linear', 'radial', 'conic', 'mesh'] as const;
 const DENSITY = { compact: 0.8, cozy: 1, roomy: 1.2 } as const;
 
@@ -78,10 +80,10 @@ export function previewState(d: Partial<Described>) {
   // A scene, a shader and layers sit toward the ground by the Look's intensity (Glaze's GZ_SCENE_LOOK); until one is drawn,
   // or when it can't be, the gradient under it shows, dimmed the same way.
   const drawn = kind === 'scene' || kind === 'shader' || kind === 'layers';
-  vars['--lp-dim'] = String(num(drawn ? 75 * (1 - num(bg.intensity, 0, 100, 50) / 100) : bg.dim, 0, 90, 60) / 100);
-  vars['--lp-blur'] = String(kind === 'shader' || kind === 'layers' ? 0 : num(bg.blur, 0, 20, 0));
+  vars['--lp-dim'] = String(num(drawn ? 75 * (1 - num(bg.intensity, 0, 100, 50) / 100) : kind === 'media' ? d.media?.dim : bg.dim, 0, 90, kind === 'media' ? 40 : 60) / 100);
+  vars['--lp-blur'] = String(kind === 'shader' || kind === 'layers' || kind === 'media' ? 0 : num(bg.blur, 0, 20, 0));
   vars['--lp-angle'] = `${num(bg.angle, 0, 360, 135)}deg`;
-  if (kind === 'gradient' || kind === 'shader' || kind === 'layers') vars['--lp-bg-image'] = gradient(style, num(bg.angle, 0, 360, 135), num(bg.blend, 0, 100, 100), num(bg.spread, 20, 200, 100));
+  if (kind === 'gradient' || kind === 'shader' || kind === 'layers' || kind === 'media') vars['--lp-bg-image'] = gradient(style, num(bg.angle, 0, 360, 135), num(bg.blend, 0, 100, 100), num(bg.spread, 20, 200, 100));
   vars['--lp-surface-color'] = surface.surfaceCustom === true ? hex(surface.surfaceColor, vars['--gz-surface']) : vars['--gz-surface'];
   vars['--lp-surface-tint'] = `${num(surface.surfaceTint, 0, 100, 0)}%`;
   const opacity = num(surface.surfaceOpacity, -1, 100, -1);
@@ -93,13 +95,34 @@ export function previewState(d: Partial<Described>) {
   const fam = (f: Font | undefined) => word(f?.family, FAMILIES, 'sans');
   const data = {
     bg: kind, font: fam(d.font), head: fam(d.head ?? d.font), mono: d.mono ? fam(d.mono) : 'mono',
-    animated: String(kind === 'aurora' || kind === 'scene' || ((kind === 'shader' || kind === 'layers') && d.animated === true)),
+    animated: String(kind === 'aurora' || kind === 'scene' || ((kind === 'shader' || kind === 'layers' || kind === 'media') && d.animated === true)),
   };
   return { vars, data };
 }
 
+// A Look's background file: a muted looping video or an animated picture from the gallery's media route (on the submit page,
+// `src`: the file the student chose, which isn't on the server yet). Under prefers-reduced-motion a video shows its first
+// frame and a picture isn't shown. A Lottie animation keeps the gradient stand-in: no player is loaded here.
+const FITS = ['cover', 'contain', 'fill'] as const;
+function showMedia(el: HTMLElement, d: Partial<Described>, src?: string) {
+  el.querySelector('.lp-media')?.remove();
+  const m = d.media;
+  if (d.bg?.kind !== 'media' || !m || typeof m.hash !== 'string' || !/^[\w-]{43}$/.test(m.hash) || (m.type !== 'video' && m.type !== 'image')) return;
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (m.type === 'image' && still) return;
+  const v = document.createElement(m.type === 'video' ? 'video' : 'img');
+  // Attributes, not properties, so the large preview's copy (cloneNode) plays the same way.
+  if (m.type === 'video') for (const a of ['muted', 'loop', 'playsinline', ...(still ? [] : ['autoplay'])]) v.setAttribute(a, '');
+  else Object.assign(v, { alt: '', decoding: 'async', loading: 'lazy' });
+  if (m.type === 'video') { v.setAttribute('preload', 'metadata'); (v as HTMLVideoElement).muted = true; }
+  v.className = 'lp-media';
+  v.style.setProperty('object-fit', word(m.fit, FITS, 'cover'));
+  v.setAttribute('src', src || `/glaze/looks/api/media/${m.hash}`);
+  el.querySelector('.lp-bg')?.append(v);
+}
+
 // Paint a rendered preview (LookPreview.astro's markup) in the browser: setProperty and dataset only.
-export function paintPreview(el: HTMLElement, d: Partial<Described>) {
+export function paintPreview(el: HTMLElement, d: Partial<Described>, mediaSrc?: string) {
   const { vars, data } = previewState(d);
   for (const [k, v] of Object.entries(vars)) el.style.setProperty(k, v);
   if (!vars['--lp-bg-image']) el.style.removeProperty('--lp-bg-image');
@@ -107,6 +130,7 @@ export function paintPreview(el: HTMLElement, d: Partial<Described>) {
   const host = el.querySelector<HTMLElement>('[data-f="host"]');
   if (host) host.textContent = typeof d.bg?.imageHost === 'string' ? d.bg.imageHost : '';
   el.querySelector('.lp-bg img')?.remove();
+  showMedia(el, d, mediaSrc);
   // A shader or layers background is drawn live, while the preview is on screen; anything else stops what was drawn there.
   watch(el, d.bg?.kind === 'shader' || d.bg?.kind === 'layers' ? liveSpec(d.live) : null);
 }
@@ -205,6 +229,8 @@ export function wireDialog(root: ParentNode = document) {
     copy.setAttribute('tabindex', '-1');
     copy.setAttribute('aria-hidden', 'true');
     stripLive(copy);
+    // A copy's video keeps the muted attribute but not the state, which autoplay needs.
+    for (const v of copy.querySelectorAll('video')) v.muted = true;
     stage.replaceChildren(copy);
     // The large preview draws its own copy of a shader or layers background.
     watch(copy, specOf(p));

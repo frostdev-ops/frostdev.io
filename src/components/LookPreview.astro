@@ -103,9 +103,10 @@ const live = look.bg?.kind === 'shader' || look.bg?.kind === 'layers' ? JSON.str
   .lp[data-bg='image'] .lp-bg::before { background: repeating-linear-gradient(135deg, var(--gz-surface) 0 2cqi, var(--gz-line) 2cqi 4cqi); }
   /* A shader or layers background is drawn live (livebg.ts) into a canvas; until then, and when it can't be, this gradient
      (dimmed as Glaze dims it) shows. The canvas is already toward the ground, so it takes no dim of its own. */
-  .lp[data-bg='shader'] .lp-bg::before, .lp[data-bg='layers'] .lp-bg::before { background: var(--lp-bg-image); }
+  .lp[data-bg='shader'] .lp-bg::before, .lp[data-bg='layers'] .lp-bg::before, .lp[data-bg='media'] .lp-bg::before { background: var(--lp-bg-image); }
   .lp-live { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .lp[data-live] .lp-bg::before, .lp[data-live] .lp-bg::after { display: none; }
+  .lp-bg video { position: absolute; inset: 0; width: 100%; height: 100%; }
   .lp-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(calc(var(--lp-blur) * var(--lp-px))); }
   @keyframes lp-aurora { from { transform: translate(-6%, -3%) rotate(-6deg) scale(1); } to { transform: translate(6%, 4%) rotate(8deg) scale(1.15); } }
   @keyframes lp-scene { from { transform: translateY(2%) scale(1); } to { transform: translateY(-4%) scale(1.08) rotate(3deg); } }

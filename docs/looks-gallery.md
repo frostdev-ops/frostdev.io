@@ -43,13 +43,16 @@ All JSON, `X-Content-Type-Options: nosniff`, no CORS. POSTs need `Origin: https:
 (`SITE_ORIGIN`), `Content-Type: application/json` and a body of at most 22 KiB (`BODY_MAX`, and nginx's
 `client_max_body_size 22k` for the API location). That is the most a submission can be: a glaze2 code of
 20,000 characters with a 40-character name and a 32-character credit written as `\uXXXX` escapes, six tags and
-the licence is 21,012 bytes; the tests build it and hold both numbers to it. It was 16 KB for glaze1.
+the licence is 21,012 bytes; the tests build it and hold both numbers to it. It was 16 KB for glaze1. `submit`
+alone takes up to 16,406 KiB (`SUBMIT_MAX`, and its own nginx location), for a Look's background file as base64
+(below).
 
 | Request | Answer |
 | --- | --- |
 | `GET looks` | Published community Looks: `id, name, credit, created, tags, code` and everything `describe()` gives (for a glaze2 Look that includes `parts`, the text it carries and `live`, what its preview draws: a shader's source can make a Look's entry 8 KB larger, and the list has no paging yet). `Cache-Control: public, max-age=60`. The gallery fetches it without cookies. |
 | `POST check` `{code, name?, credit?, tags?}` | The deterministic problems, `describe()`, and the 3 nearest published Looks (curated and community) with distances. Never calls a model, never uses quota; 30 a minute per network, in memory. |
-| `POST submit` `{code, name, credit, tags, license: true}` | The review, below. |
+| `POST submit` `{code, name, credit, tags, license: true, media?}` | The review, below. `media`: the background file a `file:` Look names, base64. |
+| `GET media/<hash>` (and HEAD) | A published Look's background file, exactly the cleaned bytes named by `<hash>`; 404 for anything else. Its type's `Content-Type`, `Cache-Control: public, max-age=31536000, immutable`, `ETag: "<hash>"` (304 on a match), `Content-Disposition: attachment`, no cookies. Glaze downloads it on "Use this Look" and checks the hash again. |
 | `GET status/<token>` | `pending`, `published` (with the card's link), `declined` (with the reason) or `removed`. |
 
 ## The submission flow
@@ -462,6 +465,26 @@ previews; it grows with the catalog.
 **Not covered.** The preview doesn't show animations, effects, the cursor effect, the nav layout or rules (the badges
 say they are there). Shaders are not run by the reviewers or the server: only checked and judged by description; a
 strobing or visually busy shader is the second reviewer's and the maintainer's judgment.
+
+### Background files (`file:` media)
+
+A glaze2 Look whose background is a video, an animated picture or a Lottie animation must name a file
+(`x.bg.media.src` = `file:<hash>`, the base64url SHA-256 of the file as Glaze cleans it). A linked (`https:`) one is
+refused, because what a link serves can change after the review. The submit page asks for the file when the check's
+`look.media` names one: the student adds the same file they chose in Glaze's editor, and the server cleans it with
+Glaze's own reader (vendored `lib/media.js`, the background limits: video 12 MiB, picture 6 MiB, Lottie 1 MiB) and
+refuses it unless it is that type and that hash. Nothing is used up by a refusal.
+
+The reviewers are told only that there is a file (`summarize()`'s `background.file`); a Look with one never publishes on
+the reviews alone: a decline still declines, and anything else goes to a person, whose mail says how to copy the file
+off the server (`docker cp`) and see the whole Look in Glaze. The file is written as `media/<hash>` next to the database
+in the same transaction as the Look's row (a `.tmp` and a rename; a failure gives the day's submission back, and the next
+start removes `.tmp` files and files no published or pending Look names). Declining or removing a Look deletes its file
+unless another published or pending Look uses it. `GET media/<hash>` reads and checks the file again on every request.
+
+The cards and the large preview play a video muted and looping, or show an animated picture, from that route; under
+`prefers-reduced-motion` a video shows its first frame and a picture isn't shown. A Lottie background shows the
+gradient stand-in. Curated entries can't have a file (there is no route for them).
 
 ## Limits, and why not a MAC address
 
