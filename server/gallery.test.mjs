@@ -679,6 +679,7 @@ for (const [label, mk, pattern] of [
   ['layers the background does not use', () => code2({ bg: { layers: [{ k: 'noise' }] } }, { kind: 'scene' }), /background layers it doesn't use/],
   ['a shader background with no shader', () => code2({ cursor: { kind: 'trail' } }, { kind: 'shader' }), /the background is a shader, but the code has no shader/],
   ['a layers background with no layers', () => code2({ cursor: { kind: 'trail' } }, { kind: 'layers' }), /the background is layers, but the code has no layers/],
+  ['a video background (a linked file can change after review)', () => code2({ bg: { media: { type: 'video', src: 'https://example.com/a.webm' } } }, { kind: 'media' }), /doesn't take video or animation backgrounds/],
   ['a shader without scene()', () => shaderCode('void main() { }'), /Glaze .* refuses the code.*x\.bg/],
   ['a shader with #extension', () => shaderCode(`#extension GL_OES_standard_derivatives : enable\n${SHADER}`), /refuses the code.*x\.bg/],
   ['a shader with its own uniform', () => shaderCode(`uniform float k;\n${SHADER}`), /refuses the code.*x\.bg/],

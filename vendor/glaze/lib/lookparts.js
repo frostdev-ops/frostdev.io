@@ -106,7 +106,20 @@ var GZ_XPARTS = globalThis.GZ_XPARTS || (() => {
     const k = isObj(v) && typeof v.k === 'string' && own(LAYER, v.k) ? v.k : null;
     return k && shape({ k: oneOf([k]), ...rules(LAYER[k]) }, ['k', ...REQUIRED[k]])(v);
   };
-  const bg = shape({ shader: shape({ src: source }, ['src']), layers: list(layer, 1, 4) }); // media is reserved: refused until it is built
+  // A looping video, an animated picture or a Lottie animation (lib/scene-media.js draws it, lib/media.js reads the files).
+  // src is an https address on a public host (never a device, a local network, a port or credentials), kept as the parser
+  // writes it, or `file:` and a SHA-256 (base64url) naming a file kept on this computer, which only a Look share brings.
+  const HOST = /^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,61}[a-z0-9]$/;
+  const LOCAL = /(^|\.)(localhost|local|internal|lan|home\.arpa)$/;
+  const mediaUrl = (v) => {
+    if (typeof v !== 'string' || v.length > 2048) return null;
+    let u;
+    try { u = new URL(v); } catch { return null; }
+    return u.protocol === 'https:' && !u.username && !u.password && !u.port && HOST.test(u.hostname) && !LOCAL.test(u.hostname) ? u.href : null;
+  };
+  const MEDIA = { types: ['video', 'image', 'lottie'], fits: ['cover', 'contain', 'fill'], url: mediaUrl, src: (v) => (typeof v === 'string' && /^file:[\w-]{43}$/.test(v) ? v : mediaUrl(v)) };
+  const media = shape({ type: oneOf(MEDIA.types), src: MEDIA.src, fit: oneOf(MEDIA.fits), dim: num(0, 90, true), loop: (v) => (typeof v === 'boolean' ? v : null) }, ['type', 'src']);
+  const bg = shape({ shader: shape({ src: source }, ['src']), layers: list(layer, 1, 4), media });
 
   // ---- animations -------------------------------------------------------------------------------
   // A stop's keys, each between the limits motionx.js has for it; a key left out is the element as it is.
@@ -161,7 +174,7 @@ var GZ_XPARTS = globalThis.GZ_XPARTS || (() => {
   // accents). The motion parts' defaults are motionx.js's, which draws them.
   const given = (fields) => Object.fromEntries(Object.entries(fields).filter(([, [d]]) => d !== undefined && d !== null).map(([n, [d]]) => [n, d]));
   const deepFreeze = (o) => { for (const v of Object.values(o)) if (v && typeof v === 'object') deepFreeze(v); return Object.freeze(o); };
-  const DEFAULTS = deepFreeze({ layer: Object.fromEntries(Object.entries(LAYER).map(([k, f]) => [k, given(f)])) });
+  const DEFAULTS = deepFreeze({ layer: Object.fromEntries(Object.entries(LAYER).map(([k, f]) => [k, given(f)])), media: { fit: 'cover', dim: 40, loop: true } });
   // Same value, whatever the order of an object's keys.
   const same = (a, b) => (a === b) || (isObj(a) && isObj(b) ? Object.keys(a).length === Object.keys(b).length && Object.keys(a).every((k) => own(b, k) && same(a[k], b[k]))
     : Array.isArray(a) && Array.isArray(b) ? a.length === b.length && a.every((e, i) => same(e, b[i])) : false);
@@ -276,6 +289,16 @@ var GZ_XPARTS = globalThis.GZ_XPARTS || (() => {
     return false;
   };
 
+  // Installed mods' parts over a Look's (each already cleaned): the first mod in the student's order to set a key wins it,
+  // over the Look; rules add up, the Look's first, to the 64 a Look may have. null when nothing is left.
+  const over = (base, overs) => {
+    const all = [...overs, base].filter(isObj);
+    const x = Object.assign({}, ...all.reverse());
+    const rules = [base, ...overs].flatMap((p) => (Array.isArray(p?.rules) ? p.rules : [])).slice(0, 64);
+    if (rules.length) x.rules = rules; else delete x.rules;
+    return Object.keys(x).length ? x : null;
+  };
+
   // ---- what a code brings, for the editor's offer -------------------------------------------------
   // Plain sentences with {placeholders}, for t(why, vars): English here, translated where they are shown.
   const describe = (P) => {
@@ -283,6 +306,11 @@ var GZ_XPARTS = globalThis.GZ_XPARTS || (() => {
     const add = (why, vars) => out.push({ why, vars });
     if (x.bg?.shader) add('Draws its background with its own shader.');
     if (x.bg?.layers) add('Layers {n} animated backgrounds.', { n: x.bg.layers.length });
+    if (x.bg?.media) {
+      const m = x.bg.media, host = m.src.startsWith('file:') ? '' : new URL(m.src).hostname;
+      if (host) add({ video: 'Plays a video behind your pages, loaded from {host}.', image: 'Plays an animated picture behind your pages, loaded from {host}.', lottie: 'Plays an animation behind your pages, loaded from {host}.' }[m.type], { host });
+      else add({ video: 'Plays a video behind your pages, from a file that came with it.', image: 'Plays an animated picture behind your pages, from a file that came with it.', lottie: 'Plays an animation behind your pages, from a file that came with it.' }[m.type]);
+    }
     if (x.anim) add('Changes {n} animations.', { n: Object.keys(x.anim).length });
     if (x.fx) add('Plays effects for {n} events.', { n: Object.keys(x.fx).length });
     if (x.cursor) add('Adds a cursor effect.');
@@ -292,9 +320,9 @@ var GZ_XPARTS = globalThis.GZ_XPARTS || (() => {
     return out;
   };
   // How a background kind reads in the offer ("…, and a custom shader background").
-  const KIND_WORD = { shader: 'a custom shader background', layers: 'a layered animated background' };
+  const KIND_WORD = { shader: 'a custom shader background', layers: 'a layered animated background', media: 'a video or animation background' };
 
-  return { BLENDS, MAX_JSON, SHADER_MAX, DEFAULTS, clean, mods, bundle, same, strip, compact, pipe, b64, unb64, deflate, inflate, pack, parse, unpack, hash, areas, stored, fromStored, read, write, describe, KIND_WORD };
+  return { BLENDS, MEDIA, MAX_JSON, SHADER_MAX, DEFAULTS, clean, mods, bundle, over, same, strip, compact, pipe, b64, unb64, deflate, inflate, pack, parse, unpack, hash, areas, stored, fromStored, read, write, describe, KIND_WORD };
 })();
 
 if (typeof module !== 'undefined') module.exports = GZ_XPARTS; else GZ_XPARTS;

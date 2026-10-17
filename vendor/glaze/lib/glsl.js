@@ -197,7 +197,7 @@ var GZ_GLSL = globalThis.GZ_GLSL || (() => {
     for (const m of code.matchAll(/\bgl_\w+/g)) if (m[0] !== 'gl_FragCoord') e(at(m.index), "{name}: write the colour as the result of scene(); other gl_ names are Glaze's or reserved.", { name: m[0] });
     for (const m of code.matchAll(/\b\w*__\w*/g)) e(at(m.index), '{name}: names containing a double underscore are reserved by GLSL.', { name: m[0] });
     for (const r of RESERVED) {
-      const m = code.match(new RegExp(`(?:^|[;{}\\n]\\s*)(?:float|vec[234]|mat[234]|int|bool|void|const\\s+\\w+)\\s+${r}\\b`));
+      const m = code.match(new RegExp(`(?:^|[;{}\\n])[ \\t]*(?:float|vec[234]|mat[234]|int|bool|void|const\\s+\\w+)\\s+${r}\\b`));
       if (m) e(at(m.index + 1), '`{name}` is already provided by Glaze; use it, or rename yours.', { name: r });
     }
     if (!/\bvec4\s+scene\s*\(\s*(?:in\s+)?vec2\s+\w+\s*\)\s*\{/.test(code)) e(0, 'Missing the entry point: `vec4 scene(vec2 uv) { ... }`.');

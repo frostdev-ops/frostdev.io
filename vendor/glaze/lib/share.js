@@ -43,7 +43,7 @@ const GZ_SHARE = (() => {
       if (!clean || !X.same(clean, extra)) fail("This theme has extras Glaze can't put in a code.");
       // Inactive background drafts stay in storage; a code carries only what this Look uses.
       if (clean.x?.bg) {
-        for (const key of ['shader', 'layers']) if (s.bg.kind !== key) delete clean.x.bg[key];
+        for (const key of ['shader', 'layers', 'media']) if (s.bg.kind !== key) delete clean.x.bg[key];
         if (!Object.keys(clean.x.bg).length) delete clean.x.bg;
         if (!Object.keys(clean.x).length) delete clean.x;
       }
@@ -67,7 +67,8 @@ const GZ_SHARE = (() => {
   const fail = (why, vars = {}) => { throw Object.assign(new Error(why.replace(/\{(\w+)\}/g, (_, k) => vars[k])), { why, vars }); };
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const decode = async (code) => {
-    const text = String(code || '').replace(/\s+/g, '');
+    if (typeof code !== 'string' || code.length > 4 * MAX_CODE2) fail('That theme code is damaged.');
+    const text = code.replace(/\s+/g, '');
     const v2 = text.startsWith(PREFIX2);
     if (!v2 && !text.startsWith(PREFIX)) fail("That isn't a Glaze theme code. Codes start with glaze1:");
     const body = text.slice((v2 ? PREFIX2 : PREFIX).length);

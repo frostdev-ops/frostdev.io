@@ -12,6 +12,9 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
   const X = () => (typeof GZ_XPARTS !== 'undefined' ? GZ_XPARTS : require('./lookparts.js'));
   const MX = () => (typeof GZ_MX !== 'undefined' ? GZ_MX : require('./motionx.js'));
   const W = () => (typeof GZ_WIDGETS !== 'undefined' ? GZ_WIDGETS : require('./widgets.js'));
+  // The packs a mod carries are read with lib/media.js; the worker brings it on first use.
+  const MEDIA = () => (typeof GZ_MEDIA !== 'undefined' ? GZ_MEDIA : typeof require === 'function' ? require('./media.js') : (importScripts('media.js'), GZ_MEDIA));
+  const WG = () => (typeof GZ_MODWIDGET !== 'undefined' ? GZ_MODWIDGET : require('./modwidget.js'));
 
   // Files in a bundle, bytes of them all (mod.json and mod.sig too), bytes of .js, bytes of mod.json, a path's characters
   // and folders, the zip itself (the files plus room for headers), and a glazemod1: code's characters.
@@ -247,8 +250,10 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
   };
   const isFile = (files, p, e) => typeof p === 'string' && own(files, p) && ext(p) === e;
   // Slots: tiles and rail widgets drawn from the mod's Worker (a component tree and a canvas), or, for a mod without data
-  // permissions, an HTML file of its own (frame UI). nav and background: null, {} (drawn from the Worker) or { file }.
+  // permissions, an HTML file of its own (frame UI), or, with no code at all, `blocks` Glaze draws itself (lib/modwidget.js).
+  // nav and background: null, {} (drawn from the Worker) or { file }.
   const SLOT_ID = /^[a-z][a-z0-9-]{0,31}$/;
+  const PICTURES = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'];
   const ui = (v, files) => {
     keys(v, ['tiles', 'rail', 'nav', 'background'], 'ui');
     const file = (o, f) => { if (own(o, 'file') && !isFile(files, o.file, 'html')) bad(`${f}.file`); };
@@ -258,11 +263,16 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
       const ids = new Set();
       v[k].forEach((s, i) => {
         const f = `ui.${k}.${i}`, tile = k === 'tiles';
-        keys(s, ['id', 'name', 'file', ...(tile ? ['sizes'] : [])], f, ['id', 'name', ...(tile ? ['sizes'] : [])]);
+        keys(s, ['id', 'name', 'file', 'blocks', ...(tile ? ['sizes'] : [])], f, ['id', 'name', ...(tile ? ['sizes'] : [])]);
         if (typeof s.id !== 'string' || !SLOT_ID.test(s.id) || ids.has(s.id)) bad(`${f}.id`);
         ids.add(s.id);
         if (!line(s.name, 40)) bad(`${f}.name`);
         file(s, f);
+        if (own(s, 'blocks')) {
+          // Pictures are the mod's own files; the blocks must be exactly what the cleaner would keep.
+          const b = own(s, 'file') ? null : WG().blocks(s.blocks);
+          if (!b || !WG().same(b, s.blocks) || WG().images(b).some((p) => !own(files, p) || !PICTURES.includes(ext(p)))) bad(`${f}.blocks`);
+        }
         if (tile && (!Array.isArray(s.sizes) || !s.sizes.length || s.sizes.some((z) => !W().SIZES.includes(z)) || new Set(s.sizes).size !== s.sizes.length)) bad(`${f}.sizes`);
       });
     }
@@ -303,7 +313,8 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
       if (!ok()) bad(f);
     });
   };
-  const MANIFEST = ['glaze', 'name', 'version', 'author', 'permissions', 'parts', 'ui', 'hooks', 'replaces', 'settings'];
+  const hasBlocks = (m) => [...(m.ui?.tiles || []), ...(m.ui?.rail || [])].some((s) => own(s, 'blocks'));
+  const MANIFEST = ['glaze', 'name', 'version', 'author', 'permissions', 'parts', 'ui', 'hooks', 'replaces', 'settings', 'packs'];
   // raw: mod.json as parsed; files: the bundle's { path: bytes }, for the files mod.json names.
   const clean = (raw, files) => {
     keys(raw, MANIFEST, 'mod.json', ['glaze', 'name', 'version', 'author']);
@@ -315,10 +326,22 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
     if (!keyOk(raw.author.key)) bad('author.key');
     if (own(raw, 'permissions')) permissions(raw.permissions);
     if (own(raw, 'parts')) { const p = X().clean(raw.parts); if (!p || !X().same(p, raw.parts)) bad('parts'); }
-    if (own(raw, 'ui')) ui(raw.ui, files);
+    if (own(raw, 'ui')) {
+      ui(raw.ui, files);
+      // A widget's data comes with its permission, declared and explained like any other, and asks for no more than its
+      // blocks show: no network host, which it could do nothing with, and no data it never draws.
+      if (hasBlocks(raw)) {
+        const want = [...new Set([...(raw.ui.tiles || []), ...(raw.ui.rail || [])].flatMap((s) => (own(s, 'blocks') ? WG().needs(s.blocks) : [])))].sort();
+        if (want.join() !== (raw.permissions || []).map((p) => p.id).sort().join()) bad('permissions');
+      }
+    }
     if (own(raw, 'hooks') && !isFile(files, raw.hooks, 'js')) bad('hooks');
     if (own(raw, 'replaces') && (!Array.isArray(raw.replaces) || !raw.replaces.every(replaceOk) || new Set(raw.replaces).size !== raw.replaces.length)) bad('replaces');
     if (own(raw, 'settings')) settings(raw.settings);
+    // Stickers and pets it carries, as lib/media.js cleans them; each file is one of the bundle's.
+    if (own(raw, 'packs')) { const p = MEDIA().packs(raw.packs, (f) => own(files, f)); if (!p || !X().same(p, raw.packs)) bad('packs'); }
+    // A declarative widget is the whole of a mod without code: no hooks and no page of any slot's own.
+    if (hasBlocks(raw) && (own(raw, 'hooks') || [...(raw.ui.tiles || []), ...(raw.ui.rail || []), raw.ui.nav, raw.ui.background].some((s) => s && own(s, 'file')))) bad('ui');
     // A mod that reads personal data never has a page of its own: it has no HTML at all.
     if ((raw.permissions || []).some((p) => DATA.includes(p.id)) && Object.keys(files).some((p) => ext(p) === 'html')) bad('ui');
     return raw;
@@ -496,14 +519,31 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
   // that field, and nothing blocked installs, updates or turns back on. Dev mode is storage.local `modDev: true`, set by
   // the editor's dev mode switch.
   const ID = /^[a-z2-7]{16}$/;
-  const SOURCES = ['file', 'code', 'link', 'gallery', 'dev'];
-  const OPS = ['install', 'list', 'enable', 'disable', 'revoke', 'grant', 'remove', 'clearTrust', 'export'];
+  const SOURCES = ['file', 'code', 'link', 'gallery', 'dev', 'builder'];
+  // A mod channel's read link (lib/modchannel.js), kept on the record of a mod installed from one.
+  const channelOk = (text) => {
+    if (typeof text !== 'string' || text.length > 600) return false;
+    try {
+      const u = new URL(text);
+      return (u.protocol === 'https:' || (u.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname)))
+        && !u.username && !u.password && !u.search && u.pathname.endsWith('/j')
+        && u.hash.startsWith('#1.r.') && canon(u.hash.slice(5), 80);
+    } catch { return false; }
+  };
+  const OPS = ['install', 'list', 'enable', 'disable', 'revoke', 'grant', 'remove', 'clearTrust', 'export', 'dismissOffer', 'replace'];
   const slot = (id) => `mod:${id}`;
+  const replaceSlot = (id) => `modReplace:${id}`;
+  const api = () => (typeof GZ_MODAPI !== 'undefined' ? GZ_MODAPI : require('./modapi.js'));
   const trustSlot = (id) => `modTrust:${id}`;
   const pin = ({ key, version, hash }) => ({ key, version, hash });
   const summary = ({ files, ...r }) => ({ ...r, prompt: prompt(r.manifest) });
   // The broker loads lib/blocklist.js before every decision; a missing module is an error, never an empty list.
   const change = async (m, { local }, { blocked = (r) => GZ_BLOCKLIST.blocked(local, r) } = {}) => {
+    if (m.op === 'dismissOffer') {
+      if (m.zip !== null && (typeof m.zip !== 'string' || m.zip.length > Math.ceil(CAP.archive / 3) * 4)) return { ok: false, error: 'bad' };
+      const offer = (await local.get('modOffer')).modOffer;
+      return { ok: !offer || (offer.zip ?? null) !== m.zip || (m.zip === null && offer.at !== m.at) || await local.remove('modOffer') };
+    }
     const reason = async ({ id, hash, key }) => String((await blocked({ id, hash, key })) || '');
     const index = async () => { const v = (await local.get('mods')).mods; return Array.isArray(v) ? v.filter((x) => typeof x === 'string' && ID.test(x)) : []; };
     const get = async (id) => { const r = (await local.get(slot(id)))[slot(id)]; return isObj(r) && r.id === id && isObj(r.files) ? r : null; };
@@ -515,10 +555,18 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
     }
     if (m.op === 'install') {
       if (typeof m.zip !== 'string' || m.zip.length > Math.ceil(CAP.archive / 3) * 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(m.zip)
-        || typeof m.hash !== 'string' || !SOURCES.includes(m.source)) return { ok: false, error: 'bad' };
+        || typeof m.hash !== 'string' || !SOURCES.includes(m.source) || (m.channel !== undefined && !channelOk(m.channel))) return { ok: false, error: 'bad' };
       let got;
       try { got = await read(unstd(m.zip)); } catch (e) { return { ok: false, error: 'bundle', why: e.why || "That mod file is damaged, or isn't a Glaze mod.", vars: e.vars || {} }; }
       if (got.hash !== m.hash) return { ok: false, error: 'hash' };
+      // Builder saves are local signed widgets, never an imported author's bundle or a followed channel.
+      if (m.source === 'builder' && (!got.signed || !hasBlocks(got.manifest) || m.channel !== undefined
+        || got.key !== (await local.get('modAuthor')).modAuthor?.x)) return { ok: false, error: 'bad' };
+      // 'gallery' (shown as Reviewed) only for the bundle the worker itself fetched from the gallery: the pending offer.
+      if (m.source === 'gallery') {
+        const offer = (await local.get('modOffer')).modOffer;
+        if (!got.signed || offer?.id !== got.id || offer.hash !== m.hash || offer.zip !== m.zip) return { ok: false, error: 'bad' };
+      }
       const before = await get(got.id);
       const p = plan(before, got, { dev: (await local.get('modDev')).modDev === true, blocked: await reason(got), trust: await trust(got.id, before) });
       if (p.action === 'refuse') return { ok: false, error: 'refused', reason: p.reason, ...(p.blocked && { blocked: p.blocked }) };
@@ -530,9 +578,13 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
       else if (Array.isArray(m.grants) && m.grants.every((g) => declared.includes(g)) && new Set(m.grants).size === m.grants.length) grants = Object.fromEntries(m.grants.map((g) => [g, true]));
       else return { ok: false, error: 'grants' };
       const record = { id: got.id, manifest: got.manifest, files: Object.fromEntries(Object.entries(got.files).map(([k, v]) => [k, std(v)])), hash: got.hash,
-        key: got.key, version: got.version, grants, source: m.source, installedAt: before?.installedAt ?? Date.now(), ...(before && { updatedAt: Date.now() }), enabled: before ? before.enabled !== false : true, dev: !got.signed };
+        key: got.key, version: got.version, grants, source: m.source, installedAt: before?.installedAt ?? Date.now(), ...(before && { updatedAt: Date.now() }), enabled: before ? before.enabled !== false : true, dev: !got.signed,
+        ...((m.channel ?? before?.channel) && { channel: m.channel ?? before.channel }) };
       const ids = await index();
-      if (!await local.set({ [slot(got.id)]: record, ...(got.signed && { [trustSlot(got.id)]: pin(got) }), mods: ids.includes(got.id) ? ids : [...ids, got.id] })) return { ok: false, error: 'write' };
+      // An update keeps the replacements the student turned on that the mod still declares; a key it adds starts off.
+      const kept = before ? api().enabled((await local.get(replaceSlot(got.id)))[replaceSlot(got.id)], got.manifest) : [];
+      if (!await local.set({ [slot(got.id)]: record, ...(before && { [replaceSlot(got.id)]: Object.fromEntries(kept.map((k) => [k, true])) }), ...(got.signed && { [trustSlot(got.id)]: pin(got) }), mods: ids.includes(got.id) ? ids : [...ids, got.id] })) return { ok: false, error: 'write' };
+      if (m.source === 'gallery') await local.remove('modOffer');
       return { ok: true, action: p.action, mod: summary(record) };
     }
     if (!OPS.includes(m.op) || typeof m.id !== 'string' || !ID.test(m.id)) return { ok: false, error: 'bad' };
@@ -547,6 +599,13 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
       return put({ enabled: true });
     }
     if (m.op === 'disable') return put({ enabled: false });
+    if (m.op === 'replace') {
+      const set = api().replace(m.set, r.manifest);
+      if (!set) return { ok: false, error: 'bad' };
+      // Merge only the edited keys in the worker's queue, so another switch or editor cannot overwrite them.
+      const on = api().enabled((await local.get(replaceSlot(r.id)))[replaceSlot(r.id)], r.manifest);
+      return { ok: await local.set({ [replaceSlot(r.id)]: { ...Object.fromEntries(on.map((k) => [k, true])), ...set } }) };
+    }
     if (m.op === 'grant') {
       if (typeof m.perm !== 'string' || !(r.manifest.permissions || []).some((p) => p.id === m.perm)) return { ok: false, error: 'bad' };
       return put({ grants: { ...r.grants, [m.perm]: true } });
@@ -560,12 +619,50 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
     if (m.op === 'remove') {
       const kept = await trust(r.id, r);
       if (!await local.set({ ...(kept && { [trustSlot(r.id)]: kept }), mods: (await index()).filter((x) => x !== r.id) })) return { ok: false, error: 'write' };
-      return { ok: await local.remove(slot(r.id)) };
+      return { ok: await local.remove([slot(r.id), `modChannel:${r.id}`, replaceSlot(r.id)]) };
     }
     return { ok: true, zip: std(archive(Object.fromEntries(Object.entries(r.files).map(([k, v]) => [k, unstd(v)])))), name: r.manifest?.name || '' };
   };
 
-  return { CAP, TYPES, DATA, PREFIX, OPS, type, slug, base32, compare, unzip, archive, check, clean, caps, prompt, digest, modId, verify, bundle, read, encode, decode,
+  // ---- the gallery's "Use in Glaze" -------------------------------------------------------------------------------
+  // The worker's one request to the gallery, made on the student's click there (lib/gallery.js): the signed bundle for
+  // exactly that id and hash, with no cookies, no referrer and no redirects, read up to the zip cap. It must verify, be
+  // that id and hash, and not be blocked. → storage.local `modOffer`: { id, hash, zip (base64), at } for the editor's
+  // prompt, or { error, vars, at } with English for t().
+  const GALLERY = 'https://frostdev.io/glaze/mods/api/mods/';
+  const download = async (res, cap) => {
+    if (+res.headers.get('content-length') > cap) { await res.body.cancel().catch(() => {}); tooBig(); }
+    const reader = res.body.getReader(), parts = [];
+    for (let n = 0; ;) {
+      const { done, value } = await reader.read();
+      if (done) return cat(...parts);
+      n += value.length;
+      if (n > cap) { reader.cancel().catch(() => {}); tooBig(); }
+      parts.push(value);
+    }
+  };
+  const fromGallery = async (g, { fetch, blocked }) => {
+    if (!isObj(g) || Object.keys(g).length !== 2 || typeof g.id !== 'string' || !ID.test(g.id) || !canon(g.hash, 32)) fail("That gallery link isn't a Glaze mod.");
+    let res = null;
+    try {
+      res = await fetch(`${GALLERY}${g.id}/${g.hash}.glazemod`, { credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(30000) });
+    } catch { /* below */ }
+    if (!res?.ok || !res.body) fail("Glaze couldn't download that mod from the gallery. Try again later.");
+    const bytes = await download(res, CAP.archive), got = await read(bytes);
+    if (!got.signed) fail("That mod isn't signed by its author, so Glaze won't take it from the gallery.");
+    if (got.id !== g.id || got.hash !== g.hash) fail("That mod isn't the one the gallery listed.");
+    const why = String((await blocked(got)) || '');
+    if (why) fail('Glaze has blocked this mod: {reason}', { reason: why });
+    return { ...got, bytes };
+  };
+  const offer = async (g, env) => {
+    try {
+      const got = await fromGallery(g, env);
+      return { id: got.id, hash: got.hash, zip: std(got.bytes), at: Date.now() };
+    } catch (e) { return { error: e.why || "That mod file is damaged, or isn't a Glaze mod.", vars: e.vars || {}, at: Date.now() }; }
+  };
+
+  return { CAP, TYPES, DATA, PREFIX, OPS, GALLERY, fromGallery, offer, std, type, slug, base32, compare, unzip, archive, check, clean, caps, prompt, digest, modId, verify, bundle, read, encode, decode,
     canSign, makeKey, keyPair, backup, restore, pack, plan, change };
 })();
 

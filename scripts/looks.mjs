@@ -120,7 +120,7 @@ export async function checkCode(code) {
   }
   let got;
   try { got = await SHARE.decode(code); } catch (err) { return { problems: [`Glaze ${GLAZE_VERSION} refuses the code: ${err.message}`], look: null }; }
-  if (!v2 && ['shader', 'layers'].includes(got.bg.kind)) return { problems: ['a glaze1: code cannot use a background that needs Look parts; copy it again from Glaze as a glaze2: code'], look: null };
+  if (!v2 && ['shader', 'layers', 'media'].includes(got.bg.kind)) return { problems: ['a glaze1: code cannot use a background that needs Look parts; copy it again from Glaze as a glaze2: code'], look: null };
   const problems = [];
   // An image address is fetched by whoever wears the Look, so it's only allowed where it's shown.
   if (got.bg.image && got.bg.kind !== 'image') problems.push("the code carries a background image address it doesn't use; clear the image in Glaze and copy the code again");
@@ -145,6 +145,7 @@ const partsProblems = (got) => {
   if (x?.bg?.layers && kind !== 'layers') out.push("the code carries background layers it doesn't use; set the background to layers, or remove them, and copy the code again");
   if (kind === 'shader' && !x?.bg?.shader) out.push('the background is a shader, but the code has no shader');
   if (kind === 'layers' && !x?.bg?.layers) out.push('the background is layers, but the code has no layers');
+  if (kind === 'media' || x?.bg?.media) out.push("the gallery doesn't take video or animation backgrounds yet, because a linked file can change after it is reviewed; share this Look by its code instead");
   return out;
 };
 

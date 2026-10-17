@@ -260,6 +260,7 @@ test('refusals: unsigned, tampered, damaged, invalid, blocked, unlicensed, too m
     'a blocked mod id': [blockedId.bytes, /blocked by Glaze/],
     'a blocked bundle': [blockedHash.bytes, /blocked by Glaze/],
     'a blocked author': [blockedAuthor.bytes, /blocked by Glaze/],
+    'a video background': [(await make(countdown({ parts: { bg: { media: { type: 'video', src: 'https://example.com/a.webm' } } } }))).bytes, /doesn't take mods with a video or animation background/],
     'more text than the review reads': [big.bytes, new RegExp(`the review reads at most ${MOD_TEXT_MAX >> 10} KiB`)],
   };
   for (const [what, [bytes, why]] of Object.entries(cases)) {

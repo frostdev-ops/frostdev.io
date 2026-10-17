@@ -967,6 +967,8 @@ export function gallery({
     const problems = [];
     if (!got.signed) problems.push("only signed mods can be shared here: export it from Glaze's editor, which signs it with your author key (a development copy without mod.sig stays on your computer)");
     if (blockedMod(got)) problems.push('this mod, this bundle or its author is blocked by Glaze');
+    // A linked video or animation can change after the review, so the gallery takes none for now.
+    if (got.manifest.parts?.bg?.media) problems.push("the gallery doesn't take mods with a video or animation background yet, because a linked file can change after it is reviewed; share this mod as a file or link instead");
     if (facts.text > MOD_TEXT_MAX) problems.push(`it has ${Math.ceil(facts.text / 1024)} KiB of code and text; the review reads at most ${MOD_TEXT_MAX >> 10} KiB, so split it or trim it`);
     problems.push(...modConflicts(facts));
     return { problems, got, facts };

@@ -45,9 +45,9 @@ const GZ_SPEC = {
   },
   // colors: the three the gradient, aurora and scenes are painted with; none = the palette's.
   // scene: the three.js background drawn when kind is 'scene'; intensity is its one knob (dim and
-  // blur are for the other kinds). 'shader' and 'layers': the Look's parts (lib/lookparts.js).
+  // blur are for the other kinds). 'shader', 'layers' and 'media': the Look's parts (lib/lookparts.js).
   bg: {
-    kind: ['solid', ['solid', 'gradient', 'image', 'aurora', 'scene', 'shader', 'layers']], image: ['', 'url'], dim: [60, [0, 90]], blur: [0, [0, 20]],
+    kind: ['solid', ['solid', 'gradient', 'image', 'aurora', 'scene', 'shader', 'layers', 'media']], image: ['', 'url'], dim: [60, [0, 90]], blur: [0, [0, 20]],
     colors: [[], 'hexes'], grain: [true, 'bool'],
     // The gradient's shape: style, direction (degrees), blend (100 melts the colors together, 0 is
     // hard bands) and spread (how much of the screen the change of color covers, in %).
