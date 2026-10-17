@@ -97,9 +97,10 @@ const preview = async (file) => {
   return fits('width') && fits('height') ? '' : `is ${info.width}×${info.height}; previews are ${PREVIEW_SIZE.width.join('–')} wide and ${PREVIEW_SIZE.height.join('–')} tall`;
 };
 
-// A shader the way two copies of it agree: no comments, indentation or blank lines (comments are stripped at encode, but
-// a code made by hand may keep them, and a copy must not become a different Look by that).
-const shaderKey = (src) => src.replace(/\r\n?/g, '\n').replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, ' ').split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n');
+// Ignore comments and whitespace without merging operators or moving a token into a #define's body.
+const shaderKey = (src) => src.replace(/\r\n?/g, '\n').replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (s) => s.replace(/[^\n]/g, ' '))
+  .split('\n').map((l) => l.match(/[A-Za-z_]\w*|(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?|\+\+|--|[+*/%=!<>-]=|&&|\|\||\^\^|<<|>>|\S/g) || [])
+  .filter((l) => l.length).map((l) => l.join(' ') + (l[0] === '#' ? '\n' : '')).join(' ');
 const sorted = (_, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) : v);
 // What makes a Look this Look, whatever its code looks like: everything Glaze decodes, in a fixed order. A glaze1 code has
 // no parts, and the decoder's `parts: null` is left out, so a glaze1 Look keeps the identity it had before parts existed.
@@ -119,6 +120,7 @@ export async function checkCode(code) {
   }
   let got;
   try { got = await SHARE.decode(code); } catch (err) { return { problems: [`Glaze ${GLAZE_VERSION} refuses the code: ${err.message}`], look: null }; }
+  if (!v2 && ['shader', 'layers'].includes(got.bg.kind)) return { problems: ['a glaze1: code cannot use a background that needs Look parts; copy it again from Glaze as a glaze2: code'], look: null };
   const problems = [];
   // An image address is fetched by whoever wears the Look, so it's only allowed where it's shown.
   if (got.bg.image && got.bg.kind !== 'image') problems.push("the code carries a background image address it doesn't use; clear the image in Glaze and copy the code again");
@@ -233,7 +235,7 @@ function describeParts(x, got, bgKind) {
   }
   if (x.rules) {
     const count = (key) => byKey(x.rules.reduce((o, r) => ({ ...o, [r[key]]: (o[r[key]] || 0) + 1 }), {}));
-    out.rules = { count: x.rules.length, byAction: count('do'), byPart: count('p') };
+    out.rules = { count: x.rules.length, byAction: count('do'), byPart: count('p'), items: x.rules.map(({ t, ...r }) => r) };
     const labels = x.rules.filter((r) => r.t).map((r) => ({ part: r.p, text: r.t }));
     if (labels.length) text.labels = labels;
   }
