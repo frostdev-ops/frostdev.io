@@ -221,6 +221,9 @@ const DATA_WORDS = { courses: ['Courses', 'Reads the list of your courses.'], to
 export const permissionWords = (id) => (DATA_WORDS[id] ? { label: DATA_WORDS[id][0], means: DATA_WORDS[id][1] }
   : { label: id.slice(8), means: `Can send data to ${id.slice(8)} and get data from it.` });
 
+// Glaze's own author key: mods its maintainers sign with it are Glaze's own, so their credit of Glaze is accurate.
+export const GLAZE_KEY = '1OWA68PTRmSTaMYsrsaLxztxlGQSBFkijdXKpwC0xVw';
+
 export const MOD_POLICY = `You review mods submitted to the Glaze Mods gallery on frostdev.io. Glaze is a browser extension that restyles school course sites (Blackboard, Canvas, Moodle) for students, many of them minors. A mod is a signed bundle: mod.json (its manifest), optional Look parts (data Glaze itself interprets: a shader or layered background, animations, event effects, a cursor effect, a navigation layout, rules that hide, move, restyle or relabel parts of school pages), optional HTML and CSS for a page of its own, optional pictures and fonts, and optional JavaScript. A published mod is offered to students marked "Reviewed" for exactly this bundle, and your review is the only check before that. Be very cautious: when in any doubt, do not accept.
 
 How mods run (facts about Glaze, not claims from the submission):
@@ -228,6 +231,7 @@ How mods run (facts about Glaze, not claims from the submission):
   - "courses": the student's course list; "todo": their To Do items, due dates and schedule; "grades": their grades and GPA. These are personal data.
   - "network:<host>": glaze.fetch to that one host, without cookies or referrer. It is the only way data is meant to leave the device.
 - A mod with a page of its own (an HTML file for a tile, a side widget, the navigation or the background; "frame") never has personal-data permissions, but its page can still leak to other sites (link preconnect, prefetch, images, fonts and styles from other hosts) and post messages to the school page around it.
+- "official" in the facts is computed by the gallery from the bundle's signature; the submitter can't set it. true means Glaze's own maintainers signed the mod with Glaze's author key, so a credit or name presenting it as Glaze's is accurate, not impersonation; it exempts the mod from nothing else. false means it is not from Glaze: presenting it as made, published or endorsed by Glaze is impersonation (rule 7).
 - Needing no permission: settings, theme colors, the page kind and course id, storage on the device (1 MiB), temporary Look overrides, card badges (with courses), navigation items, command palette entries, page rules, effects.
 
 Decline, or answer "human" when it is a judgment call a person should make, if any of these holds:
@@ -301,7 +305,7 @@ export const modFacts = (got) => {
     ...(data.length && hosts.length ? [`This mod could send your ${data.map((d) => DATA_WORDS[d][0].toLowerCase()).join(', ')} to ${hosts.join(', ')}.`] : []),
     ...(frame ? ['It has a page of its own, which can contact other sites.'] : []),
   ];
-  return { id: got.id, hash: got.hash, name: m.name, version: got.version, credit: m.author.name, key: got.key, permissions, data, hosts, frame, code: !!got.manifest.hooks || frame, adds, warnings, files, size, text, media };
+  return { id: got.id, hash: got.hash, name: m.name, version: got.version, credit: m.author.name, key: got.key, official: got.key === GLAZE_KEY, permissions, data, hosts, frame, code: !!got.manifest.hooks || frame, adds, warnings, files, size, text, media };
 };
 
 // The reviewer's user message: the facts, then every text file whole, between lines with a marker the submitter can't know.

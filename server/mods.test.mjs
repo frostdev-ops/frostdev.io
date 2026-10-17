@@ -12,7 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { after, afterEach, before, test } from 'node:test';
-import { MOD_BODY_MAX, MOD_POLICY, MOD_TEXT_MAX, canon, gallery, modFacts, modReviewInput } from './gallery.mjs';
+import { GLAZE_KEY, MOD_BODY_MAX, MOD_POLICY, MOD_TEXT_MAX, canon, gallery, modFacts, modReviewInput } from './gallery.mjs';
 
 const MB = createRequire(path.join(process.cwd(), 'vendor/glaze/'))('./lib/modbundle.js');
 const ORIGIN = 'https://frostdev.io';
@@ -874,6 +874,15 @@ test('the review input: facts, every text file whole between unguessable markers
   assert.ok(!a.includes('PNG'), 'no picture bytes');
   assert.ok(a.includes('"path": "pics/leaf.png"'));
   assert.equal((a.match(/^=====BEGIN FILE/gm) || []).length, 3);
+});
+
+test('the reviewer is told which mods Glaze itself signed, from the signature alone', async () => {
+  const m = await make();
+  assert.equal(modFacts(m).official, false);
+  const own = { ...m, key: GLAZE_KEY };
+  assert.equal(modFacts(own).official, true);
+  assert.ok(modReviewInput(own, modFacts(own)).includes('"official": true'));
+  for (const s of ['"official" in the facts is computed by the gallery', 'not impersonation', 'exempts the mod from nothing else']) assert.ok(MOD_POLICY.includes(s), s);
 });
 
 test('the reviewer\'s policy is very cautious and names each rule', () => {
