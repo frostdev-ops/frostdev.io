@@ -479,7 +479,9 @@ The reviewers are told only that there is a file (`summarize()`'s `background.fi
 the reviews alone: every automated decision goes to a person, whose mail says how to copy the file
 off the server (`docker cp`) and see the whole Look in Glaze. The file is written as `media/<hash>` next to the database
 in the same transaction as the Look's row (a `.tmp` and a rename; a failure gives the day's submission back, and the next
-start removes `.tmp` files and files no published or pending Look names). Declining or removing a Look deletes its file
+start removes `.tmp` files and files no published or pending Look names). Both galleries together keep at most 1 GiB
+of files; the write lock serializes this check, a shared hash counts once, and a capacity refusal returns 503 and gives
+the day back. An atomic temporary write may briefly need one additional upload’s space. Declining or removing a Look deletes its file
 unless another published or pending Look uses it. `GET media/<hash>` checks a file once per process (again only when its
 size or mtime changes) and streams it from disk; a request with a query string is a 404, so it can't be used to miss
 Cloudflare's cache.

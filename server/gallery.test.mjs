@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, truncateSync, utimesSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import http from 'node:http';
 import net from 'node:net';
@@ -1182,4 +1182,33 @@ test('media: /submit takes a 12 MiB video as base64 and no more, in Node and in 
   assert.ok(over instanceof Error || over.status === 413);
   const check = await fetch(`${base}/check`, { method: 'POST', headers: { origin: ORIGIN, 'content-type': 'application/json' }, body: JSON.stringify({ code: 'x', media: 'A'.repeat(BODY_MAX) }) }).catch((e) => e);
   assert.ok(check instanceof Error || check.status === 413);
+});
+
+
+test('media: the combined file budget refuses uploads without using quota and counts shared files once', async () => {
+  const dir = await startMedia();
+  const cap = 1024 ** 3;
+  const held = path.join(path.dirname(dir), 'mods', `${'a'.repeat(43)}.glazemod`);
+  writeFileSync(held, '');
+  truncateSync(held, cap);
+  const sub = await mediaLook(lottie('budget'));
+  const who = fresh();
+  const full = await post('/submit', sub, who);
+  assert.equal(full.status, 503);
+  assert.match(full.body.error, /room/);
+  assert.equal(calls.decisions.length + calls.safety.length + calls.chat.length, 0, 'a full store cannot trigger repeat free reviews');
+  assert.equal(quotaUsed(), 0);
+  assert.deepEqual(readdirSync(dir), []);
+  assert.equal(g.list().length, 0);
+  const bytes = M.check(new Uint8Array(lottie('budget')), 'bg').bytes.length;
+  truncateSync(held, cap - bytes);
+  const a = await post('/submit', sub, who);
+  assert.equal(a.body.outcome, 'pending', 'a capacity refusal can be retried');
+  const b = await post('/submit', await mediaLook(lottie('budget')), fresh());
+  assert.equal(b.body.outcome, 'pending', 'a shared hash takes no extra room');
+  const before = quotaUsed();
+  const c = await post('/submit', await mediaLook(lottie('another')), fresh());
+  assert.equal(c.status, 503);
+  assert.equal(quotaUsed(), before);
+  assert.deepEqual(readdirSync(dir), [await hashOf(lottie('budget'))]);
 });

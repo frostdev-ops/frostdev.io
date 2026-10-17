@@ -59,6 +59,8 @@ export const BODY_MAX = 22 * 1024;
 // client_max_body_size for /glaze/looks/api/submit says the same.
 const MEDIA = createRequire(path.join(process.cwd(), 'vendor/glaze/'))('./lib/media.js');
 export const SUBMIT_MAX = BODY_MAX + Math.ceil(MEDIA.LIMIT.bg.video / 3) * 4;
+// Pending files can wait indefinitely: daily submission quotas alone do not bound retained disk use.
+const STORED_MAX = 1024 ** 3;
 const COOKIE = 'gz_gallery';
 const COOKIE_PATH = '/glaze/looks/api';
 // One review per UTC day per cookie, and per client network (an IPv4 address or an IPv6 /64).
@@ -598,6 +600,16 @@ export function gallery({
     verified.set(hash, { size: st.size, mtime: st.mtimeMs, mime: got.mime });
     return { file, size: st.size, mime: got.mime };
   };
+  // Called under the write lock before either upload: count retained files across both galleries, replacing a shared
+  // hash only once. The atomic temporary write may need one extra upload's worth of space until its rename.
+  const checkStorage = (bytes, target) => {
+    let size = bytes;
+    for (const dir of [bundleDir, mediaDir]) for (const name of readdirSync(dir)) {
+      const f = path.join(dir, name);
+      if (f !== target) size += statSync(f).size;
+    }
+    if (size > STORED_MAX) throw fail(503, 'The gallery has no room for more files right now; nothing was used up. Try again later.');
+  };
   // The signed mod blocklist as published (its text), or null.
   const blocklist = () => { const r = q.meta.get('blocklist'); return r ? Buffer.from(r.v).toString('utf8') : null; };
   const blocklistSeq = () => { try { return JSON.parse(blocklist()).list.seq; } catch { return 0; } };
@@ -946,6 +958,7 @@ export function gallery({
       q.expiredReviews.run(t);
       const full = keys.find(([k, key, max]) => (q.used.get(k, key, day)?.n || 0) >= max);
       if (!full) {
+        if (media) checkStorage(media.bytes.length, mediaFile(media.hash));
         // Five minutes outlives both review deadlines; a crashed process cannot hold a name forever.
         q.reserve.run(reservation, body.name.toLowerCase(), fingerprint, t + 5 * 60e3);
         for (const [k, key] of keys) q.take.run(k, key, day);
@@ -1005,7 +1018,7 @@ export function gallery({
       const tmp = media && path.join(mediaDir, `${crypto.randomUUID()}.tmp`);
       try {
         tx(() => {
-          if (media) { writeFileSync(tmp, media.bytes); renameSync(tmp, mediaFile(media.hash)); }
+          if (media) { checkStorage(media.bytes.length, mediaFile(media.hash)); writeFileSync(tmp, media.bytes); renameSync(tmp, mediaFile(media.hash)); }
           q.insert.run(id, body.name, body.credit, day, JSON.stringify(kept), body.code, fingerprint, JSON.stringify(described), status, JSON.stringify(decision), '', sha(token), status === 'pending' ? 1 : 0, t, media?.hash || '');
         });
       } catch (e) {
@@ -1101,6 +1114,7 @@ export function gallery({
         const full = keys.find(([k, key, max]) => (q.used.get(k, key, day)?.n || 0) >= max);
         if (full) return { over: full[0] };
         for (const [k, key] of keys) q.take.run(k, key, day);
+        checkStorage(bytes.length, bundleFile(facts.hash));
         writeFileSync(tmp, bytes);
         renameSync(tmp, bundleFile(facts.hash));
         q.modInsert.run(facts.id, facts.hash, facts.version, facts.name, facts.credit, facts.key,

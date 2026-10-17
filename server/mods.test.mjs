@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, truncateSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import { createRequire } from 'node:module';
 import net from 'node:net';
@@ -948,4 +948,22 @@ test('nginx: the blocklist and published mods are GET only and anonymous; upload
   assert.match(up, /proxy_set_header X-Forwarded-For "";/);
   assert.match(up, /proxy_pass http:\/\/127\.0\.0\.1:8788;/);
   for (const page of ['/glaze/mods', '/glaze/mods/submit']) assert.ok(conf.includes(`location ~ ^${page}/?$ {`), page);
+});
+
+
+test('mods and Look media share the storage budget and a capacity refusal restores quota', async () => {
+  await start();
+  const held = path.join(dir, 'media', 'a'.repeat(43));
+  writeFileSync(held, '');
+  truncateSync(held, 1024 ** 3);
+  const m = await make();
+  const who = fresh();
+  const full = await submit(m.bytes, who);
+  assert.equal(full.status, 503);
+  assert.match(full.body.error, /room/);
+  assert.equal(modQuota(), 0);
+  assert.equal(row(m.hash), undefined);
+  assert.deepEqual(readdirSync(path.join(dir, 'mods')), []);
+  rmSync(held);
+  assert.equal((await submit(m.bytes, who)).status, 202);
 });
