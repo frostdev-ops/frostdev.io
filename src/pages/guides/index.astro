@@ -1,5 +1,6 @@
 ---
 import MarketingLayout from '../../layouts/MarketingLayout.astro';
+import type { MarkdownInstance } from 'astro';
 import '../../styles/guides.css';
 
 const guides = [
@@ -11,6 +12,11 @@ const guides = [
   { project: 'Glaze', slug: 'glaze-safari', title: 'Make Blackboard, Canvas and Moodle yours in Safari.', description: 'Install the Mac app, shape glass and frost, choose a pet, and set up your school workspace.', image: 'glaze-preview.webp', duration: '15 min', topics: ['Safari setup', 'Surfaces & pets', 'Study tools'] },
   { project: 'Glaze', slug: 'glaze-chrome', title: 'Make your school site yours in Chrome or Firefox.', description: 'Set up Chrome or try the Firefox preview, then shape surfaces, choose a pet and arrange your workspace.', image: 'glaze-editor-3.0.0.webp', duration: '15 min', topics: ['Chrome & Firefox', 'Surfaces & pets', 'Study tools'] },
 ];
+// Glaze's reference docs (src/pages/guides/glaze-[doc].astro), getting started first, building it last.
+const order = ['install', 'features', 'privacy', 'mods-api', 'mods-widgets', 'relay', 'development', 'firefox-android'];
+const docs = Object.entries(import.meta.glob<MarkdownInstance<{ title: string; description: string }>>('../../content/glaze-docs/*.md', { eager: true }))
+  .map(([file, doc]) => ({ slug: file.replace(/^.*\/|\.md$/g, ''), ...doc.frontmatter }))
+  .sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.slug));
 const projects = [...new Set(guides.map((guide) => guide.project))];
 const isLogo = (project: string) => project === 'Frostsim' || project === 'Loothing';
 ---
@@ -42,6 +48,10 @@ const isLogo = (project: string) => project === 'Frostsim' || project === 'Looth
         </a>
       ))}
     </div>
+    <section id="glaze-docs" class="guides-docs">
+      <div class="guides-collection-heading"><h2>Glaze reference</h2><span>Also on <a href="https://github.com/frostdev-ops/glaze/wiki">GitHub's wiki</a></span></div>
+      <ul>{docs.map((doc) => <li><a href={`/guides/glaze-${doc.slug}`}>{doc.title}</a><span>{doc.description}</span></li>)}</ul>
+    </section>
     <section class="guides-hub-help"><div><p class="guide-eyebrow">A good guide keeps growing</p><h2>Something unclear?</h2><p>These guides follow the projects’ documentation. Check the linked references if your installed version looks different, or tell us which step needs a closer look.</p></div><a href="mailto:admin@frostdev.io">Help improve a guide <span aria-hidden="true">↗</span></a></section>
   </div>
 </MarketingLayout>
