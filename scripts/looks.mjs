@@ -145,8 +145,17 @@ const partsProblems = (got) => {
   if (x?.bg?.layers && kind !== 'layers') out.push("the code carries background layers it doesn't use; set the background to layers, or remove them, and copy the code again");
   if (kind === 'shader' && !x?.bg?.shader) out.push('the background is a shader, but the code has no shader');
   if (kind === 'layers' && !x?.bg?.layers) out.push('the background is layers, but the code has no layers');
-  if (kind === 'media' || x?.bg?.media) out.push("the gallery doesn't take video or animation backgrounds yet, because a linked file can change after it is reviewed; share this Look by its code instead");
+  // A video or animation background must be a file (file:<hash>), which is submitted with the Look and served by the gallery
+  // exactly as reviewed; a linked one could change after its review.
+  if (x?.bg?.media && kind !== 'media') out.push("the code carries a video or animation background it doesn't use; set the background to it, or remove it, and copy the code again");
+  if (kind === 'media' && !x?.bg?.media) out.push('the background is a video or animation, but the code has none');
+  if (x?.bg?.media && !x.bg.media.src.startsWith('file:')) out.push("the gallery doesn't take a linked video or animation background, because a linked file can change after it is reviewed; in Glaze's editor choose the file from your computer instead of a link, copy the code again and add the file here");
   return out;
+};
+// The file a gallery Look's background names ({ type, hash }), or null: what the submit page must send with the code.
+export const mediaOf = (got) => {
+  const m = got?.bg?.kind === 'media' ? got.parts?.x?.bg?.media : null;
+  return m?.src.startsWith('file:') ? { type: m.type, hash: m.src.slice(5) } : null;
 };
 
 // A name, a community credit (when given) and tags, the tags checked against the decoded code. partial: check only
@@ -200,6 +209,11 @@ function describeParts(x, got, bgKind) {
     out.background = { kind: 'shader', bytes: src.length, lines: src.split('\n').length, estimatedCost: GLSL.estimate(src), costLimit: GLSL.COST_LIMIT, key: hash12(shaderKey(src)) };
     animated = /\buTime\b/.test(src);
     live = { kind: 'shader', src };
+  } else if (bgKind === 'media' && x.bg?.media) {
+    // The file is the Look's own (its hash is the key, as a shader's is); what it shows only a person can judge.
+    const m = { ...XPARTS.DEFAULTS.media, ...x.bg.media };
+    out.background = { kind: 'media', type: m.type, fit: m.fit, dim: m.dim, loop: m.loop, key: m.src };
+    animated = true;
   } else if (bgKind === 'layers' && x.bg?.layers) {
     const layers = x.bg.layers.map((l) => ({ ...XPARTS.DEFAULTS.layer[l.k], ...l, ...(l.c && { c: l.c.map(ink) }) }));
     out.background = { kind: 'layers', layers, key: hash12(JSON.stringify(layers.map(({ c, ...rest }) => rest))) };
@@ -274,6 +288,8 @@ export function describe(got) {
     },
     contrast: GZ_CONTRAST(got.colors).map(({ label, min, ratio, pass }) => ({ label, min, ratio: Math.round(ratio * 100) / 100, pass })),
     ...(more && { parts: more.parts, ...(more.live && { live: more.live }), ...(more.text && { partsText: more.text }) }),
+    // A file background: what the cards draw from the gallery's media route (server/gallery.mjs).
+    ...(bgKind === 'media' && mediaOf(got) && { media: { ...mediaOf(got), fit: more.parts.background.fit, dim: more.parts.background.dim } }),
   };
 }
 
@@ -299,7 +315,7 @@ export function distance(a, b) {
   const fontGap = a.font?.id === b.font?.id ? 0 : a.font?.family === b.font?.family ? 5 : 10;
   // A shader or a layer stack is a background of its own: another one is as different as another kind of background, and
   // the same one with other colors is only a recolor (half the background colors' difference, as for a gradient).
-  const custom = ['shader', 'layers'].includes(a.bg.kind);
+  const custom = ['shader', 'layers', 'media'].includes(a.bg.kind);
   const bgGap = a.bg.kind !== b.bg.kind || (custom && a.parts?.background?.key !== b.parts?.background?.key) ? 10
     : (a.bg.kind === 'scene' && a.bg.scene !== b.bg.scene) || (a.bg.kind === 'gradient' && a.bg.style !== b.bg.style) ? 5
       : a.bg.kind === 'solid' ? 0 : mean(a.bg.colors.map((c, i) => delta(c, b.bg.colors[i]))) / 2;
@@ -348,6 +364,8 @@ export async function loadLooks(entries = 'src/data/looks', previews = 'public/p
     if (typeof author !== 'string' || !HANDLE.test(author)) bad('author must be a GitHub username');
     const day = typeof created === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(created) ? new Date(`${created}T00:00:00Z`) : null;
     if (!day || Number.isNaN(+day) || day.toISOString().slice(0, 10) !== created || +day > Date.now() + 864e5) bad('created must be a real date (YYYY-MM-DD), not in the future');
+    // A curated entry is a static file in this repository, with no media route to serve a background file from.
+    if (mediaOf(got)) bad('a curated Look cannot have a video or animation background file; submit it through the gallery instead');
     const described = got && !problems.length ? describe(got) : null;
 
     // Screenshots are optional: the live preview is drawn from the code.

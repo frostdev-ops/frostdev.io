@@ -3,14 +3,15 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import http from 'node:http';
 import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { after, afterEach, before, test } from 'node:test';
 import zlib from 'node:zlib';
-import { BANDS, BLOCKLIST_MAX, BODY_MAX, ESCALATION_POLICY, QUESTIONS, SAFETY_QUESTIONS, SAFETY_QUESTIONS_PARTS, canon, checkBlocklist, cleanReason, gallery, mailMessage, networkOf, summarize } from './gallery.mjs';
+import { BANDS, BLOCKLIST_MAX, BODY_MAX, SUBMIT_MAX, ESCALATION_POLICY, QUESTIONS, SAFETY_QUESTIONS, SAFETY_QUESTIONS_PARTS, canon, checkBlocklist, cleanReason, gallery, mailMessage, networkOf, summarize } from './gallery.mjs';
 import * as L from '../scripts/looks.mjs';
 
 const ORIGIN = 'https://frostdev.io';
@@ -679,7 +680,7 @@ for (const [label, mk, pattern] of [
   ['layers the background does not use', () => code2({ bg: { layers: [{ k: 'noise' }] } }, { kind: 'scene' }), /background layers it doesn't use/],
   ['a shader background with no shader', () => code2({ cursor: { kind: 'trail' } }, { kind: 'shader' }), /the background is a shader, but the code has no shader/],
   ['a layers background with no layers', () => code2({ cursor: { kind: 'trail' } }, { kind: 'layers' }), /the background is layers, but the code has no layers/],
-  ['a video background (a linked file can change after review)', () => code2({ bg: { media: { type: 'video', src: 'https://example.com/a.webm' } } }, { kind: 'media' }), /doesn't take video or animation backgrounds/],
+  ['a video background (a linked file can change after review)', () => code2({ bg: { media: { type: 'video', src: 'https://example.com/a.webm' } } }, { kind: 'media' }), /doesn't take a linked video or animation background/],
   ['a shader without scene()', () => shaderCode('void main() { }'), /Glaze .* refuses the code.*x\.bg/],
   ['a shader with #extension', () => shaderCode(`#extension GL_OES_standard_derivatives : enable\n${SHADER}`), /refuses the code.*x\.bg/],
   ['a shader with its own uniform', () => shaderCode(`uniform float k;\n${SHADER}`), /refuses the code.*x\.bg/],
@@ -1036,4 +1037,141 @@ test('blocklist: nginx passes GET alone to the gallery, with a tiny body cap and
   assert.doesNotMatch(loc, /proxy_set_header X-Real-IP \$remote_addr/);
   // The looks API keeps its own location, and its body cap.
   assert.match(conf, /location \^~ \/glaze\/looks\/api\/ \{[^}]*client_max_body_size 22k;/);
+});
+
+// ---- Looks with a background file (file:<hash>) ----------------------------------------------------------------------
+const M = createRequire(import.meta.url)('../vendor/glaze/lib/media.js');
+// A small Lottie animation (Glaze's own test fixture), and one more with its own name, so each makes another file.
+const lottie = (nm = 'slide') => Buffer.from(JSON.stringify({ v: '5.7.0', fr: 30, ip: 0, op: 60, w: 200, h: 120, nm, ddd: 0, assets: [], markers: [], layers: [{ ddd: 0, ind: 1, ty: 4, nm: 'box', sr: 1, ao: 0, ip: 0, op: 60, st: 0, bm: 0, ks: { o: { a: 0, k: 100 }, r: { a: 0, k: 0 }, p: { a: 1, k: [{ t: 0, s: [40, 60, 0], i: { x: 0.5, y: 1 }, o: { x: 0.5, y: 0 } }, { t: 60, s: [160, 60, 0] }] }, a: { a: 0, k: [0, 0, 0] }, s: { a: 0, k: [100, 100, 100] } }, shapes: [{ ty: 'gr', nm: 'g', it: [{ ty: 'rc', d: 1, s: { a: 0, k: [40, 40] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 6 } }, { ty: 'fl', c: { a: 0, k: [1, 0, 0, 1] }, o: { a: 0, k: 100 }, r: 1 }, { ty: 'tr', p: { a: 0, k: [0, 0] }, a: { a: 0, k: [0, 0] }, s: { a: 0, k: [100, 100] }, r: { a: 0, k: 0 }, o: { a: 0, k: 100 } }] }] }] }));
+const hashOf = async (b) => M.sha(M.check(new Uint8Array(b), 'bg').bytes);
+const mediaLook = async (file = lottie(), type = 'lottie') => look({ code: code2({ bg: { media: { type, src: `file:${await hashOf(file)}` } } }, { kind: 'media' }), media: file.toString('base64') });
+// Each of these tests has a directory of its own, so the media/ next to its database is its own too.
+const startMedia = async () => { const dir = mkdtempSync(path.join(tmp, 'm-')); await start({ db: path.join(dir, 'g.db') }); return path.join(dir, 'media'); };
+const media = (h, init) => fetch(`${base}/media/${h}`, init);
+
+test('media: the check says a file is needed; a submission without it, or with another, uses nothing up', async () => {
+  const dir = await startMedia();
+  const sub = await mediaLook();
+  const h = await hashOf(lottie());
+  const c = await post('/check', { code: sub.code });
+  assert.deepEqual(c.body.problems, []);
+  assert.deepEqual(c.body.look.media, { type: 'lottie', hash: h, fit: 'cover', dim: 40 });
+  assert.equal(c.body.look.animated, true);
+  for (const [why, media, pattern] of [
+    ['no file', undefined, /has a background file \(a Lottie animation\): add the same file/],
+    ['another file', lottie('other').toString('base64'), /isn't the one this code names/],
+    ['not a Lottie file', Buffer.from('{"nope":1}').toString('base64'), /can't play that background file as a Lottie animation/],
+    ['not base64', 'not base64!', /didn't arrive whole/],
+    ['over the Lottie limit', 'A'.repeat(Math.ceil(M.LIMIT.bg.lottie / 3) * 4 + 4), /too big for a Lottie animation \(the most is 1 MiB\)/],
+  ]) {
+    const r = await post('/submit', { ...sub, media }, fresh());
+    assert.equal(r.status, 422, why);
+    assert.ok(r.body.problems.some((p) => pattern.test(p)), `${why}: ${r.body.problems}`);
+  }
+  // A file the code doesn't use is refused too.
+  const extra = await post('/submit', look({ media: lottie().toString('base64') }), fresh());
+  assert.ok(extra.body.problems.some((p) => /doesn't name a file for its background/.test(p)));
+  // A video's hash with a Lottie file: the type must be the declared one.
+  const typed = await post('/submit', { ...sub, code: code2({ bg: { media: { type: 'video', src: `file:${h}` } } }, { kind: 'media' }) }, fresh());
+  assert.ok(typed.body.problems.some((p) => /as a video/.test(p)));
+  assert.equal(calls.decisions.length + calls.safety.length + calls.chat.length, 0);
+  assert.equal(quotaUsed(), 0);
+  assert.deepEqual(readdirSync(dir), []);
+});
+
+test('media: an accepted Look with a file goes to a person, who sees how to get the file; it is served only once published', async () => {
+  const dir = await startMedia();
+  const sub = await mediaLook();
+  const h = await hashOf(lottie());
+  const r = await post('/submit', sub, fresh());
+  assert.equal(r.status, 200);
+  assert.equal(r.body.outcome, 'pending', 'the first review accepted it, and a person decides');
+  assert.equal(calls.chat.length, 0);
+  // The reviewers saw that it has a file, never the file.
+  const seen = JSON.stringify(calls.decisions[0].body.state.submission);
+  assert.match(seen, /a video or animation file the reviewers cannot see/);
+  assert.ok(!seen.includes(h) && !seen.includes('slide'));
+  assert.deepEqual(readdirSync(dir), [h]);
+  await waitFor(() => mails.length === 1);
+  for (const part of ['Its background is a video or animation file, which a person always checks.', 'lottie file that no reviewer saw', `docker cp glaze-gallery:${path.join(dir, h)} .`]) assert.ok(mails[0].includes(part), part);
+  assert.ok(mails[0].split('\r\n').every((line) => line.length <= 998));
+  assert.equal((await media(h)).status, 404, 'not while pending');
+  assert.ok(g.decide(r.body.id, 'published'));
+  const got = await media(h);
+  assert.equal(got.status, 200);
+  const body = new Uint8Array(await got.arrayBuffer());
+  assert.equal(await M.sha(body), h, 'exactly the cleaned file');
+  for (const [k, v] of [['content-type', 'application/json'], ['cache-control', 'public, max-age=31536000, immutable'], ['etag', `"${h}"`], ['x-content-type-options', 'nosniff'], ['content-disposition', 'attachment'], ['set-cookie', null], ['access-control-allow-origin', null]]) assert.equal(got.headers.get(k), v, k);
+  assert.equal((await media(h, { headers: { 'if-none-match': `"${h}"` } })).status, 304);
+  const head = await media(h, { method: 'HEAD' });
+  assert.equal(head.status, 200);
+  assert.equal(head.headers.get('content-length'), String(body.length));
+  assert.equal((await media(h, { method: 'POST' })).status, 405);
+  for (const bad of ['a'.repeat(43), `${h}x`, '..%2Fg.db', h.slice(1)]) assert.equal((await media(bad)).status, 404, bad);
+  // The listing gives the cards what they draw.
+  const { looks } = await (await fetch(`${base}/looks`)).json();
+  assert.equal(looks[0].media.hash, h);
+  // A file changed on disk is not served.
+  writeFileSync(path.join(dir, h), '{"v":"5.7.0"}');
+  assert.equal((await media(h)).status, 404);
+});
+
+test('media: taking a Look down stops serving its file unless another published Look uses it; a review decline keeps nothing', async () => {
+  const dir = await startMedia();
+  const file = lottie('shared');
+  const h = await hashOf(file);
+  const one = await post('/submit', await mediaLook(file), fresh());
+  // The same file under another Look (another palette, so another code).
+  const two = await post('/submit', await mediaLook(file), fresh());
+  assert.ok(g.decide(one.body.id, 'published') && g.decide(two.body.id, 'published'));
+  assert.ok(g.decide(one.body.id, 'removed'));
+  assert.equal((await media(h)).status, 200, 'the other Look still uses it');
+  assert.ok(g.decide(two.body.id, 'removed'));
+  assert.equal((await media(h)).status, 404);
+  assert.deepEqual(readdirSync(dir), [], 'nothing uses it, so it is gone');
+  // A person's decline drops its file too.
+  const three = await post('/submit', await mediaLook(lottie('declined')), fresh());
+  assert.ok(g.decide(three.body.id, 'declined', 'No.'));
+  assert.deepEqual(readdirSync(dir), []);
+  // A review that declines it stores no file at all.
+  plan.decisions = decisionSays({ quality: 0.5 });
+  const four = await post('/submit', await mediaLook(lottie('poor')), fresh());
+  assert.equal(four.body.outcome, 'declined');
+  assert.deepEqual(readdirSync(dir), []);
+});
+
+test('media: a failed write keeps no file and gives the day back; startup removes leftovers', async () => {
+  const dir = await startMedia();
+  const sub = await mediaLook(lottie('crash'));
+  const h = await hashOf(lottie('crash'));
+  // A directory where the file goes: the rename fails after the review.
+  mkdirSync(path.join(dir, h));
+  const r = await post('/submit', sub, fresh());
+  assert.equal(r.status, 500);
+  assert.equal(quotaUsed(), 0, 'the submission was given back');
+  assert.equal(g.db.prepare('SELECT COUNT(*) n FROM looks').get().n, 0);
+  assert.ok(!readdirSync(dir).some((f) => f.endsWith('.tmp')));
+  rmSync(path.join(dir, h), { recursive: true });
+  // A crash between the write and the row: the file is an orphan, removed at the next start, as is a partial .tmp.
+  await g.close();
+  writeFileSync(path.join(dir, h), lottie('crash'));
+  writeFileSync(path.join(dir, 'x.tmp'), 'partial');
+  g = gallery({ db: path.join(path.dirname(dir), 'g.db'), apiKey: 'k', openrouter: mockUrl });
+  await g.listen(0, '127.0.0.1');
+  assert.deepEqual(readdirSync(dir), []);
+});
+
+test('media: /submit takes a 12 MiB video as base64 and no more, in Node and in nginx; /check keeps its 22k', async () => {
+  assert.equal(SUBMIT_MAX, BODY_MAX + 16 * 1024 * 1024);
+  const conf = readFileSync('ops/public-site.nginx.conf', 'utf8');
+  const loc = /location = \/glaze\/looks\/api\/submit \{([^}]*)\}/.exec(conf)[1];
+  assert.equal(/client_max_body_size (\d+)k;/.exec(loc)[1] * 1024, SUBMIT_MAX);
+  await startMedia();
+  const big = JSON.stringify({ media: 'A'.repeat(SUBMIT_MAX - 64) });
+  const r = await fetch(`${base}/submit`, { method: 'POST', headers: { origin: ORIGIN, 'content-type': 'application/json' }, body: big });
+  assert.equal(r.status, 422, 'read whole, then checked');
+  const over = await fetch(`${base}/submit`, { method: 'POST', headers: { origin: ORIGIN, 'content-type': 'application/json' }, body: 'A'.repeat(SUBMIT_MAX + 1) }).catch((e) => e);
+  assert.ok(over instanceof Error || over.status === 413);
+  const check = await fetch(`${base}/check`, { method: 'POST', headers: { origin: ORIGIN, 'content-type': 'application/json' }, body: JSON.stringify({ code: 'x', media: 'A'.repeat(BODY_MAX) }) }).catch((e) => e);
+  assert.ok(check instanceof Error || check.status === 413);
 });
