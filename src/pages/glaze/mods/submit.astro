@@ -90,7 +90,8 @@ const guide = 'https://github.com/frostdev-ops/frostdev.io/blob/main/docs/looks-
   const closed = () => say(el('p', "The Mods gallery server isn't answering; nothing was used up. Try again later."));
   const problems = (list: string[], id = 'f-file-error') => {
     for (const x of ['f-file-error', 'f-license-error']) $(x).replaceChildren();
-    for (const p of list) $(id).append(el('li', p.charAt(0).toUpperCase() + p.slice(1) + '.'));
+    // Glaze's own messages are sentences already; the server's are not.
+    for (const p of list) $(id).append(el('li', p.charAt(0).toUpperCase() + p.slice(1) + (/[.!?]$/.test(p) ? '' : '.')));
     if (id === 'f-file-error' && list.length) file.setAttribute('aria-invalid', 'true'); else file.removeAttribute('aria-invalid');
   };
 

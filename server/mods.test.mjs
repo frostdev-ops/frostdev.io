@@ -473,6 +473,23 @@ test('the queue survives a restart: a review cut short stays queued and runs on 
   assert.equal(calls.chat.length, 3);
 });
 
+test('a stored bundle that is missing or changed goes to a person, without a call', async () => {
+  await start();
+  plan.chat = { hold: true };
+  const a = await make();
+  await submit(a.bytes);
+  await waitFor(() => calls.chat.length === 1);
+  await g.close();
+  rmSync(path.join(dir, 'mods', `${a.hash}.glazemod`));
+  plan.chat = review('accept');
+  await open();
+  await g.drain();
+  const r = row(a.hash);
+  assert.equal(r.status, 'pending');
+  assert.match(JSON.parse(r.decision).review.reason, /could not read the stored bundle/);
+  assert.equal(calls.chat.length, 1);
+});
+
 test('bundles are served only for published hashes, and the route can\'t reach any other file', async () => {
   await start({ blocklistKey: BL_PUB });
   plan.chat = review('accept');

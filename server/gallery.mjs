@@ -193,8 +193,9 @@ export const MOD_NETWORK_PER_DAY = 1;
 // refused before anything is used up, since a review that can't read it all can't vouch for it.
 export const MOD_TEXT_MAX = 384 << 10;
 // The review runs in the background, so it isn't bound by nginx's or Cloudflare's limits on a request; this only stops one
-// that hangs. A review that runs out goes to a person.
-export const MOD_REVIEW_TIMEOUT = 600e3;
+// that hangs. Measured on 2026-10-17: about 22 output tokens a second at xhigh (a small mod: 6,000 tokens in 4.5 minutes),
+// so the 32,000 output tokens allowed could take 25 minutes. A review that runs out goes to a person.
+export const MOD_REVIEW_TIMEOUT = 30 * 60e3;
 // A review interrupted this many times (the process died while it ran) goes to a person instead of trying again.
 const MOD_TRIES = 3;
 const MOD_PAGE = 24;
