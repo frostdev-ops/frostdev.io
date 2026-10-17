@@ -1014,6 +1014,7 @@ The private file routes recheck the bundle's signature/hash (or the Look media's
 selected by byte signatures, restricted to PNG, JPEG, GIF, WebP, AVIF, MP4 and WebM, with media-extension mismatches
 refused. Other files are plain UTF-8 text or attachment-only binary downloads; HTML and SVG can never be active
 documents. File responses additionally have `Content-Security-Policy: default-src 'none'; sandbox` and `nosniff`.
+Private videos support single byte ranges for seeking, after authentication and whole-file integrity/type checks.
 All submitted names, reasons, review text and source files reach the dashboard through text sinks.
 
 Approve, decline and remove use the same functions as the CLI and retain its state rules: approval only for pending

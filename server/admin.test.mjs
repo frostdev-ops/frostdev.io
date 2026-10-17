@@ -302,6 +302,54 @@ test('pending Look media and mod background animation are private; Lottie is pla
   assert.equal((await request(`/files/looks/${row.id}`, who)).status, 404);
 });
 
+test('private video review supports bounded byte ranges without bypassing authentication or file checks', async () => {
+  await start(); const who = await login();
+  const box = (type, body = Buffer.alloc(0)) => {
+    const header = Buffer.alloc(8); header.writeUInt32BE(body.length + 8); header.write(type, 4);
+    return Buffer.concat([header, body]);
+  };
+  const video = Buffer.concat([box('ftyp', Buffer.from('isom\x00\x00\x00\x00isom')), box('moov', box('trak')), box('mdat', Buffer.from(HOSTILE))]);
+  const checked = MEDIA.check(new Uint8Array(video), 'bg'); assert.equal(checked?.mime, 'video/mp4');
+  const hash = await MEDIA.sha(checked.bytes);
+  writeFileSync(path.join(dir, 'media', hash), checked.bytes);
+  const look = seedLook('pending', { media: hash });
+  const mod = await seedMod('pending', { manifest: { parts: { bg: { media: { type: 'video', src: './movie.mp4' } } } },
+    files: { 'movie.mp4': video, 'fake.png': Buffer.concat([PNG.subarray(0, 8), Buffer.from(HOSTILE)]) } });
+  const routes = [`/files/looks/${look.id}`, `/files/mods/${mod.id}/${mod.hash}?path=movie.mp4`];
+  for (const route of routes) {
+    const full = await request(route, who);
+    assert.equal(full.status, 200); assert.equal(full.headers.get('content-length'), String(video.length));
+    assert.deepEqual(Buffer.from(await full.arrayBuffer()), video);
+    for (const [range, start, end] of [['bytes=0-0', 0, 0], ['bytes=20-', 20, video.length - 1], ['bytes=-16', video.length - 16, video.length - 1], ['bytes=8-999999', 8, video.length - 1]]) {
+      const r = await request(route, { ...who, headers: { range } });
+      assert.equal(r.status, 206, range);
+      assert.equal(r.headers.get('content-range'), `bytes ${start}-${end}/${video.length}`);
+      assert.equal(r.headers.get('content-length'), String(end - start + 1));
+      assert.equal(r.headers.get('accept-ranges'), 'bytes');
+      assert.equal(r.headers.get('content-type'), 'video/mp4');
+      assert.equal(r.headers.get('cache-control'), 'no-store');
+      assert.equal(r.headers.get('x-content-type-options'), 'nosniff');
+      assert.equal(r.headers.get('content-disposition'), 'inline');
+      assert.match(r.headers.get('content-security-policy'), /sandbox/);
+      assert.deepEqual(Buffer.from(await r.arrayBuffer()), video.subarray(start, end + 1));
+    }
+    for (const range of [`bytes=${video.length}-`, 'bytes=9-2', 'bytes=-0', `bytes=${'9'.repeat(400)}-`]) {
+      const r = await request(route, { ...who, headers: { range } });
+      assert.equal(r.status, 416, range); assert.equal(r.headers.get('content-range'), `bytes */${video.length}`);
+    }
+    for (const headers of [{ range: 'bytes=0-1,4-5' }, { range: 'bytes=oops' }, { range: 'bytes=0-1', 'if-range': '"unknown"' }]) {
+      const r = await request(route, { ...who, headers });
+      assert.equal(r.status, 200); assert.deepEqual(Buffer.from(await r.arrayBuffer()), video);
+    }
+    assert.equal((await request(route, { headers: { range: 'bytes=0-1' } })).status, 401);
+  }
+  assert.equal((await request(`/files/mods/${mod.id}/${mod.hash}?path=fake.png`, { ...who, headers: { range: 'bytes=0-1' } })).status, 415);
+  writeFileSync(path.join(dir, 'mods', `${mod.hash}.glazemod`), HOSTILE);
+  assert.equal((await request(routes[1], { ...who, headers: { range: 'bytes=0-1' } })).status, 404);
+  clock += 12 * 3600e3;
+  assert.equal((await request(routes[0], { ...who, headers: { range: 'bytes=0-1' } })).status, 401);
+});
+
 test('audit pages can reach older records and have no public route; nginx and Docker stage the complete private surface', async () => {
   await start(); const who = await login();
   for (let i = 0; i < 205; i++) g.db.prepare('INSERT INTO admin_audit (email, action, kind, id, hash, at, reason) VALUES (?, ?, ?, ?, ?, ?, ?)').run(EMAIL, 'removed', 'looks', 'c-0000000001', '', clock, HOSTILE);

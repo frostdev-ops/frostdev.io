@@ -71,7 +71,7 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
   const modView = (r) => ({ id: r.id, hash: r.hash, name: r.name, credit: r.credit, version: r.version, key: r.key,
     status: r.status, created: r.created, decided: r.decided, reason: r.reason, decision: JSON.parse(r.decision),
     summary: JSON.parse(r.summary), permissions: JSON.parse(r.permissions).map((p) => ({ ...p, ...permissionWords(p.id) })) });
-  const fileReply = (res, bytes, name, { text = false, download = false } = {}) => {
+  const fileReply = (req, res, bytes, name, { text = false, download = false } = {}) => {
     const type = adminFileType(bytes);
     const ext = name.split('.').pop().toLowerCase();
     if (!download && mediaTypes[ext] && type !== mediaTypes[ext]) return reply(res, 415, { error: 'The file bytes do not match its media type.' });
@@ -80,9 +80,25 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
     try { utf8 = new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch { /* binary */ }
     const binary = utf8 === null || /\x00/.test(utf8);
     const attachment = download || (type === plain && binary);
-    reply(res, 200, attachment ? bytes : text || type === plain ? utf8 : bytes,
-      attachment ? 'application/octet-stream' : text ? plain : type,
-      { 'content-security-policy': "default-src 'none'; sandbox", 'content-disposition': attachment ? 'attachment; filename="gallery-file"' : 'inline' });
+    let body = attachment ? bytes : text || type === plain ? utf8 || '' : bytes;
+    const mime = attachment ? 'application/octet-stream' : text ? plain : type;
+    const headers = { 'content-security-policy': "default-src 'none'; sandbox", 'content-disposition': attachment ? 'attachment; filename="gallery-file"' : 'inline' };
+    let status = 200;
+    if (mime.startsWith('video/')) {
+      headers['accept-ranges'] = 'bytes';
+      // Ignore multipart/invalid ranges and If-Range without a matching validator; always sniff the whole file first.
+      const range = req.headers['if-range'] === undefined && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+      if (range && (range[1] || range[2])) {
+        const start = range[1] ? Number(range[1]) : Math.max(0, bytes.length - Number(range[2]));
+        const end = range[1] && range[2] ? Math.min(bytes.length - 1, Number(range[2])) : bytes.length - 1;
+        if (!Number.isSafeInteger(start) || start > end) return reply(res, 416, '', mime,
+          { ...headers, 'content-range': `bytes */${bytes.length}`, 'content-length': 0 });
+        body = bytes.subarray(start, end + 1);
+        status = 206;
+        headers['content-range'] = `bytes ${start}-${end}/${bytes.length}`;
+      }
+    }
+    reply(res, status, body, mime, { ...headers, 'content-length': Buffer.byteLength(body) });
   };
 
   const handle = async (req, res, url) => {
@@ -179,7 +195,7 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
       const media = row.media && await readLookMedia(row.media);
       if (look[1] === 'api') return reply(res, 200, { ...lookView(row), mediaType: media ? media.mime : null });
       if (!media) return reply(res, 404, { error: 'The media file is unavailable.' });
-      return fileReply(res, readFileSync(media.file), row.media, { text: media.mime === 'application/json' });
+      return fileReply(req, res, readFileSync(media.file), row.media, { text: media.mime === 'application/json' });
     }
     const mod = /^\/(api|files|bundles)\/mods\/([a-z2-7]{16})\/([\w-]{43})$/.exec(p);
     if (mod) {
@@ -195,7 +211,7 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
         'content-disposition': `attachment; filename="${row.id}-${row.hash}.glazemod"`, 'content-security-policy': "default-src 'none'; sandbox" });
       const file = url.searchParams.get('path');
       if (!file || !Object.hasOwn(stored.got.files, file)) return reply(res, 404, { error: 'No such file.' });
-      return fileReply(res, stored.got.files[file], file, { text: url.searchParams.get('view') === 'text', download: url.searchParams.get('download') === '1' });
+      return fileReply(req, res, stored.got.files[file], file, { text: url.searchParams.get('view') === 'text', download: url.searchParams.get('download') === '1' });
     }
     return reply(res, 404, { error: 'Not found.' });
   };
