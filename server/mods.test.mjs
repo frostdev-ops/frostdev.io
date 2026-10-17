@@ -1396,6 +1396,30 @@ test('vision: background image media always needs a person even when viewed and 
   assert.match(JSON.parse(r.row.decision).person, /background/);
 });
 
+test('requeue: CLI resets attempts, audits email, hides a published bundle and lets the queue review it again', async () => {
+  await start(); const m = await make(); const r = await reviewed(m.bytes);
+  const env = { ...process.env, DB: path.join(dir, 'gallery.db'), ADMIN_EMAIL: 'owner@example.edu' };
+  g.db.prepare('UPDATE mods SET tries = 3 WHERE hash = ?').run(m.hash);
+  const cli = spawnSync(process.execPath, ['server/gallery.mjs', '--requeue-mod', m.id, m.hash], { env, encoding: 'utf8' });
+  assert.equal(cli.status, 0, cli.stderr); assert.match(cli.stdout, /: queued/);
+  assert.equal(row(m.hash).status, 'queued'); assert.equal(row(m.hash).tries, 0);
+  assert.equal((await download(m.id, m.hash)).status, 404);
+  assert.equal((await (await fetch(`${api}/mods`)).json()).total, 0);
+  const audit = g.db.prepare("SELECT * FROM admin_audit WHERE action = 'queued'").get(); assert.equal(audit.email, 'owner@example.edu');
+  await g.close(); calls.chat = []; plan.chat = review('accept'); await open({ escalationModel: 'current/reviewer' }); await g.drain();
+  assert.equal(calls.chat[0].body.model, 'current/reviewer'); assert.equal(row(m.hash).status, 'published'); assert.equal(row(m.hash).tries, 1);
+  assert.equal((await status(r.token)).status, 'published');
+});
+
+test('requeue during a review invalidates the old result and drains a fresh review', async () => {
+  await start(); let release; const wait = new Promise(r => { release = r; });
+  plan.chat = [{ ...review('decline'), wait }, review('accept')];
+  const m = await make(); await submit(m.bytes); await waitFor(() => calls.chat.length === 1);
+  assert.equal(await g.decideMod(m.id, m.hash, 'queued', '', 'owner@example.edu'), true);
+  assert.equal(row(m.hash).tries, 0); release(); await g.drain();
+  assert.equal(calls.chat.length, 2); assert.equal(row(m.hash).status, 'published'); assert.equal(row(m.hash).tries, 1);
+});
+
 test('vision: duplicate views do not spend image quota; images and bash share the existing output cap', async () => {
   await start();
   const m = await make(countdown(), { 'hooks.js': te.encode(HOOKS), 'p.png': VIEW_PNG });

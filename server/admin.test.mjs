@@ -475,3 +475,26 @@ test('revoking an allowlisted email invalidates its persisted session; Google er
   assert.equal((await finish(f)).status, 403);
   assert.equal(g.db.prepare('SELECT COUNT(*) n FROM admin_flows').get().n, 0);
 });
+
+test('dashboard requeue requires Origin and CSRF, audits the admin email, refuses removed mods and drains again', async () => {
+  await start(); const who = await login();
+  const mod = await seedMod('published');
+  const route = `mods/${mod.id}/${mod.hash}/requeue`;
+  for (const headers of [{ ...who, csrf: '' }, { ...who, origin: 'https://evil.example' }, { ...who, origin: 'null' }]) {
+    assert.equal((await action(route, headers)).status, 403);
+  }
+  assert.equal((await action(route, who, 'Use the current reviewer.')).status, 200);
+  assert.equal((await fetch(`${base}/glaze/mods/api/mods/${mod.id}/${mod.hash}.glazemod`)).status, 404);
+  await g.drain();
+  const row = g.db.prepare('SELECT * FROM mods WHERE hash = ?').get(mod.hash);
+  assert.equal(row.status, 'pending'); assert.equal(row.tries, 1); assert.equal(row.epoch, 1);
+  assert.ok(JSON.parse(row.decision).review.failed, 'the drain retried with the current (unconfigured) reviewer');
+  const entry = g.db.prepare("SELECT * FROM admin_audit WHERE action = 'queued'").get();
+  assert.equal(entry.email, EMAIL); assert.equal(entry.hash, mod.hash); assert.equal(entry.reason, 'Use the current reviewer.');
+  const removed = await seedMod('removed');
+  assert.equal((await action(`mods/${removed.id}/${removed.hash}/requeue`, who)).status, 409);
+  const look = seedLook(); assert.equal((await action(`looks/${look.id}/requeue`, who)).status, 400);
+  for (const status of ['pending', 'declined', 'queued']) {
+    const item = await seedMod(status); assert.equal((await action(`mods/${item.id}/${item.hash}/requeue`, who)).status, 200); await g.drain();
+  }
+});

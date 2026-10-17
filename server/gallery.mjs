@@ -32,6 +32,7 @@
 //   node server/gallery.mjs --approve-mod <id> <hash>             publish a pending mod (that exact bundle)
 //   node server/gallery.mjs --decline-mod <id> <hash> "<reason>"  decline a pending or queued mod; the submitter sees the reason
 //   node server/gallery.mjs --remove-mod <id> <hash>              take a mod down; that bundle can't be submitted again
+//   node server/gallery.mjs --requeue-mod <id> <hash>             send any non-removed version back to the current reviewer
 // The Mods section (/glaze/mods/api/): signed .glazemod bundles checked by Glaze's own reader, reviewed by the full LLM in a
 // queue kept in the database (no decision model), MOD_REVIEWS_PER_DAY (40) a day; bundles are files in mods/ next to DB.
 // A Look whose background is a video or animation file (file:<hash> in its code) is submitted with that file, cleaned by
@@ -554,6 +555,7 @@ export function gallery({
   if (!db.prepare('PRAGMA table_info(looks)').all().some((c) => c.name === 'fingerprint')) db.exec("ALTER TABLE looks ADD COLUMN fingerprint TEXT NOT NULL DEFAULT ''");
   // The hash of a Look's background file, or ''.
   if (!db.prepare('PRAGMA table_info(looks)').all().some((c) => c.name === 'media')) db.exec("ALTER TABLE looks ADD COLUMN media TEXT NOT NULL DEFAULT ''");
+  if (!db.prepare('PRAGMA table_info(mods)').all().some((c) => c.name === 'epoch')) db.exec('ALTER TABLE mods ADD COLUMN epoch INTEGER NOT NULL DEFAULT 0');
   const q = Object.fromEntries(Object.entries({
     published: "SELECT * FROM looks WHERE status = 'published' ORDER BY created DESC, name",
     blocking: "SELECT id, name, code, fingerprint, status FROM looks WHERE status IN ('published', 'pending', 'removed')",
@@ -597,9 +599,9 @@ export function gallery({
       ORDER BY created DESC, rowid DESC`,
     modPublished: "SELECT * FROM mods WHERE id = ? AND hash = ? AND status = 'published'",
     modNext: "SELECT * FROM mods WHERE status = 'queued' ORDER BY created, hash LIMIT 1",
-    modTry: 'UPDATE mods SET tries = tries + 1 WHERE hash = ?',
-    modUntry: 'UPDATE mods SET tries = tries - 1 WHERE hash = ? AND tries > 0',
-    modDecide: "UPDATE mods SET status = ?, reason = ?, decision = ?, unmailed = ?, decided = ? WHERE hash = ? AND status = 'queued'",
+    modTry: "UPDATE mods SET tries = tries + 1 WHERE hash = ? AND epoch = ? AND status = 'queued'",
+    modUntry: 'UPDATE mods SET tries = tries - 1 WHERE hash = ? AND epoch = ? AND tries > 0',
+    modDecide: "UPDATE mods SET status = ?, reason = ?, decision = ?, unmailed = ?, decided = ? WHERE hash = ? AND epoch = ? AND status = 'queued'",
     modSetStatus: 'UPDATE mods SET status = ?, reason = ?, decided = ?, unmailed = 0 WHERE id = ? AND hash = ? AND status = ?',
     modMailed: 'UPDATE mods SET unmailed = 0 WHERE hash = ?',
     modUnmailed: "SELECT * FROM mods WHERE status = 'pending' AND unmailed = 1",
@@ -1296,7 +1298,7 @@ export function gallery({
   // agent: what a review that failed did before it did (reviewModAgent's error.agent).
   const failedReview = (why, error = '', agent = {}) => ({ model: escalationModel, ...agent, decision: 'human', reason: `The reviewer ${why}, so a person will decide.`, failed: true, ...(error && { error: String(error).slice(0, 200) }) });
   const reviewMod = async (row) => {
-    q.modTry.run(row.hash);
+    if (!q.modTry.run(row.hash, row.epoch).changes) return;
     let review;
     if (blockedMod(row)) review = { decision: 'decline', reason: 'This mod, this bundle or its author is blocked by Glaze.', blocked: true };
     else if (row.tries + 1 > MOD_TRIES) review = failedReview(`was interrupted ${MOD_TRIES} times`);
@@ -1316,7 +1318,7 @@ export function gallery({
           if (!review.reason || !review.rationale || !review.overview || !review.summary || !review.recommendation) throw Object.assign(new Error('invalid'), { agent: meta });
         } catch (e) {
           // The server is closing: the row stays queued for the next start, and this try doesn't count.
-          if (stopping.signal.aborted) { q.modUntry.run(row.hash); return; }
+          if (stopping.signal.aborted) { q.modUntry.run(row.hash, row.epoch); return; }
           review = failedReview(e.why || (e.message === 'invalid' || e instanceof SyntaxError ? 'answered something other than a review' : 'did not answer'), `${e.name}: ${e.message}`, e.agent);
         }
       }
@@ -1330,7 +1332,7 @@ export function gallery({
     const status = { accept: 'published', decline: 'declined', human: 'pending' }[outcome];
     const person = status !== 'pending' ? null : both ? 'it can read personal data and reach the network, which a person always decides'
       : facts.media ? 'its background is a video or animation file, which a person always checks' : unseen ? 'it includes pictures or fonts the reviewer did not view or cannot see, which a person must check' : review.failed ? review.reason : 'the reviewer asked for a person';
-    q.modDecide.run(status, status === 'declined' ? review.reason : '', JSON.stringify({ review, person, at: new Date(now()).toISOString() }), status === 'pending' ? 1 : 0, now(), row.hash);
+    q.modDecide.run(status, status === 'declined' ? review.reason : '', JSON.stringify({ review, person, at: new Date(now()).toISOString() }), status === 'pending' ? 1 : 0, now(), row.hash, row.epoch);
     if (status === 'pending') mailPending();
   };
   let draining = null;
@@ -1409,17 +1411,21 @@ export function gallery({
   };
   const decideMod = async (id, hash, to, reason = '', actor = 'CLI') => {
     const row = q.modByHash.get(hash);
-    const from = { published: ['pending'], declined: ['pending', 'queued'], removed: ['published', 'pending', 'queued'] }[to];
+    const from = { published: ['pending'], declined: ['pending', 'queued'], removed: ['published', 'pending', 'queued'], queued: ['queued', 'pending', 'published', 'declined'] }[to];
     if (!row || row.id !== id || !from.includes(row.status)) return false;
     if (to === 'published') {
       try { await readStoredMod(row); } catch { return false; }
       if (blockedMod(row)) return false;
     }
-    return tx(() => {
-      const changed = q.modSetStatus.run(to, cleanReason(reason), now(), id, hash, row.status).changes === 1;
+    const ok = tx(() => {
+      const changed = to === 'queued'
+        ? db.prepare("UPDATE mods SET status = 'queued', tries = 0, epoch = epoch + 1, reason = '', decision = '{}', decided = 0, unmailed = 0 WHERE id = ? AND hash = ? AND status = ? AND epoch = ?").run(id, hash, row.status, row.epoch).changes === 1
+        : q.modSetStatus.run(to, cleanReason(reason), now(), id, hash, row.status).changes === 1;
       if (changed) admin.audit(actor, to, 'mods', id, hash, cleanReason(reason));
       return changed;
     });
+    if (ok && to === 'queued' && server.listening) drain();
+    return ok;
   };
   const admin = galleryAdmin({ db, siteOrigin, now, readJson, decide, decideMod, readMod: readStoredMod, readLookMedia: readMedia,
     permissionWords, limits, blocklist, googleClientId, googleClientSecret, adminEmails, googleFetch,
@@ -1639,11 +1645,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
       ].join('\n'));
     }
     g.db.close();
-  } else if (['--approve-mod', '--decline-mod', '--remove-mod'].includes(cmd) && MOD_ID.test(arg || '') && MOD_HASH.test(reason || '') && (cmd !== '--decline-mod' || cleanReason(process.argv[5]))) {
+  } else if (['--approve-mod', '--decline-mod', '--remove-mod', '--requeue-mod'].includes(cmd) && MOD_ID.test(arg || '') && MOD_HASH.test(reason || '') && (cmd !== '--decline-mod' || cleanReason(process.argv[5]))) {
     const g = gallery(fromEnv(process.env));
     await g.ready;
-    const to = { '--approve-mod': 'published', '--decline-mod': 'declined', '--remove-mod': 'removed' }[cmd];
-    console.log(await g.decideMod(arg, reason, to, process.argv[5]) ? `${arg} ${reason}: ${to}` : `${arg} ${reason}: no such mod in a state that can become ${to}`);
+    const to = { '--approve-mod': 'published', '--decline-mod': 'declined', '--remove-mod': 'removed', '--requeue-mod': 'queued' }[cmd];
+    console.log(await g.decideMod(arg, reason, to, process.argv[5], process.env.ADMIN_EMAIL || 'CLI') ? `${arg} ${reason}: ${to}` : `${arg} ${reason}: no such mod in a state that can become ${to}`);
     g.db.close();
   } else if (cmd === '--blocklist' && arg) {
     const g = gallery(fromEnv(process.env));
@@ -1654,7 +1660,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     } catch (e) { failCli(e); }
     g.db.close();
   } else if (cmd) {
-    console.error('usage: gallery.mjs [--list | --pending | --show <id> | --approve <id> | --decline <id> "<reason>" | --remove <id> | --backup <file> | --blocklist <file>\n                   | --mods | --mod <id> | --approve-mod <id> <hash> | --decline-mod <id> <hash> "<reason>" | --remove-mod <id> <hash>]');
+    console.error('usage: gallery.mjs [--list | --pending | --show <id> | --approve <id> | --decline <id> "<reason>" | --remove <id> | --backup <file> | --blocklist <file>\n                   | --mods | --mod <id> | --approve-mod <id> <hash> | --decline-mod <id> <hash> "<reason>" | --remove-mod <id> <hash> | --requeue-mod <id> <hash>]');
     process.exitCode = 2;
   } else {
     const g = gallery(fromEnv(process.env));

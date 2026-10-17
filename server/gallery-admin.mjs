@@ -174,13 +174,14 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
         sql('DELETE FROM admin_sessions WHERE token = ?').run(session.token);
         return reply(res, 200, { ok: true }, undefined, { 'set-cookie': cookie(SESSION, '', 0) });
       }
-      const action = /^\/api\/(looks|mods)\/([^/]+)(?:\/([\w-]{43}))?\/(approve|decline|remove)$/.exec(p);
+      const action = /^\/api\/(looks|mods)\/([^/]+)(?:\/([\w-]{43}))?\/(approve|decline|remove|requeue)$/.exec(p);
       if (!action) return reply(res, 404, { error: 'Not found.' });
       const [, kind, id, bundleHash, verb] = action;
+      if (verb === 'requeue' && kind !== 'mods') return reply(res, 400, { error: 'Only mods can be sent back to review.' });
       if (!(kind === 'looks' ? /^c-[0-9a-f]{10}$/.test(id) && !bundleHash : /^[a-z2-7]{16}$/.test(id) && !!bundleHash)) return reply(res, 400, { error: 'Invalid item.' });
       const body = await readJson(req, 4096);
       if (typeof body.reason !== 'string' || body.reason.length > 1200 || (verb === 'decline' && !body.reason.replace(/[\p{Cc}\p{Cf}\s]/gu, ''))) return reply(res, 400, { error: 'Give a reason for declining.' });
-      const to = { approve: 'published', decline: 'declined', remove: 'removed' }[verb];
+      const to = { approve: 'published', decline: 'declined', remove: 'removed', requeue: 'queued' }[verb];
       const ok = kind === 'looks' ? decide(id, to, body.reason, session.email) : await decideMod(id, bundleHash, to, body.reason, session.email);
       return reply(res, ok ? 200 : 409, ok ? { ok: true } : { error: 'The item changed, is blocked, or cannot take that action. Refresh and check it.' });
     }
