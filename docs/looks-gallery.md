@@ -1,7 +1,8 @@
 # Glaze Looks gallery
 
 `/glaze/looks` is a free, open gallery of Glaze themes. No accounts, likes, comments, counters, analytics
-or payments, ever. Glaze makes no request to it; a student visits it like any other page.
+or payments, ever. Glaze makes no request to it (the one request it makes to this server is the mod blocklist, below); a
+student visits it like any other page.
 
 It has two kinds of Looks:
 
@@ -581,6 +582,36 @@ Remove first and look into it after.
   harmful), and publish. For personal data in a screenshot, also ask GitHub to purge the image from the
   issue if it was uploaded there.
 
+## Mod blocklist
+
+Glaze's code mods (`docs/mods.md` §3 in the Glaze repository) can be blocked by a list the owner signs. This server only
+keeps and serves the latest signed document; it cannot make or change one. The same server and database, but nothing else
+here is involved: no review, no quota, no cookie.
+
+- **The document**: `{ "list": { "v": 1, "seq", "issued", "expires", "mods": [id], "bundles": [hash], "authors": [key],
+  "reasons": { entry: text } }, "sig" }`. `sig` is Ed25519 (base64url) over `utf8("glaze-blocklist-1|" + canonical JSON of
+  list)`, canonical meaning keys sorted by code unit and no spaces. The owner's private key stays offline (Glaze's
+  `scripts/blocklist-sign.mjs`, `RELEASING.md` there); the extension pins the public key and checks the signature, that `seq`
+  only goes up and that `expires` (a week after `issued`) has not passed. What it cannot verify, it ignores: mods keep running.
+- **`GET /glaze/mods/api/blocklist`** (and HEAD): the stored document, `Cache-Control: public, max-age=3600`, a strong `ETag`
+  (SHA-256 of the body) that `If-None-Match` revalidates with a 304, `Access-Control-Allow-Origin: *`, no cookie. 404 until
+  one is published; any other method is 405 (nginx refuses it first). The extension asks no more than daily, and only while the
+  student has a mod installed.
+- **Publishing**: `node gallery.mjs --blocklist <file>` inside the container. It checks the file against `BLOCKLIST_KEY` (the
+  owner's public key, 43 base64url characters, in `/etc/glaze-gallery.env`; it is not a secret) and refuses a bad signature, an
+  expired list, a `seq` that is not higher than the stored one and a document over 256 KiB (the extension refuses more), so
+  a mistake is found here and not by every extension. The running server serves the new document at once. Without
+  `BLOCKLIST_KEY` nothing can be published. Steps: sign on the owner's computer; copy the signed file into the volume
+  (`/var/lib/docker/volumes/glaze-gallery/_data/`); `docker exec glaze-gallery node gallery.mjs --blocklist /data/<file>`;
+  `curl -i https://frostdev.io/glaze/mods/api/blocklist` to see it.
+- **A stolen or failed server** can withhold the list or serve an older one, and cannot forge a new one or lower the `seq` an
+  extension has seen. Withholding leaves every mod running except those an earlier list already blocked.
+- **Keep it fresh**: a list expires a week after it is signed. Sign and publish again (a new `seq`, the same entries) before
+  then, or extensions show it as out of date; blocks it already made stay.
+- **nginx**: `location ^~ /glaze/mods/api/` is GET only (`limit_except`), 1 KiB body cap, no access log, and it passes on
+  neither the visitor's address nor cookies. The route is public, so the server has no quota to count with. Uploads for the
+  Mods section will need a location of their own with POST.
+
 ## Deploy
 
 **glaze2 waits for a Glaze release.** The gallery decodes codes with the vendored Glaze, and a release is only vendored
@@ -602,6 +633,7 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
    MAIL_URL=smtps://smtp-relay.gmail.com:465
    MAIL_FROM=admin@frostdev.io
    # optional: DECISION_MODEL=liquid/d1-ultra ESCALATION_MODEL=openai/gpt-6-luna-pro:exacto REVIEWS_PER_DAY=300 MAIL_TO=admin@frostdev.io
+   # the mod blocklist's public key, once the owner has made it (Glaze: scripts/blocklist-sign.mjs keygen): BLOCKLIST_KEY=…
    ```
 
    frostdev.io's mail is Google Workspace and the VPS has no mail server. The recommended route (now
@@ -621,7 +653,7 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
    ```
 
    It listens on 127.0.0.1:8788 only. Rerun the script after a curated entry changes.
-3. nginx: the `/glaze/looks/submit` and `/glaze/looks/api/` locations from `ops/public-site.nginx.conf`.
+3. nginx: the `/glaze/looks/submit`, `/glaze/looks/api/` and `/glaze/mods/api/` locations from `ops/public-site.nginx.conf`.
    The API location needs nginx's realip module on the frostdev.io server block (Cloudflare's ranges in
    `set_real_ip_from`, `real_ip_header CF-Connecting-IP`), as share.frostdev.io has, so `$remote_addr`,
    passed on as `X-Real-IP`, is the visitor. It logs nothing.
@@ -633,12 +665,15 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
 
 The CLI, inside the container: `--list`, `--pending`, `--show <id>` (a Look's parts and part text, both reviewers'
 numbers, the second reviewer's decision, reason, rationale and any reasoning summary), `--approve <id>`, `--decline <id> "<reason>"`,
-`--remove <id>`, `--backup <file>`.
+`--remove <id>`, `--backup <file>`, `--blocklist <file>` (the signed mod blocklist, above).
 
 ## Privacy
 
 - The gallery page asks frostdev.io itself for the community list, without cookies; the request is
   answered from the database and recorded nowhere. No request logs, in nginx or the server.
+- The mod blocklist (`GET /glaze/mods/api/blocklist`) is the one request Glaze itself makes here, and only while a student has
+  a mod installed. It carries no cookie, referrer or other identifier, is answered from the database and is recorded
+  nowhere: nothing is counted, and nginx's location logs nothing and passes on neither the visitor's address nor cookies.
 - Previewing on the submit page sends the code and fields to frostdev.io to check them; nothing is
   saved as submission records. The check sets the one-day cookie if there is none, and keeps a daily
   keyed network hash in memory for rate limiting. Inactive rate-limit buckets are purged by the
