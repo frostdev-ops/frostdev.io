@@ -743,8 +743,8 @@ The mod reviewer uses a tool loop (`reviewModAgent()` in `server/gallery.mjs`): 
 - `view_image`: an exact `/mod/<path>`. Only PNG, JPEG, WebP and GIF, sniffed from bytes and checked with Glaze's own
   file-kind checker, are sent as base64 `image_url` parts in a follow-up user message ([OpenRouter image
   inputs](https://openrouter.ai/docs/guides/overview/multimodal/image-understanding)). No file URL or remote host is
-  sent. AVIF, video, Lottie and disguised active documents are not viewable. Limits: **96 KiB per image, eight images,
-  128 KiB total**; base64 and tool results share the existing **200,000-character** output budget. Every call also
+  sent. AVIF, video, Lottie and disguised active documents are not viewable. Limits: **1 MiB per image, 40 images,
+  2 MiB total** (a whole bundle); pictures do not count against the **200,000-character** tool-result budget. Every call also
   consumes a model round and the shared deadline/completion-token budget. Duplicate views reuse the recorded view
   without resending bytes. Image pixels and text are untrusted data under rule 3, and the reviewer is told to view
   every picture.
@@ -752,7 +752,7 @@ The mod reviewer uses a tool loop (`reviewModAgent()` in `server/gallery.mjs`): 
   overview, summary, recommendation}`, all strings. Only a valid submission finishes the review. A reply without a tool
   call gets one nudge; another goes to a person.
 
-At most 30 model rounds (`MOD_ROUNDS`), 32,000 aggregate completion tokens, and 200,000 characters of serialized tool results (`MOD_SHELL_TOTAL`), all inside
+At most 60 model rounds (`MOD_ROUNDS`), 32,000 aggregate completion tokens, and 200,000 characters of serialized tool results (`MOD_SHELL_TOTAL`), all inside
 one 30-minute deadline (`MOD_REVIEW_TIMEOUT`). Hitting a bound goes to a person with the reason. The complete conversation,
 including OpenRouter's opaque `reasoning_details`, is sent back each round. Stored review metadata includes rounds,
 commands (each shortened to 200 characters), server-recorded viewed image paths and byte total, tool output size, total prompt/completion/reasoning tokens and cost
@@ -870,7 +870,7 @@ after changing the loop, `MOD_POLICY` or the model.
 | What happens | Result |
 | --- | --- |
 | No `OPENROUTER_API_KEY`, an error, a 30-minute timeout, two 429/5xx, an invalid tool call, an incomplete answer, or an answer outside the schema | `pending` (`failed: true`), mailed |
-| 30 rounds, 32,000 aggregate completion tokens, 200,000 characters of tool results, or a second reply without tool calls | `pending` (`failed: true`), mailed with the bound reached and work so far |
+| 60 rounds, 32,000 aggregate completion tokens, 200,000 characters of tool results, or a second reply without tool calls | `pending` (`failed: true`), mailed with the bound reached and work so far |
 | A shell command hits a time or resource limit | `pending` (`failed: true`), mailed with the bound reached and work so far |
 | A shell command fails normally (for example, a missing file) | a bounded error result to the model; the review can continue within its overall bounds |
 | The process restarts during a review | the mod stays `queued` and is reviewed after the start; after three cut-short tries, `pending` |

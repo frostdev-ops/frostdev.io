@@ -1373,7 +1373,7 @@ test('vision: per-image, count and total byte caps leave refused images unseen',
   for (const files of [
     { 'big.png': padded(MOD_IMAGE_MAX + 1) },
     Object.fromEntries(Array.from({ length: MOD_IMAGES + 1 }, (_, i) => [`p${i}.png`, VIEW_PNG])),
-    { 'one.png': padded(MOD_IMAGE_TOTAL / 2 + 1), 'two.png': padded(MOD_IMAGE_TOTAL / 2 + 1) },
+    // MOD_IMAGE_TOTAL equals a bundle's whole 2 MiB, so no valid bundle can pass it; it stays as a backstop.
   ]) {
     calls.chat = []; plan.chat = [...Object.keys(files).map(p => viewImage(`/mod/${p}`)), review('accept')];
     const r = await reviewed((await make(countdown(), { 'hooks.js': te.encode(HOOKS), ...files })).bytes);
@@ -1420,7 +1420,7 @@ test('requeue during a review invalidates the old result and drains a fresh revi
   assert.equal(calls.chat.length, 2); assert.equal(row(m.hash).status, 'published'); assert.equal(row(m.hash).tries, 1);
 });
 
-test('vision: duplicate views do not spend image quota; images and bash share the existing output cap', async () => {
+test('vision: duplicate views do not spend image quota; pictures do not count against the shell output cap', async () => {
   await start();
   const m = await make(countdown(), { 'hooks.js': te.encode(HOOKS), 'p.png': VIEW_PNG });
   plan.chat = [viewImage('/mod/p.png'), viewImage('/mod/p.png'), review('accept')];
@@ -1430,8 +1430,7 @@ test('vision: duplicate views do not spend image quota; images and bash share th
   assert.equal(calls.chat.at(-1).body.messages.filter(m => Array.isArray(m.content)).length, 1);
   const big = Buffer.concat([VIEW_PNG, Buffer.alloc(MOD_IMAGE_MAX - VIEW_PNG.length)]);
   calls.chat = []; plan.chat = [viewImage('/mod/big.png'), ...Array.from({ length: 10 }, () => bash('seq 1 10000')), review('accept')];
-  const failed = await reviewed((await make(countdown(), { 'hooks.js': te.encode(HOOKS), 'big.png': big })).bytes);
-  assert.equal(failed.row.status, 'pending');
-  assert.match(JSON.parse(failed.row.decision).review.reason, /200000-character shell output limit/);
-  assert.ok(calls.chat.length < 12);
+  const done = await reviewed((await make(countdown(), { 'hooks.js': te.encode(HOOKS), 'big.png': big })).bytes);
+  assert.equal(done.row.status, 'published', 'a full-size picture does not use up the shell output budget');
+  assert.ok(JSON.parse(done.row.decision).review.shellOutput < 200_000);
 });

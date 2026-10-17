@@ -278,11 +278,13 @@ const MOD_SCHEMA = {
 
 // The review's bounds, all inside MOD_REVIEW_TIMEOUT: model calls, and shell output sent back to the model (each round
 // resends it all, so it is what the review costs).
-export const MOD_ROUNDS = 30;
+// Room to view every picture of a full bundle one call at a time (40) and still read the code.
+export const MOD_ROUNDS = 60;
 export const MOD_SHELL_TOTAL = 200_000;
-export const MOD_IMAGE_MAX = 96 << 10;
-export const MOD_IMAGES = 8;
-export const MOD_IMAGE_TOTAL = 128 << 10;
+// Room for a full bundle's pictures: 24 stickers + 4 pet sheets + tile art (a bundle holds 2 MiB in all).
+export const MOD_IMAGE_MAX = 1 << 20;
+export const MOD_IMAGES = 40;
+export const MOD_IMAGE_TOTAL = 2 << 20;
 // Sniff the bytes, then use Glaze's file-kind check with that type, never the submitted extension.
 export const modImageType = (bytes) => {
   const mime = adminFileType(bytes);
@@ -942,7 +944,7 @@ export function gallery({
           if (!mime) out = { error: 'Not viewable. Only PNG, JPEG, WebP and GIF bytes at an exact /mod/<path> can be viewed.' };
           else if (agent.viewedImages.includes(p)) out = { alreadyViewed: p };
           else if (bytes.length > MOD_IMAGE_MAX || agent.viewedImages.length >= MOD_IMAGES || agent.imageBytes + bytes.length > MOD_IMAGE_TOTAL) {
-            out = { error: 'Not viewable: image limit (96 KiB each, eight images, 128 KiB total). A person must inspect it.' };
+            out = { error: `Not viewable: image limit (${MOD_IMAGE_MAX >> 10} KiB each, ${MOD_IMAGES} images, ${MOD_IMAGE_TOTAL >> 10} KiB total). A person must inspect it.` };
           } else {
             picture = { type: 'image_url', image_url: { url: `data:${mime};base64,${Buffer.from(bytes).toString('base64')}` } };
             out = { viewed: p, mime, bytes: bytes.length };
@@ -957,7 +959,8 @@ export function gallery({
           if ([124, 126].includes(out.exitCode)) throw fail('shell limit', `hit a shell command ${out.exitCode === 124 ? 'time' : 'resource'} limit`);
         }
         const content = JSON.stringify(out);
-        const outputSize = content.length + (picture ? JSON.stringify(picture).length : 0);
+        // Pictures are bounded by MOD_IMAGES / MOD_IMAGE_TOTAL, not by the shell's character budget.
+        const outputSize = content.length;
         if (agent.shellOutput + outputSize > MOD_SHELL_TOTAL) throw fail('output', `reached its ${MOD_SHELL_TOTAL}-character shell output limit without submitting a review`);
         agent.shellOutput += outputSize;
         messages.push({ role: 'tool', tool_call_id: c.id, content });
