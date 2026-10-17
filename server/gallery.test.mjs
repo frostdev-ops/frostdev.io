@@ -54,11 +54,12 @@ const llmSays = (decision, reason = 'Because.', reasoning, rationale = 'Content:
 const mock = http.createServer((req, res) => {
   let b = '';
   req.on('data', (d) => { b += d; });
-  req.on('end', () => {
+  req.on('end', async () => {
     const body = JSON.parse(b);
     const kind = req.url === '/alpha/decisions' ? (body.questions?.abuse ? 'safety' : 'decisions') : req.url === '/v1/chat/completions' ? 'chat' : '';
     calls[kind]?.push({ body, auth: req.headers.authorization });
     const next = (Array.isArray(plan[kind]) ? plan[kind].shift() : plan[kind]) || { status: 404, json: { error: { code: 404, message: 'no' } } };
+    if (next.wait) await next.wait;
     res.writeHead(next.status, { 'content-type': 'application/json' });
     res.end(typeof next.json === 'string' ? next.json : JSON.stringify(next.json));
   });
@@ -1228,4 +1229,35 @@ test('media: a failed decision commit leaves the pending file intact', async () 
   g.db.exec('DROP TRIGGER reject_decision');
   assert.ok(g.decide(r.body.id, 'published'));
   assert.equal((await media(h)).status, 200);
+});
+
+
+test('media: filling storage during review refunds quota and preserves existing shared files', async () => {
+  const dir = await startMedia();
+  const file = lottie('retained');
+  const h = await hashOf(file);
+  const a = await post('/submit', await mediaLook(file), fresh());
+  const b = await post('/submit', await mediaLook(file), fresh());
+  const before = quotaUsed();
+  let resume;
+  const wait = new Promise((resolve) => { resume = resolve; });
+  plan.decisions = { ...decisionSays(), wait };
+  const sub = await mediaLook(lottie('in-flight'));
+  const who = fresh();
+  const pending = post('/submit', sub, who);
+  const held = path.join(path.dirname(dir), 'mods', `${'a'.repeat(43)}.glazemod`);
+  try {
+    await waitFor(() => calls.decisions.length === 3);
+    writeFileSync(held, '');
+    truncateSync(held, 1024 ** 3 - readFileSync(path.join(dir, h)).length);
+  } finally { resume(); }
+  const full = await pending;
+  assert.equal(full.status, 503);
+  assert.equal(quotaUsed(), before);
+  assert.equal(g.list().length, 2);
+  assert.deepEqual(readdirSync(dir), [h]);
+  assert.ok(g.decide(a.body.id, 'published') && g.decide(b.body.id, 'published'));
+  assert.equal((await media(h)).status, 200);
+  rmSync(held);
+  assert.equal((await post('/submit', sub, who)).body.outcome, 'pending', 'the failed review write gave the visitor their quota back');
 });
