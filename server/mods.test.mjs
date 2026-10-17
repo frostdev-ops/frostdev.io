@@ -480,6 +480,26 @@ test('personal data with a network host always goes to a person, even when the r
   assert.ok(mails[1].includes('Decline: grades go to the host.'));
 });
 
+test('a mod carrying sticker and pet packs describes them in checks, review facts and its published card', async () => {
+  await start();
+  const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
+  const m = await make({ glaze: 1, name: 'Garden packs', version: '1.0.0', author: { name: 'Kai' }, packs: {
+    stickers: [{ id: 'leaf', name: 'Leaf', file: 'leaf.png' }],
+    pets: [{ id: 'buddy', name: 'Buddy', file: 'buddy.png' }],
+  } }, { 'leaf.png': png, 'buddy.png': png });
+  const adds = ['A sticker: Leaf', 'A pet: Buddy'];
+  const checked = await post('/check', m.bytes);
+  assert.deepEqual(checked.body.problems, []);
+  assert.deepEqual(checked.body.mod.adds, adds);
+  assert.deepEqual(modFacts(await MB.read(m.bytes)).adds, adds);
+  const r = await reviewed(m.bytes);
+  assert.equal(r.row.status, 'pending');
+  assert.equal(await g.decideMod(m.id, m.hash, 'published'), true);
+  const card = (await (await fetch(`${api}/mods`)).json()).mods[0];
+  assert.deepEqual(card.adds, adds);
+  assert.equal(card.code, false);
+});
+
 test('pictures and fonts omitted from the model input cannot be published by a model acceptance', async () => {
   await start();
   const assets = {

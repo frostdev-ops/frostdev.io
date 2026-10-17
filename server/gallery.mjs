@@ -274,6 +274,7 @@ export const modFacts = (got) => {
   const parts = XP.describe({ x: got.manifest.parts }).map(({ why, vars = {} }) => why.replace(/\{(\w+)\}/g, (_, k) => vars[k]));
   const adds = [
     ...(m.ui?.tiles || []).map((t) => `A tile: ${t.name}`), ...(m.ui?.rail || []).map((t) => `A side widget: ${t.name}`),
+    ...(m.packs?.stickers || []).map((s) => `A sticker: ${s.name}`), ...(m.packs?.pets || []).map((p) => `A pet: ${p.name}`),
     ...(m.ui?.nav ? ['Its own navigation'] : []), ...(m.ui?.background ? ['Its own background'] : []), ...parts,
     ...(m.replaces || []).map((r) => `Can replace Glaze's ${r.replace(/^bg$/, 'background').replace(/^nav$/, 'navigation').replace(/^effect:/, 'effect for ').replace(/^tile:/, 'tile ')}`),
     ...(m.settings?.length ? [`${m.settings.length} setting${m.settings.length === 1 ? '' : 's'} in the editor`] : []),
