@@ -862,7 +862,7 @@ test('blocklist: the signed document is served as published, cacheable for an ho
   assert.equal(r.headers.get('cache-control'), 'public, max-age=3600');
   assert.match(r.headers.get('content-type'), /^application\/json/);
   assert.match(r.headers.get('etag'), /^"[\w-]{43}"$/);
-  assert.equal(r.headers.get('access-control-allow-origin'), '*');
+  assert.equal(r.headers.get('access-control-allow-origin'), null);
   assert.equal(r.headers.get('x-content-type-options'), 'nosniff');
   assert.equal(r.headers.get('referrer-policy'), 'no-referrer');
   assert.equal(r.headers.get('set-cookie'), null, 'no cookie is ever set');
@@ -872,6 +872,7 @@ test('blocklist: the signed document is served as published, cacheable for an ho
   assert.equal(same.status, 304);
   assert.equal(await same.text(), '');
   assert.equal(same.headers.get('etag'), etag);
+  assert.equal(same.headers.get('access-control-allow-origin'), null);
   assert.equal(same.headers.get('cache-control'), 'public, max-age=3600');
   assert.equal((await blGet({ headers: { 'if-none-match': `W/${etag}` } })).status, 304, 'a weak copy of it (a proxy that compresses) matches too');
   assert.equal((await blGet({ headers: { 'if-none-match': `"other", ${etag}` } })).status, 304);
@@ -937,6 +938,25 @@ test('blocklist: only a document signed by the configured key, unexpired and wit
   await start();
   assert.throws(() => g.setBlocklist(JSON.stringify(good)), /BLOCKLIST_KEY is not set/);
   assert.equal((await blGet()).status, 404);
+});
+
+test('blocklist: publishing refuses signed lists the extension cannot use', async () => {
+  await blStart();
+  const good = blSign(blList(5, clock));
+  g.setBlocklist(JSON.stringify(good));
+  for (const over of [
+    { issued: 'not a date' }, { issued: iso(clock + 31 * 864e5) },
+    { expires: new Date(clock + 864e5).toISOString() },
+    { mods: ['Not-An-Id'], reasons: {} }, { mods: 'aaaaaaaaaaaaaaaa' },
+    { bundles: ['short'] }, { authors: ['short'] },
+    { mods: ['aaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaa'] },
+    { reasons: { bbbbbbbbbbbbbbbb: 'not listed' } },
+    { reasons: { aaaaaaaaaaaaaaaa: 'x'.repeat(201) } },
+    { reasons: { aaaaaaaaaaaaaaaa: 'line\nbreak' } }, { reasons: [] },
+  ]) {
+    assert.throws(() => g.setBlocklist(JSON.stringify(blSign(blList(6, clock, over)))), /not a valid blocklist/, JSON.stringify(over));
+    assert.deepEqual(await (await blGet()).json(), good);
+  }
 });
 
 test('blocklist: the published list survives a restart', async () => {

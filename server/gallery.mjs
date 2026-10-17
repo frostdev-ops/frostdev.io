@@ -220,6 +220,16 @@ export const BLOCKLIST_MAX = 256 << 10;
 export const canon = (v) => (Array.isArray(v) ? `[${v.map(canon).join(',')}]`
   : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(',')}}`
     : JSON.stringify(v));
+// Keep publishing validation in step with Glaze's lib/blocklist.js clean(): a signed typo must not become the latest list.
+const blocklistShape = (l) => {
+  const at = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(s) ? Date.parse(s) : NaN;
+  const names = (a, re) => Array.isArray(a) && a.every((x) => typeof x === 'string' && re.test(x)) && new Set(a).size === a.length;
+  if (!(at(l.issued) < at(l.expires))) return false;
+  if (!names(l.mods, /^[a-z2-7]{16}$/) || !names(l.bundles, /^[\w-]{43}$/) || !names(l.authors, /^[\w-]{43}$/)) return false;
+  if (!l.reasons || typeof l.reasons !== 'object' || Array.isArray(l.reasons)) return false;
+  const listed = new Set([...l.mods, ...l.bundles, ...l.authors]);
+  return Object.entries(l.reasons).every(([k, v]) => listed.has(k) && typeof v === 'string' && v.length > 0 && v.length <= 200 && !/[\p{Cc}\p{Cf}]/u.test(v));
+};
 // A signed document's text → the text to keep and serve, or throws a message for the owner. `key`: the public key (raw,
 // base64url); `seen`: the seq now stored (0 for none).
 export const checkBlocklist = (text, key, { now = Date.now(), seen = 0 } = {}) => {
@@ -234,6 +244,7 @@ export const checkBlocklist = (text, key, { now = Date.now(), seen = 0 } = {}) =
   const pub = crypto.createPublicKey({ key: { kty: 'OKP', crv: 'Ed25519', x: key }, format: 'jwk' });
   if (!crypto.verify(null, Buffer.from(`glaze-blocklist-1|${canon(list)}`), pub, Buffer.from(sig, 'base64url'))) throw new Error('the signature is not by BLOCKLIST_KEY');
   if (!(typeof list.expires === 'string' && Date.parse(list.expires) > now)) throw new Error('the list has expired (or has no valid expires)');
+  if (!blocklistShape(list)) throw new Error('not a valid blocklist for the extension');
   if (list.seq <= seen) throw new Error(`seq ${list.seq} is not higher than the stored ${seen}`);
   return JSON.stringify({ list, sig });
 };
@@ -710,7 +721,7 @@ export function gallery({
       // Public, signed data: cacheable for an hour, and revalidated by its ETag. The extension asks with no cookies and
       // verifies the signature itself, so nothing here identifies or trusts anyone; no request is counted or logged.
       const etag = `"${sha(body)}"`;
-      const headers = { etag, 'cache-control': 'public, max-age=3600', 'access-control-allow-origin': '*' };
+      const headers = { etag, 'cache-control': 'public, max-age=3600' };
       if (String(req.headers['if-none-match'] || '').split(',').some((t) => t.trim().replace(/^W\//, '') === etag)) {
         res.writeHead(304, { ...headers, 'referrer-policy': 'no-referrer' });
         return res.end();
