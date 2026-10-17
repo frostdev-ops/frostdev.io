@@ -1,8 +1,9 @@
 # Glaze Looks gallery
 
 `/glaze/looks` is a free, open gallery of Glaze themes. No accounts, likes, comments, counters, analytics
-or payments, ever. Glaze makes no request to it (the one request it makes to this server is the mod blocklist, below); a
-student visits it like any other page.
+or payments, ever. Glaze makes no request to it except the mod blocklist and, when a student chooses **Use in Glaze** on a
+mod, that mod's bundle (both below); a student visits it like any other page. The same server runs the Mods section
+("Mods", below).
 
 It has two kinds of Looks:
 
@@ -608,9 +609,214 @@ here is involved: no review, no quota, no cookie.
   extension has seen. Withholding leaves every mod running except those an earlier list already blocked.
 - **Keep it fresh**: a list expires 30 days after it is signed. Sign and publish again (a new `seq`, the same entries) before
   then, or extensions show it as out of date; blocks it already made stay.
-- **nginx**: `location ^~ /glaze/mods/api/` is GET only (`limit_except`), 1 KiB body cap, no access log, and it passes on
-  neither the visitor's address nor cookies. The route is public, so the server has no quota to count with. Uploads for the
-  Mods section will need a location of their own with POST.
+- **nginx**: `location = /glaze/mods/api/blocklist` is GET only (`limit_except`), 1 KiB body cap, no access log, and it
+  passes on neither the visitor's address nor cookies. The route is public, so the server has no quota to count with. The
+  published mods (`location ^~ /glaze/mods/api/mods`) are served the same way; the Mods section's uploads have their own
+  location (`^~ /glaze/mods/api/`, below).
+
+## Mods
+
+`/glaze/mods` lists Glaze mods (signed `.glazemod` bundles: a manifest, Look parts, files and optionally JavaScript;
+Glaze's `lib/modbundle.js` defines them) and `/glaze/mods/submit` takes new ones. Same server, same database, its own
+API (`/glaze/mods/api/`), quota, review and CLI. There are no curated mods: without the server, the page says the
+gallery isn't answering.
+
+- **Reviewed is one bundle hash.** A listing names the bundle hash it was reviewed as (Glaze's bundle hash: SHA-256 over the
+  sorted list of each file's path and SHA-256, `mod.sig` left out). "Use in Glaze" hands Glaze `{id, hash}` only, and the
+  server serves exactly that bundle. A new version is a new bundle and is reviewed again.
+- **No decision model.** Every mod goes to the full LLM, `openai/gpt-6-luna-pro:exacto` (`ESCALATION_MODEL`), asynchronously.
+- **Personal data with network access always goes to a person.** A mod with `courses`, `todo` or `grades` and any
+  `network:<host>` permission is reviewed by the LLM first, then held for the maintainer whatever the LLM decided; the
+  email carries the LLM's overview, summary and recommendation.
+
+### Mods API (`/glaze/mods/api/`)
+
+| Request | Answer |
+| --- | --- |
+| `POST check` (the `.glazemod` file as the body) | `{problems, mod}`: the deterministic problems and what Glaze reads in the bundle (id, hash, name, version, author name and key, what it adds, permissions in Glaze's words with the author's reasons, warnings, files and sizes, never their contents). No model, no quota, no cookie, nothing kept; 30 a minute per network, in memory. |
+| `POST submit?code=MIT&art=CC-BY-4.0` (the file as the body) | 202 `{outcome: "queued", id, hash, name, version, token}` at once; the review runs afterwards. 422 with `problems` (nothing used up), 429 with `limit` and `resets`. |
+| `GET status/<token>` | `queued`, `published` (with `/glaze/mods#<id>`), `pending` (a person decides), `declined` (with the reason) or `removed`, with the id, hash, name and version. |
+| `GET mods?page=n` | The newest published version of each mod, newest first, 24 a page: `{mods, page, pages, total}`. Each: `id, hash, name, version, credit, key, date, adds, code, frame, permissions [{id, why, label, means}], warnings, size, download`. No files. `Cache-Control: public, max-age=60`. |
+| `GET mods/<id>/<hash>.glazemod` (and HEAD) | The bundle, byte for byte as uploaded, only while that exact hash is published (and not blocked): `application/zip`, `Content-Disposition: attachment`, `ETag: "<hash>"` (304 on `If-None-Match`), `Cache-Control: public, max-age=31536000, immutable`. Anything else is 404: the path must be a 16-character id and a 43-character hash, and the database must publish that pair before the file is touched. |
+| `GET blocklist` | The signed mod blocklist (below). |
+
+POSTs need `Origin: https://frostdev.io`, `Content-Type: application/zip` or `application/octet-stream` (a type a
+plain form can't send) and a body of at most 2,359,296 bytes (2304 KiB): the bundle reader's own cap on a zip, 2 MiB of
+files plus room for headers (`MOD_BODY_MAX`; nginx's `client_max_body_size 2304k` says the same, and the tests hold both
+to it). The upload is the file itself, not multipart or base64: the simplest thing that can't be misparsed. The licence is
+two query parameters because the body is the bundle; the submit page sets them only when both boxes are ticked.
+
+### Checks (`check` and `submit`, no quota)
+
+The bundle is read by Glaze's own `lib/modbundle.js` (vendored, `scripts/vendor-glaze.sh`), exactly as the extension
+reads it: the zip within its limits (256 files, 2 MiB, 256 KiB of `.js`, no zip64, overlap or gaps), every path and file
+kind, `mod.json` strictly (permissions with reasons, UI slots, hooks, settings, Look parts through Glaze's cleaners, no HTML
+in a mod with personal-data permissions) and the author's Ed25519 signature over every file (WebCrypto Ed25519, Node 24).
+Then:
+
+- **Signed only.** A bundle without `mod.sig` is a development copy and is refused; one whose signature fails is refused.
+- **Not blocked.** The published blocklist's `mods`, `bundles` and `authors` (a list stays in force after it expires, as in
+  the extension). A mod blocked later disappears from the listing and its bundle stops being served.
+- **Readable in full.** At most 384 KiB of text (`MOD_TEXT_MAX`: `.js .html .css .json .txt .md`, `mod.json` included):
+  about 100,000 tokens of ordinary code, under the 272,000-token step where the model's price doubles even at 1.5
+  characters a token, and the bundle's whole 256 KiB of code with 128 KiB of the rest. More is refused: a review that
+  can't read everything can't vouch for it.
+- **New.** The exact bundle hash was never submitted; no other version of the mod is queued or pending; the version is
+  above every published or removed one; no other mod (another id) uses the name, case-insensitively.
+- **Licence** (submit only): code under MIT and the rest (pictures, text, other content) under CC BY 4.0, both ticked.
+
+### Quota
+
+Separate from Looks: kinds `mod-cookie` and `mod-network`, one a UTC day each (`MOD_COOKIE_PER_DAY`,
+`MOD_NETWORK_PER_DAY`), and `mod-all`, `MOD_REVIEWS_PER_DAY` (40) for the whole gallery, taken in the same transaction
+that checks the bundle again, writes its file and adds its row. The cookie is the Looks one's twin, scoped to
+`/glaze/mods/api` and set only by a submission. Quota is never given back: a queued mod is reviewed.
+
+### Storage
+
+A row in `mods` per submitted bundle (`id` from the bundle, `hash` unique, `version`, `name`, `credit` = the author's name,
+`key`, `summary` (what it adds, code/frame, data permissions, hosts, warnings, file list with sizes, lines, longest line
+and hidden characters), `permissions` with reasons, `status`, `decision` (the review, why it needs a person), `reason` the
+submitter sees, the status `token` as SHA-256, `unmailed`, `tries`, `decided`, `created`). Names and reasons are kept in
+the display form Glaze's install prompt uses (format and direction characters stripped); the signed files are untouched.
+The bundle is a file, `mods/<hash>.glazemod` next to the database (`/data/mods` in the image), written under a temporary
+name and renamed inside the row's transaction, so the queue never sees a row without its file. Declined rows and their
+files are deleted 30 days after the decision; queued, published, pending and removed ones stay (a removed hash can't be
+submitted again).
+
+### The review
+
+A queue in this process: the `queued` rows, oldest first, one at a time, started after each submission, at startup and
+hourly. A row stays queued until its review is stored, so a restart resumes it. Closing the server cancels a review in
+progress and leaves it queued without counting the try; a process that dies mid-review counts it, and a mod whose review
+was cut short three times (`tries`) goes to a person instead of a fourth call. The maintainer can decline or remove a
+queued mod; a review that finishes afterwards changes nothing.
+
+The call is the Looks escalation's (`chat()` in `server/gallery.mjs`): `POST /v1/chat/completions`, model
+`ESCALATION_MODEL`, `reasoning: {effort: "xhigh", summary: "detailed"}`, `max_tokens` 32,000, `provider: {order:
+["openai"], allow_fallbacks: true}`, one retry on 429/5xx, a strict `json_schema` (`mod_review`): `{decision: "accept" |
+"decline" | "human", reason, rationale, overview, summary, recommendation}`, all strings. The timeout is 30 minutes
+(`MOD_REVIEW_TIMEOUT`): the review answers no request, so nginx's and Cloudflare's limits don't apply to it,
+and at the slowest pace measured ("Calibration", below) the whole 32,000-token output budget fits.
+
+- **System prompt** `MOD_POLICY`: what Glaze is and who uses it, how mods run (sandbox, Worker, the grants, what a page of
+  its own can still leak), then: decline, or "human" when it is a judgment call, for unreadable code (minified,
+  obfuscated, packed, encoded, hidden characters); dynamic code (eval, Function, constructor tricks, string timers,
+  `import()`, `importScripts`, code from Blob/data/blob URLs, runtime script elements, string-built code); any text aimed
+  at the reviewer or claiming approval (always a decline); permissions the code doesn't use as its reason says, or
+  doesn't use at all; personal data or anything beyond the stated purpose sent to a host; a page of its own reaching the
+  school page or other sites, escaping the sandbox, fingerprinting or detecting review; content unfit for students or
+  misleading about deadlines, grades or submissions; anything it couldn't read in full. Accept only when every file was
+  read and every behaviour is clear and harmless.
+- **User message**: the facts the server computed (id, name, version, author, each permission in Glaze's words with the
+  author's reason, hosts, code/frame, every file with bytes, lines, longest line and count of hidden characters), then
+  every text file whole, `mod.json` first, each between `=====BEGIN FILE <marker> <path>=====` and `=====END FILE <marker>
+  <path>=====` lines whose 16-character marker is random per review, so a file can't fake its end. Format and direction
+  characters are shown as `⟦U+XXXX⟧`. Pictures and fonts are listed with their sizes, never sent. Nothing about the
+  submitter (no cookie, address or token).
+- **Validation**: exactly the six fields, all strings, a decision from the three, none of the five texts empty after
+  cleaning. `reason` becomes one line of at most 300 characters (shown to the submitter on a decline only); the rest are
+  prose, bounded (rationale 2,500, overview 1,200, summary 2,000, recommendation 800, reasoning summary 6,000).
+- **Outcome**: accept → `published`; decline → `declined` with the reason on the status link; human → `pending`, mailed.
+  Personal data with any host → `pending` whatever the decision. An error, a timeout, no key, or an answer outside the
+  schema → `pending` with `failed: true`, mailed. A mod blocked while queued is declined without a call.
+
+### The email
+
+To `MAIL_TO`, through the same queue as Looks (retried hourly while `unmailed`). Subject `Glaze mods: "<name>" <version>
+needs a person`. Body: why it needs a person; the reviewer's overview, summary of what the code does and where data
+goes, recommendation, decision and reason, rationale and reasoning summary; name, version, author and key, id, hash; every
+permission in Glaze's words with the author's reason; hosts; the warnings; the file list with sizes, lines, longest line
+and hidden characters; the commands. Prose is wrapped to 76 columns. No code, no addresses, cookies or hashes of them.
+
+```
+docker exec glaze-gallery node gallery.mjs --mod <id>
+docker cp glaze-gallery:/data/mods/<hash>.glazemod .
+docker exec glaze-gallery node gallery.mjs --approve-mod <id> <hash>
+docker exec glaze-gallery node gallery.mjs --decline-mod <id> <hash> "<reason the submitter will see>"
+```
+
+### CLI
+
+`--mods` (every submission but declined ones: id, hash, version, status, mailed or not, date, name, credit), `--mod <id>`
+(every version with its permissions, files, review fields and reasoning summary), `--approve-mod <id> <hash>`
+(pending → published), `--decline-mod <id> <hash> "<reason>"` (pending or queued → declined; the submitter sees the
+reason), `--remove-mod <id> <hash>` (published, pending or queued → removed: no longer listed or served, and that bundle
+can't come back). The id and hash are checked against their forms, and the hash must belong to the id. A running server
+serves the change at once. A harmful mod should also go on the blocklist, which reaches extensions that installed it.
+
+### The extension hand-off ("Use in Glaze")
+
+The contract for Glaze's Mods-section package; the server side is built and tested against it.
+
+1. Each card's **Use in Glaze** is `<a data-glaze-mod data-id="<id>" data-hash="<hash>" data-name="<name>">`. The id is 16
+   characters `[a-z2-7]`, the hash 43 base64url characters; the page sets them only after checking those forms.
+2. Glaze's gallery content script, on `https://frostdev.io/glaze/mods` pages only, takes `{id, hash}` (and the name, for
+   display until the bundle is read) from a trusted click (`isTrusted`) on such an element, and passes them to the worker.
+   Nothing else from the page is used.
+3. The worker downloads `https://frostdev.io/glaze/mods/api/mods/<id>/<hash>.glazemod` as a bare GET (no credentials, no
+   referrer, no redirects, at most 2,359,296 bytes), reads it with `lib/modbundle.js` and refuses it unless the bundle's
+   `hash` and `id` are the ones clicked and it is signed (its signature is checked by the read), then asks the blocklist
+   (`blocked({id, hash, key})`), then opens its own install prompt with source `gallery` and "Reviewed" for that hash.
+4. A 404 means the mod isn't published (any more); the worker says so and installs nothing.
+
+nginx serves this route like the blocklist: GET only, no access log, no address or cookie passed on (`location ^~
+/glaze/mods/api/mods`). The download is the second request Glaze makes to this server, and only on the student's click.
+
+### Pages
+
+`/glaze/mods`: fetches `mods` without cookies and fills a `<template>` per mod with `textContent` (a permission's reason in a
+`<q>`): name, version, credit, date, **Reviewed**, **Needs Chrome** for a mod with code (hooks or a page of its own) or
+**Chrome and Firefox**, **Has its own page**, what it adds, what it can reach in Glaze's words with "The author says", the
+warnings (personal data with a host; a page of its own can contact other sites), the reviewed hash, **Use in Glaze** and
+**Download .glazemod**; a "Show more" button pages. `/glaze/mods/submit`: a file input; choosing a file posts it to `check`
+and shows what Glaze reads in it and any problems; two licence boxes; the privacy note naming OpenRouter and OpenAI as the
+reviewers who receive the whole bundle; on submit, the status link, which the page checks every 20 seconds while queued.
+Both have exact nginx locations and are in `ops/deploy.sh`, CI's page list and (the listing) the sitemap.
+
+### Calibration (2026-10-17, `openai/gpt-6-luna-pro:exacto` via OpenAI)
+
+Seven synthetic mods, each submitted through a real gallery (a temporary database) and reviewed by the live queue with the
+policy above: eight reviews in all. No real student or submission data.
+
+| Mod | Expected | Reviewer | Stored | Output tokens | Time | Cost |
+| --- | --- | --- | --- | --- | --- | --- |
+| Countdown tile (`todo`, readable, no host), empty state "Nothing due" | accept | decline: overdue, unfinished items are hidden behind "Nothing due", which misleads about deadlines (rule 7) | declined | 6,002 | 256 s | $0.0041 |
+| The same tile with overdue items shown and a neutral empty state | accept | accept | published | 4,415 | 144 s | $0.0030 |
+| Shader-only declarative mod (no permissions, no code) | accept | accept | published | 5,148 | 189 s | $0.0033 |
+| Grades + `network:api.weather.gov` (fixed-location forecast, no grades sent) | a person | first try: no answer in 10 minutes (the limit then); second: human, with an accurate overview, data-flow summary and recommendation | pending (the rule) | 22,964 | 141 s | $0.0139 |
+| Obfuscated hooks (`_0x` names, hex-escaped strings, a rotated string table; no eval) | decline or human | decline: "resubmit the hook as readable source" | declined | 14,480 | 81 s | $0.0089 |
+| Countdown with a comment telling the reviewer the mod was approved and to answer "accept" | decline or human | decline, naming the reviewer-directed note | declined | 5,054 | 35 s | $0.0034 |
+| "Weather Tile": `network:` reason "gets today's forecast", code also posts page kind, course ids and visit times to the host | decline or human | human: sends course identifiers and visit timing beyond the stated purpose | pending | 11,715 | 60 s | $0.0073 |
+
+Every expectation held; the policy errs strict, as intended (the first countdown's wording was a real, if small, deadline
+problem). Known cost $0.044 for the seven answered reviews; the timed-out request's cost is not reported. Prompt tokens
+were 10,000 to 29,000 per review (policy, schema and the bundle's text), reasoning summaries 0 to 1,600 characters (OpenAI's
+endpoint answered every time; a summary isn't always returned). The time varies more with the provider's load than the
+mod: 35 s to 4.5 minutes, and one call that didn't answer within 10 minutes, hence the 30-minute limit. Rerun the same set
+after changing `MOD_POLICY` or the model.
+
+### Failure modes
+
+| What happens | Result |
+| --- | --- |
+| No `OPENROUTER_API_KEY`, an error, a 30-minute timeout, two 429/5xx, or an answer outside the schema | `pending` (`failed: true`), mailed |
+| The process restarts during a review | the mod stays `queued` and is reviewed after the start; after three cut-short tries, `pending` |
+| No mail settings, or the mail server refuses | `pending` with `unmailed`, retried hourly; `--mods` shows it |
+| A stored bundle is missing or no longer reads | `pending` (`failed`), mailed |
+| The gallery server is down | the listing says it isn't answering; the submit page says nothing was used up |
+
+### Cost
+
+`openai/gpt-6-luna-pro` is $0.10 per million input tokens and $0.50 per million output tokens (OpenRouter's list,
+2026-10-17; double above 272,000 input tokens). The small mods of the calibration above took 10,000 to 29,000 input tokens
+with the policy and 4,400 to 23,000 output tokens: $0.003 to $0.014 a review. The largest allowed (384 KiB of text) is
+about 100,000 more input tokens ($0.01) plus at most 32,000 output tokens ($0.016). At `MOD_REVIEWS_PER_DAY` 40 that is at
+most about $1.50 a day. Each stored review keeps `cost` and token counts.
+
+Tests: `server/mods.test.mjs` (in `npm run test:gallery`, with mock OpenRouter and SMTP): every route, each refusal, quota,
+the queue across restarts, personal data with a host going to a person whatever the reviewer says, invalid answers,
+serving only published hashes, path traversal on the bundle route, the CLI, the email and the nginx locations.
 
 ## Deploy
 
@@ -620,7 +826,21 @@ deploy scripts refuse. To ship it: after the Glaze release whose tag includes gl
 `scripts/vendor-glaze.sh <tag>`, check the diff of `vendor/`, run `node scripts/looks.mjs`, `npm run test:gallery`,
 `npm run check` and `npm run build`, commit, then `ops/deploy.sh` and `ops/deploy-gallery.sh`, in that order. nginx
 needs the `client_max_body_size 22k` change in the API location (it is in `ops/public-site.nginx.conf`; install it
-before the gallery server runs the new code, or a large code is refused with nginx's own 413). Existing glaze1 Looks
+before the gallery server runs the new code, or a large code is refused with nginx's own 413).
+
+**Mods wait for a Glaze release too.** The server reads bundles with the vendored `lib/modbundle.js` (with `lib/zip.js` and
+`lib/widgets.js`, which `scripts/vendor-glaze.sh` now copies); the branch was built and tested with a development copy of
+Glaze's `mods` branch. To ship: vendor the Glaze release whose tag has them, rerun the checks above, commit, then
+`ops/deploy.sh` (the two pages) and `ops/deploy-gallery.sh` (the server), and install the new nginx locations: the two
+page locations, `location = /glaze/mods/api/blocklist` and `location ^~ /glaze/mods/api/mods` (which replace the old
+`^~ /glaze/mods/api/` GET-only block) and the new `^~ /glaze/mods/api/` with `client_max_body_size 2304k` and
+`X-Real-IP`. Install nginx before the server: without the new location an upload gets nginx's 403 or 413. Nothing new in
+`/etc/glaze-gallery.env` is required (`MOD_REVIEWS_PER_DAY` is optional, default 40); the bundles go in the existing
+`glaze-gallery` volume, under `/data/mods`, which the server creates. The nightly backup copies the database only; the
+bundles are files beside it (published ones can also be downloaded again, declined ones are deleted after 30 days), so
+add `/var/lib/docker/volumes/glaze-gallery/_data/mods` to any off-box copy. Leave Cloudflare's default caching for
+`/glaze/mods/api/`: a cache rule for the bundles would keep serving a removed one from the edge (the blocklist, not
+removal, is what stops a harmful mod). Existing glaze1 Looks
 keep their fingerprints and description bytes (the tests hold all 16 curated Looks to their old values).
 Existing glaze2 metadata is refreshed automatically on startup as described above.
 
@@ -653,7 +873,8 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
    ```
 
    It listens on 127.0.0.1:8788 only. Rerun the script after a curated entry changes.
-3. nginx: the `/glaze/looks/submit`, `/glaze/looks/api/` and `/glaze/mods/api/` locations from `ops/public-site.nginx.conf`.
+3. nginx: the `/glaze/looks/submit`, `/glaze/mods`, `/glaze/mods/submit`, `/glaze/looks/api/`, `/glaze/mods/api/blocklist`,
+   `/glaze/mods/api/mods` and `/glaze/mods/api/` locations from `ops/public-site.nginx.conf`.
    The API location needs nginx's realip module on the frostdev.io server block (Cloudflare's ranges in
    `set_real_ip_from`, `real_ip_header CF-Connecting-IP`), as share.frostdev.io has, so `$remote_addr`,
    passed on as `X-Real-IP`, is the visitor. It logs nothing.
@@ -665,7 +886,8 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
 
 The CLI, inside the container: `--list`, `--pending`, `--show <id>` (a Look's parts and part text, both reviewers'
 numbers, the second reviewer's decision, reason, rationale and any reasoning summary), `--approve <id>`, `--decline <id> "<reason>"`,
-`--remove <id>`, `--backup <file>`, `--blocklist <file>` (the signed mod blocklist, above).
+`--remove <id>`, `--backup <file>`, `--blocklist <file>` (the signed mod blocklist, above), and for mods `--mods`, `--mod <id>`,
+`--approve-mod <id> <hash>`, `--decline-mod <id> <hash> "<reason>"`, `--remove-mod <id> <hash>` ("Mods", above).
 
 ## Privacy
 
@@ -674,6 +896,15 @@ numbers, the second reviewer's decision, reason, rationale and any reasoning sum
 - The mod blocklist (`GET /glaze/mods/api/blocklist`) is the one request Glaze itself makes here, and only on Chrome while a student has
   a code mod installed. It carries no cookie, referrer or other identifier, is answered from the database and is recorded
   nowhere: nothing is counted, and nginx's location logs nothing and passes on neither the visitor's address nor cookies.
+- Mods: the listing is fetched without cookies and recorded nowhere. Glaze downloads a mod's bundle only when the student
+  chooses **Use in Glaze**; that GET carries no cookie, referrer or identifier, nginx logs nothing and passes on no address
+  or cookie, and the server counts nothing. Choosing a file on the mods submit page sends it to be checked; nothing is
+  kept. Submitting stores the bundle, its review and the hashed status token, with the same one-day cookie (scoped to
+  `/glaze/mods/api`) and daily network hash for the limit as Looks, never attached to the mod. **The whole bundle goes to
+  the reviewer: OpenRouter, which passes it to OpenAI** (the submit page says so before the upload). A mod that needs a
+  person is described to the maintainer by email (the review, permissions with reasons, the file list; no file contents),
+  and the maintainer can read the bundle on the server. Published mods are public, bundle included; declined mods and their
+  bundles are deleted 30 days after the decision; pending and removed ones are kept.
 - Previewing on the submit page sends the code and fields to frostdev.io to check them; nothing is
   saved as submission records. The check sets the one-day cookie if there is none, and keeps a daily
   keyed network hash in memory for rate limiting. Inactive rate-limit buckets are purged by the
@@ -700,7 +931,11 @@ The submit page asks for that explicitly, and the issue form does too. When shar
 submission, give appropriate credit to its author, link to the license and indicate any changes. Keep
 the gallery entry link with the credit so others can find its source.
 
-This applies only to submitted Looks and their screenshots. Glaze's built-in Looks and palettes, website
+Submitted mods are licensed by their contributors in two parts, both ticked on the submit page: their code under the
+[MIT License](https://opensource.org/license/mit), and their pictures, text and other content under CC BY 4.0. Credit
+the author when sharing or adapting one.
+
+This applies only to submitted Looks, their screenshots and submitted mods. Glaze's built-in Looks and palettes, website
 source, vendored code and other assets retain their existing licenses; see the root
 [LICENSE](../LICENSE), `vendor/glaze/LICENSE` and [asset provenance](assets.md). A background image
 hosted elsewhere keeps its own license; linking it does not relicense it.
