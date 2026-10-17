@@ -1371,8 +1371,10 @@ export function gallery({
       const row = q.byId.get(id);
       const from = { published: ['pending'], declined: ['pending'], removed: ['published', 'pending'] }[to];
       if (!row || !from.includes(row.status)) return false;
-      // A declined or removed Look's file goes, unless another published or pending Look uses it.
-      return tx(() => { const ok = q.setStatus.run(to, cleanReason(reason), now(), id, row.status).changes === 1; if (ok) dropMedia(row.media); return ok; });
+      // Delete only after the decision commits; a failed commit must leave its pending file intact.
+      const ok = tx(() => q.setStatus.run(to, cleanReason(reason), now(), id, row.status).changes === 1);
+      if (ok && row.media) try { tx(() => dropMedia(row.media)); } catch (e) { console.error('gallery: media cleanup:', e.message); }
+      return ok;
     },
     // Mods, for the CLI: every submission but the declined ones, every version of one mod, and the maintainer's decisions.
     // A queued mod can be declined or removed before its review; only a person's approval publishes one the review didn't.

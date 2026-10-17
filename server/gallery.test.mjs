@@ -1212,3 +1212,20 @@ test('media: the combined file budget refuses uploads without using quota and co
   assert.equal(quotaUsed(), before);
   assert.deepEqual(readdirSync(dir), [await hashOf(lottie('budget'))]);
 });
+
+test('media: a failed decision commit leaves the pending file intact', async () => {
+  const dir = await startMedia();
+  const file = lottie('decision rollback');
+  const h = await hashOf(file);
+  const r = await post('/submit', await mediaLook(file), fresh());
+  g.db.exec(`PRAGMA foreign_keys = ON;
+    CREATE TABLE parent (id INTEGER PRIMARY KEY);
+    CREATE TABLE child (id INTEGER REFERENCES parent(id) DEFERRABLE INITIALLY DEFERRED);
+    CREATE TRIGGER reject_decision AFTER UPDATE OF status ON looks BEGIN INSERT INTO child VALUES (1); END;`);
+  assert.throws(() => g.decide(r.body.id, 'declined', 'No.'), /FOREIGN KEY/);
+  assert.equal(g.show(r.body.id).status, 'pending');
+  assert.deepEqual(readdirSync(dir), [h], 'rolled-back decisions must not delete the file');
+  g.db.exec('DROP TRIGGER reject_decision');
+  assert.ok(g.decide(r.body.id, 'published'));
+  assert.equal((await media(h)).status, 200);
+});
