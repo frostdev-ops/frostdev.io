@@ -76,7 +76,7 @@ const safetyQuestions = (parts) => {
   return {
     abuse: { type: 'noul', instructions: `${intro} Does ${what} contain profanity, a slur, sexual or drug content, graphic violence, or an insult or harassment aimed at a person?`, criteria: { true: 'Yes: at least one of those is there. Dark or spooky themes (blood, ghosts, death, hell as an exaggeration) do not count by themselves.', false: 'No: ordinary, playful or mildly spooky words only.' } },
     personal: { type: 'noul', instructions: `${intro} Does ${what} reveal personal information: a phone number, an email or street address, or a person's full real name together with a school, grade or other detail that identifies them?`, criteria: { true: 'Yes: someone could be identified or contacted from it.', false: 'No: a nickname, first name, initials or a made-up handle.' } },
-    official: { type: 'noul', instructions: `${intro} Does ${what} claim to be official, or to come from a company, brand, school or university (for example "Official", a company name as the credit, or a university as the author)? Naming a platform as a description ("Canvas Calm") is fine.`, criteria: { true: 'Yes: it presents itself as made or endorsed by an organization.', false: 'No: a personal theme.' } },
+    official: { type: 'noul', instructions: `${intro} Does ${what} claim to be official, or to come from a company, brand, school or university (for example "Official", a company name as the credit, or a university as the author)?${parts ? ' A label that presents a part of a school page as an organization\'s own, or gives it its name (for example "Official Instructure Support" or "University IT Helpdesk"), counts.' : ''} Naming a platform as a description ("Canvas Calm") is fine.`, criteria: { true: 'Yes: it presents itself as made or endorsed by an organization.', false: 'No: a personal theme.' } },
     ad: {
       type: 'noul',
       instructions: `${intro} Is ${what} advertising, selling something, or pointing to a website or service?${parts ? " A link's address points to a website, so every link counts unless its name and host plainly serve students (a school's library, a study tool, a reference)." : ''}`,
@@ -532,12 +532,14 @@ export function gallery({
     if (a.distinct < d.distinct) out.push(`It reads as ${a.choice === 'copy' ? 'a copy' : 'a light variant'} of ${near ? `"${near.look.name}"` : 'a Look already here'} (${Math.round(a.distinct * 100)}% distinct where it needs ${Math.round(d.distinct * 100)}%). Make it more your own.`);
     return out;
   };
-  // A Look that adds links to the course menu is never published on the first review alone, whatever it answered: whether a
-  // link belongs there is a judgment (ESCALATION_POLICY, 4), and the second reviewer is the one who makes it.
-  const band = (a, links = false) => {
+  // A Look whose parts carry text (group labels, link names and addresses, rule labels) is never published on the first review
+  // alone, whatever it answered: whether a link belongs in the course menu is a judgment (ESCALATION_POLICY, 4), and the first
+  // reviewer's `official` question is weak on a label (2026-10-16: "Dean of Students Office" 0.10, "Google Classroom Help Center"
+  // 0.08), so the second reviewer reads that text too. A clear decline still declines. Pass false to go back to the bands alone.
+  const band = (a, text = false) => {
     const { accept: A, decline: D } = BANDS;
     if (a.safety >= D.safety || a.quality < D.quality || a.distinct < D.distinct) return 'decline';
-    if (!links && a.safety < A.safety && a.quality >= A.quality && a.distinct >= A.distinct && a.choice === 'distinct') return 'accept';
+    if (!text && a.safety < A.safety && a.quality >= A.quality && a.distinct >= A.distinct && a.choice === 'distinct') return 'accept';
     return 'unsure';
   };
 
@@ -616,7 +618,7 @@ export function gallery({
         submission: { name: body.name, claimedTags: body.tags, ...summarize(described) },
         nearest: near.map((n) => ({ name: n.look.name, distance: n.distance, ...summarize(n.look.described) })),
       };
-      // Free text in the parts goes to the safety call with the name and credit, and only there (the Look call never sees it).
+      // Free text in the parts goes to the safety call with the name and credit, and to the second reviewer, never to the Look call.
       const who = { name: body.name, credit: body.credit, ...(described.partsText && { parts: described.partsText }) };
       let a;
       try { a = await firstReview(state, claimed, who); } catch (e) {
@@ -626,7 +628,7 @@ export function gallery({
       }
       const kept = body.tags.filter((x) => !(x in a.tags) || a.tags[x] >= BANDS.tag);
       const dropped = body.tags.filter((x) => !kept.includes(x));
-      let outcome = band(a, !!described.parts?.nav?.links?.length);
+      let outcome = band(a, !!described.partsText);
       let escalation = null;
       if (outcome === 'unsure') {
         // The second reviewer judges the content rules too, so it sees the credit and the text in the parts.

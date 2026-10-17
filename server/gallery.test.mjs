@@ -586,7 +586,7 @@ test('check shows a glaze2 code live, with its parts, and the nearest Looks', as
   assert.equal(quotaUsed(), 0);
 });
 
-test('text in the parts goes to the safety call with the name and credit, and a link always meets the second reviewer', async () => {
+test('text in the parts goes to the safety call with the name and credit, and any text meets the second reviewer', async () => {
   await start();
   const sub = look({ code: code2({ nav: NAV, rules: RULES }) });
   const r = await post('/submit', sub, fresh());
@@ -601,13 +601,14 @@ test('text in the parts goes to the safety call with the name and credit, and a 
   assert.match(risk.questions.abuse.instructions, /the name, the credit or any of the text from its parts/);
   assert.match(risk.questions.ad.instructions, /every link counts unless its name and host plainly serve students/);
   assert.match(risk.questions.ad.criteria.true, /a link to a site that does not plainly serve students/);
+  assert.match(risk.questions.official.instructions, /A label that presents a part of a school page as an organization's own/);
   assert.deepEqual(Object.keys(risk.questions).sort(), ['abuse', 'ad', 'official', 'personal']);
   // The Look call sees the link's host, never the free text.
   const look1 = JSON.stringify(calls.decisions[0].body.state);
   assert.match(look1, /library\.example\.edu/);
   assert.doesNotMatch(look1, /Library|Study|My courses|search\?q/);
   assert.equal(calls.decisions[0].body.state.submission.parts.nav.groups[0].items.includes('link:library.example.edu'), true);
-  // A clear accept would have published it; a link is a judgment, so the second reviewer made it, and saw the text.
+  // A clear accept would have published it; text in parts is not left to the first reviewer, so the second made the call, and saw the text.
   assert.equal(r.body.escalated, true);
   assert.equal(calls.chat.length, 1);
   assert.equal(calls.chat[0].body.messages[0].content, ESCALATION_POLICY);
@@ -615,17 +616,20 @@ test('text in the parts goes to the safety call with the name and credit, and a 
   assert.equal(user.submission.credit, sub.credit);
   assert.deepEqual(user.submission.partsText, risk.state.parts);
   assert.equal(user.submission.parts.rules.count, 3);
-  // The same Look without a link, whose clear answers stand: rule labels still reach the safety call.
+  // The same Look without a link: a rule label is text too, so it meets the second reviewer as well.
   calls.chat = [];
   const noLink = look({ code: code2({ rules: RULES }) });
   const r2 = await post('/submit', noLink, fresh());
   assert.equal(r2.body.outcome, 'published');
-  assert.equal(r2.body.escalated, false);
-  assert.equal(calls.chat.length, 0);
+  assert.equal(r2.body.escalated, true);
+  assert.equal(calls.chat.length, 1);
+  assert.deepEqual(JSON.parse(calls.chat[0].body.messages[1].content).submission.partsText, { labels: [{ part: 'canvas.dashboard-card.title', text: 'My courses' }] });
   assert.deepEqual(calls.safety[1].body.state.parts, { labels: [{ part: 'canvas.dashboard-card.title', text: 'My courses' }] });
-  // A Look whose parts have no text is reviewed with the original safety questions.
+  // A Look whose parts have no text is reviewed with the original safety questions, and a clear accept stands.
+  calls.chat = [];
   const plain = look({ code: code2({ cursor: { kind: 'sparkle' } }) });
-  await post('/submit', plain, fresh());
+  assert.equal((await post('/submit', plain, fresh())).body.escalated, false);
+  assert.equal(calls.chat.length, 0);
   assert.deepEqual(calls.safety[2].body.state, { name: plain.name, credit: plain.credit });
   assert.deepEqual(calls.safety[2].body.questions, SAFETY_QUESTIONS);
 });

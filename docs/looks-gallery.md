@@ -166,8 +166,13 @@ A safety decline names the kind of problem in plain words (inappropriate words, 
 claims to be official, advertising) and never quotes the name or credit (or, for glaze2, the text in the
 parts). A claimed subjective tag with P < 0.5 is dropped from the Look, never a reason to decline it.
 
-A Look that adds links to the course menu is never in the clear-accept band, whatever the answers: it goes to
-stage 2, because whether a link belongs there is a judgment (`band(a, links)`). A clear decline still declines.
+A Look whose parts carry any text (group labels, link names and addresses, rule labels) is never in the clear-accept
+band, whatever the answers: it goes to stage 2 (`band(a, text)`). Whether a link belongs in the course menu is a
+judgment, and the first reviewer is weak on text in labels (probes, 2026-10-16: "Official Instructure Support" 0.25
+until the question named such labels, then 0.89; the independent "Dean of Students Office" 0.10 and "Google
+Classroom Help Center" 0.08). A clear decline still declines. Parts without text (a shader, layers, animations,
+effects, a cursor, a nav layout without labels or links, rules that only hide, move or style) are judged by the
+bands alone.
 
 ### Choosing the decision model (2026-10-16)
 
@@ -390,11 +395,23 @@ apply as before. One bad part refuses the whole code, and a refused code uses no
   host and icon; `parts.rules`: how many, by action and by part name (names from Glaze's registry).
 - Not in it: group labels, link names, link addresses and rule labels. That text goes to the **safety call** next to
   the name and credit, as `parts: { groups, links: [{ name, url }], labels: [{ part, text }] }`, and to stage 2 as
-  `submission.partsText`; the Look call never sees it. The host of a link counts for the `ad` question, and a Look that
-  adds links is never accepted on stage 1 alone.
+  `submission.partsText`; the Look call never sees it. The host of a link counts for the `ad` question, and a Look
+  with any such text is never accepted on stage 1 alone.
 - A full set of parts (a shader, every moment and event, six nav groups and eight links, 40 rules) adds about 2,700
   characters to a Look's summary (3,926 in all against 1,144 for a plain Look) and each nearest Look with parts about as
   much: a few thousand tokens more, still about $0.0002 a stage-1 review.
+
+**Probes** (2026-10-16, 18 live calls, about $0.008; the questions for parts are new and only this thin). `liquid/d1-ultra`
+safety call on `{ name, credit, parts }`: a benign library link 0.02 for `ad`, a benign label 0.00; a shop link with a
+referral code `ad` 0.98 (0.97 with an instruction to the reviewer in the link's name); an insult in a rule label `abuse`
+1.00; an email address and phone number in a group label `personal` 0.99; "Official Instructure Support" `official`
+0.25 with the original question and 0.89 after it named such labels, "University IT Helpdesk" 0.62; independent
+labels "Dean of Students Office" 0.10 and "Google Classroom Help Center" 0.08 (hence text always meets stage 2). The Look
+call on a shader Look with an animation and a cursor: quality 3.05, `distinct` 0.79; on a layered Look with 400
+twinkling stars at 200% speed, additive blends and 200 ms confetti: quality 2.18 (unsure band, so stage 2). Stage 2
+accepted a Look with a library link in a "Study" group and declined one with a "Deals" group and a referral link to an
+essay service, each with a sensible reason and rationale. Rerun them when the model changes (the scripts were outside the repository, like the
+others; the cases are the ones above).
 
 **Previews.** `describe()` also gives `live` (a shader's source, the ground and background colors already resolved,
 and Glaze's `GZ_SCENE_LOOK` numbers for the Look's intensity) and the cards badge what else a Look changes:
