@@ -62,11 +62,12 @@ const review = (decision, over = {}, { reasoning = 'I read hooks.js line by line
 const mock = http.createServer((req, res) => {
   let b = '';
   req.on('data', (d) => { b += d; });
-  req.on('end', () => {
+  req.on('end', async () => {
     const body = JSON.parse(b);
     if (req.url === '/v1/chat/completions') calls.chat.push({ body, auth: req.headers.authorization });
     const next = (Array.isArray(plan.chat) ? plan.chat.shift() : plan.chat) || { status: 404, json: { error: 'no' } };
     if (next.hold) return; // never answers: the client gives up
+    if (next.wait) await next.wait;
     res.writeHead(next.status, { 'content-type': 'application/json' });
     res.end(typeof next.json === 'string' ? next.json : JSON.stringify(next.json));
   });
@@ -294,6 +295,58 @@ test('posts need the site\'s Origin, a bundle\'s type, and at most the bundle ca
   assert.equal(MOD_BODY_MAX, 2304 * 1024);
 });
 
+test('chunked uploads obey the body cap without Content-Length and leave no stored files', async () => {
+  await start();
+  const chunked = (bytes) => new Promise((resolve, reject) => {
+    const req = http.request(`${api}/check`, { method: 'POST', headers: { origin: ORIGIN, 'content-type': 'application/zip' } }, (res) => {
+      res.resume();
+      res.on('end', () => resolve(res.statusCode));
+    }).on('error', reject);
+    for (let i = 0; i < bytes.length; i += 65536) req.write(bytes.subarray(i, i + 65536));
+    req.end();
+  });
+  assert.equal(await chunked((await make()).bytes), 200);
+  assert.equal(await chunked(Buffer.alloc(MOD_BODY_MAX)), 200, 'the exact cap reaches the bundle reader');
+  assert.equal(await chunked(Buffer.alloc(MOD_BODY_MAX + 1)), 413);
+  assert.equal(modQuota(), 0);
+  assert.deepEqual(readdirSync(path.join(dir, 'mods')), []);
+});
+
+test('hostile archives are refused before quota, storage or review', async () => {
+  await start();
+  const m = await make();
+  const tooMany = Buffer.from(m.bytes);
+  tooMany.writeUInt16LE(MB.CAP.files + 1, tooMany.length - 12);
+  const tooBig = Buffer.from(m.bytes);
+  const cd = tooBig.readUInt32LE(tooBig.length - 6);
+  tooBig.writeUInt32LE(MB.CAP.total + 1, cd + 24);
+  const bad = [tooMany, tooBig, MB.archive({ ...m.files, '../escape.txt': te.encode('x') }), MB.archive({ ...m.files, 'payload.svg': te.encode('<svg/>') })];
+  for (const bytes of bad) {
+    const r = await submit(bytes);
+    assert.equal(r.status, 422);
+    assert.ok(r.body.problems.length);
+  }
+  assert.equal(modQuota(), 0);
+  assert.equal(calls.chat.length, 0);
+  assert.equal(g.listMods().length, 0);
+  assert.deepEqual(readdirSync(path.join(dir, 'mods')), []);
+});
+
+for (const limit of ['cookie', 'network', 'all', 'bundle']) test(`concurrent mod submissions enforce the ${limit} limit`, async () => {
+  await start({ modReviewsPerDay: limit === 'all' ? 1 : 40 });
+  plan.chat = { hold: true };
+  const a = await make(), b = limit === 'bundle' ? a : await make();
+  const first = fresh(), second = fresh();
+  if (limit === 'cookie') second.cookie = first.cookie;
+  if (limit === 'network') { first.ip = '2001:db8:1:2::1'; second.ip = '2001:db8:1:2:ffff::2'; }
+  const results = await Promise.all([submit(a.bytes, first), submit(b.bytes, second)]);
+  assert.deepEqual(results.map((r) => r.status).sort(), [202, limit === 'bundle' ? 422 : 429]);
+  if (limit !== 'bundle') assert.equal(results.find((r) => r.status === 429).body.limit, limit);
+  assert.equal(g.listMods().length, 1);
+  assert.equal(modQuota(), 3);
+  assert.equal(readdirSync(path.join(dir, 'mods')).length, 1);
+});
+
 for (const failure of ['insert', 'commit']) test(`failed row ${failure} rolls back quota and removes the renamed bundle`, async () => {
   await start();
   const m = await make();
@@ -516,6 +569,33 @@ test('the queue survives a restart: a review cut short stays queued and runs on 
   assert.equal(calls.chat.length, 3);
 });
 
+for (const action of ['declined', 'removed']) test(`a completed review cannot undo a queued mod being ${action}`, async (t) => {
+  await start();
+  let release;
+  const wait = new Promise((resolve) => { release = resolve; });
+  t.after(release);
+  plan.chat = { ...review('accept'), wait };
+  const m = await make();
+  await submit(m.bytes);
+  await waitFor(() => calls.chat.length === 1);
+  assert.equal(await g.decideMod(m.id, m.hash, action, 'Maintainer decision.'), true);
+  release();
+  await g.drain();
+  assert.equal(row(m.hash).status, action);
+  assert.equal(row(m.hash).reason, 'Maintainer decision.');
+  assert.equal((await download(m.id, m.hash)).status, 404);
+});
+
+test('a retryable model error uses one queue try and one submission quota', async () => {
+  await start();
+  plan.chat = [{ status: 429, json: {} }, review('accept')];
+  const done = await reviewed((await make()).bytes);
+  assert.equal(done.row.status, 'published');
+  assert.equal(done.row.tries, 1);
+  assert.equal(calls.chat.length, 2);
+  assert.equal(modQuota(), 3);
+});
+
 test('a stored bundle that is missing or changed goes to a person, without a call', async () => {
   for (const replacement of ['missing', 'signed', 'unsigned']) {
     await start();
@@ -713,6 +793,14 @@ test('the CLI lists, shows, approves, declines and removes mods by id and hash',
   assert.match(cli('--approve-mod', c.id, c.hash).stdout, /no such mod in a state that can become published/);
   assert.match(cli('--approve-mod', a.id, b.hash).stdout, /no such mod/, 'the hash must belong to the id');
   for (const args of [['--approve-mod', a.id], ['--decline-mod', b.id, b.hash], ['--mod', 'not-an-id'], ['--remove-mod', a.id, '../x']]) assert.equal(cli(...args).status, 2, args.join(' '));
+});
+
+test('both mod pages use text sinks for untrusted names, reasons and permissions', () => {
+  for (const file of ['src/pages/glaze/mods.astro', 'src/pages/glaze/mods/submit.astro']) {
+    const script = readFileSync(file, 'utf8').split('<script>')[1].split('</script>')[0];
+    assert.doesNotMatch(script, /innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function\(|\.srcdoc/);
+    assert.match(script, /textContent/);
+  }
 });
 
 test('nginx: the blocklist and published mods are GET only and anonymous; uploads get the bundle cap and the visitor\'s address', () => {
