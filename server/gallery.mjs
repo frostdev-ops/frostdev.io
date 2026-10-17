@@ -935,6 +935,12 @@ export function gallery({
   const blockedMod = ({ id, hash, key }) => {
     try { const l = JSON.parse(blocklist()).list; return l.mods.includes(id) || l.bundles.includes(hash) || l.authors.includes(key); } catch { return false; }
   };
+  const readStoredMod = async (row) => {
+    const bytes = readFileSync(bundleFile(row.hash));
+    const got = await MB.read(new Uint8Array(bytes));
+    if (got.id !== row.id || got.hash !== row.hash || got.key !== row.key || !got.signed) throw new Error('changed');
+    return { bytes, got };
+  };
   // A bundle against the mods the gallery has or had: one review per bundle, one version of a mod in review at a time, a
   // new version above the published ones, and a name no other mod uses.
   const modConflicts = (f) => {
@@ -1030,8 +1036,7 @@ export function gallery({
     else {
       let got;
       try {
-        got = await MB.read(new Uint8Array(readFileSync(bundleFile(row.hash))));
-        if (got.id !== row.id || got.hash !== row.hash || !got.signed) throw new Error('changed');
+        ({ got } = await readStoredMod(row));
       } catch { got = null; review = failedReview('could not read the stored bundle'); }
       if (got) {
         try {
@@ -1083,7 +1088,12 @@ export function gallery({
       if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, { error: 'GET only.' }, { allow: 'GET, HEAD' });
       const row = q.modPublished.get(b[1], b[2]);
       let body = null;
-      try { if (row && !blockedMod(row)) body = readFileSync(bundleFile(row.hash)); } catch { /* no file: not served */ }
+      try {
+        if (row && !blockedMod(row)) {
+          const { bytes } = await readStoredMod(row);
+          if (q.modPublished.get(row.id, row.hash) && !blockedMod(row)) body = bytes;
+        }
+      } catch { /* invalid or missing file: not served */ }
       if (!body) return send(res, 404, { error: 'No such mod in the gallery.' });
       const headers = { etag: `"${row.hash}"`, 'cache-control': 'public, max-age=31536000, immutable', 'referrer-policy': 'no-referrer' };
       if (unchanged(req, headers.etag)) { res.writeHead(304, headers); return res.end(); }
@@ -1226,10 +1236,14 @@ export function gallery({
     // A queued mod can be declined or removed before its review; only a person's approval publishes one the review didn't.
     listMods: () => db.prepare("SELECT id, hash, version, name, credit, status, unmailed, created FROM mods WHERE status != 'declined' ORDER BY created, hash").all(),
     showMod: (id) => q.modVersions.all(id).map((r) => ({ ...r, summary: JSON.parse(r.summary), permissions: JSON.parse(r.permissions), decision: JSON.parse(r.decision) })),
-    decideMod: (id, hash, to, reason = '') => {
+    decideMod: async (id, hash, to, reason = '') => {
       const row = q.modByHash.get(hash);
       const from = { published: ['pending'], declined: ['pending', 'queued'], removed: ['published', 'pending', 'queued'] }[to];
       if (!row || row.id !== id || !from.includes(row.status)) return false;
+      if (to === 'published') {
+        try { await readStoredMod(row); } catch { return false; }
+        if (blockedMod(row)) return false;
+      }
       return q.modSetStatus.run(to, cleanReason(reason), now(), id, hash, row.status).changes === 1;
     },
   };
@@ -1309,7 +1323,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     const g = gallery(fromEnv(process.env));
     await g.ready;
     const to = { '--approve-mod': 'published', '--decline-mod': 'declined', '--remove-mod': 'removed' }[cmd];
-    console.log(g.decideMod(arg, reason, to, process.argv[5]) ? `${arg} ${reason}: ${to}` : `${arg} ${reason}: no such mod in a state that can become ${to}`);
+    console.log(await g.decideMod(arg, reason, to, process.argv[5]) ? `${arg} ${reason}: ${to}` : `${arg} ${reason}: no such mod in a state that can become ${to}`);
     g.db.close();
   } else if (cmd === '--blocklist' && arg) {
     const g = gallery(fromEnv(process.env));

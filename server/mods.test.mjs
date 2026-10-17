@@ -526,7 +526,7 @@ test('bundles are served only for published hashes, and the route can\'t reach a
   ]) assert.equal(await raw(p), 404, p);
   assert.equal(await raw(`${base}/${pub.id}/${pub.hash}.glazemod`), 200);
   // Taken down: not served, not listed; a later blocklist hides a published one too.
-  assert.equal(g.decideMod(pub.id, pub.hash, 'removed'), true);
+  assert.equal(await g.decideMod(pub.id, pub.hash, 'removed'), true);
   assert.equal((await download(pub.id, pub.hash)).status, 404);
   assert.equal((await (await fetch(`${api}/mods`)).json()).total, 0);
   plan.chat = review('accept');
@@ -535,6 +535,40 @@ test('bundles are served only for published hashes, and the route can\'t reach a
   g.setBlocklist(blocklist(1, { bundles: [later.hash] }));
   assert.equal((await download(later.id, later.hash)).status, 404);
   assert.equal((await (await fetch(`${api}/mods`)).json()).total, 0);
+});
+
+test('published downloads refuse missing, unsigned, damaged or replaced bundles before ETag matching', async () => {
+  await start();
+  const m = await make();
+  await reviewed(m.bytes);
+  const file = path.join(dir, 'mods', `${m.hash}.glazemod`);
+  const other = await make();
+  for (const bytes of [null, unsigned(), te.encode('damaged'), other.bytes]) {
+    if (bytes === null) rmSync(file); else writeFileSync(file, bytes);
+    for (const method of ['GET', 'HEAD']) {
+      const r = await download(m.id, m.hash, { method, headers: { 'if-none-match': '*' } });
+      assert.equal(r.status, 404, `${method}: ${bytes === null ? 'missing' : 'changed'}`);
+    }
+  }
+});
+
+test('approval refuses a missing, changed or blocked stored bundle', async () => {
+  await start({ blocklistKey: BL_PUB });
+  plan.chat = review('human');
+  const m = await make();
+  await reviewed(m.bytes);
+  const file = path.join(dir, 'mods', `${m.hash}.glazemod`);
+  const env = { ...process.env, DB: path.join(dir, 'gallery.db') };
+  const approve = () => spawnSync(process.execPath, ['server/gallery.mjs', '--approve-mod', m.id, m.hash], { env, encoding: 'utf8' });
+  for (const bytes of [null, unsigned(), (await make()).bytes]) {
+    if (bytes === null) rmSync(file); else writeFileSync(file, bytes);
+    approve();
+    assert.equal(row(m.hash).status, 'pending', 'invalid storage must stay pending');
+  }
+  writeFileSync(file, m.bytes);
+  g.setBlocklist(blocklist(1, { bundles: [m.hash] }));
+  approve();
+  assert.equal(row(m.hash).status, 'pending', 'blocked bundles must stay pending');
 });
 
 test('the listing is paginated and carries no files', async () => {
