@@ -15,7 +15,8 @@
 //                                               OPENROUTER_API_KEY, DECISION_MODEL (liquid/d1-ultra),
 //                                               ESCALATION_MODEL (openai/gpt-6-luna-pro:exacto), REVIEWS_PER_DAY (300),
 //                                               MAIL_URL (smtps://user:pass@host:465), MAIL_FROM, MAIL_TO
-//                                               (admin@frostdev.io). OPENROUTER_BASE overrides the API's address, for
+//                                               (admin@frostdev.io), BLOCKLIST_KEY (the owner's Ed25519 public key for the
+//                                               mod blocklist, base64url). OPENROUTER_BASE overrides the API's address, for
 //                                               tests only.
 //   node server/gallery.mjs --list              published, pending and removed community Looks
 //   node server/gallery.mjs --pending           Looks waiting for a person, and whether their mail went out
@@ -24,6 +25,7 @@
 //   node server/gallery.mjs --decline <id> "<reason>"   decline a pending Look; the student sees the reason
 //   node server/gallery.mjs --remove <id>       take a Look down; its name and code stay blocked
 //   node server/gallery.mjs --backup <file>     a consistent copy of the database (SQLite's online backup)
+//   node server/gallery.mjs --blocklist <file>  publish the mod blocklist the owner signed (served at /glaze/mods/api/blocklist)
 import crypto from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import http from 'node:http';
@@ -206,6 +208,36 @@ const sha = (x) => crypto.createHash('sha256').update(x).digest('base64url');
 const hmac = (key, x) => crypto.createHmac('sha256', key).update(x).digest('base64url');
 const fail = (status, error, extra = {}) => Object.assign(new Error(error), { status, extra });
 
+// ---- the mod blocklist --------------------------------------------------------------------------------------------
+// A list of mods Glaze must stop, which the owner signs offline (Glaze's scripts/blocklist-sign.mjs; the private key never
+// comes near this server) as { list, sig }: Ed25519 over utf8('glaze-blocklist-1|' + canon(list)). The server keeps the
+// latest signed document in the meta table and serves it. It can't change one: a stolen server can withhold the list or
+// serve an older one, but the extension checks the signature against the key it ships with and that seq only goes up. The
+// extension does the full check of the list's contents (lib/blocklist.js clean); the server checks what it needs to refuse a
+// mistake at publishing time: the signature, a future expiry, a higher seq and the size the extension will read.
+export const BLOCKLIST_MAX = 256 << 10;
+// JSON with object keys sorted by code unit and no spaces: the same text the extension and the signing tool make.
+export const canon = (v) => (Array.isArray(v) ? `[${v.map(canon).join(',')}]`
+  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(',')}}`
+    : JSON.stringify(v));
+// A signed document's text → the text to keep and serve, or throws a message for the owner. `key`: the public key (raw,
+// base64url); `seen`: the seq now stored (0 for none).
+export const checkBlocklist = (text, key, { now = Date.now(), seen = 0 } = {}) => {
+  if (!/^[\w-]{43}$/.test(key)) throw new Error('BLOCKLIST_KEY is not set to the owner\'s public key (base64url, 43 characters)');
+  if (Buffer.byteLength(text) > BLOCKLIST_MAX) throw new Error(`the document is over ${BLOCKLIST_MAX} bytes, which the extension would refuse`);
+  let doc;
+  try { doc = JSON.parse(text); } catch { throw new Error('the file is not JSON'); }
+  const { list, sig } = doc && typeof doc === 'object' ? doc : {};
+  if (!list || typeof list !== 'object' || Array.isArray(list) || list.v !== 1 || !Number.isSafeInteger(list.seq) || list.seq < 1 || typeof sig !== 'string' || !/^[\w-]{86}$/.test(sig)) {
+    throw new Error('not a signed blocklist: { "list": { "v": 1, "seq": …, … }, "sig": … }');
+  }
+  const pub = crypto.createPublicKey({ key: { kty: 'OKP', crv: 'Ed25519', x: key }, format: 'jwk' });
+  if (!crypto.verify(null, Buffer.from(`glaze-blocklist-1|${canon(list)}`), pub, Buffer.from(sig, 'base64url'))) throw new Error('the signature is not by BLOCKLIST_KEY');
+  if (!(typeof list.expires === 'string' && Date.parse(list.expires) > now)) throw new Error('the list has expired (or has no valid expires)');
+  if (list.seq <= seen) throw new Error(`seq ${list.seq} is not higher than the stored ${seen}`);
+  return JSON.stringify({ list, sig });
+};
+
 // The client's network, as the share relay finds it: X-Real-IP (or IP_HEADER) only from a trusted proxy; IPv4 as is,
 // IPv6 by its /64, which one subscriber usually holds whole.
 export const networkOf = (ip) => {
@@ -292,7 +324,7 @@ export const sendMail = (mailUrl, { from, to, subject, text }) => new Promise((r
 export function gallery({
   db: file = 'gallery.db', looksDir = 'src/data/looks', siteOrigin = 'https://frostdev.io', ipHeader = '', trustedProxies = '127.0.0.1,::1',
   apiKey = '', decisionModel = 'liquid/d1-ultra', escalationModel = 'openai/gpt-6-luna-pro:exacto', openrouter = 'https://openrouter.ai/api',
-  reviewsPerDay = 300, mailUrl = '', mailFrom = '', mailTo = 'admin@frostdev.io', now = () => Date.now(),
+  reviewsPerDay = 300, mailUrl = '', mailFrom = '', mailTo = 'admin@frostdev.io', blocklistKey = '', now = () => Date.now(),
 } = {}) {
   const db = new DatabaseSync(file);
   db.exec(`PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;
@@ -333,11 +365,15 @@ export function gallery({
     oldDeclined: "DELETE FROM looks WHERE status = 'declined' AND decided < ?",
     meta: 'SELECT v FROM meta WHERE k = ?',
     setMeta: 'INSERT OR IGNORE INTO meta (k, v) VALUES (?, ?)',
+    putMeta: 'INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v',
   }).map(([k, sql]) => [k, db.prepare(sql)]));
   // The key cookies are hashed with, made once and kept in the database.
   q.setMeta.run('cookie-key', crypto.randomBytes(32));
   const cookieKey = q.meta.get('cookie-key').v;
   const tx = (fn) => { db.exec('BEGIN IMMEDIATE'); try { const r = fn(); db.exec('COMMIT'); return r; } catch (e) { db.exec('ROLLBACK'); throw e; } };
+  // The signed mod blocklist as published (its text), or null.
+  const blocklist = () => { const r = q.meta.get('blocklist'); return r ? Buffer.from(r.v).toString('utf8') : null; };
+  const blocklistSeq = () => { try { return JSON.parse(blocklist()).list.seq; } catch { return 0; } };
 
   // Housekeeping: today's network key, made when first needed; old keys, quota, rejected reviews and human declines go.
   const sweep = () => {
@@ -667,6 +703,21 @@ export function gallery({
   const handle = async (req, res) => {
     let url;
     try { url = new URL(req.url, 'http://gallery'); } catch { return send(res, 400, { error: 'Bad request.' }); }
+    if (url.pathname === '/glaze/mods/api/blocklist') {
+      if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, { error: 'GET only.' }, { allow: 'GET, HEAD' });
+      const body = blocklist();
+      if (!body) return send(res, 404, { error: 'No blocklist has been published.' });
+      // Public, signed data: cacheable for an hour, and revalidated by its ETag. The extension asks with no cookies and
+      // verifies the signature itself, so nothing here identifies or trusts anyone; no request is counted or logged.
+      const etag = `"${sha(body)}"`;
+      const headers = { etag, 'cache-control': 'public, max-age=3600', 'access-control-allow-origin': '*' };
+      if (String(req.headers['if-none-match'] || '').split(',').some((t) => t.trim().replace(/^W\//, '') === etag)) {
+        res.writeHead(304, { ...headers, 'referrer-policy': 'no-referrer' });
+        return res.end();
+      }
+      res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'content-length': Buffer.byteLength(body), 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', ...headers });
+      return res.end(req.method === 'HEAD' ? undefined : body);
+    }
     const p = url.pathname.replace(/^\/glaze\/looks\/api/, '');
     if (req.method === 'GET' && p === '/looks') {
       const looks = q.published.all().map((r) => {
@@ -732,6 +783,13 @@ export function gallery({
       const d = JSON.parse(r.described);
       return { id: r.id, name: r.name, credit: r.credit, status: r.status, created: r.created, reason: r.reason, decision: JSON.parse(r.decision), ...(d.parts && { parts: partsView(d.parts) }), ...(d.partsText && { partsText: d.partsText }) };
     },
+    // The maintainer's blocklist (--blocklist): checked against the configured key, and kept only if its seq is higher than the
+    // one stored. → the list.
+    setBlocklist: (text) => tx(() => {
+      const kept = checkBlocklist(text, blocklistKey, { now: now(), seen: blocklistSeq() });
+      q.putMeta.run('blocklist', Buffer.from(kept));
+      return JSON.parse(kept).list;
+    }),
     decide: (id, to, reason = '') => {
       const row = q.byId.get(id);
       const from = { published: ['pending'], declined: ['pending'], removed: ['published', 'pending'] }[to];
@@ -752,7 +810,7 @@ export const fromEnv = (env) => ({
   ipHeader: (env.IP_HEADER || '').toLowerCase(), trustedProxies: env.TRUSTED_PROXIES || undefined,
   apiKey: env.OPENROUTER_API_KEY || '', decisionModel: env.DECISION_MODEL || undefined, escalationModel: env.ESCALATION_MODEL || undefined,
   openrouter: env.OPENROUTER_BASE || undefined, reviewsPerDay: Number(env.REVIEWS_PER_DAY) || undefined,
-  mailUrl: env.MAIL_URL || '', mailFrom: env.MAIL_FROM || '', mailTo: env.MAIL_TO || undefined,
+  mailUrl: env.MAIL_URL || '', mailFrom: env.MAIL_FROM || '', mailTo: env.MAIL_TO || undefined, blocklistKey: env.BLOCKLIST_KEY || '',
 });
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
@@ -784,8 +842,16 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     const to = { '--approve': 'published', '--decline': 'declined', '--remove': 'removed' }[cmd];
     console.log(g.decide(arg, to, reason) ? `${arg}: ${to}` : `${arg}: no such Look in a state that can become ${to}`);
     g.db.close();
+  } else if (cmd === '--blocklist' && arg) {
+    const g = gallery(fromEnv(process.env));
+    await g.ready;
+    try {
+      const l = g.setBlocklist(readFileSync(arg, 'utf8'));
+      console.log(`blocklist: seq ${l.seq} published (issued ${l.issued}, expires ${l.expires}; ${l.mods?.length ?? 0} mods, ${l.bundles?.length ?? 0} bundles, ${l.authors?.length ?? 0} authors)`);
+    } catch (e) { failCli(e); }
+    g.db.close();
   } else if (cmd) {
-    console.error('usage: gallery.mjs [--list | --pending | --show <id> | --approve <id> | --decline <id> "<reason>" | --remove <id> | --backup <file>]');
+    console.error('usage: gallery.mjs [--list | --pending | --show <id> | --approve <id> | --decline <id> "<reason>" | --remove <id> | --backup <file> | --blocklist <file>]');
     process.exitCode = 2;
   } else {
     const g = gallery(fromEnv(process.env));

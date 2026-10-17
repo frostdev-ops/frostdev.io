@@ -1,16 +1,16 @@
 // node --test server/gallery.test.mjs (npm run test:gallery), from the repository root. OpenRouter and the mail
 // server are mocks on 127.0.0.1; nothing leaves this computer.
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { after, afterEach, before, test } from 'node:test';
 import zlib from 'node:zlib';
-import { BANDS, BODY_MAX, ESCALATION_POLICY, QUESTIONS, SAFETY_QUESTIONS, SAFETY_QUESTIONS_PARTS, cleanReason, gallery, mailMessage, networkOf, summarize } from './gallery.mjs';
+import { BANDS, BLOCKLIST_MAX, BODY_MAX, ESCALATION_POLICY, QUESTIONS, SAFETY_QUESTIONS, SAFETY_QUESTIONS_PARTS, canon, checkBlocklist, cleanReason, gallery, mailMessage, networkOf, summarize } from './gallery.mjs';
 import * as L from '../scripts/looks.mjs';
 
 const ORIGIN = 'https://frostdev.io';
@@ -805,4 +805,195 @@ test('summarize puts parts in a compact description with no free text and no sou
   assert.doesNotMatch(JSON.stringify(s), /Library|Study|My courses|search\?q/);
   // A Look without parts is summarized as it always was.
   assert.equal('parts' in summarize(L.describe((await L.checkCode(code())).look)), false);
+});
+
+// ---- the mod blocklist ---------------------------------------------------------------------------------------------------
+// TEST KEY ONLY, the same key, list and signature as Glaze's test/blocklist.test.js: if canon() or the signed text ever
+// differ between the extension and this server, one side's tests fail. The real key is the owner's, offline.
+const BL_SEED = 'jeLTA3LlloWEPSpToL3asyk4m8JNMrxUvIGeTEvech8';
+const BL_PUB = 'riGx9YRdwUKkExiHgkVnUCa3WWqbxDdWy0I533i-uJM';
+const BL_VECTOR = {
+  list: {
+    v: 1, seq: 7, issued: '2026-10-17T00:00:00Z', expires: '2026-10-24T00:00:00Z',
+    mods: ['aaaaaaaaaaaaaaaa', 'm5xw6z3mn5zxi2lo'],
+    bundles: ['wzEaOI1xdoprftf5JrWf_NQBMKNMhHb94dBxHQEBzCY'],
+    authors: ['7pIjr3r-X6ox2CR2I-D-SKptyX982qWdEsp_K1yuMso'],
+    reasons: { aaaaaaaaaaaaaaaa: 'Sends grades to a third party.' },
+  },
+  sig: '1xBKbZIUYQxZdE5APX8EaF9oOE8jeLCA9oMoT8YeR4SsekaMY-aPqhCGqeN8c3McdboT0_pVz9GwLjyB5qrqBw',
+  canon: '{"authors":["7pIjr3r-X6ox2CR2I-D-SKptyX982qWdEsp_K1yuMso"],"bundles":["wzEaOI1xdoprftf5JrWf_NQBMKNMhHb94dBxHQEBzCY"],"expires":"2026-10-24T00:00:00Z","issued":"2026-10-17T00:00:00Z","mods":["aaaaaaaaaaaaaaaa","m5xw6z3mn5zxi2lo"],"reasons":{"aaaaaaaaaaaaaaaa":"Sends grades to a third party."},"seq":7,"v":1}',
+};
+const blKey = crypto.createPrivateKey({ key: Buffer.concat([Buffer.from('302e020100300506032b657004220420', 'hex'), Buffer.from(BL_SEED, 'base64url')]), format: 'der', type: 'pkcs8' });
+// A signed document for `list`, as the owner's tool writes it.
+const blSign = (list, key = blKey) => ({ list, sig: crypto.sign(null, Buffer.from(`glaze-blocklist-1|${canon(list)}`), key).toString('base64url') });
+const iso = (t) => new Date(t).toISOString().replace(/\.\d{3}Z$/, 'Z');
+// A list issued at `at` (ms), good for a week.
+const blList = (seq, at, over = {}) => ({ ...BL_VECTOR.list, seq, issued: iso(at), expires: iso(at + 7 * 864e5), ...over });
+const blUrl = () => `${new URL(base).origin}/glaze/mods/api/blocklist`;
+const blGet = (init) => fetch(blUrl(), init);
+const blStart = (opts) => start({ blocklistKey: BL_PUB, ...opts });
+
+test('blocklist: the fixed vector signs and checks the same text on both sides', () => {
+  assert.equal(canon(BL_VECTOR.list), BL_VECTOR.canon);
+  const text = JSON.stringify({ list: BL_VECTOR.list, sig: BL_VECTOR.sig });
+  const now = Date.parse('2026-10-18T00:00:00Z');
+  assert.equal(checkBlocklist(text, BL_PUB, { now }), text);
+  assert.throws(() => checkBlocklist(text, BL_PUB, { now: Date.parse('2026-10-24T00:00:00Z') }), /expired/);
+  assert.throws(() => checkBlocklist(text, crypto.generateKeyPairSync('ed25519').publicKey.export({ format: 'jwk' }).x, { now }), /not by BLOCKLIST_KEY/);
+  assert.equal(canon({ b: [2, { z: 1, a: 'é"' }], a: null }), '{"a":null,"b":[2,{"a":"é\\"","z":1}]}');
+});
+
+test('blocklist: nothing is served until the owner publishes one', async () => {
+  await blStart();
+  const r = await blGet();
+  assert.equal(r.status, 404);
+  assert.equal(r.headers.get('cache-control'), 'no-store');
+  assert.equal(r.headers.get('etag'), null);
+});
+
+test('blocklist: the signed document is served as published, cacheable for an hour, with an ETag', async () => {
+  await blStart();
+  const doc = blSign(blList(8, clock));
+  const kept = g.setBlocklist(JSON.stringify(doc, null, 2));
+  assert.deepEqual(kept, doc.list);
+  const r = await blGet({ headers: { cookie: 'gz_gallery=whatever', origin: 'https://example.org' } });
+  assert.equal(r.status, 200);
+  assert.deepEqual(await r.json(), doc);
+  assert.equal(r.headers.get('cache-control'), 'public, max-age=3600');
+  assert.match(r.headers.get('content-type'), /^application\/json/);
+  assert.match(r.headers.get('etag'), /^"[\w-]{43}"$/);
+  assert.equal(r.headers.get('access-control-allow-origin'), '*');
+  assert.equal(r.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(r.headers.get('referrer-policy'), 'no-referrer');
+  assert.equal(r.headers.get('set-cookie'), null, 'no cookie is ever set');
+  // The ETag revalidates: the same one is 304 with no body, another gets the document.
+  const etag = r.headers.get('etag');
+  const same = await blGet({ headers: { 'if-none-match': etag } });
+  assert.equal(same.status, 304);
+  assert.equal(await same.text(), '');
+  assert.equal(same.headers.get('etag'), etag);
+  assert.equal(same.headers.get('cache-control'), 'public, max-age=3600');
+  assert.equal((await blGet({ headers: { 'if-none-match': `W/${etag}` } })).status, 304, 'a weak copy of it (a proxy that compresses) matches too');
+  assert.equal((await blGet({ headers: { 'if-none-match': `"other", ${etag}` } })).status, 304);
+  assert.equal((await blGet({ headers: { 'if-none-match': '"other"' } })).status, 200);
+  const head = await blGet({ method: 'HEAD' });
+  assert.deepEqual([head.status, await head.text(), head.headers.get('etag')], [200, '', etag]);
+  assert.equal(Number(head.headers.get('content-length')), Buffer.byteLength(JSON.stringify(doc)));
+  // A new list changes the ETag, and the old one gets the new document.
+  g.setBlocklist(JSON.stringify(blSign(blList(9, clock))));
+  const next = await blGet({ headers: { 'if-none-match': etag } });
+  assert.equal(next.status, 200);
+  assert.equal((await next.json()).list.seq, 9);
+  assert.notEqual(next.headers.get('etag'), etag);
+  // It is served to anyone and counted by no one: no quota was touched.
+  assert.equal(quotaUsed(), 0);
+});
+
+test('blocklist: it is read-only over HTTP', async () => {
+  await blStart();
+  g.setBlocklist(JSON.stringify(blSign(blList(1, clock))));
+  for (const method of ['POST', 'PUT', 'DELETE', 'PATCH']) {
+    const r = await blGet({ method, headers: { origin: ORIGIN, 'content-type': 'application/json' }, body: JSON.stringify(blSign(blList(2, clock))) });
+    assert.equal(r.status, 405, method);
+    assert.equal(r.headers.get('allow'), 'GET, HEAD');
+  }
+  assert.equal((await (await blGet()).json()).list.seq, 1);
+});
+
+test('blocklist: only a document signed by the configured key, unexpired and with a higher seq is kept', async () => {
+  await blStart();
+  const good = blSign(blList(5, clock));
+  g.setBlocklist(JSON.stringify(good));
+  const kept = async (why) => assert.deepEqual(await (await blGet()).json(), good, `${why}: the published list is unchanged`);
+  const other = crypto.generateKeyPairSync('ed25519').privateKey;
+  const bad = {
+    'signed by another key': [JSON.stringify(blSign(blList(6, clock), other)), /not by BLOCKLIST_KEY/],
+    'a list edited after signing': [JSON.stringify({ ...blSign(blList(6, clock)), list: blList(6, clock, { mods: [], reasons: {} }) }), /not by BLOCKLIST_KEY/],
+    'the signature of another list': [JSON.stringify({ list: blList(6, clock), sig: good.sig }), /not by BLOCKLIST_KEY/],
+    'the same seq': [JSON.stringify(blSign(blList(5, clock, { mods: ['bbbbbbbbbbbbbbbb'], reasons: {} }))), /not higher than the stored 5/],
+    'a lower seq': [JSON.stringify(blSign(blList(4, clock))), /not higher than the stored 5/],
+    'already expired': [JSON.stringify(blSign(blList(6, clock - 8 * 864e5))), /expired/],
+    'no expiry': [JSON.stringify(blSign((({ expires, ...rest }) => rest)(blList(6, clock)))), /expired/],
+    'not JSON': ['{"list":', /not JSON/],
+    'JSON that is not a document': ['[1,2]', /not a signed blocklist/],
+    'no signature': [JSON.stringify({ list: blList(6, clock) }), /not a signed blocklist/],
+    'a short signature': [JSON.stringify({ list: blList(6, clock), sig: 'abc' }), /not a signed blocklist/],
+    'a version 2 list': [JSON.stringify(blSign(blList(6, clock, { v: 2 }))), /not a signed blocklist/],
+    'seq 0': [JSON.stringify(blSign(blList(0, clock))), /not a signed blocklist/],
+    'a seq that is a string': [JSON.stringify(blSign(blList('6', clock))), /not a signed blocklist/],
+    'over the size the extension reads': [JSON.stringify(blSign(blList(6, clock, { reasons: {}, bundles: Array.from({ length: 7000 }, (_, i) => crypto.createHash('sha256').update(String(i)).digest('base64url')) }))), /over \d+ bytes/],
+  };
+  assert.ok(Buffer.byteLength(bad['over the size the extension reads'][0]) > BLOCKLIST_MAX);
+  for (const [why, [text, error]] of Object.entries(bad)) {
+    assert.throws(() => g.setBlocklist(text), error, why);
+    await kept(why);
+  }
+  // A higher seq replaces it.
+  const next = blSign(blList(6, clock));
+  g.setBlocklist(JSON.stringify(next));
+  assert.deepEqual(await (await blGet()).json(), next);
+  // Without a configured key nothing can be published.
+  await g.close();
+  await start();
+  assert.throws(() => g.setBlocklist(JSON.stringify(good)), /BLOCKLIST_KEY is not set/);
+  assert.equal((await blGet()).status, 404);
+});
+
+test('blocklist: the published list survives a restart', async () => {
+  await blStart();
+  const doc = blSign(blList(3, clock));
+  g.setBlocklist(JSON.stringify(doc));
+  const file = path.join(tmp, `g${dbn}.db`);
+  await g.close();
+  g = gallery({ db: file, blocklistKey: BL_PUB, now: () => clock, openrouter: mockUrl });
+  const a = await g.listen(0, '127.0.0.1');
+  base = `http://127.0.0.1:${a.port}/glaze/looks/api`;
+  assert.deepEqual(await (await blGet()).json(), doc);
+  assert.throws(() => g.setBlocklist(JSON.stringify(blSign(blList(3, clock)))), /not higher than the stored 3/);
+});
+
+test('blocklist: the CLI publishes a signed file and says why when it refuses one', async () => {
+  await blStart();
+  const file = path.join(tmp, `blocklist-${dbn}.json`);
+  const env = { ...process.env, DB: path.join(tmp, `g${dbn}.db`), BLOCKLIST_KEY: BL_PUB };
+  const run = (e, ...args) => spawnSync(process.execPath, ['--disable-warning=ExperimentalWarning', 'server/gallery.mjs', ...args], { env: e, encoding: 'utf8' });
+  const cli = (...args) => run(env, ...args);
+  const write = (doc) => writeFileSync(file, `${JSON.stringify(doc, null, 2)}\n`);
+  // The CLI keeps real time.
+  const real = Date.now();
+  write(blSign(blList(2, real)));
+  const ok = cli('--blocklist', file);
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.match(ok.stdout, /blocklist: seq 2 published \(issued \S+, expires \S+; 2 mods, 1 bundles, 1 authors\)/);
+  assert.equal((await (await blGet()).json()).list.seq, 2, 'the running server serves it at once');
+  write(blSign(blList(2, real)));
+  const again = cli('--blocklist', file);
+  assert.equal(again.status, 1);
+  assert.match(again.stderr, /gallery: seq 2 is not higher than the stored 2/);
+  write(blSign(blList(3, real), crypto.generateKeyPairSync('ed25519').privateKey));
+  const wrong = cli('--blocklist', file);
+  assert.equal(wrong.status, 1);
+  assert.match(wrong.stderr, /signature is not by BLOCKLIST_KEY/);
+  assert.equal((await (await blGet()).json()).list.seq, 2);
+  const nokey = run({ ...env, BLOCKLIST_KEY: '' }, '--blocklist', file);
+  assert.equal(nokey.status, 1);
+  assert.match(nokey.stderr, /BLOCKLIST_KEY is not set/);
+  assert.equal(cli('--blocklist', path.join(tmp, 'missing.json')).status, 1);
+  const usage = cli('--blocklist');
+  assert.equal(usage.status, 2);
+  assert.match(usage.stderr, /--blocklist <file>/);
+});
+
+test('blocklist: nginx passes GET alone to the gallery, with a tiny body cap and nothing that identifies the visitor', () => {
+  const conf = readFileSync('ops/public-site.nginx.conf', 'utf8');
+  const loc = /location \^~ \/glaze\/mods\/api\/ \{([\s\S]*?)\n\}/.exec(conf)?.[1];
+  assert.ok(loc, 'a location for /glaze/mods/api/');
+  assert.match(loc, /limit_except GET \{\s*deny all;\s*\}/);
+  assert.equal(/client_max_body_size (\d+)k;/.exec(loc)[1], '1');
+  assert.match(loc, /proxy_pass http:\/\/127\.0\.0\.1:8788;/);
+  assert.match(loc, /access_log off;/);
+  for (const header of ['X-Forwarded-For', 'X-Real-IP', 'Cookie']) assert.match(loc, new RegExp(`proxy_set_header ${header} "";`), `${header} is not passed on`);
+  assert.doesNotMatch(loc, /proxy_set_header X-Real-IP \$remote_addr/);
+  // The looks API keeps its own location, and its body cap.
+  assert.match(conf, /location \^~ \/glaze\/looks\/api\/ \{[^}]*client_max_body_size 22k;/);
 });

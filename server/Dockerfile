@@ -7,7 +7,8 @@
 #   docker run -d --name glaze-gallery --restart unless-stopped --network host -v glaze-gallery:/data \
 #     --env-file /etc/glaze-gallery.env glaze-gallery
 # /etc/glaze-gallery.env (mode 600): OPENROUTER_API_KEY=…, and optionally DECISION_MODEL, ESCALATION_MODEL,
-# REVIEWS_PER_DAY, MAIL_URL=smtps://…, MAIL_FROM, MAIL_TO. docs/looks-gallery.md has the rest.
+# REVIEWS_PER_DAY, MAIL_URL=smtps://…, MAIL_FROM, MAIL_TO, and BLOCKLIST_KEY (the owner's public key for the mod
+# blocklist; it is public). docs/looks-gallery.md has the rest.
 FROM node:24-alpine
 WORKDIR /app
 COPY gallery.mjs ./
