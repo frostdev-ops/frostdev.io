@@ -1032,7 +1032,7 @@ export function gallery({
       try {
         got = await MB.read(new Uint8Array(readFileSync(bundleFile(row.hash))));
         if (got.id !== row.id || got.hash !== row.hash || !got.signed) throw new Error('changed');
-      } catch { review = failedReview('could not read the stored bundle'); }
+      } catch { got = null; review = failedReview('could not read the stored bundle'); }
       if (got) {
         try {
           const { v, ...meta } = await chat(MOD_POLICY, modReviewInput(got, modFacts(got)), MOD_SCHEMA, MOD_REVIEW_TIMEOUT, stopping.signal);
