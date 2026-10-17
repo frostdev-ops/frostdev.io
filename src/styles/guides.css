@@ -124,6 +124,13 @@
 .guides-card-action { display: flex; align-items: center; justify-content: space-between; color: var(--guide-accent); font-size: .8rem; margin-top: auto; }
 .guides-card-action > span { transition: transform .2s; }
 .guides-card:hover .guides-card-action > span { transform: translate(2px, -2px); }
+.guides-docs { margin: 3rem 0 0; scroll-margin-top: 2rem; }
+.guides-docs .guides-collection-heading a { color: var(--guide-accent); }
+.guides-docs ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: 1rem 2rem; }
+.guides-docs li { display: flex; flex-direction: column; gap: .3rem; padding: 1rem 0; border-top: 1px solid #263c50; }
+.guides-docs li a { color: #e6f1fa; font-weight: 600; }
+.guides-docs li a:hover { color: var(--guide-accent); }
+.guides-docs li span { font-size: .85rem; line-height: 1.7; color: #91abc2; }
 .guides-hub-help { display: flex; align-items: center; justify-content: space-between; gap: 2rem; margin: 3rem 0 0; padding: 2.5rem 0; border-top: 1px solid #263c50; }
 .guides-hub-help > div { max-width: 39rem; }
 .guides-hub-help h2 { color: #e6f1fa; font-size: 1.8rem; letter-spacing: -.03em; font-weight: 500; margin: .7rem 0; }

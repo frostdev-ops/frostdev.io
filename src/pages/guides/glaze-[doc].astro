@@ -1,0 +1,33 @@
+---
+import type { MarkdownInstance } from 'astro';
+import GuideLayout from '../../layouts/GuideLayout.astro';
+
+// Glaze's reference docs, one guide each. The Markdown is mirrored from Glaze's repository by its
+// scripts/docs-mirror.js (edit it there); each page is also on Glaze's GitHub wiki, linked from the frontmatter.
+type Doc = MarkdownInstance<{ title: string; description: string; updated: string; wiki: string }>;
+
+export function getStaticPaths() {
+  const docs = import.meta.glob<Doc>('../../content/glaze-docs/*.md', { eager: true });
+  return Object.entries(docs).map(([file, doc]) => ({ params: { doc: file.replace(/^.*\/|\.md$/g, '') }, props: { doc } }));
+}
+
+const { doc } = Astro.props as { doc: Doc };
+const { Content, frontmatter } = doc;
+const headings = doc.getHeadings().filter((heading) => heading.depth === 2);
+// A page without sections still gets one chapter, so the contents list has somewhere to go.
+const chapters = headings.length ? headings.map((heading) => ({ id: heading.slug, title: heading.text })) : [{ id: 'start', title: frontmatter.title }];
+const minutes = Math.max(1, Math.round(doc.rawContent().split(/\s+/).length / 220));
+---
+
+<GuideLayout
+  title={frontmatter.title}
+  description={frontmatter.description}
+  path={`/guides/glaze-${Astro.params.doc}`}
+  project="Glaze"
+  duration={`${minutes} min read`}
+  updated={frontmatter.updated}
+  chapters={chapters}
+>
+  <div id="start"><Content /></div>
+  <p class="guide-caption">Also on <a href={frontmatter.wiki}>Glaze's GitHub wiki</a>.</p>
+</GuideLayout>

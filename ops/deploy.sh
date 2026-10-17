@@ -29,7 +29,8 @@ import { readdirSync, statSync, lstatSync } from 'node:fs';
 const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'glaze/privacy', 'glaze/terms', 'glaze/looks', 'glaze/looks/submit', 'privacy', 'guides',
   'guides/rimeward-first-workspace', 'guides/crosspane-two-computers',
   'guides/rimewire-agent-handoffs', 'guides/frostsim-first-simulation',
-  'guides/loothing-raid-loot', 'guides/glaze-safari', 'guides/glaze-chrome'];
+  'guides/loothing-raid-loot', 'guides/glaze-safari', 'guides/glaze-chrome',
+  ...['install', 'features', 'privacy', 'mods-api', 'mods-widgets', 'relay', 'development', 'firefox-android'].map((doc) => `guides/glaze-${doc}`)];
 for (const page of pages) assert(statSync(`dist/${page ? page + '/' : ''}index.html`).size > 0);
 for (const file of ['robots.txt', 'sitemap.xml', 'ads.txt']) assert(statSync(`dist/${file}`).size > 0);
 assert(statSync('dist/_site').isDirectory());
