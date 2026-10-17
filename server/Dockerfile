@@ -14,6 +14,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --omit=optional --ignore-scripts --no-audit --no-fund && npm cache clean --force
 COPY gallery.mjs mod-shell.mjs ./
+COPY gallery-admin.mjs ./
+COPY admin admin/
 COPY scripts/looks.mjs scripts/
 COPY vendor/glaze vendor/glaze/
 COPY src/data/looks src/data/looks/

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glaze gallery admin</title>
+  <link rel="stylesheet" href="/glaze/admin/style.css">
+  <script src="/glaze/admin/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#queue">Skip to review queue</a>
+  <header><div><p class="eyebrow">Frostdev · Glaze</p><h1>Gallery admin</h1></div><div class="account"><span id="email"></span><button id="refresh" type="button">Refresh</button><button id="logout" type="button">Sign out</button></div></header>
+  <nav aria-label="Dashboard"><a href="#queue">Queue</a><a href="#all-looks">Looks</a><a href="#all-mods">Mods</a><a href="#manage">Manage</a><a href="#audit">Audit log</a></nav>
+  <main>
+    <p id="message" role="status" aria-live="polite">Loading gallery…</p>
+    <section id="queue" aria-labelledby="queue-title"><h2 id="queue-title">Waiting for a person</h2><p>Oldest first. Open an item to read its review and check its media.</p><div id="pending" class="items"></div></section>
+    <section id="detail" aria-labelledby="detail-title" hidden><h2 id="detail-title" tabindex="-1"></h2><div id="detail-body"></div></section>
+    <section id="all-looks" aria-labelledby="looks-title"><h2 id="looks-title">All Looks</h2><div class="filters"><label>Search Looks<input id="looks-search" type="search" placeholder="Name, author or id"></label><label>Status<select id="looks-filter"><option value="">Every status</option>pending</option><option>published</option><option>declined</option><option>removed</option></select></label></div><div id="looks" class="items"></div></section>
+    <section id="all-mods" aria-labelledby="mods-title"><h2 id="mods-title">All mods · every version</h2><div class="filters"><label>Search mods<input id="mods-search" type="search" placeholder="Name, author, id or hash"></label><label>Status<select id="mods-filter"><option value="">Every status</option><option>pending</option><option>queued</option><option>published</option><option>declined</option><option>removed</option></select></label></div><div id="mods" class="items"></div></section>
+    <section id="manage" aria-labelledby="manage-title"><h2 id="manage-title">Manage</h2><p id="limits"></p><p id="blocklist"></p></section>
+    <section id="audit" aria-labelledby="audit-title"><h2 id="audit-title">Audit log</h2><p>Latest first. Reasons are the text saved with the decision.</p><ol id="audit-rows"></ol><button id="older" type="button" hidden>Load older entries</button></section>
+    <noscript>This dashboard needs JavaScript. The gallery moderation CLI also remains available.</noscript>
+  </main>
+</body>
+</html>

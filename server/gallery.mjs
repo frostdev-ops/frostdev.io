@@ -18,6 +18,7 @@
 //                                               (admin@frostdev.io), BLOCKLIST_KEY (the owner's Ed25519 public key for the
 //                                               mod blocklist, base64url). OPENROUTER_BASE overrides the API's address, for
 //                                               tests only.
+//                                               GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ADMIN_EMAILS enable /glaze/admin.
 //   node server/gallery.mjs --list              published, pending and removed community Looks
 //   node server/gallery.mjs --pending           Looks waiting for a person, and whether their mail went out
 //   node server/gallery.mjs --show <id>         a Look's review: both reviewers' numbers, decision, reason and rationale
@@ -47,6 +48,7 @@ import { DatabaseSync, backup as sqliteBackup } from 'node:sqlite';
 import { pathToFileURL } from 'node:url';
 import { modShell } from './mod-shell.mjs';
 export { modShell, fitOutput, MOD_SHELL_TIMEOUT } from './mod-shell.mjs';
+import { galleryAdmin } from './gallery-admin.mjs';
 
 const L = await import(pathToFileURL(path.resolve('scripts/looks.mjs')).href);
 
@@ -510,6 +512,7 @@ export function gallery({
   db: file = 'gallery.db', looksDir = 'src/data/looks', siteOrigin = 'https://frostdev.io', ipHeader = '', trustedProxies = '127.0.0.1,::1',
   apiKey = '', decisionModel = 'liquid/d1-ultra', escalationModel = 'openai/gpt-6-luna-pro:exacto', openrouter = 'https://openrouter.ai/api',
   reviewsPerDay = 300, modReviewsPerDay = 40, limits = true, mailUrl = '', mailFrom = '', mailTo = 'admin@frostdev.io', blocklistKey = '', bundles = '', now = () => Date.now(),
+  googleClientId = '', googleClientSecret = '', adminEmails = '', googleFetch = fetch,
 } = {}) {
   const db = new DatabaseSync(file);
   // Mod bundles are files next to the database (/data/mods in the image), named by their bundle hash; SQLite holds the rest.
@@ -637,6 +640,7 @@ export function gallery({
   // Housekeeping: today's network key, made when first needed; old keys, quota, rejected reviews and human declines go.
   const sweep = () => {
     const t = now();
+    admin.sweep();
     q.expiredReviews.run(t);
     q.oldSalts.run(today(t));
     q.oldQuota.run(today(t - 2 * DAY));
@@ -997,6 +1001,7 @@ export function gallery({
         ...(row.media ? ['', wrap(`Its background is a ${d.media?.type} file that no reviewer saw. Look at it before deciding: copy it off the server with the command below and open it (a video or picture in a browser; a Lottie animation is JSON). To see the whole Look, paste the code into Glaze, then choose this file in the editor's background (a file from this computer): its name matches, so the Look uses it.`),
           `  docker cp glaze-gallery:${mediaFile(row.media)} .`] : []),
         '', 'Theme code (paste it into Glaze\'s Share tab to see it):', codeLines(row.code),
+        '', `Review in the dashboard: ${siteOrigin}/glaze/admin#looks/${row.id}`,
         '', 'To decide, on the server:',
         `  docker exec glaze-gallery node gallery.mjs --approve ${row.id}`,
         `  docker exec glaze-gallery node gallery.mjs --decline ${row.id} "<reason the student will see>"`,
@@ -1033,6 +1038,7 @@ export function gallery({
         ...(s.media ? ['', wrap(`Its background is ${s.media.path} in the bundle (${s.media.type}, ${s.media.bytes} bytes), which no reviewer saw: look at it before deciding. Copy the bundle off the server with the docker cp command below and unzip it (a .glazemod is a zip); Glaze checked the file with its background limits.`)] : []),
         '', `Files (${s.size} bytes, ${s.text} of them text):`,
         ...s.files.map((f) => `  ${f.path}  ${f.bytes} bytes${f.lines ? `, ${f.lines} lines, the longest ${f.longestLine}` : ''}${f.hidden ? `, ${f.hidden} hidden characters` : ''}`),
+        '', `Review in the dashboard: ${siteOrigin}/glaze/admin#mods/${row.id}/${row.hash}`,
         '', 'To read it and decide, on the server:', cmd(`--mod ${row.id}`),
         `  docker cp glaze-gallery:${bundleFile(row.hash)} .`,
         cmd(`--approve-mod ${row.id} ${row.hash}`),
@@ -1355,9 +1361,43 @@ export function gallery({
     return send(res, 404, { error: 'Not found.' });
   };
 
+  // ---- admin: shared CLI decisions and the private HTTP surface --------------------------------------------------
+  const decide = (id, to, reason = '', actor = 'CLI') => {
+    const row = q.byId.get(id);
+    const from = { published: ['pending'], declined: ['pending'], removed: ['published', 'pending'] }[to];
+    if (!row || !from.includes(row.status)) return false;
+    // Delete only after the decision commits; a failed commit must leave its pending file intact.
+    const ok = tx(() => {
+      const changed = q.setStatus.run(to, cleanReason(reason), now(), id, row.status).changes === 1;
+      if (changed) admin.audit(actor, to, 'looks', id, '', cleanReason(reason));
+      return changed;
+    });
+    if (ok && row.media) try { tx(() => dropMedia(row.media)); } catch (e) { console.error('gallery: media cleanup:', e.message); }
+    return ok;
+  };
+  const decideMod = async (id, hash, to, reason = '', actor = 'CLI') => {
+    const row = q.modByHash.get(hash);
+    const from = { published: ['pending'], declined: ['pending', 'queued'], removed: ['published', 'pending', 'queued'] }[to];
+    if (!row || row.id !== id || !from.includes(row.status)) return false;
+    if (to === 'published') {
+      try { await readStoredMod(row); } catch { return false; }
+      if (blockedMod(row)) return false;
+    }
+    return tx(() => {
+      const changed = q.modSetStatus.run(to, cleanReason(reason), now(), id, hash, row.status).changes === 1;
+      if (changed) admin.audit(actor, to, 'mods', id, hash, cleanReason(reason));
+      return changed;
+    });
+  };
+  const admin = galleryAdmin({ db, siteOrigin, now, readJson, decide, decideMod, readMod: readStoredMod, readLookMedia: readMedia,
+    permissionWords, limits, blocklist, googleClientId, googleClientSecret, adminEmails, googleFetch,
+    clientKey: (req) => hmac(saltOf(today(now())), clientOf(req)),
+  });
+
   const handle = async (req, res) => {
     let url;
     try { url = new URL(req.url, 'http://gallery'); } catch { return send(res, 400, { error: 'Bad request.' }); }
+    if (url.pathname === '/glaze/admin' || url.pathname.startsWith('/glaze/admin/')) return admin.handle(req, res, url);
     if (url.pathname === '/glaze/mods/api/blocklist') {
       if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, { error: 'GET only.' }, { allow: 'GET, HEAD' });
       const body = blocklist();
@@ -1485,29 +1525,12 @@ export function gallery({
       q.putMeta.run('blocklist', Buffer.from(kept));
       return JSON.parse(kept).list;
     }),
-    decide: (id, to, reason = '') => {
-      const row = q.byId.get(id);
-      const from = { published: ['pending'], declined: ['pending'], removed: ['published', 'pending'] }[to];
-      if (!row || !from.includes(row.status)) return false;
-      // Delete only after the decision commits; a failed commit must leave its pending file intact.
-      const ok = tx(() => q.setStatus.run(to, cleanReason(reason), now(), id, row.status).changes === 1);
-      if (ok && row.media) try { tx(() => dropMedia(row.media)); } catch (e) { console.error('gallery: media cleanup:', e.message); }
-      return ok;
-    },
+    decide,
     // Mods, for the CLI: every submission but the declined ones, every version of one mod, and the maintainer's decisions.
     // A queued mod can be declined or removed before its review; only a person's approval publishes one the review didn't.
     listMods: () => db.prepare("SELECT id, hash, version, name, credit, status, unmailed, created FROM mods WHERE status != 'declined' ORDER BY created, hash").all(),
     showMod: (id) => q.modVersions.all(id).map((r) => ({ ...r, summary: JSON.parse(r.summary), permissions: JSON.parse(r.permissions), decision: JSON.parse(r.decision) })),
-    decideMod: async (id, hash, to, reason = '') => {
-      const row = q.modByHash.get(hash);
-      const from = { published: ['pending'], declined: ['pending', 'queued'], removed: ['published', 'pending', 'queued'] }[to];
-      if (!row || row.id !== id || !from.includes(row.status)) return false;
-      if (to === 'published') {
-        try { await readStoredMod(row); } catch { return false; }
-        if (blockedMod(row)) return false;
-      }
-      return q.modSetStatus.run(to, cleanReason(reason), now(), id, hash, row.status).changes === 1;
-    },
+    decideMod,
   };
 }
 
@@ -1524,6 +1547,7 @@ export const fromEnv = (env) => ({
   openrouter: env.OPENROUTER_BASE || undefined, reviewsPerDay: Number(env.REVIEWS_PER_DAY) || undefined,
   mailUrl: env.MAIL_URL || '', mailFrom: env.MAIL_FROM || '', mailTo: env.MAIL_TO || undefined, blocklistKey: env.BLOCKLIST_KEY || '',
   modReviewsPerDay: Number(env.MOD_REVIEWS_PER_DAY) || undefined, limits: env.SUBMIT_LIMITS !== 'off',
+  googleClientId: env.GOOGLE_CLIENT_ID || '', googleClientSecret: env.GOOGLE_CLIENT_SECRET || '', adminEmails: env.ADMIN_EMAILS || '',
 });
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
