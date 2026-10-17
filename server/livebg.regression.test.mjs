@@ -21,13 +21,14 @@ class Target {
   emit(type) { for (const fn of [...(this.listeners.get(type) || [])]) fn({ preventDefault() {} }); }
 }
 
-function page({ loaded = true, hidden = false, reduced = false } = {}) {
-  const stats = { contexts: 0, peak: 0, created: 0, draws: 0, engineStarts: 0, engineStops: 0 };
+function page({ loaded = true, hidden = false, reduced = false, gpuReady = true } = {}) {
+  const stats = { contexts: 0, peak: 0, created: 0, draws: 0, engineStarts: 0, sizes: [] };
   const document = Object.assign(new Target(), { hidden });
-  const scripts = [], canvases = [], resizes = [], frames = new Map();
-  let intersection, frame = 0;
+  const scripts = [], canvases = [], resizes = [], frames = new Map(), messages = [];
+  let intersection, frame = 0, now = 0;
   const motion = Object.assign(new Target(), { matches: reduced });
-  const gl = () => {
+  const draw = (canvas) => { stats.draws++; stats.sizes.push({ width: canvas.width, height: canvas.height, hidden: canvas.style.visibility === 'hidden' }); };
+  const gl = (canvas) => {
     stats.created++; stats.contexts++; stats.peak = Math.max(stats.peak, stats.contexts);
     let lost = false;
     const api = new Proxy({
@@ -35,7 +36,10 @@ function page({ loaded = true, hidden = false, reduced = false } = {}) {
       getShaderParameter: () => true,
       getProgramParameter: () => true,
       createShader: () => ({}), createProgram: () => ({}), createBuffer: () => ({}), getUniformLocation: () => ({}),
-      drawArrays: () => { stats.draws++; },
+      drawArrays: () => draw(canvas),
+      fenceSync: () => ({}), flush() {}, deleteSync() {}, isContextLost: () => lost,
+      getSyncParameter: () => gpuReady ? 1 : 0, SIGNALED: 1,
+      getParameter: () => [1, 64],
     }, { get: (o, k) => k in o ? o[k] : () => {} });
     return api;
   };
@@ -43,23 +47,51 @@ function page({ loaded = true, hidden = false, reduced = false } = {}) {
   document.createElement = (tag) => {
     if (tag === 'script') return {};
     assert.equal(tag, 'canvas');
-    const canvas = Object.assign(new Target(), { clientWidth: 320, clientHeight: 180, setAttribute() {}, remove() { this.removed = true; }, getContext: gl });
+    const canvas = Object.assign(new Target(), { style: {}, clientWidth: 320, clientHeight: 180, setAttribute() {}, remove() { this.removed = true; }, getContext() { return this.gl ||= gl(this); } });
     canvases.push(canvas);
     return canvas;
   };
-  const engine = { start(canvas) {
-    stats.engineStarts++;
-    const context = canvas.getContext('webgl2');
-    return { update() {}, stop() { stats.engineStops++; context.getExtension('WEBGL_lose_context').loseContext(); } };
-  } };
+  class Geometry { setAttribute() { return this; } dispose() {} }
+  class Material { constructor(options) { Object.assign(this, options); } dispose() {} }
+  class Object3D { constructor(geometry, material) { Object.assign(this, { geometry, material }); } }
+  class Color { set() { return this; } lerp() { return this; } }
+  class Renderer {
+    constructor({ canvas }) { this.canvas = canvas; this.debug = {}; this.gl = canvas.getContext('webgl2'); }
+    setPixelRatio() {} setClearColor() {} clear() {} dispose() {}
+    setSize(width, height) { Object.assign(this.canvas, { width, height }); }
+    render() { draw(this.canvas); }
+    getContext() { return this.gl; }
+    forceContextLoss() { this.gl.getExtension('WEBGL_lose_context').loseContext(); }
+  }
+  const three = {
+    WebGLRenderer: Renderer, Scene: class { add() {} remove() {} }, OrthographicCamera: class {},
+    PerspectiveCamera: class {}, Mesh: Object3D, Points: Object3D, PlaneGeometry: Geometry, BufferGeometry: Geometry,
+    Float32BufferAttribute: class {}, ShaderMaterial: Material, RawShaderMaterial: Material, Color, ColorManagement: {},
+  };
+  let engine;
   const context = vm.createContext({
-    exports: {}, document, performance: { now: () => 0 }, matchMedia: () => motion,
+    exports: {}, document, performance: { now: () => now }, matchMedia: () => motion, queueMicrotask,
+    location: { protocol: 'https:' }, addEventListener() {}, removeEventListener() {},
+    MessageChannel: class {
+      constructor() {
+        this.port1 = { onmessage: null, close() {} };
+        this.port2 = { postMessage: () => messages.push(() => this.port1.onmessage?.()), close() {} };
+      }
+    },
     IntersectionObserver: class { constructor(callback) { intersection = callback; } observe() {} unobserve() {} },
     ResizeObserver: class { constructor(callback) { this.callback = callback; resizes.push(this); } observe() {} disconnect() { this.stopped = true; } },
     requestAnimationFrame: (fn) => { frames.set(++frame, fn); return frame; }, cancelAnimationFrame: (id) => frames.delete(id),
     require: (name) => {
       if (name === '../../vendor/glaze/lib/glsl.js?url') return '/glsl.js';
-      if (name === '../../vendor/glaze-scene/lib/scene.js') return engine;
+      if (name === '../../vendor/glaze-scene/lib/scene.js') {
+        if (!engine) {
+          const exports = {};
+          const source = ts.transpile(readFileSync('vendor/glaze-scene/lib/scene.js', 'utf8'), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS });
+          vm.runInContext(`(function(exports, require) { ${source}\n })`, context)(exports, (name) => { assert.equal(name, './three.min.js'); return three; });
+          engine = { start(...args) { stats.engineStarts++; return exports.start(...args); } };
+        }
+        return engine;
+      }
       throw new Error(`Unexpected import ${name}`);
     },
     ...(loaded && { GZ_GLSL: GLSL }),
@@ -72,6 +104,8 @@ function page({ loaded = true, hidden = false, reduced = false } = {}) {
     intersect: (shown, gone = []) => intersection([...gone.map((target) => ({ target, isIntersecting: false })), ...shown.map((target) => ({ target, isIntersecting: true }))]),
     load() { context.GZ_GLSL = GLSL; for (const s of scripts) s.onload(); },
     hide(value) { document.hidden = value; document.emit('visibilitychange'); },
+    frame(ms = 34) { now += ms; const queued = [...frames.values()]; frames.clear(); for (const fn of queued) fn(now); },
+    gpu() { now++; const queued = messages.splice(0); for (const fn of queued) fn(); },
   };
 }
 
@@ -166,7 +200,8 @@ test('reduced motion draws one shader frame and changes restart the current prev
   p.watch(el, shader());
   p.intersect([el]);
   await flush();
-  assert.equal(p.stats.draws, 1);
+  p.gpu(); p.frame(); p.gpu(); p.gpu();
+  assert.equal(p.stats.sizes.filter((s) => !s.hidden).length, 1);
   assert.equal(p.frames.size, 0);
   p.motion.matches = false;
   p.motion.emit('change');
@@ -175,4 +210,31 @@ test('reduced motion draws one shader frame and changes restart the current prev
   assert.equal(p.frames.size, 1);
   p.unwatch(el);
   assert.equal(p.frames.size, 0);
+});
+
+test('unmeasured shaders begin at probe size and do not queue frames behind a delayed GPU fence', async () => {
+  const p = page({ gpuReady: false });
+  const el = p.preview();
+  p.watch(el, shader());
+  p.intersect([el]);
+  await flush();
+  assert.ok(p.stats.sizes[0].width <= 16 && p.stats.sizes[0].height <= 9, `first draw was ${p.stats.sizes[0].width}x${p.stats.sizes[0].height}`);
+  for (let i = 0; i < 6; i++) p.frame();
+  assert.equal(p.stats.draws, 1, 'queued shader draws while the first GPU fence was still pending');
+  p.unwatch(el);
+  assert.equal(p.stats.contexts, 0);
+});
+
+test('shader probes that exceed their GPU budget fall back without a visible full-size draw', async () => {
+  const p = page({ gpuReady: false });
+  const el = p.preview();
+  p.watch(el, shader());
+  p.intersect([el]);
+  await flush();
+  for (let i = 0; i < 251; i++) p.gpu();
+  await flush();
+  assert.equal(p.stats.contexts, 0);
+  assert.equal(p.stats.sizes.filter((s) => !s.hidden).length, 0);
+  assert.equal(el.dataset.live, undefined);
+  p.unwatch(el);
 });

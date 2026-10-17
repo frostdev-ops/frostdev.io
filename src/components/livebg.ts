@@ -9,10 +9,9 @@
 // the few on screen. Nothing here puts a Look's text in the page: the only values that reach the DOM are canvas drawing
 // and the data-live attribute.
 //
-// A shader is drawn by a small raw-WebGL quad, with the vertex shader, the wrapper and the checker of Glaze's own
-// lib/glsl.js, loaded as a script the first time one is needed (7 KB gzipped). Layers use Glaze's scene engine
-// (vendor/glaze-scene: lib/scene.js and its three.js build), imported the first time a Look with layers is on screen
-// (about 150 KB gzipped, none of it on a page without one).
+// Shaders and layers use Glaze's scene engine (vendor/glaze-scene: lib/scene.js and its three.js build), imported the first
+// time either is on screen (about 150 KB gzipped). Its GPU fence guard probes untrusted shaders before a visible frame and
+// waits for each sampled draw before submitting another. The shader checker loads first, before any graphics context.
 import glslUrl from '../../vendor/glaze/lib/glsl.js?url';
 
 export type Layer = {
@@ -73,11 +72,6 @@ const loadGlsl = () => (glsl ||= new Promise((resolve) => {
   document.head.append(s);
 }));
 
-const rgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
-// Frames at most this wide are drawn (Glaze draws custom shaders at 0.6 of the screen's size); a preview is small.
-const MAX_PIXELS = 640;
-const FPS = 30;
-
 type Stop = () => void;
 type Ctx = { still: boolean; current: () => boolean; fail: () => void };
 
@@ -91,99 +85,12 @@ function canvasIn(el: HTMLElement) {
   return canvas;
 }
 
-async function runShader(el: HTMLElement, spec: Extract<Live, { kind: 'shader' }>, { still, current, fail }: Ctx): Promise<Stop> {
-  const G = await loadGlsl();
-  if (!current()) return () => {};
-  // The shader has been through Glaze's checker twice already (the code's decoder, the server); a third time before any GL.
-  if (!G || !G.check(spec.src).ok) throw new Error('refused');
-  const canvas = canvasIn(el);
-  let gl: WebGLRenderingContext | null = null;
-  const lose = () => { gl?.getExtension('WEBGL_lose_context')?.loseContext(); canvas.remove(); };
-  try {
-    gl = canvas.getContext('webgl', { antialias: false, depth: false, stencil: false, alpha: false, powerPreference: 'low-power', preserveDrawingBuffer: still }) as WebGLRenderingContext | null;
-    if (!gl) throw new Error('no WebGL');
-    const g = gl;
-    const make = (type: number, text: string) => {
-      const s = g.createShader(type)!;
-      g.shaderSource(s, text);
-      g.compileShader(s);
-      if (!g.getShaderParameter(s, g.COMPILE_STATUS)) throw new Error('compile');
-      return s;
-    };
-    const program = g.createProgram()!;
-    g.attachShader(program, make(g.VERTEX_SHADER, G.VERT));
-    g.attachShader(program, make(g.FRAGMENT_SHADER, G.wrap(spec.src)));
-    g.bindAttribLocation(program, 0, 'position');
-    g.bindAttribLocation(program, 1, 'uv');
-    g.linkProgram(program);
-    if (!g.getProgramParameter(program, g.LINK_STATUS)) throw new Error('link');
-    g.useProgram(program);
-    g.bindBuffer(g.ARRAY_BUFFER, g.createBuffer());
-    g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 0, 0, 0, 1, -1, 0, 1, 0, -1, 1, 0, 0, 1, 1, 1, 0, 1, 1]), g.STATIC_DRAW);
-    g.enableVertexAttribArray(0);
-    g.vertexAttribPointer(0, 3, g.FLOAT, false, 20, 0);
-    g.enableVertexAttribArray(1);
-    g.vertexAttribPointer(1, 2, g.FLOAT, false, 20, 12);
-    const at = (n: string) => g.getUniformLocation(program, n);
-    // The colors sit toward the ground by `dim`, as Glaze's scene engine hands them to its shaders.
-    const ground = rgb(spec.ground);
-    g.uniform3f(at('uGround'), ground[0], ground[1], ground[2]);
-    spec.colors.forEach((c, i) => { const v = rgb(c).map((x, k) => x + (ground[k] - x) * spec.dim); g.uniform3f(at(`uC${i + 1}`), v[0], v[1], v[2]); });
-    g.uniform1f(at('uAmount'), spec.amount);
-    const uTime = at('uTime'), uAspect = at('uAspect'), uPx = at('uPx');
-    let scale = 0.6, time = 0, raf = 0, last = performance.now(), slow = 0, stopped = false;
-    const fit = () => {
-      const w = Math.max(1, canvas.clientWidth), h = Math.max(1, canvas.clientHeight);
-      const s = Math.min(scale, MAX_PIXELS / w);
-      canvas.width = Math.max(1, Math.round(w * s));
-      canvas.height = Math.max(1, Math.round(h * s));
-      g.viewport(0, 0, canvas.width, canvas.height);
-      g.uniform1f(uAspect, w / h);
-      g.uniform1f(uPx, canvas.height / 1000);
-    };
-    const draw = () => {
-      g.uniform1f(uTime, time);
-      g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
-    };
-    // ponytail: a rough guard, not Glaze's fence-timed one. Frames more than 150 ms apart four times running (a slow
-    // device, or a shader that is heavy for it) halve the resolution once, then hold one still frame. lib/glsl.js's cost
-    // limit is what bounds a shader before it ever draws.
-    const tick = (now: number) => {
-      raf = requestAnimationFrame(tick);
-      if (document.hidden) { last = now; return; }
-      const dt = now - last;
-      if (dt < 1000 / FPS - 1) return;
-      slow = dt > 150 ? slow + 1 : Math.max(0, slow - 1);
-      if (slow >= 4) {
-        slow = 0;
-        if (scale > 0.3) { scale /= 2; fit(); } else { cancelAnimationFrame(raf); raf = 0; draw(); return; }
-      }
-      time += (Math.min(dt, 100) / 1000) * spec.pace;
-      last = now;
-      draw();
-    };
-    const onLost = (e: Event) => { e.preventDefault(); if (!stopped) fail(); };
-    const onVisible = () => { last = performance.now(); slow = 0; };
-    canvas.addEventListener('webglcontextlost', onLost);
-    document.addEventListener('visibilitychange', onVisible);
-    const resize = new ResizeObserver(() => { if (!stopped) { fit(); draw(); } });
-    resize.observe(canvas);
-    fit();
-    draw();
-    if (!still) raf = requestAnimationFrame(tick);
-    return () => {
-      stopped = true;
-      cancelAnimationFrame(raf);
-      resize.disconnect();
-      document.removeEventListener('visibilitychange', onVisible);
-      canvas.removeEventListener('webglcontextlost', onLost);
-      lose();
-    };
-  } catch (e) { lose(); throw e; }
-}
-
-async function runLayers(el: HTMLElement, spec: Extract<Live, { kind: 'layers' }>, { still, current, fail }: Ctx): Promise<Stop> {
-  // Glaze's own engine and its three.js build, as a chunk of their own: fetched when the first Look with layers is on screen.
+async function run(el: HTMLElement, spec: Live, { still, current, fail }: Ctx): Promise<Stop> {
+  if (spec.kind === 'shader') {
+    const G = await loadGlsl();
+    if (!current()) return () => {};
+    if (!G || !G.check(spec.src).ok) throw new Error('refused');
+  }
   const engine = await import('../../vendor/glaze-scene/lib/scene.js');
   if (!current()) return () => {};
   const canvas = canvasIn(el);
@@ -191,7 +98,7 @@ async function runLayers(el: HTMLElement, spec: Extract<Live, { kind: 'layers' }
   try {
     // The engine stops itself when it can't draw (no WebGL, over its frame budget); it then tells us, and the gradient shows.
     scene = engine.start(canvas, () => true, () => { canvas.remove(); fail(); });
-    scene.update({ kind: 'layers', x: { bg: { layers: spec.layers } }, palette: {}, ground: spec.ground, colors: spec.colors, dim: spec.dim, amount: spec.amount, speed: still ? 0 : spec.pace });
+    scene.update({ kind: spec.kind, x: { bg: spec.kind === 'shader' ? { shader: { src: spec.src } } : { layers: spec.layers } }, palette: {}, ground: spec.ground, colors: spec.colors, dim: spec.dim, amount: spec.amount, speed: still ? 0 : spec.pace });
   } catch (e) { scene?.stop(); canvas.remove(); throw e; }
   const s = scene;
   return () => { s.stop(); canvas.remove(); };
@@ -228,7 +135,7 @@ function begin(s: Session) {
   const token = ++s.token;
   const current = () => s.token === token;
   const ctx: Ctx = { still: !!motion?.matches, current, fail: () => { if (current()) { s.failed = true; release(s); pump(); } } };
-  (s.spec.kind === 'shader' ? runShader(s.el, s.spec, ctx) : runLayers(s.el, s.spec, ctx)).then((stop) => {
+  run(s.el, s.spec, ctx).then((stop) => {
     // Gone off screen (or replaced) while it was loading.
     if (s.token !== token) { stop(); return; }
     s.stop = stop;
