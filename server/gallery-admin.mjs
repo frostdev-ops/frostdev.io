@@ -110,7 +110,20 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
     if (!enabled) return reply(res, 404, { error: 'Not found.' });
     const p = url.pathname.slice(ROOT.length);
     if (p === '/login' && req.method === 'GET') return reply(res, 200,
-      '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Gallery sign-in</title><link rel="stylesheet" href="/glaze/admin/style.css"><main><h1>Glaze gallery admin</h1><form method="post" action="/glaze/admin/login"><button>Sign in with Google</button></form></main></html>', 'text/html; charset=utf-8');
+      `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light"><title>Gallery sign-in · Glaze · Frostdev</title><link rel="stylesheet" href="/glaze/admin/style.css"></head>
+<body>
+  <a class="skip" href="#sign-in">Skip to sign in</a>
+  <header class="masthead shell"><a class="brand" href="/glaze"><strong>frostdev</strong><span aria-hidden="true">/</span> Glaze</a><a class="text-link" href="/glaze/looks">Public gallery <span aria-hidden="true">↗</span></a></header>
+  <main class="shell login-main" id="sign-in">
+    <div class="login-card"><p class="eyebrow">Glaze · Gallery workspace</p><h1>A little care.<br>A better gallery.</h1><p class="lead">Review Looks and mods, inspect submissions, and help decide what goes live.</p>
+      <form method="post" action="/glaze/admin/login"><button type="submit">Sign in with Google <span aria-hidden="true">→</span></button></form>
+      <p class="login-note">Use your approved admin account to continue.</p><a class="login-back" href="/glaze">Back to Glaze <span aria-hidden="true">↗</span></a>
+    </div>
+  </main>
+  <footer class="shell footer"><span>Frostdev · Glaze gallery</span><span>Made to be shared. Reviewed with care.</span></footer>
+</body></html>`, 'text/html; charset=utf-8');
     if (p === '/login' && req.method === 'POST') {
       if (req.headers.origin !== siteOrigin) return refuse(res);
       sweep();
