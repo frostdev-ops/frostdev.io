@@ -7,14 +7,14 @@ import '../styles/products.css';
 // Set false to remove the entire Halloween skin, decorations, and seasonal copy.
 const halloween = true;
 const source = 'https://github.com/frostdev-ops/glaze';
-const safariDownload = `${source}/releases/download/v3.0.3/glaze-3.0.3-safari-macos.dmg`;
-const safariZip = `${source}/releases/download/v3.0.3/glaze-3.0.3-safari-macos.zip`;
-const chromeZip = `${source}/releases/download/v3.0.3/glaze-v3.0.3.zip`;
-const firefoxZip = `${source}/releases/download/v3.0.3/glaze-v3.0.3-firefox.zip`;
+const safariDownload = `${source}/releases/download/v3.0.4/glaze-3.0.4-safari-macos.dmg`;
+const safariZip = `${source}/releases/download/v3.0.4/glaze-3.0.4-safari-macos.zip`;
+const chromeZip = `${source}/releases/download/v3.0.4/glaze-v3.0.4.zip`;
+const firefoxZip = `${source}/releases/download/v3.0.4/glaze-v3.0.4-firefox.zip`;
 const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 ---
 
-<MarketingLayout title="Glaze 3.0.3 — Blackboard, Canvas and Moodle, made yours" description="Make your school site yours: themes, glass and frost controls, animated pets, live course tabs, notes and planning. Free for Chrome and Safari, with a Firefox preview." path="/glaze" image="/projects/glaze/cover.webp">
+<MarketingLayout title="Glaze 3.0.4 — Blackboard, Canvas and Moodle, made yours" description="Make your school site yours: themes, glass and frost controls, animated pets, live course tabs, notes and planning. Free for Chrome and Safari, with a Firefox preview." path="/glaze" image="/projects/glaze/cover.webp">
   <div class:list={["product-page glaze-page", { "is-halloween": halloween }]}>
     <section class="product-hero" aria-labelledby="glaze-title">
       {halloween && <div class="halloween-hero" aria-hidden="true">
@@ -43,7 +43,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
           <a class="product-button secondary" href="/guides/glaze-chrome">Chrome guide <span aria-hidden="true">→</span></a>
         </div>
         {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.<br />A little Halloween for your study space.</p>}
-        <p class="product-meta">Version 3.0.3 · Free and open source<br />No analytics. No account.</p>
+        <p class="product-meta">Version 3.0.4 · Free and open source<br />No analytics. No account.</p>
         <p class="product-caption"><a href="/guides/glaze-chrome#firefox">Try the Firefox preview →</a></p>
         <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>
       </div>
@@ -119,7 +119,7 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
         <article class="product-card"><h3>Choose your study companion</h3><p>Meet Ember, Luna, Mochi, Sprout, Pebble, Rime and the Glaze droplet, or import a pet sprite sheet from your device. Choose once for the habitat, Study buddy, Blackboard navigation badge and course-card pet, including the original Cat and Bunny. Your XP and decorations stay with your school account. No uploads, nags or missed-day penalties.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#pets">Meet the pets →</a></article>
         <article class="product-card"><h3>Keep your place, keep moving</h3><p>Glaze 3.0.2 reduces Blackboard’s styling work during clicks, hovers and page changes. Keep up to four additional course pages live on every computer; hidden pages no longer close just because they have been idle.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#workspace">Set up your workspace →</a></article>
       </div>
-      <p class="product-caption"><strong>New in 3.0.3:</strong> one pet choice for your habitat, Study buddy, navigation badge and course-card pet, with shared timer and task reactions. Each display keeps its own on/off switch; XP and decorations stay with your school account. Blackboard file previews refresh expired viewer links and retry while uploaded files convert.</p>
+      <p class="product-caption"><strong>New in 3.0.4:</strong> mods. Add backgrounds (shaders, layered scenes, videos, animated pictures, Lottie), motion and event effects, nav layouts, page tweaks, and sticker and pet packs and widgets made by others, from a code, link, file or the gallery's new Mods section. Each mod shows what it may read, and why, before you add it. Code mods run sandboxed on Chrome; Firefox and Safari get mods without code. Updates are signed, with an opt-out signed blocklist, and a no-code widget builder makes your own. Looks can now have a looping video, animated WebP/AVIF or Lottie background, muted, still when motion is off and paused in hidden tabs. See the <a href="/guides/glaze-mods-api">mods guide</a>.</p>
     </section>
 
     <section class="product-section product-split" aria-labelledby="editor-heading">
@@ -140,10 +140,10 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
       </div>
       <div class="browser-guides">
         <a class="product-panel browser-guide" href="/guides/glaze-safari"><span class="product-eyebrow">Safari on Mac</span><h3>Signed, notarized Mac app.</h3><p>Install, enable the extension, allow your Blackboard, Canvas or Moodle site.</p><span class="product-text-link">Safari guide →</span></a>
-        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Store or GitHub package.</h3><p>The store version may differ. Load the GitHub package unpacked for the 3.0.3 features in this guide.</p><span class="product-text-link">Chrome guide →</span></a>
+        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Store or GitHub package.</h3><p>The store version may differ. Load the GitHub package unpacked for the 3.0.4 features in this guide.</p><span class="product-text-link">Chrome guide →</span></a>
         <a class="product-panel browser-guide" href="/guides/glaze-chrome#firefox"><span class="product-eyebrow">Firefox preview</span><h3>Try the Firefox package.</h3><p>Firefox 140 or newer on desktop. Load it temporarily for this browser session; it is removed when Firefox quits.</p><span class="product-text-link">Firefox setup →</span></a>
       </div>
-      <p class="product-caption">GitHub downloads: <a href={safariZip}>Safari Mac ZIP</a> · <a href={chromeZip}>Chrome extension ZIP</a> · <a href={firefoxZip}>Firefox preview ZIP</a> · <a href={`${source}/releases/tag/v3.0.3`}>3.0.3 release notes</a>.</p>
+      <p class="product-caption">GitHub downloads: <a href={safariZip}>Safari Mac ZIP</a> · <a href={chromeZip}>Chrome extension ZIP</a> · <a href={firefoxZip}>Firefox preview ZIP</a> · <a href={`${source}/releases/tag/v3.0.4`}>3.0.4 release notes</a>.</p>
     </section>
 
     <section class="product-cta">
