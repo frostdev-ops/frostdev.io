@@ -45,6 +45,16 @@ const post = (g, body, { ip = '192.0.2.1', cookie = '', type = 'application/json
 });
 afterEach(async () => { mock.restoreAll(); mock.timers.reset(); for (const g of galleries.splice(0)) await g.close(); });
 process.on('exit', () => rmSync(tmp, { recursive: true, force: true }));
+// The page's TypeScript (src/components/*.ts) without a browser: only its pure functions run. livebg.ts is loaded for real;
+// its `?url` import of lib/glsl.js is the file's name here.
+const loadTs = (file, requires = {}) => {
+  const exports = {};
+  const source = ts.transpile(readFileSync(file, 'utf8'), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true });
+  vm.runInNewContext(source, { exports, require: (m) => { if (!(m in requires)) throw new Error(`unexpected import ${m}`); return requires[m]; } });
+  return exports;
+};
+const loadLive = () => loadTs('src/components/livebg.ts', { '../../vendor/glaze/lib/glsl.js?url': '/glsl.js' });
+const loadPreview = () => loadTs('src/components/looks.ts', { './livebg': loadLive() });
 
 // Each group is run against the immutable baseline before its fix is committed.
 test('code guard bounds inflation before parsing', async () => {
@@ -494,8 +504,7 @@ test('503 paused reviews keep the documented GitHub fallback', async () => {
 });
 
 test('preview CSS rejects external URLs, injected declarations and nonfinite numbers', () => {
-  const exports = {};
-  vm.runInNewContext(ts.transpile(readFileSync('src/components/looks.ts', 'utf8'), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS }), { exports });
+  const exports = loadPreview();
   const { vars, data } = exports.previewState({ colors: { '--gz-accent': 'red; background:url(https://evil.example)' }, radius: Infinity, scale: NaN, font: { family: 'url(https://evil.example)' }, bg: { kind: 'url(https://evil.example)', colors: ['url(https://evil.example)'] } });
   assert.doesNotMatch(JSON.stringify({ vars, data }), /url\(|evil\.example|NaN|Infinity/);
   assert.equal(vars['--gz-accent'], '#17c8f4');
@@ -534,8 +543,7 @@ test('v3 surface overrides reach both model evidence and the preview', async () 
   assert.equal(state.submission.shape.surfaceColor, '#ffffff');
   assert.equal(state.submission.shape.surfaceOpacity, 100);
   const checked = await post(g, { code: theme }, { route: '/check' });
-  const exports = {};
-  vm.runInNewContext(ts.transpile(readFileSync('src/components/looks.ts', 'utf8'), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS }), { exports });
+  const exports = loadPreview();
   const { vars } = exports.previewState(checked.body.look);
   assert.equal(vars['--lp-surface-color'], '#ffffff');
   assert.equal(vars['--lp-opacity'], '100%');
@@ -614,4 +622,67 @@ test('curated glaze2 entries are checked like any other, and an unused shader st
   entry('unused', code2({ bg: { shader: { src: SHADER } } }, { kind: 'solid' }));
   const bad = await loadLooks(dir, path.join(tmp, 'none'));
   assert.ok(bad.errors.some((e) => /unused\.json.*shader background it doesn't use/.test(e)), JSON.stringify(bad.errors));
+});
+
+test('the preview takes a live description only if every value is in Glaze\'s range, and draws nothing else', () => {
+  const { liveSpec } = loadLive();
+  const base = { ground: '#101820', colors: ['#112233', '#445566', '#778899'], dim: 0.3, amount: 0.6, pace: 1.1 };
+  assert.deepEqual({ ...liveSpec({ kind: 'shader', src: SHADER, ...base }) }, { kind: 'shader', src: SHADER, ...base });
+  const bad = [
+    null, 'shader', [], {}, { ...base, kind: 'eval', src: SHADER },
+    { kind: 'shader', src: 'vec4 scene(vec2 uv) { return vec4(1.); } // é', ...base }, { kind: 'shader', src: 'x'.repeat(8193), ...base }, { kind: 'shader', src: '', ...base }, { kind: 'shader', src: 42, ...base },
+    { kind: 'shader', src: SHADER, ...base, ground: 'url(https://evil.example)' }, { kind: 'shader', src: SHADER, ...base, colors: ['#112233', '#445566'] },
+    { kind: 'shader', src: SHADER, ...base, colors: ['#112233', '#445566', 'red; background: url(https://evil.example)'] },
+    { kind: 'layers', layers: [], ...base }, { kind: 'layers', layers: [{ k: 'video', src: 'https://evil.example/a.mp4' }], ...base }, { kind: 'layers', layers: 'noise', ...base },
+  ];
+  for (const raw of bad) assert.equal(liveSpec(raw), null, JSON.stringify(raw)?.slice(0, 80));
+  // Numbers and words are clamped or defaulted into Glaze's lists; colors that are not #rrggbb are dropped from a layer.
+  const spec = liveSpec({ kind: 'layers', ...base, dim: 9, pace: NaN, layers: [
+    { k: 'particles', count: 99999, shape: 'skull', size: -4, drift: 700, twinkle: 'lots', blend: 'xor', amount: 500, speed: -1, c: ['#ffffff', 'javascript:1', 'accent'] },
+    { k: 'scene', name: 'https://evil.example/scene' }, { k: 'noise' }, { k: 'gradient', style: 'zigzag' }, { k: 'noise' },
+  ] });
+  assert.equal(spec.layers.length, 4);
+  assert.equal(spec.dim, 1);
+  assert.equal(spec.pace, 1);
+  assert.deepEqual({ ...spec.layers[0] }, { k: 'particles', blend: 'normal', amount: 100, speed: 0, count: 400, shape: 'dot', size: 1, drift: 360, twinkle: 0, c: ['#ffffff'] });
+  assert.equal(spec.layers[1].name, 'mist');
+  assert.equal(spec.layers[3].style, 'linear');
+  assert.doesNotMatch(JSON.stringify(spec), /evil|javascript|skull|zigzag/);
+});
+
+test('badges list what else a Look changes, and the preview state treats shader and layers like a scene under its gradient', () => {
+  const { partTags, cardTags, previewState, TAG_LABELS, PART_TAGS } = loadPreview();
+  const parts = { background: { kind: 'shader' }, animations: [{ moment: 'card.enter' }], effects: [], cursor: { kind: 'trail' }, nav: { place: 'top' }, rules: { count: 2 } };
+  assert.deepEqual(Array.from(partTags(parts)), ['animations', 'cursor', 'nav-layout', 'page-tweaks']);
+  assert.deepEqual(Array.from(partTags(undefined)), []);
+  assert.deepEqual(Array.from(partTags('animations')), []);
+  assert.deepEqual(Array.from(cardTags({ kind: 'look', mode: 'dark', animated: true, tags: ['serif'], parts }, 'community')), ['community', 'look', 'dark', 'animated', 'animations', 'cursor', 'nav-layout', 'page-tweaks', 'serif']);
+  assert.deepEqual(Array.from(PART_TAGS, ([, label]) => label), ['Animations', 'Effects', 'Cursor', 'Nav layout', 'Page tweaks']);
+  for (const [tag, label] of PART_TAGS) assert.equal(TAG_LABELS[tag], label);
+  for (const kind of ['shader', 'layers']) {
+    const { vars, data } = previewState({ animated: true, bg: { kind, intensity: 60, style: 'radial', angle: 90, blend: 100, spread: 100, colors: ['#112233', '#445566', '#778899'], blur: 12 } });
+    assert.equal(data.bg, kind);
+    assert.equal(data.animated, 'true');
+    assert.equal(vars['--lp-dim'], '0.3');
+    assert.equal(vars['--lp-blur'], '0', 'Glaze does not blur what is drawn over the gradient');
+    assert.match(vars['--lp-bg-image'], /^radial-gradient\(/);
+  }
+  assert.equal(previewState({ bg: { kind: 'shader', colors: ['url(https://evil.example)'] } }).data.animated, 'false');
+});
+
+test('the gallery page and the submit page take glaze2 codes and draw backgrounds only through livebg', () => {
+  const looks = readFileSync('src/components/looks.ts', 'utf8');
+  assert.match(looks, /\/\^glaze\[12\]:\[\\w-\]\+\$\/\.test\(l\.code\)/);
+  const submit = readFileSync('src/pages/glaze/looks/submit.astro', 'utf8');
+  assert.match(submit, /slice\(0, 20000\)/);
+  assert.match(submit, /glaze2:/);
+  // The only way a Look's text or description reaches the page is textContent, dataset and setProperty (no innerHTML, no
+  // insertAdjacentHTML, no eval, no Function, no remote script).
+  for (const file of ['src/components/livebg.ts', 'src/components/looks.ts', 'src/pages/glaze/looks/submit.astro', 'src/pages/glaze/looks.astro']) {
+    const source = readFileSync(file, 'utf8').replace(/\/\/.*$/gm, '');
+    assert.doesNotMatch(source, /innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function\(|\.srcdoc/, file);
+  }
+  const live = readFileSync('src/components/livebg.ts', 'utf8');
+  assert.equal([...live.matchAll(/\bsrc: glslUrl\b/g)].length, 1, 'the only script it adds is the vendored lib/glsl.js');
+  assert.doesNotMatch(live, /https?:\/\//);
 });

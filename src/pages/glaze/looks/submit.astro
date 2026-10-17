@@ -29,8 +29,8 @@ const access: [string, string, string][] = [
       <form class="submit-form product-panel" id="submit-form" method="post" novalidate>
         <div class="field">
           <label for="f-code">Theme code</label>
-          <textarea id="f-code" name="code" rows="4" required spellcheck="false" autocomplete="off" placeholder="glaze1:…" aria-describedby="f-code-help f-code-error"></textarea>
-          <p class="help" id="f-code-help">Starts with <code>glaze1:</code>. Checked by Glaze {GLAZE_VERSION}'s own code as you type.</p>
+          <textarea id="f-code" name="code" rows="4" required spellcheck="false" autocomplete="off" placeholder="glaze1:… or glaze2:…" aria-describedby="f-code-help f-code-error"></textarea>
+          <p class="help" id="f-code-help">Starts with <code>glaze1:</code>, or <code>glaze2:</code> for a Look with extras (a shader or layered background, animations, effects, a cursor effect, a navigation layout, page tweaks). Checked by Glaze {GLAZE_VERSION}'s own code as you type.</p>
           <p class="help" id="f-code-prefilled" hidden>This code came with the link you opened. Nothing has been sent yet. <button type="button" class="looks-link" id="f-code-check">Preview it</button></p>
           <ul class="error" id="f-code-error"></ul>
         </div>
@@ -104,7 +104,7 @@ const access: [string, string, string][] = [
       </div>
       <div class="product-panel">
         <h3>What's kept</h3>
-        <p>Previewing sends your code and fields to frostdev.io to check them; those fields are not saved. Previewing or submitting sets a one-day cookie scoped to the gallery API. The preview rate limit keeps a short-lived keyed network hash in memory; submissions keep cookie and network hashes for the daily limit, with quota rows removed at the two-day cutoff. The network key is replaced daily. These identifiers are not included in review requests or notification emails: OpenRouter sees the Look, its name, credit and tags, and the nearest Looks.</p>
+        <p>Previewing sends your code and fields to frostdev.io to check them; those fields are not saved. Previewing or submitting sets a one-day cookie scoped to the gallery API. The preview rate limit keeps a short-lived keyed network hash in memory; submissions keep cookie and network hashes for the daily limit, with quota rows removed at the two-day cutoff. The network key is replaced daily. These identifiers are not included in review requests or notification emails: OpenRouter sees the Look, its name, credit and tags, and the nearest Looks. For a Look with extras that includes a description of them, never a shader's source; the text they carry (navigation labels, link names and addresses, rule labels) goes to the first reviewer's safety check with the name and credit.</p>
         <p>Published and pending Looks retain their submitted fields, review and hashed status token until acted on; published fields are public. Removed records are retained to block resubmission. Automated declines keep the submitted name, code and review for 30 days; human declines also retain the credit and status record for 30 days after the decision. Cookie and network hashes are not attached to these records. Backups and notification emails have separate retention; the gallery does not delete email copies.</p>
         <h3>Changed your mind?</h3>
         <p>Email <a class="looks-link" href="mailto:admin@frostdev.io?subject=Glaze%20Looks%20gallery">admin@frostdev.io</a> with the Look's name to have it taken down.</p>
@@ -209,7 +209,7 @@ const access: [string, string, string][] = [
   // A code in the link (#code=…, how Glaze can open this page): filled in, but nothing is sent until the student asks.
   const hash = new URLSearchParams(location.hash.slice(1));
   if (hash.get('code')) {
-    code.value = hash.get('code')!.slice(0, 4000);
+    code.value = hash.get('code')!.slice(0, 20000);
     $('f-code-prefilled').hidden = false;
     $('f-code-check').addEventListener('click', () => { $('f-code-prefilled').hidden = true; check(); });
   }

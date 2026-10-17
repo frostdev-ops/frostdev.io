@@ -3,6 +3,9 @@
 // describe() in scripts/looks.mjs, and is checked again here: a color must be #rrggbb, a number must be finite and
 // in Glaze's range, a word must be one of Glaze's. Anything else falls back to a default, so even a wrong answer
 // from the server can only paint a wrong color, never inject CSS or markup. Submitted text is only ever textContent.
+// A shader or layers background is drawn live by livebg.ts from the `live` description, checked there again.
+import { liveSpec, specOf, stripLive, unwatch, watch, watchBuilt } from './livebg';
+export { watchBuilt };
 
 export type Font = { id: string; name: string; group: string; fb: string; family: string } | null;
 export type Described = {
@@ -13,6 +16,9 @@ export type Described = {
   bg: { kind: string; style: string; angle: number; blend: number; spread: number; colors: string[]; dim: number; blur: number; scene: string; intensity: number; image: string; imageHost: string };
   surfaces?: Record<string, unknown>;
   contrast: { label: string; min: number; ratio: number; pass: boolean }[];
+  // Look parts (a glaze2 code): what the Look adds, and how to draw a shader or layers background. Both are optional.
+  parts?: { background?: unknown; animations?: unknown[]; effects?: unknown[]; cursor?: unknown; nav?: unknown; rules?: unknown };
+  live?: unknown;
 };
 export type Look = Described & {
   id: string; name: string; created: string; tags: string[]; code: string;
@@ -27,7 +33,7 @@ const hex = (v: unknown, d: string) => (typeof v === 'string' && HEX.test(v) ? v
 const num = (v: unknown, lo: number, hi: number, d: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
 const word = <T extends string>(v: unknown, list: readonly T[], d: T): T => (list.includes(v as T) ? (v as T) : d);
 const FAMILIES = ['sans', 'serif', 'mono'] as const;
-export const BG_KINDS = ['solid', 'gradient', 'image', 'aurora', 'scene'] as const;
+export const BG_KINDS = ['solid', 'gradient', 'image', 'aurora', 'scene', 'shader', 'layers'] as const;
 const STYLES = ['linear', 'radial', 'conic', 'mesh'] as const;
 const DENSITY = { compact: 0.8, cozy: 1, roomy: 1.2 } as const;
 
@@ -69,10 +75,13 @@ export function previewState(d: Partial<Described>) {
   vars['--lp-glass'] = String(num(d.glass, 0, 24, 12));
   vars['--lp-depth'] = String(num(d.depth, 0, 3, 1));
   vars['--lp-pad'] = String(DENSITY[word(d.density, ['compact', 'cozy', 'roomy'] as const, 'cozy')]);
-  vars['--lp-dim'] = String(num(kind === 'scene' ? 75 * (1 - num(bg.intensity, 0, 100, 50) / 100) : bg.dim, 0, 90, 60) / 100);
-  vars['--lp-blur'] = String(num(bg.blur, 0, 20, 0));
+  // A scene, a shader and layers sit toward the ground by the Look's intensity (Glaze's GZ_SCENE_LOOK); until one is drawn,
+  // or when it can't be, the gradient under it shows, dimmed the same way.
+  const drawn = kind === 'scene' || kind === 'shader' || kind === 'layers';
+  vars['--lp-dim'] = String(num(drawn ? 75 * (1 - num(bg.intensity, 0, 100, 50) / 100) : bg.dim, 0, 90, 60) / 100);
+  vars['--lp-blur'] = String(kind === 'shader' || kind === 'layers' ? 0 : num(bg.blur, 0, 20, 0));
   vars['--lp-angle'] = `${num(bg.angle, 0, 360, 135)}deg`;
-  if (kind === 'gradient') vars['--lp-bg-image'] = gradient(style, num(bg.angle, 0, 360, 135), num(bg.blend, 0, 100, 100), num(bg.spread, 20, 200, 100));
+  if (kind === 'gradient' || kind === 'shader' || kind === 'layers') vars['--lp-bg-image'] = gradient(style, num(bg.angle, 0, 360, 135), num(bg.blend, 0, 100, 100), num(bg.spread, 20, 200, 100));
   vars['--lp-surface-color'] = surface.surfaceCustom === true ? hex(surface.surfaceColor, vars['--gz-surface']) : vars['--gz-surface'];
   vars['--lp-surface-tint'] = `${num(surface.surfaceTint, 0, 100, 0)}%`;
   const opacity = num(surface.surfaceOpacity, -1, 100, -1);
@@ -84,7 +93,7 @@ export function previewState(d: Partial<Described>) {
   const fam = (f: Font | undefined) => word(f?.family, FAMILIES, 'sans');
   const data = {
     bg: kind, font: fam(d.font), head: fam(d.head ?? d.font), mono: d.mono ? fam(d.mono) : 'mono',
-    animated: String(kind === 'aurora' || kind === 'scene'),
+    animated: String(kind === 'aurora' || kind === 'scene' || ((kind === 'shader' || kind === 'layers') && d.animated === true)),
   };
   return { vars, data };
 }
@@ -98,6 +107,8 @@ export function paintPreview(el: HTMLElement, d: Partial<Described>) {
   const host = el.querySelector<HTMLElement>('[data-f="host"]');
   if (host) host.textContent = typeof d.bg?.imageHost === 'string' ? d.bg.imageHost : '';
   el.querySelector('.lp-bg img')?.remove();
+  // A shader or layers background is drawn live, while the preview is on screen; anything else stops what was drawn there.
+  watch(el, d.bg?.kind === 'shader' || d.bg?.kind === 'layers' ? liveSpec(d.live) : null);
 }
 
 // A https image address, or ''.
@@ -120,12 +131,19 @@ const fontLine = (d: Partial<Described>) => {
 };
 export { fontLine };
 
+// What else a Look changes, besides its colors, fonts, shape and background (a glaze2 code's parts), as badges.
+export const PART_TAGS: [string, string][] = [['animations', 'Animations'], ['effects', 'Effects'], ['cursor', 'Cursor'], ['nav-layout', 'Nav layout'], ['page-tweaks', 'Page tweaks']];
 export const TAG_LABELS: Record<string, string> = {
   minimal: 'Minimal', colorful: 'Colorful', gradient: 'Gradient', serif: 'Serif', monospace: 'Monospace', seasonal: 'Seasonal',
   'high-contrast': 'High contrast', 'low-vision': 'Low vision', 'dyslexia-friendly': 'Dyslexia-friendly', 'color-blind-safe': 'Color-blind safe',
   dark: 'Dark', light: 'Light', animated: 'Animated', look: 'Look', palette: 'Palette', curated: 'Curated', community: 'Community',
+  ...Object.fromEntries(PART_TAGS),
 };
-export const cardTags = (l: Pick<Look, 'kind' | 'mode' | 'animated' | 'tags'>, source: string) => [source, l.kind, l.mode, ...(l.animated ? ['animated'] : []), ...l.tags];
+const filled = (v: unknown) => (Array.isArray(v) ? v.length > 0 : !!v && typeof v === 'object');
+// Which part of a Look's `parts` each badge is for.
+const PART_OF = { animations: 'animations', effects: 'effects', cursor: 'cursor', 'nav-layout': 'nav', 'page-tweaks': 'rules' } as const;
+export const partTags = (p: Look['parts']) => (p && typeof p === 'object' ? PART_TAGS.map(([t]) => t).filter((t) => filled(p[PART_OF[t as keyof typeof PART_OF]])) : []);
+export const cardTags = (l: Pick<Look, 'kind' | 'mode' | 'animated' | 'tags' | 'parts'>, source: string) => [source, l.kind, l.mode, ...(l.animated ? ['animated'] : []), ...partTags(l.parts), ...l.tags];
 export const day = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+){0,7}$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -133,10 +151,10 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 // A community card from the page's <template> (LookCard.astro, rendered empty): text through textContent, colors
 // through setProperty, the code and name into data attributes for Copy code and Glaze's own gallery script.
 export function fillCard(tpl: HTMLTemplateElement, l: Look): HTMLElement | null {
-  if (typeof l?.id !== 'string' || !ID.test(l.id) || typeof l.name !== 'string' || typeof l.code !== 'string' || !/^glaze1:[\w-]+$/.test(l.code)) return null;
+  if (typeof l?.id !== 'string' || !ID.test(l.id) || typeof l.name !== 'string' || typeof l.code !== 'string' || !/^glaze[12]:[\w-]+$/.test(l.code)) return null;
   const card = (tpl.content.firstElementChild as HTMLElement).cloneNode(true) as HTMLElement;
   const f = (k: string) => card.querySelector<HTMLElement>(`[data-f="${k}"]`)!;
-  const tags = cardTags({ kind: l.kind === 'look' ? 'look' : 'palette', mode: l.mode === 'light' ? 'light' : 'dark', animated: !!l.animated, tags: (Array.isArray(l.tags) ? l.tags : []).filter((t) => Object.hasOwn(TAG_LABELS, t)) }, 'community');
+  const tags = cardTags({ kind: l.kind === 'look' ? 'look' : 'palette', mode: l.mode === 'light' ? 'light' : 'dark', animated: !!l.animated, parts: l.parts, tags: (Array.isArray(l.tags) ? l.tags : []).filter((t) => Object.hasOwn(TAG_LABELS, t)) }, 'community');
   const credit = typeof l.credit === 'string' ? l.credit : '';
   const created = typeof l.created === 'string' && DATE.test(l.created) ? l.created : '';
   card.id = l.id;
@@ -186,10 +204,13 @@ export function wireDialog(root: ParentNode = document) {
     copy.removeAttribute('aria-label');
     copy.setAttribute('tabindex', '-1');
     copy.setAttribute('aria-hidden', 'true');
+    stripLive(copy);
     stage.replaceChildren(copy);
+    // The large preview draws its own copy of a shader or layers background.
+    watch(copy, specOf(p));
     title.textContent = p.dataset.title || 'Preview';
     dialog.showModal();
   });
   dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
-  dialog.addEventListener('close', () => { stage.replaceChildren(); opener?.focus(); opener = null; });
+  dialog.addEventListener('close', () => { for (const lp of stage.querySelectorAll<HTMLElement>('.lp')) unwatch(lp); stage.replaceChildren(); opener?.focus(); opener = null; });
 }

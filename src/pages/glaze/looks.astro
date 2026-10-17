@@ -2,6 +2,7 @@
 import MarketingLayout from '../../layouts/MarketingLayout.astro';
 import LookCard from '../../components/LookCard.astro';
 import { loadLooks, TAGS, GLAZE_VERSION } from '../../../scripts/looks.mjs';
+import { PART_TAGS, partTags } from '../../components/looks';
 import '../../styles/products.css';
 import '../../styles/looks.css';
 
@@ -19,9 +20,10 @@ const groups: [string, [string, string][]][] = [
   ['kind', [['look', 'Looks'], ['palette', 'Palettes']]],
   ['mode', [['dark', 'Dark'], ['light', 'Light']]],
   ['animated', [['animated', 'Animated']]],
+  ...PART_TAGS.map(([tag, label]): [string, [string, string][]] => [tag, [[tag, label]]]),
   ...Object.entries(TAGS).map(([tag, label]): [string, [string, string][]] => [tag, [[tag, label]]]),
 ];
-const used = new Set(looks.flatMap((l) => ['curated', l.kind, l.mode, ...(l.animated ? ['animated'] : []), ...l.tags]));
+const used = new Set(looks.flatMap((l) => ['curated', l.kind, l.mode, ...(l.animated ? ['animated'] : []), ...partTags(l.parts), ...l.tags]));
 ---
 
 <MarketingLayout title="Glaze Looks — free themes for Blackboard Ultra and Canvas" description={`${looks.length} free Looks and palettes for Glaze, shared openly. Preview one, then wear it on Blackboard Ultra or Canvas. No accounts, no tracking.`} path="/glaze/looks">
@@ -72,7 +74,7 @@ const used = new Set(looks.flatMap((l) => ['curated', l.kind, l.mode, ...(l.anim
         <h3>In one click</h3>
         <p>With the newest Glaze, <strong>Use this Look in Glaze</strong> opens Glaze's editor with the Look in its preview. Choose <strong>Use this theme</strong> to wear it, <strong>Save to favorites</strong> to keep it for later, or Cancel. Glaze keeps your favorites and a history of the themes you wore on your computer, with a Previous Look button.</p>
         <h3>By hand</h3>
-        <p>Choose <strong>Copy code</strong>, open Glaze's editor, go to <strong>Share</strong> and paste the code. This works in every Glaze since 2.1.</p>
+        <p>Choose <strong>Copy code</strong>, open Glaze's editor, go to <strong>Share</strong> and paste the code. This works in every Glaze since 2.1. A Look with extras (a shader or layered background, animations, effects, a cursor effect, a navigation layout or page tweaks) has a longer code that starts with <code>glaze2:</code>, which needs a Glaze that supports Look parts; older versions say it isn't a theme code.</p>
         <p>A palette changes only your colors. A Look also sets fonts, shape and background.</p>
       </div>
     </section>
@@ -98,7 +100,7 @@ const used = new Set(looks.flatMap((l) => ['curated', l.kind, l.mode, ...(l.anim
 </MarketingLayout>
 
 <script>
-  import { fillCard, showImage, wireDialog, type Look } from '../../components/looks';
+  import { fillCard, showImage, watchBuilt, wireDialog, type Look } from '../../components/looks';
 
   const $ = <T extends Element>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel)!;
   const grid = $<HTMLUListElement>('#looks-grid');
@@ -131,6 +133,8 @@ const used = new Set(looks.flatMap((l) => ['curated', l.kind, l.mode, ...(l.anim
   for (const c of chips) c.addEventListener('click', () => { c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true')); update(); });
   update();
   wireDialog(grid);
+  // Curated Looks with a shader or layers background draw it while they are on screen.
+  watchBuilt(grid);
 
   // The community's Looks, from frostdev.io's gallery server, without cookies. If it doesn't answer, the curated
   // gallery above is the whole gallery.

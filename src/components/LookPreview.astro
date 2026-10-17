@@ -8,6 +8,9 @@ interface Props { look?: Partial<Described>; name?: string }
 const { look = {}, name = '' } = Astro.props;
 const { vars, data } = previewState(look);
 const host = look.bg?.imageHost || '';
+// A curated Look with a shader or layers background carries how to draw it here, for the page's script (livebg.ts, which
+// checks it again); the markup holds no code. `<` is escaped so the JSON can't close its own tag.
+const live = look.bg?.kind === 'shader' || look.bg?.kind === 'layers' ? JSON.stringify(look.live ?? null).replace(/</g, '\\u003c') : '';
 ---
 
 <button type="button" class="lp" style={vars} data-bg={data.bg} data-font={data.font} data-head={data.head} data-mono={data.mono}
@@ -51,6 +54,7 @@ const host = look.bg?.imageHost || '';
       </span>
     </span>
   </span>
+  {live && <script is:inline type="application/json" class="lp-spec" set:html={live}></script>}
   <span class="lp-label lp-scene-label" aria-hidden="true">3D scene in Glaze</span>
   <span class="lp-label lp-image-label" aria-hidden="true">Background image from <span data-f="host">{host}</span></span>
 </button>
@@ -97,6 +101,11 @@ const host = look.bg?.imageHost || '';
     filter: blur(1.2cqi); animation: lp-scene 12s ease-in-out infinite alternate;
   }
   .lp[data-bg='image'] .lp-bg::before { background: repeating-linear-gradient(135deg, var(--gz-surface) 0 2cqi, var(--gz-line) 2cqi 4cqi); }
+  /* A shader or layers background is drawn live (livebg.ts) into a canvas; until then, and when it can't be, this gradient
+     (dimmed as Glaze dims it) shows. The canvas is already toward the ground, so it takes no dim of its own. */
+  .lp[data-bg='shader'] .lp-bg::before, .lp[data-bg='layers'] .lp-bg::before { background: var(--lp-bg-image); }
+  .lp-live { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .lp[data-live] .lp-bg::before, .lp[data-live] .lp-bg::after { display: none; }
   .lp-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(calc(var(--lp-blur) * var(--lp-px))); }
   @keyframes lp-aurora { from { transform: translate(-6%, -3%) rotate(-6deg) scale(1); } to { transform: translate(6%, 4%) rotate(8deg) scale(1.15); } }
   @keyframes lp-scene { from { transform: translateY(2%) scale(1); } to { transform: translateY(-4%) scale(1.08) rotate(3deg); } }
