@@ -1,0 +1,216 @@
+---
+import MarketingLayout from '../../../layouts/MarketingLayout.astro';
+import { GLAZE_VERSION } from '../../../../scripts/looks.mjs';
+import '../../../styles/products.css';
+import '../../../styles/looks.css';
+
+const guide = 'https://github.com/frostdev-ops/frostdev.io/blob/main/docs/looks-gallery.md#mods';
+---
+
+<MarketingLayout title="Share a Glaze mod" description="Submit your Glaze mod to the free Mods gallery. It is checked at once by Glaze's own code, then reviewed file by file." path="/glaze/mods/submit">
+  <div class="product-page looks-page submit-page mods-submit">
+    <section class="looks-hero" aria-labelledby="submit-title">
+      <p class="product-eyebrow"><a href="/glaze">Glaze</a> · <a href="/glaze/mods">Mods</a> · Share</p>
+      <h1 class="product-title" id="submit-title">Share your mod.</h1>
+      <p class="product-lead">In Glaze's editor, under <strong>Mods</strong>, export your mod: Glaze signs it with your author key and saves a <code>.glazemod</code> file. Choose it here and it's checked at once. When you submit, a reviewer reads every file, usually within a few minutes, and your status link shows the outcome. One a day.</p>
+    </section>
+
+    <div class="submit-grid">
+      <form class="submit-form product-panel" id="submit-form" method="post" novalidate>
+        <div class="field">
+          <label for="f-file">Mod file</label>
+          <input type="file" id="f-file" accept=".glazemod,application/zip" aria-describedby="f-file-help f-file-error" />
+          <p class="help" id="f-file-help">A signed <code>.glazemod</code>, at most 2 MiB of files (256 KiB of code). Checked by Glaze {GLAZE_VERSION}'s own code as soon as you choose it; nothing is kept until you submit.</p>
+          <ul class="error" id="f-file-error"></ul>
+        </div>
+        <div class="field">
+          <label class="tag license"><input type="checkbox" id="f-code" aria-describedby="f-license-error" /> I wrote its code or have the right to share it, and I license the code under the <a class="looks-link" href="https://opensource.org/license/mit" rel="license">MIT License</a>.</label>
+          <label class="tag license"><input type="checkbox" id="f-art" aria-describedby="f-license-error" /> I made its pictures, text and other content or have the right to share them, and I license them under <a class="looks-link" href="https://creativecommons.org/licenses/by/4.0/" rel="license">CC BY 4.0</a>.</label>
+          <ul class="error" id="f-license-error"></ul>
+        </div>
+        <div class="product-actions submit-actions">
+          <button type="submit" class="product-button" id="f-submit" disabled>Submit for review</button>
+          <a class="product-button secondary" href="/glaze/mods">Back to the mods</a>
+        </div>
+        <p class="help" id="check-status" role="status" aria-live="polite"></p>
+        <div role="status" aria-live="polite"><div class="submit-status" id="submit-status" hidden></div></div>
+        <noscript><p class="help">Submitting needs JavaScript.</p></noscript>
+      </form>
+
+      <aside class="submit-side" aria-labelledby="mod-title">
+        <h2 class="submit-h2" id="mod-title">What Glaze reads in it</h2>
+        <p class="submit-empty mods-empty" id="mod-empty">Choose a mod file to see it here.</p>
+        <div class="mod-facts" id="mod-facts" hidden>
+          <p class="mod-name"><strong id="m-name"></strong> <span id="m-version"></span> by <span id="m-credit"></span></p>
+          <ul class="look-tags" id="m-badges" aria-label="About this mod"></ul>
+          <h3 class="mod-h3">What it adds</h3>
+          <ul class="mod-list" id="m-adds"></ul>
+          <h3 class="mod-h3">What it can reach, with your reasons</h3>
+          <ul class="mod-list mod-perms" id="m-perms"></ul>
+          <ul class="mod-warnings" id="m-warnings"></ul>
+          <h3 class="mod-h3">Files</h3>
+          <ul class="mod-list mod-files" id="m-files"></ul>
+          <p class="mod-hash">Id <code id="m-id"></code>, bundle <code id="m-hash"></code></p>
+        </div>
+      </aside>
+    </div>
+
+    <section class="product-section product-split" id="privacy" aria-labelledby="privacy-heading">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">What happens to it</p>
+        <h2 id="privacy-heading">Who reads your mod, and what's kept.</h2>
+        <p>Choosing a file sends it to frostdev.io to be checked by Glaze's own code; nothing is kept from that. <strong>When you submit, the whole bundle (every file in it) is sent to the reviewer: OpenRouter, which passes it to OpenAI's <code>gpt-6-luna-pro</code>.</strong> It reads every file and accepts, declines with a reason you'll see, or asks a person. A mod that can read courses, To Do or grades and also reach a website always goes to a person, the maintainer, who gets the review by email and can read the bundle on the server. <a class="looks-link" href={guide}>How the review works</a></p>
+      </div>
+      <div class="product-panel">
+        <h3>What's kept</h3>
+        <p>The bundle is kept on frostdev.io with its review and a hashed status token. A published mod is public: its name, version, author name and key, what it adds and its permissions with your reasons, and the bundle itself for anyone to download. A declined mod and its bundle are deleted 30 days after the decision; pending and taken-down ones are kept, a taken-down one so the same bundle can't come back. Submitting sets a one-day cookie scoped to the mods API and keeps it and your network address only as keyed hashes for the one-a-day limit (the address's key is replaced daily, and the hashes go after two days). They aren't attached to your mod and never reach the reviewer or the email. Backups and emails have their own retention.</p>
+        <h3>Changed your mind?</h3>
+        <p>Email <a class="looks-link" href="mailto:admin@frostdev.io?subject=Glaze%20Mods%20gallery">admin@frostdev.io</a> with the mod's name to have it taken down.</p>
+      </div>
+    </section>
+  </div>
+</MarketingLayout>
+
+<script>
+  const API = '/glaze/mods/api';
+  // lib/modbundle.js's cap on a .glazemod: 2 MiB of files plus room for the zip's headers (server/gallery.mjs MOD_BODY_MAX).
+  const MAX = 2304 * 1024;
+  const ID = /^[a-z2-7]{16}$/, HASH = /^[\w-]{43}$/;
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>('submit-form');
+  const file = $<HTMLInputElement>('f-file');
+  const code = $<HTMLInputElement>('f-code');
+  const art = $<HTMLInputElement>('f-art');
+  const button = $<HTMLButtonElement>('f-submit');
+  const statusBox = $<HTMLElement>('submit-status');
+  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text = '', cls = '') => { const e = document.createElement(tag); if (text) e.textContent = text; if (cls) e.className = cls; return e; };
+  const link = (href: string, text: string) => Object.assign(el('a', text, 'looks-link'), { href });
+  const str = (v: unknown, max = 400) => (typeof v === 'string' ? v.slice(0, max) : '');
+  const say = (...nodes: (Node | string)[]) => { statusBox.replaceChildren(...nodes); statusBox.hidden = false; statusBox.scrollIntoView({ block: 'nearest' }); };
+  const closed = () => say(el('p', "The Mods gallery server isn't answering; nothing was used up. Try again later."));
+  const problems = (list: string[], id = 'f-file-error') => {
+    for (const x of ['f-file-error', 'f-license-error']) $(x).replaceChildren();
+    for (const p of list) $(id).append(el('li', p.charAt(0).toUpperCase() + p.slice(1) + '.'));
+    if (id === 'f-file-error' && list.length) file.setAttribute('aria-invalid', 'true'); else file.removeAttribute('aria-invalid');
+  };
+
+  // ---- what the check says about the chosen file -------------------------------------------------------------------
+  type Mod = { id: string; hash: string; name: string; version: string; credit: string; adds: string[]; code: boolean; frame: boolean; permissions: { id: string; why: string; label: string; means: string }[]; warnings: string[]; files: { path: string; bytes: number }[]; size: number; text: number };
+  const kib = (n: number) => (n < 1024 ? `${n} bytes` : `${(n / 1024).toFixed(1)} KiB`);
+  const show = (m: Mod | null) => {
+    $('mod-facts').hidden = !m;
+    $('mod-empty').hidden = !!m;
+    if (!m) return;
+    $('m-name').textContent = str(m.name);
+    $('m-version').textContent = str(m.version, 40);
+    $('m-credit').textContent = str(m.credit, 40);
+    $('m-badges').replaceChildren(el('li', m.code === true ? 'Needs Chrome' : 'Chrome and Firefox'), ...(m.frame === true ? [el('li', 'Has its own page')] : []));
+    const adds = Array.isArray(m.adds) ? m.adds.map((x) => str(x)).filter(Boolean) : [];
+    $('m-adds').replaceChildren(...(adds.length ? adds : ['Settings and parts Glaze draws itself']).map((x) => el('li', x)));
+    const perms = Array.isArray(m.permissions) ? m.permissions : [];
+    $('m-perms').replaceChildren(...(perms.length ? perms.map((p) => {
+      const li = el('li');
+      li.append(el('strong', str(p.label, 260)), ` — ${str(p.means)} You say: `, el('q', str(p.why, 280)));
+      return li;
+    }) : [el('li', 'Nothing beyond Glaze itself: no personal data, no websites.')]));
+    $('m-warnings').replaceChildren(...(Array.isArray(m.warnings) ? m.warnings : []).map((w) => el('li', str(w))));
+    $('m-files').replaceChildren(...(Array.isArray(m.files) ? m.files : []).map((f) => el('li', `${str(f.path, 200)} · ${kib(Number(f.bytes) || 0)}`)));
+    $('m-id').textContent = ID.test(m.id) ? m.id : '';
+    $('m-hash').textContent = HASH.test(m.hash) ? m.hash : '';
+  };
+
+  let bytes: ArrayBuffer | null = null;
+  let ok = false;
+  const ready = () => { button.disabled = !(bytes && ok); };
+  file.addEventListener('change', async () => {
+    bytes = null; ok = false; ready(); show(null); problems([]);
+    $('check-status').textContent = '';
+    const f = file.files?.[0];
+    if (!f) return;
+    if (f.size > MAX) { problems(['that file is bigger than a mod can be (2 MiB of files)']); return; }
+    const data = await f.arrayBuffer();
+    $('check-status').textContent = 'Checking…';
+    let r: Response;
+    try { r = await fetch(`${API}/check`, { method: 'POST', headers: { 'content-type': 'application/zip' }, body: data }); } catch { $('check-status').textContent = ''; closed(); return; }
+    if (r.status === 429) { $('check-status').textContent = 'Slow down a little, then choose the file again.'; return; }
+    const body = await r.json().catch(() => null);
+    if (!r.ok || !body) { $('check-status').textContent = ''; if (r.status === 413) problems(['that file is bigger than a mod can be (2 MiB of files)']); else closed(); return; }
+    const list = Array.isArray(body.problems) ? body.problems.map(String) : [];
+    problems(list);
+    show(body.mod || null);
+    $('check-status').textContent = list.length ? `${list.length} problem${list.length === 1 ? '' : 's'} found.` : 'Checked. No problems found.';
+    bytes = data; ok = list.length === 0; ready();
+  });
+
+  // ---- submitting -------------------------------------------------------------------------------------------------------
+  const statusLink = (token: string) => {
+    const href = `/glaze/mods/submit#status=${encodeURIComponent(token)}`;
+    const p = el('p', 'Keep this link to see what happens: ');
+    p.append(link(href, `${location.origin}${href}`));
+    return p;
+  };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!bytes || !ok) return;
+    if (!code.checked || !art.checked) { problems(['you need to agree to share its code under MIT and its pictures and other content under CC BY 4.0'], 'f-license-error'); (code.checked ? art : code).focus(); return; }
+    problems([]);
+    button.disabled = true;
+    button.textContent = 'Uploading…';
+    let r: Response | null = null;
+    try { r = await fetch(`${API}/submit?code=MIT&art=CC-BY-4.0`, { method: 'POST', headers: { 'content-type': 'application/zip' }, body: bytes }); } catch { r = null; }
+    button.textContent = 'Submit for review';
+    if (!r) { closed(); ready(); return; }
+    const body = await r.json().catch(() => ({}));
+    if (r.status === 202 && typeof body.token === 'string') {
+      bytes = null; ok = false;
+      history.replaceState(null, '', `#status=${encodeURIComponent(body.token)}`);
+      say(el('h2', 'Your mod is waiting for its review.', 'submit-h2'), el('p', 'A reviewer reads every file; it usually takes a few minutes. This page checks again by itself.'), statusLink(body.token));
+      watch(body.token);
+      return;
+    }
+    if (r.status === 422) { problems(Array.isArray(body.problems) ? body.problems.map(String) : []); say(el('p', 'Fix the problems marked above; nothing was used up.')); }
+    else if (r.status === 429) {
+      const when = typeof body.resets === 'string' ? new Date(body.resets).toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' }) : 'tomorrow';
+      say(el('p', `${str(body.error) || 'You can submit one mod a day.'} You can submit again ${when}.`));
+    } else if (r.status === 413) problems(['that file is bigger than a mod can be (2 MiB of files)']);
+    else closed();
+    ready();
+  });
+
+  // ---- #status=<token>: what became of a submission -----------------------------------------------------------------
+  const WORDS: Record<string, string> = { queued: 'waiting for its review', published: 'published', pending: 'waiting for a person', declined: 'declined', removed: 'taken down' };
+  let tries = 0;
+  const watch = (token: string) => {
+    fetch(`${API}/status/${token}`).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((s) => {
+      const out: Node[] = [el('h2', `“${str(s.name)}” ${str(s.version, 40)}: ${WORDS[s.status] || 'unknown'}`, 'submit-h2')];
+      if (s.status === 'published' && ID.test(s.id)) { const p = el('p'); p.append(link(`/glaze/mods#${s.id}`, 'See it in the gallery'), '.'); out.push(p); }
+      if (s.status === 'declined' && s.reason) out.push(el('p', `The reason: ${str(s.reason, 300)}`));
+      if (s.status === 'pending') out.push(el('p', 'A person will look at it. Check back later; this link keeps working.'));
+      if (s.status === 'queued') out.push(el('p', 'The reviewer reads every file; this page checks again every 20 seconds.'));
+      if (HASH.test(s.hash)) { const p = el('p', 'Bundle ', 'help'); p.append(el('code', s.hash)); out.push(p); }
+      out.push(statusLink(token));
+      say(...out);
+      if (s.status === 'queued' && ++tries < 45) setTimeout(() => watch(token), 20e3);
+    }, (status) => say(el('p', status === 404 ? 'That status link is unknown, or its mod was declined more than 30 days ago.' : "The gallery server isn't answering; try the link again later.")));
+  };
+  const token = new URLSearchParams(location.hash.slice(1)).get('status');
+  if (token && /^[\w-]{32}$/.test(token)) watch(token);
+</script>
+
+<style is:global>
+  .mods-submit .submit-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .mods-submit input[type='file'] { width: 100%; padding: .7rem .85rem; border: 1px dashed #35506a; border-radius: .5rem; background: rgb(12 27 44 / .8); color: #e8f2fa; font: inherit; font-size: .85rem; }
+  .mods-submit .tag.license + .tag.license { margin-top: .5rem; }
+  .mods-empty { aspect-ratio: auto; min-height: 8rem; border: 1px solid #23394e; border-radius: .75rem; }
+  .mod-facts { display: grid; gap: .6rem; padding: 1.1rem 1.25rem; border: 1px solid #23394e; border-radius: .75rem; background: rgb(10 23 37 / .85); }
+  .mod-name { color: #d5e5f2; font-size: .95rem; overflow-wrap: anywhere; }
+  .mod-name strong { color: #e8f2fa; }
+  .mod-h3 { color: #e8f2fa; font-size: .82rem; font-weight: 600; }
+  .mod-list { display: grid; gap: .3rem; padding-left: 1.1rem; list-style: disc; color: #b3c8dc; font-size: .8rem; line-height: 1.55; overflow-wrap: anywhere; }
+  .mod-perms strong { color: #e8f2fa; font-weight: 600; }
+  .mod-perms q { color: #d5e5f2; font-style: italic; }
+  .mod-warnings { display: grid; gap: .3rem; color: #fcd34d; font-size: .8rem; line-height: 1.55; }
+  .mod-warnings:empty { display: none; }
+  .mod-hash { color: #8fa8c0; font-size: .72rem; overflow-wrap: anywhere; }
+  .mod-hash code, .submit-status code { color: #c0e6ec; overflow-wrap: anywhere; }
+</style>

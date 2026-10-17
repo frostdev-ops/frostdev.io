@@ -1,0 +1,174 @@
+---
+import MarketingLayout from '../../layouts/MarketingLayout.astro';
+import '../../styles/products.css';
+import '../../styles/looks.css';
+
+const guide = 'https://github.com/frostdev-ops/frostdev.io/blob/main/docs/looks-gallery.md#mods';
+---
+
+<MarketingLayout title="Glaze Mods — reviewed add-ons for Glaze" description="Mods for Glaze, shared openly: tiles, widgets, backgrounds and page tweaks. Every bundle listed here was reviewed as exactly that bundle. No accounts, no tracking." path="/glaze/mods">
+  <div class="product-page looks-page mods-page">
+    <section class="looks-hero" aria-labelledby="mods-title">
+      <p class="product-eyebrow"><a href="/glaze">Glaze</a> · Mods</p>
+      <h1 class="product-title" id="mods-title">Mods, reviewed bundle by bundle.</h1>
+      <p class="product-lead">Tiles, side widgets, backgrounds and page tweaks for Glaze, made by students and developers. Each one here was reviewed as exactly the bundle you get, and lists what it can reach and why. Glaze asks you before anything installs.</p>
+      <div class="product-actions">
+        <a class="product-button" href="#using">How mods work <span aria-hidden="true">↓</span></a>
+        <a class="product-button secondary" href="/glaze/mods/submit">Share your mod <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
+    <p class="mods-state" id="mods-state" role="status">Loading the mods…</p>
+    <noscript><p class="mods-state">The mods list needs JavaScript: it comes from frostdev.io's gallery server, without cookies.</p></noscript>
+    <ul class="looks-grid" id="mods-grid"></ul>
+    <p class="mods-more"><button type="button" class="product-button secondary" id="mods-more" hidden>Show more mods</button></p>
+
+    <template id="mod-template">
+      <li class="look-card mod-card">
+        <div class="look-body">
+          <h2><a data-f="name"></a></h2>
+          <p class="look-meta">Version <span data-f="version"></span> by <span data-f="credit"></span> · <time data-f="date"></time></p>
+          <ul class="look-tags" aria-label="About this mod" data-f="badges"></ul>
+          <div>
+            <h3 class="mod-h3">What it adds</h3>
+            <ul class="mod-list" data-f="adds"></ul>
+          </div>
+          <div>
+            <h3 class="mod-h3">What it can reach</h3>
+            <ul class="mod-list mod-perms" data-f="perms"></ul>
+          </div>
+          <ul class="mod-warnings" data-f="warnings"></ul>
+          <p class="mod-hash">Reviewed as bundle <code data-f="hash"></code></p>
+          <div class="look-actions">
+            <a class="product-button" href="#using" data-glaze-mod data-f="use">Use in Glaze</a>
+            <a class="product-button secondary" data-f="download" download>Download .glazemod</a>
+          </div>
+        </div>
+      </li>
+    </template>
+
+    <section class="product-section product-split" id="using" aria-labelledby="using-heading">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">Using a mod</p>
+        <h2 id="using-heading">Glaze checks it, then asks you.</h2>
+        <p>Don't have Glaze yet? <a class="product-text-link" href="/glaze">Get Glaze →</a></p>
+      </div>
+      <div class="product-panel">
+        <h3>In one click</h3>
+        <p>With a Glaze that has mods, <strong>Use in Glaze</strong> hands Glaze the mod's id and the hash of the bundle reviewed here, nothing else. Glaze downloads exactly that bundle from frostdev.io, checks that it is the one reviewed, that its author signed it and that it isn't blocked, then shows its own install prompt: every permission in Glaze's words, with the author's reason. Nothing installs until you say so, and you can turn off any permission or the whole mod later.</p>
+        <h3>By hand</h3>
+        <p><strong>Download .glazemod</strong> and open it in Glaze's editor, under Mods. Glaze checks it the same way.</p>
+        <h3>Chrome, and everywhere else</h3>
+        <p>Mods with code run only on Chrome, in a sandbox that can reach only what you allow; they are marked <strong>Needs Chrome</strong>. Mods without code (backgrounds, effects, page tweaks) work wherever Glaze does.</p>
+        <h3>What "Reviewed" means</h3>
+        <p>Before a mod is listed, a reviewer reads every file in it: an AI model that declines anything it can't read, code that hides what it does, permissions the code doesn't need and data that would leave your computer. A mod that can read your courses, To Do or grades and also reach a website is always decided by a person too. "Reviewed" covers that one bundle: a new version is reviewed again.</p>
+      </div>
+    </section>
+
+    <section class="product-section product-split" id="share" aria-labelledby="share-heading">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">Open to everyone</p>
+        <h2 id="share-heading">Share your mod.</h2>
+        <p>Export it from Glaze's editor, which signs it with your author key, and upload the .glazemod file. It's checked by Glaze's own code at once, then reviewed in a few minutes; a status link tells you the outcome.</p>
+        <div class="product-actions"><a class="product-button" href="/glaze/mods/submit">Share a mod <span aria-hidden="true">→</span></a><a class="product-button secondary" href={guide}>How it works <span aria-hidden="true">↗</span></a></div>
+      </div>
+      <div class="product-panel">
+        <h3>License</h3>
+        <p>Code in a submitted mod is shared under the <a class="looks-link" href="https://opensource.org/license/mit" rel="license">MIT License</a>; its pictures, text and other content under <a class="looks-link" href="https://creativecommons.org/licenses/by/4.0/" rel="license">CC BY 4.0</a>. Credit the author when you share or adapt one.</p>
+        <h3>Privacy</h3>
+        <p>No accounts, likes, comments or analytics. This page asks frostdev.io for the list of mods without cookies, and that request records nothing about you. Glaze sends nothing when you visit; it asks frostdev.io for a mod only when you choose <strong>Use in Glaze</strong>, and that download carries no cookie or other identifier.</p>
+        <h3>Report a mod</h3>
+        <p>Something here that shouldn't be? Email <a class="looks-link" href="mailto:admin@frostdev.io?subject=Glaze%20Mods%20gallery%20report">admin@frostdev.io</a> with the mod's name. We take it down first and look into it after; a harmful mod can also be blocked in every Glaze.</p>
+      </div>
+    </section>
+  </div>
+</MarketingLayout>
+
+<script>
+  // The published mods, from frostdev.io's gallery server, without cookies. Every value reaches the page through
+  // textContent or setProperty; the id and hash (checked against their forms) also go in the "Use in Glaze" link's data
+  // attributes and the download address, for Glaze's gallery script.
+  type Perm = { id: string; why: string; label: string; means: string };
+  type Mod = { id: string; hash: string; name: string; version: string; credit: string; date: string; adds: string[]; code: boolean; frame: boolean; permissions: Perm[]; warnings: string[] };
+  const ID = /^[a-z2-7]{16}$/, HASH = /^[\w-]{43}$/, DAY = /^\d{4}-\d{2}-\d{2}$/;
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const grid = $<HTMLUListElement>('mods-grid');
+  const state = $<HTMLElement>('mods-state');
+  const more = $<HTMLButtonElement>('mods-more');
+  const tpl = $<HTMLTemplateElement>('mod-template');
+  const str = (v: unknown, max = 400) => (typeof v === 'string' ? v.slice(0, max) : '');
+  const strs = (v: unknown) => (Array.isArray(v) ? v.map((x) => str(x)).filter(Boolean) : []);
+  const li = (text: string) => { const e = document.createElement('li'); e.textContent = text; return e; };
+
+  const card = (m: Mod): HTMLElement | null => {
+    if (!m || !ID.test(m.id) || !HASH.test(m.hash) || !str(m.name)) return null;
+    const c = (tpl.content.firstElementChild as HTMLElement).cloneNode(true) as HTMLElement;
+    const f = (k: string) => c.querySelector<HTMLElement>(`[data-f="${k}"]`)!;
+    c.id = m.id;
+    f('name').textContent = str(m.name);
+    f('name').setAttribute('href', `#${m.id}`);
+    f('version').textContent = str(m.version, 40);
+    f('credit').textContent = str(m.credit, 40);
+    const date = DAY.test(str(m.date)) ? m.date : '';
+    f('date').textContent = date ? new Date(`${date}T00:00:00Z`).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }) : '';
+    if (date) f('date').setAttribute('datetime', date);
+    f('badges').append(li('Reviewed'), li(m.code === true ? 'Needs Chrome' : 'Chrome and Firefox'), ...(m.frame === true ? [li('Has its own page')] : []));
+    const adds = strs(m.adds);
+    f('adds').append(...(adds.length ? adds : ['Settings and parts Glaze draws itself']).map(li));
+    const perms = (Array.isArray(m.permissions) ? m.permissions : []).filter((p) => p && str(p.id));
+    if (!perms.length) f('perms').append(li('Nothing beyond Glaze itself: no personal data, no websites.'));
+    for (const p of perms) {
+      const e = document.createElement('li');
+      const label = document.createElement('strong');
+      label.textContent = str(p.label, 260);
+      const why = document.createElement('q');
+      why.textContent = str(p.why, 280);
+      e.append(label, ` — ${str(p.means)} The author says: `, why);
+      f('perms').append(e);
+    }
+    f('warnings').append(...strs(m.warnings).map(li));
+    f('hash').textContent = m.hash;
+    Object.assign(f('use').dataset, { id: m.id, hash: m.hash, name: str(m.name) });
+    f('download').setAttribute('href', `/glaze/mods/api/mods/${m.id}/${m.hash}.glazemod`);
+    return c;
+  };
+
+  let page = 0;
+  const load = async () => {
+    more.hidden = true;
+    let body: { mods?: Mod[]; page?: number; pages?: number; total?: number } | null = null;
+    try {
+      const r = await fetch(`/glaze/mods/api/mods?page=${page + 1}`, { credentials: 'omit', headers: { accept: 'application/json' } });
+      body = r.ok ? await r.json() : null;
+    } catch { body = null; }
+    if (!body || !Array.isArray(body.mods)) {
+      state.textContent = page ? "More mods couldn't be loaded; try again later." : "The Mods gallery isn't answering right now. Try again later.";
+      if (page) more.hidden = false;
+      return;
+    }
+    page = Number(body.page) || page + 1;
+    const cards = body.mods.map(card).filter((c): c is HTMLElement => !!c && !document.getElementById(c.id));
+    grid.append(...cards);
+    const total = Number(body.total) || 0;
+    state.textContent = total ? `${total} mod${total === 1 ? '' : 's'}` : 'No mods yet. Be the first to share one.';
+    more.hidden = !(page < (Number(body.pages) || 0));
+    // A link to a mod (#id), as the submit page's status gives, works once it's here.
+    if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+  };
+  more.addEventListener('click', load);
+  load();
+</script>
+
+<style is:global>
+  .mods-state { color: #b3c8dc; font-size: .9rem; margin-bottom: 1.25rem; }
+  .mods-more { margin-top: 1.25rem; text-align: center; }
+  .mod-card .look-body { gap: .85rem; }
+  .mod-h3 { color: #e8f2fa; font-size: .82rem; font-weight: 600; margin-bottom: .35rem; }
+  .mod-list { display: grid; gap: .3rem; padding-left: 1.1rem; list-style: disc; color: #b3c8dc; font-size: .8rem; line-height: 1.55; }
+  .mod-perms strong { color: #e8f2fa; font-weight: 600; }
+  .mod-perms q { color: #d5e5f2; font-style: italic; }
+  .mod-warnings { display: grid; gap: .3rem; color: #fcd34d; font-size: .8rem; line-height: 1.55; }
+  .mod-warnings:empty { display: none; }
+  .mod-hash { color: #8fa8c0; font-size: .72rem; overflow-wrap: anywhere; }
+  .mod-hash code { color: #c0e6ec; }
+</style>

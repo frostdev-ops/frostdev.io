@@ -28,7 +28,7 @@ jobs:
           node --input-type=module <<'NODE'
           import assert from 'node:assert/strict';
           import { readdirSync, statSync, lstatSync } from 'node:fs';
-          const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'glaze/privacy', 'glaze/terms', 'glaze/looks', 'glaze/looks/submit', 'privacy', 'guides',
+          const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'glaze/privacy', 'glaze/terms', 'glaze/looks', 'glaze/looks/submit', 'glaze/mods', 'glaze/mods/submit', 'privacy', 'guides',
             'guides/rimeward-first-workspace', 'guides/crosspane-two-computers',
             'guides/rimewire-agent-handoffs', 'guides/frostsim-first-simulation',
             'guides/loothing-raid-loot', 'guides/glaze-safari', 'guides/glaze-chrome'];
