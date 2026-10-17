@@ -20,6 +20,12 @@ base=/opt/frostdev-public
 release=$base/releases/$revision
 
 if [[ $mode != activate ]]; then
+    # Glaze's files must come from a release tag. A development copy (scripts/vendor-glaze.sh --dev, VERSION "local <sha>")
+    # is for testing a branch before a Glaze release has the code it needs, and never ships.
+    grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' vendor/glaze/VERSION || {
+        echo "vendor/glaze is \"$(cat vendor/glaze/VERSION)\", not a Glaze release tag; run scripts/vendor-glaze.sh <tag>." >&2
+        exit 1
+    }
     npm ci
     npm run check
     npm run build
