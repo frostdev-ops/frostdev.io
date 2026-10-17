@@ -1,0 +1,9 @@
+{
+  "name": "glaze-gallery",
+  "private": true,
+  "type": "module",
+  "description": "The gallery image's own dependencies (server/Dockerfile): the same pinned versions as the repository's package.json.",
+  "dependencies": {
+    "just-bash": "3.6.0"
+  }
+}

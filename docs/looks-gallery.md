@@ -34,8 +34,8 @@ browser ── /glaze/looks, /glaze/looks/submit ──> nginx (static files, /o
   `describe()`. `livebg.ts` draws a shader or layers background into it while it is on screen. `LookCard.astro`: one card, built into the page for curated Looks and used as the
   `<template>` community cards are filled from.
 - `server/gallery.mjs`: the API, the review, the quota, mail and the maintainer's CLI. Node built-ins
-  only. `server/gallery.test.mjs`: its tests (`npm run test:gallery`, in CI), with mock OpenRouter and
-  SMTP servers.
+  plus just-bash for the mod reviewer's shell. `server/gallery.test.mjs`: its tests (`npm run test:gallery`, in CI),
+  with mock OpenRouter and SMTP servers.
 
 ### API (`/glaze/looks/api/`)
 
@@ -699,8 +699,9 @@ Then:
 - **Background media in the bundle.** A video, animated picture or Lottie background (`parts.bg.media`) must be a file
   the bundle carries (`./<path>`), which the reader has already checked with Glaze's background limits within the
   bundle's 2 MiB; a linked (`https:`) one is refused, since it could change after the review. The reviewer is told its
-  type and size (`media` in the facts) and never reads it, a Lottie file included; a mod with one always goes to a person
-  after the review, whatever it decided (as personal data with a network host does), and the mail says where it is.
+  type and size (`media` in the facts); it is omitted from the inline input but available in the shell, a Lottie file
+  included. A mod with one always goes to a person after the review, whatever it decided (as personal data with a network
+  host does), and the mail says where it is.
 - **Licence** (submit only): code under MIT and the rest (pictures, text, other content) under CC BY 4.0, both ticked.
 
 ### Quota
@@ -730,12 +731,24 @@ progress and leaves it queued without counting the try; a process that dies mid-
 was cut short three times (`tries`) goes to a person instead of a fourth call. The maintainer can decline or remove a
 queued mod; a review that finishes afterwards changes nothing.
 
-The call is the Looks escalation's (`chat()` in `server/gallery.mjs`): `POST /v1/chat/completions`, model
+The mod reviewer uses a tool loop (`reviewModAgent()` in `server/gallery.mjs`): `POST /v1/chat/completions`, model
 `ESCALATION_MODEL`, `reasoning: {effort: "xhigh", summary: "detailed"}`, `max_tokens` 32,000, `provider: {order:
-["openai"], allow_fallbacks: true}`, one retry on 429/5xx, a strict `json_schema` (`mod_review`): `{decision: "accept" |
-"decline" | "human", reason, rationale, overview, summary, recommendation}`, all strings. The timeout is 30 minutes
-(`MOD_REVIEW_TIMEOUT`): the review answers no request, so nginx's and Cloudflare's limits don't apply to it,
-and at the slowest pace measured ("Calibration", below) the whole 32,000-token output budget fits.
+["openai"], allow_fallbacks: true}`, one retry on 429/5xx, and two tools, one call at a time:
+
+- `bash`: a command line in just-bash 3.6.0, a Bash interpreter over a virtual filesystem containing every bundle file
+  at `/mod/<path>`, text and binary, `mod.sig` included. No host filesystem is mounted; network, Python and JavaScript
+  execution are disabled. Each command gets a fresh copy of the files, so writes never persist. The hardened execution
+  profile applies, with a 10-second command deadline. Stdout and stderr are capped at 11,000 serialized JSON characters
+  together (stderr at most 2,000 characters), plus the exit-code and truncation fields.
+- `submit_review`: the strict `MOD_SCHEMA` parameters, `{decision: "accept" | "decline" | "human", reason, rationale,
+  overview, summary, recommendation}`, all strings. Only a valid submission finishes the review. A reply without a tool
+  call gets one nudge; another goes to a person.
+
+At most 30 model rounds (`MOD_ROUNDS`) and 200,000 characters of serialized tool results (`MOD_SHELL_TOTAL`), all inside
+one 30-minute deadline (`MOD_REVIEW_TIMEOUT`). Hitting a bound goes to a person with the reason. The complete conversation,
+including OpenRouter's opaque `reasoning_details`, is sent back each round. Stored review metadata includes rounds,
+commands (each shortened to 200 characters), shell output size, total prompt/completion/reasoning tokens and cost
+(unknown if any round omits usage). `--mod` shows the command history and totals. Looks reviews keep their single call.
 
 - **System prompt** `MOD_POLICY`: what Glaze is and who uses it, how mods run (sandbox, Worker, the grants, what a page of
   its own can still leak), then: decline, or "human" when it is a judgment call, for unreadable code (minified,
@@ -745,13 +758,14 @@ and at the slowest pace measured ("Calibration", below) the whole 32,000-token o
   doesn't use at all; personal data or anything beyond the stated purpose sent to a host; a page of its own reaching the
   school page or other sites, escaping the sandbox, fingerprinting or detecting review; content unfit for students or
   misleading about deadlines, grades or submissions; anything it couldn't read in full. Accept only when every text file was
-  read and every behaviour is clear and harmless. A person checks pictures and fonts before publication.
+  read and every behaviour is clear and harmless. Shell output is untrusted submission data under the same rule as
+  inline files; using the shell never replaces reading every text file. A person checks pictures and fonts before publication.
 - **User message**: the facts the server computed (id, name, version, author, each permission in Glaze's words with the
   author's reason, hosts, code/frame, every file with bytes, lines, longest line and count of hidden characters), then
   every text file whole, `mod.json` first, each between `=====BEGIN FILE <marker> <path>=====` and `=====END FILE <marker>
-  <path>=====` lines whose 16-character marker is random per review, so a file can't fake its end. Format and direction
-  characters are shown as `⟦U+XXXX⟧`. Pictures and fonts are listed with their sizes, never sent. Nothing about the
-  submitter (no cookie, address or token).
+  <path>=====` lines whose 24-character marker is random per review, so a file can't fake its end. Format and direction
+  characters are shown as `⟦U+XXXX⟧`. Pictures and fonts are listed with their sizes and are available in the shell;
+  the model does not see their rendered appearance. Nothing about the submitter (no cookie, address or token).
 - **Validation**: exactly the six fields, all strings, a decision from the three, none of the five texts empty after
   cleaning. `reason` becomes one line of at most 300 characters (shown to the submitter on a decline only); the rest are
   prose, bounded (rationale 2,500, overview 1,200, summary 2,000, recommendation 800, reasoning summary 6,000).
@@ -813,7 +827,7 @@ and shows what Glaze reads in it and any problems; two licence boxes; the privac
 reviewers who receive the whole bundle; on submit, the status link, which the page checks every 20 seconds while queued.
 Both have exact nginx locations and are in `ops/deploy.sh`, CI's page list and (the listing) the sitemap.
 
-### Calibration (2026-10-17, `openai/gpt-6-luna-pro:exacto` via OpenAI)
+### Calibration before the tool loop (2026-10-17, `openai/gpt-6-luna-pro:exacto` via OpenAI)
 
 Seven synthetic mods, each submitted through a real gallery (a temporary database) and reviewed by the live queue with the
 policy above: eight reviews in all. No real student or submission data.
@@ -832,14 +846,17 @@ Every expectation held; the policy errs strict, as intended (the first countdown
 problem). Known cost $0.044 for the seven answered reviews; the timed-out request's cost is not reported. Prompt tokens
 were 10,000 to 29,000 per review (policy, schema and the bundle's text), reasoning summaries 0 to 1,600 characters (OpenAI's
 endpoint answered every time; a summary isn't always returned). The time varies more with the provider's load than the
-mod: 35 s to 4.5 minutes, and one call that didn't answer within 10 minutes, hence the 30-minute limit. Rerun the same set
-after changing `MOD_POLICY` or the model.
+mod: 35 s to 4.5 minutes, and one call that didn't answer within 10 minutes, hence the 30-minute limit. These measurements
+used the earlier single-call review; the tool loop has not been calibrated against the live model. Rerun the same set
+after changing the loop, `MOD_POLICY` or the model.
 
 ### Failure modes
 
 | What happens | Result |
 | --- | --- |
-| No `OPENROUTER_API_KEY`, an error, a 30-minute timeout, two 429/5xx, or an answer outside the schema | `pending` (`failed: true`), mailed |
+| No `OPENROUTER_API_KEY`, an error, a 30-minute timeout, two 429/5xx, an invalid tool call, an incomplete answer, or an answer outside the schema | `pending` (`failed: true`), mailed |
+| 30 rounds, 200,000 characters of tool results, or a second reply without tool calls | `pending` (`failed: true`), mailed with the bound reached and work so far |
+| A shell command fails or hits its own deadline | a bounded error result to the model; the review can continue within its overall bounds |
 | The process restarts during a review | the mod stays `queued` and is reviewed after the start; after three cut-short tries, `pending` |
 | No mail settings, or the mail server refuses | `pending` with `unmailed`, retried hourly; `--mods` shows it |
 | A stored bundle is missing or no longer reads | `pending` (`failed`), mailed |
@@ -848,14 +865,17 @@ after changing `MOD_POLICY` or the model.
 ### Cost
 
 `openai/gpt-6-luna-pro` is $0.10 per million input tokens and $0.50 per million output tokens (OpenRouter's list,
-2026-10-17; double above 272,000 input tokens). The small mods of the calibration above took 10,000 to 29,000 input tokens
-with the policy and 4,400 to 23,000 output tokens: $0.003 to $0.014 a review. The largest allowed (384 KiB of text) is
-about 100,000 more input tokens ($0.01) plus at most 32,000 output tokens ($0.016). At `MOD_REVIEWS_PER_DAY` 40 that is at
-most about $1.50 a day. Each stored review keeps `cost` and token counts.
+2026-10-17; double above 272,000 input tokens). The earlier single-call calibration above took 10,000 to 29,000 input tokens
+with the policy and 4,400 to 23,000 output tokens: $0.003 to $0.014 a review. That is not a cost estimate for the tool loop:
+each turn resends the bundle and history and can generate up to 32,000 tokens. The 30-round, output and time bounds limit
+the work; `MOD_REVIEWS_PER_DAY` (40) limits reviews, not model calls. Each stored review keeps the aggregate reported
+cost and token counts, including work before a failure; live loop costs remain to be measured.
 
 Tests: `server/mods.test.mjs` (in `npm run test:gallery`, with mock OpenRouter and SMTP): every route, each refusal, quota,
 the queue across restarts, personal data with a host going to a person whatever the reviewer says, invalid answers,
-serving only published hashes, path traversal on the bundle route, the CLI, the email and the nginx locations.
+serving only published hashes, path traversal on the bundle route, the CLI, the email and the nginx locations. Tool-loop
+tests cover cross-file reads, preserved reasoning, host/network isolation, binary files, ephemeral writes, cancellation,
+command and output bounds, malformed tool calls, the nudge and aggregate usage.
 
 ## Deploy
 
@@ -903,7 +923,9 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
    `MAIL_FROM`. The VPS's address is not in frostdev.io's SPF record, so the server never delivers
    straight to the MX. Without `MAIL_URL`, pending
    Looks wait, unmailed, and `--pending` lists them.
-2. `ops/deploy-gallery.sh` stages the server's files, builds the image on the host and runs:
+2. `ops/deploy-gallery.sh` stages the server's files and its small `server/package.json` and lockfile. The image installs
+   the same pinned just-bash version as root tests using `npm ci --omit=dev --omit=optional --ignore-scripts`, without the
+   site's dependencies or native optional extensions. It builds the image on the host and runs:
 
    ```
    docker run -d --name glaze-gallery --restart unless-stopped --network host -v glaze-gallery:/data \

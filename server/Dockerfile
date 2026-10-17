@@ -1,5 +1,5 @@
 # The Glaze Looks gallery server (server/gallery.mjs). Built by ops/deploy-gallery.sh from a staged context with this
-# layout, the same as the repository's: gallery.mjs, scripts/looks.mjs (the shared checks), vendor/glaze (Glaze's pinned
+# layout: gallery.mjs, package*.json (server's dependencies), scripts/looks.mjs (the shared checks), vendor/glaze (Glaze's pinned
 # decoder) and src/data/looks (the curated entries, for uniqueness and neighbours: rebuild after changing them).
 # It runs on the host's network listening on 127.0.0.1 only, behind nginx on the same host, which puts the visitor's
 # address in X-Real-IP; the proxy reaches it from 127.0.0.1, the only peer whose X-Real-IP counts (TRUSTED_PROXIES'
@@ -11,6 +11,8 @@
 # blocklist; it is public). docs/looks-gallery.md has the rest.
 FROM node:24-alpine
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --omit=optional --ignore-scripts --no-audit --no-fund && npm cache clean --force
 COPY gallery.mjs ./
 COPY scripts/looks.mjs scripts/
 COPY vendor/glaze vendor/glaze/
