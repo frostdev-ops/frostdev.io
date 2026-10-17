@@ -950,6 +950,76 @@ numbers, the second reviewer's decision, reason, rationale and any reasoning sum
 `--remove <id>`, `--backup <file>`, `--blocklist <file>` (the signed mod blocklist, above), and for mods `--mods`, `--mod <id>`,
 `--approve-mod <id> <hash>`, `--decline-mod <id> <hash> "<reason>"`, `--remove-mod <id> <hash>` ("Mods", above).
 
+## Admin dashboard
+
+`/glaze/admin` is the owner's private dashboard. It is completely off (404) unless all three settings below are
+present. The public gallery and CLI continue to work with it off. There are no student accounts or sign-ups.
+
+1. In Google Cloud's Google Auth Platform, configure Branding and Audience for the owner's project. An Internal app
+   can be limited to the Workspace organization; for an External app in Testing, add each administrator as a test
+   user. Request only `openid email`. Create an OAuth client of type **Web application** and add this exact Authorized
+   redirect URI (no trailing slash): `https://frostdev.io/glaze/admin/callback`. A different `SITE_ORIGIN` needs its own
+   matching redirect URI and HTTPS origin. No browser JavaScript OAuth client or API key is needed.
+2. Add these lines to the existing root-owned, mode-600 `/etc/glaze-gallery.env` on the gallery host, using the new
+   client's values and the exact Google account emails allowed to moderate. Keep the other existing settings:
+
+   ```ini
+   GOOGLE_CLIENT_ID=<web client ID>
+   GOOGLE_CLIENT_SECRET=<web client secret>
+   ADMIN_EMAILS=owner@example.com,second@example.com
+   ```
+
+   Emails match exactly, case-insensitively; no domain-wide grants or aliases are inferred. Removing an email and
+   restarting the server also refuses that email's existing sessions. Never put the secret in a repository or a page.
+3. Deploy the committed gallery server using `ops/deploy-gallery.sh` after the existing release prerequisites above
+   are met. It stages `gallery-admin.mjs` and `admin/` as well as `gallery.mjs`; the Docker image copies all of them.
+   Recreating the container loads the environment changes. Install **both** new admin locations from
+   `ops/public-site.nginx.conf` in the frostdev.io HTTPS server (the exact `/glaze/admin` and `^~ /glaze/admin/` locations).
+   They pass cookies and the trusted visitor IP, disable caching and request logs, and cap request bodies at 4 KiB.
+   Run `sudo nginx -t && sudo systemctl reload nginx` on the host, then visit `https://frostdev.io/glaze/admin`.
+
+Sign-in uses Google's authorization-code flow with S256 PKCE, a browser-bound single-use state and nonce, and only the
+`openid email` scopes. ID tokens come exclusively from the server's direct HTTPS exchange at Google's fixed token
+endpoint; this TLS channel authenticates them, as described in
+[Google's server-flow documentation](https://developers.google.com/identity/openid-connect/openid-connect#exchangecode).
+No ID token supplied by a browser is accepted, and tokens are not saved. The server checks the token's shape and RS256
+header, issuer, exact client audience/authorized presenter, expiry, issued-at time, subject, nonce, verified email and
+email allowlist. OAuth attempts expire after ten minutes and are consumed before the exchange, even on failure.
+Sign-in starts require the site's Origin and are limited to ten per network per hour (IPv6 /64), using keyed hashes.
+
+Sessions are random 256-bit tokens, stored only as SHA-256 hashes in SQLite, with a fixed twelve-hour expiry and a
+host-only `HttpOnly; Secure; SameSite=Lax` cookie at `/glaze/admin`. Sign-out deletes the session. Every moderation POST
+and sign-out needs both the exact site Origin and the session's random CSRF token. All admin responses, including
+errors and assets, are `no-store`, `nosniff`, and have a strict CSP with no inline scripts, no framing and no external
+resources. Secure cookies require HTTPS; local tests use a fake Google endpoint and pass cookies explicitly.
+
+The oldest pending Looks and mods appear first, with why they need a person. Search and status filters cover every
+retained community Look and mod version, including declined records until their normal cleanup. Curated Looks remain
+repository-managed. Detail views contain both Look reviews or the mod agent's full review, including commands and
+rounds, permissions in Glaze's words, hosts, warnings, files, other versions and a bundle download. The palette preview
+uses the same vendored Glaze-decoded description as the submit page; it approximates the course UI and does not render
+fonts, remote backgrounds or Look parts. Attached pictures and videos have a separate viewer with video controls;
+Lottie JSON, HTML and every other text file are shown as text. No submitted code executes. A human must inspect
+background media before approving. Missing or changed bundles keep their retained review visible but cannot be
+downloaded or approved.
+
+The private file routes recheck the bundle's signature/hash (or the Look media's hash/cleaned bytes). Media types are
+selected by byte signatures, restricted to PNG, JPEG, GIF, WebP, AVIF, MP4 and WebM, with media-extension mismatches
+refused. Other files are plain UTF-8 text or attachment-only binary downloads; HTML and SVG can never be active
+documents. File responses additionally have `Content-Security-Policy: default-src 'none'; sandbox` and `nosniff`.
+All submitted names, reasons, review text and source files reach the dashboard through text sinks.
+
+Approve, decline and remove use the same functions as the CLI and retain its state rules: approval only for pending
+items, decline for pending Looks or pending/queued mods, removal for published/pending Looks or published/pending/queued
+mods. Declines need a reason. Every successful change writes an audit entry atomically with its status change: email
+(or `CLI`), resulting status, item id/hash, timestamp and reason. The log shows the latest 200 entries and can load
+older ones. The audit log has no automatic expiry and is included in database backups. Manage shows `SUBMIT_LIMITS`
+and the current blocklist state; it changes neither. Pending-review emails link directly to the dashboard item.
+
+`server/admin.test.mjs` is included in `npm run test:gallery`: local fake Google, good/refused/replayed/expired logins,
+sessions, Origin/CSRF, all six actions and atomic audit writes, private inert files, type disguises and nginx/image
+staging. No live Google credentials are needed by the tests.
+
 ## Privacy
 
 - The gallery page asks frostdev.io itself for the community list, without cookies; the request is
