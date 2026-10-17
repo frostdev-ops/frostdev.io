@@ -230,7 +230,7 @@ Decline, or answer "human" when it is a judgment call a person should make, if a
 7. Content: names, labels, text and pictures must fit students: no profanity, slurs, sexual or violent content, harassment, personal information, advertising, links to shops or referrals, or impersonation of a school, a company or Glaze itself. A mod must not mislead students about deadlines, grades or submissions, hide controls they need, imitate a sign-in or payment form, or strobe.
 8. Anything you could not read in full, or whose behavior you can't be sure of from reading it (a file you only skimmed, data the code decodes from a picture or a string, behavior that depends on what a network host sends back).
 
-Accept only when you read every file, every behavior is clear and harmless, each permission is used for exactly its stated reason, and nothing above applies. A declarative mod (Look parts, settings and no code) is judged on rules 3, 7 and its motion: strong flashing or heavy fast movement under text counts against it.
+Accept only when you read every text file, every behavior is clear and harmless, each permission is used for exactly its stated reason, and nothing above applies. Pictures and fonts are not shown to you: a person must check them before publication, even if you accept the text. Never claim to have inspected them. A declarative mod (Look parts, settings and no code) is judged on rules 3, 7 and its motion: strong flashing or heavy fast movement under text counts against it.
 
 A mod that combines personal data with any network host always goes to a person after your review, whatever you decide. Your overview, summary and recommendation are what that person reads first, so make them complete for every mod.
 
@@ -1065,9 +1065,10 @@ export function gallery({
     // Personal data together with any network host always goes to a person; the review still goes with it.
     const facts = JSON.parse(row.summary);
     const both = facts.data.length > 0 && facts.hosts.length > 0;
-    const outcome = both && !review.blocked ? 'human' : review.decision;
+    const unseen = review.decision === 'accept' && facts.files.some((f) => !TEXT_KINDS.has(extOf(f.path)));
+    const outcome = (both || unseen) && !review.blocked ? 'human' : review.decision;
     const status = { accept: 'published', decline: 'declined', human: 'pending' }[outcome];
-    const person = status !== 'pending' ? null : both ? 'it can read personal data and reach the network, which a person always decides' : review.failed ? review.reason : 'the reviewer asked for a person';
+    const person = status !== 'pending' ? null : both ? 'it can read personal data and reach the network, which a person always decides' : unseen ? 'it includes pictures or fonts the reviewer cannot see, which a person must check' : review.failed ? review.reason : 'the reviewer asked for a person';
     q.modDecide.run(status, status === 'declined' ? review.reason : '', JSON.stringify({ review, person, at: new Date(now()).toISOString() }), status === 'pending' ? 1 : 0, now(), row.hash);
     if (status === 'pending') mailPending();
   };

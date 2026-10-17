@@ -480,6 +480,29 @@ test('personal data with a network host always goes to a person, even when the r
   assert.ok(mails[1].includes('Decline: grades go to the host.'));
 });
 
+test('pictures and fonts omitted from the model input cannot be published by a model acceptance', async () => {
+  await start();
+  const assets = {
+    'leaf.png': new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]),
+    'font.woff2': te.encode('wOF2unseen font contents'),
+  };
+  for (const [file, bytes] of Object.entries(assets)) {
+    const m = await make(countdown(), { 'hooks.js': te.encode(HOOKS), [file]: bytes });
+    const r = await reviewed(m.bytes);
+    assert.equal(r.row.status, 'pending', file);
+    assert.match(JSON.parse(r.row.decision).person, /pictures or fonts.*person/);
+    assert.equal((await download(m.id, m.hash)).status, 404);
+    assert.equal((await (await fetch(`${api}/mods`)).json()).total, 0);
+    await waitFor(() => mails.some((mail) => mail.includes(m.hash) && mail.includes('pictures or fonts')));
+    assert.equal(await g.decideMod(m.id, m.hash, 'published'), true, 'a person can approve the exact bundle');
+    assert.equal((await download(m.id, m.hash)).status, 200);
+    await g.decideMod(m.id, m.hash, 'removed');
+  }
+  plan.chat = review('decline');
+  const declined = await reviewed((await make(countdown(), { 'hooks.js': te.encode(HOOKS), 'leaf.png': assets['leaf.png'] })).bytes);
+  assert.equal(declined.row.status, 'declined', 'a model decline still refuses the bundle');
+});
+
 test('the reviewer decides the rest: accept publishes, decline shows its reason, human asks a person', async () => {
   await start();
   plan.chat = review('decline', { reason: 'Remove the To Do permission; the code never reads it.' });
