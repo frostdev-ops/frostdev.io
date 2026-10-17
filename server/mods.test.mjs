@@ -472,6 +472,13 @@ test('one mod a day per cookie and per network, and a daily review cap, apart fr
   assert.equal((await submit((await make()).bytes, who)).status, 202);
 });
 
+test('limits off (owner testing) takes any number of mods from one visitor, past the daily cap', async () => {
+  await start({ modReviewsPerDay: 1, limits: false });
+  const who = fresh();
+  for (let i = 0; i < 3; i++) assert.equal((await submit((await make()).bytes, who)).status, 202);
+  assert.equal(g.db.prepare('SELECT COUNT(*) AS n FROM quota').get().n, 0);
+});
+
 test('one review per bundle, one version in review at a time, versions go up, names are unique', async () => {
   await start();
   const v1 = await make(countdown({ name: 'Due Soon' }));

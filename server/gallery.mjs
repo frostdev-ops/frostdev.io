@@ -489,7 +489,7 @@ export const sendMail = (mailUrl, { from, to, subject, text }) => new Promise((r
 export function gallery({
   db: file = 'gallery.db', looksDir = 'src/data/looks', siteOrigin = 'https://frostdev.io', ipHeader = '', trustedProxies = '127.0.0.1,::1',
   apiKey = '', decisionModel = 'liquid/d1-ultra', escalationModel = 'openai/gpt-6-luna-pro:exacto', openrouter = 'https://openrouter.ai/api',
-  reviewsPerDay = 300, modReviewsPerDay = 40, mailUrl = '', mailFrom = '', mailTo = 'admin@frostdev.io', blocklistKey = '', bundles = '', now = () => Date.now(),
+  reviewsPerDay = 300, modReviewsPerDay = 40, limits = true, mailUrl = '', mailFrom = '', mailTo = 'admin@frostdev.io', blocklistKey = '', bundles = '', now = () => Date.now(),
 } = {}) {
   const db = new DatabaseSync(file);
   // Mod bundles are files next to the database (/data/mods in the image), named by their bundle hash; SQLite holds the rest.
@@ -960,7 +960,8 @@ export function gallery({
     // Quota, taken before the review (so two at once can't both pass) and given back if the review can't happen.
     const t = now();
     const day = today(t);
-    const keys = [['cookie', hmac(cookieKey, cookie.value), COOKIE_PER_DAY], ['network', hmac(saltOf(day), clientOf(req)), NETWORK_PER_DAY], ['all', '', reviewsPerDay]];
+    // ponytail: limits off (SUBMIT_LIMITS=off) drops every daily quota, the model-cost cap included; for owner testing only.
+    const keys = !limits ? [] : [['cookie', hmac(cookieKey, cookie.value), COOKIE_PER_DAY], ['network', hmac(saltOf(day), clientOf(req)), NETWORK_PER_DAY], ['all', '', reviewsPerDay]];
     const reservation = crypto.randomUUID();
     const quota = tx(() => {
       const problems = duplicateProblems(body, fingerprint);
@@ -1111,7 +1112,7 @@ export function gallery({
     if (problems.length) return send(res, 422, { error: 'Fix these first; nothing was used up.', problems }, setCookie);
     const t = now();
     const day = today(t);
-    const keys = [['mod-cookie', hmac(cookieKey, cookie.value), MOD_COOKIE_PER_DAY], ['mod-network', hmac(saltOf(day), clientOf(req)), MOD_NETWORK_PER_DAY], ['mod-all', '', modReviewsPerDay]];
+    const keys = !limits ? [] : [['mod-cookie', hmac(cookieKey, cookie.value), MOD_COOKIE_PER_DAY], ['mod-network', hmac(saltOf(day), clientOf(req)), MOD_NETWORK_PER_DAY], ['mod-all', '', modReviewsPerDay]];
     const token = crypto.randomBytes(24).toString('base64url');
     const tmp = path.join(bundleDir, `${crypto.randomUUID()}.tmp`);
     // Checked again, quota taken, the bundle named by its hash and the row added in one transaction: two at once can't both
@@ -1418,7 +1419,7 @@ export const fromEnv = (env) => ({
   apiKey: env.OPENROUTER_API_KEY || '', decisionModel: env.DECISION_MODEL || undefined, escalationModel: env.ESCALATION_MODEL || undefined,
   openrouter: env.OPENROUTER_BASE || undefined, reviewsPerDay: Number(env.REVIEWS_PER_DAY) || undefined,
   mailUrl: env.MAIL_URL || '', mailFrom: env.MAIL_FROM || '', mailTo: env.MAIL_TO || undefined, blocklistKey: env.BLOCKLIST_KEY || '',
-  modReviewsPerDay: Number(env.MOD_REVIEWS_PER_DAY) || undefined,
+  modReviewsPerDay: Number(env.MOD_REVIEWS_PER_DAY) || undefined, limits: env.SUBMIT_LIMITS !== 'off',
 });
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
