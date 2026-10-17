@@ -744,7 +744,7 @@ The mod reviewer uses a tool loop (`reviewModAgent()` in `server/gallery.mjs`): 
   overview, summary, recommendation}`, all strings. Only a valid submission finishes the review. A reply without a tool
   call gets one nudge; another goes to a person.
 
-At most 30 model rounds (`MOD_ROUNDS`) and 200,000 characters of serialized tool results (`MOD_SHELL_TOTAL`), all inside
+At most 30 model rounds (`MOD_ROUNDS`), 32,000 aggregate completion tokens, and 200,000 characters of serialized tool results (`MOD_SHELL_TOTAL`), all inside
 one 30-minute deadline (`MOD_REVIEW_TIMEOUT`). Hitting a bound goes to a person with the reason. The complete conversation,
 including OpenRouter's opaque `reasoning_details`, is sent back each round. Stored review metadata includes rounds,
 commands (each shortened to 200 characters), shell output size, total prompt/completion/reasoning tokens and cost
@@ -855,7 +855,7 @@ after changing the loop, `MOD_POLICY` or the model.
 | What happens | Result |
 | --- | --- |
 | No `OPENROUTER_API_KEY`, an error, a 30-minute timeout, two 429/5xx, an invalid tool call, an incomplete answer, or an answer outside the schema | `pending` (`failed: true`), mailed |
-| 30 rounds, 200,000 characters of tool results, or a second reply without tool calls | `pending` (`failed: true`), mailed with the bound reached and work so far |
+| 30 rounds, 32,000 aggregate completion tokens, 200,000 characters of tool results, or a second reply without tool calls | `pending` (`failed: true`), mailed with the bound reached and work so far |
 | A shell command hits a time or resource limit | `pending` (`failed: true`), mailed with the bound reached and work so far |
 | A shell command fails normally (for example, a missing file) | a bounded error result to the model; the review can continue within its overall bounds |
 | The process restarts during a review | the mod stays `queued` and is reviewed after the start; after three cut-short tries, `pending` |
@@ -868,7 +868,9 @@ after changing the loop, `MOD_POLICY` or the model.
 `openai/gpt-6-luna-pro` is $0.10 per million input tokens and $0.50 per million output tokens (OpenRouter's list,
 2026-10-17; double above 272,000 input tokens). The earlier single-call calibration above took 10,000 to 29,000 input tokens
 with the policy and 4,400 to 23,000 output tokens: $0.003 to $0.014 a review. That is not a cost estimate for the tool loop:
-each turn resends the bundle and history and can generate up to 32,000 tokens. The 30-round, output and time bounds limit
+each turn resends the bundle and history. A review shares 32,000 completion tokens (reasoning included) across all turns;
+each request gets only the remaining allowance. A turn without valid completion usage consumes its requested allowance,
+so another call cannot exceed the budget. The 30-round, output and time bounds limit
 the work; `MOD_REVIEWS_PER_DAY` (40) limits reviews, not model calls. Each stored review keeps the aggregate reported
 cost and token counts, including work before a failure; live loop costs remain to be measured.
 

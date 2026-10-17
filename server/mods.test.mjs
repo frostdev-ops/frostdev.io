@@ -649,7 +649,7 @@ test('the reviewer decides the rest: accept publishes, decline shows its reason,
 
 test('an invalid answer, an error or no key goes to a person', async () => {
   const bad = {
-    'no tool call, twice': { status: 200, json: { choices: [{ message: { content: 'Accept.' } }] } },
+    'no tool call, twice': { status: 200, json: { usage: { completion_tokens: 100 }, choices: [{ message: { content: 'Accept.' } }] } },
     'not JSON': toolCall('submit_review', 'Accept.'),
     'a field missing': toolCall('submit_review', { decision: 'accept', reason: 'r', rationale: 'r', overview: 'o', summary: 's' }),
     'a field more': toolCall('submit_review', { decision: 'accept', reason: 'r', rationale: 'r', overview: 'o', summary: 's', recommendation: 'x', approved: 'yes' }),
@@ -1122,7 +1122,7 @@ test('the loop\'s bounds and failures go to a person with what the agent did; a 
   assert.equal(d.review.commands.length, MOD_ROUNDS);
   // A model that never calls a tool: one nudge, then a person.
   calls.chat = [];
-  plan.chat = { status: 200, json: { choices: [{ message: { content: 'Looks fine to me.' } }] } };
+  plan.chat = { status: 200, json: { usage: { completion_tokens: 100 }, choices: [{ message: { content: 'Looks fine to me.' } }] } };
   d = JSON.parse((await reviewed((await make()).bytes)).row.decision);
   assert.equal(calls.chat.length, 2);
   assert.match(calls.chat[1].body.messages.at(-1).content, /call submit_review/);
@@ -1186,12 +1186,13 @@ test('one nudge can recover; command history is bounded and missing usage stays 
   await start();
   const command = `cat /mod/hooks.js # ${'x'.repeat(300)}`;
   const step = bash(command);
-  delete step.json.usage;
+  step.json.usage = { completion_tokens: 100 };
   step.json.model = 'reported/model';
   const done = review('accept', {}, { reasoning: '' });
+  delete done.json.usage;
   delete done.json.choices[0].message.reasoning;
   done.json.choices[0].message.reasoning_details = [{ type: 'reasoning.summary', summary: 'Checked both tools.' }];
-  plan.chat = [{ status: 200, json: { choices: [{ message: { content: 'Checking.' } }] } }, step, done];
+  plan.chat = [{ status: 200, json: { usage: { completion_tokens: 100 }, choices: [{ message: { content: 'Checking.' } }] } }, step, done];
   const r = await reviewed((await make()).bytes);
   assert.equal(r.row.status, 'published');
   const d = JSON.parse(r.row.decision).review;
@@ -1202,6 +1203,31 @@ test('one nudge can recover; command history is bounded and missing usage stays 
   assert.deepEqual(d.tokens, { prompt: null, completion: null });
   assert.equal(d.reasoning, 'Checked both tools.');
   assert.equal(toolResults(2)[0].stdout, HOOKS, 'only the stored history is shortened');
+});
+
+test('completion tokens are budgeted across rounds, including missing usage and final submissions', async () => {
+  await start();
+  const first = bash('true');
+  first.json.usage.completion_tokens = 31000;
+  plan.chat = [first, review('accept')];
+  assert.equal((await reviewed((await make()).bytes)).row.status, 'published');
+  assert.deepEqual(calls.chat.map(c => c.body.max_tokens), [32000, 1000]);
+  const exhausted = bash('true');
+  exhausted.json.usage.completion_tokens = 32000;
+  const unknown = bash('true');
+  delete unknown.json.usage;
+  const over = review('accept');
+  over.json.usage.completion_tokens = 32001;
+  for (const step of [exhausted, unknown, over]) {
+    calls.chat = [];
+    plan.chat = [step, review('accept')];
+    const r = await reviewed((await make()).bytes);
+    assert.equal(r.row.status, 'pending');
+    assert.equal(calls.chat.length, 1, 'no further request after the token budget is spent');
+    const d = JSON.parse(r.row.decision).review;
+    assert.equal(d.failed, true);
+    assert.match(d.reason, /32000-token completion limit/);
+  }
 });
 
 test('malformed tool calls and incomplete responses go to a person before any command runs', async () => {

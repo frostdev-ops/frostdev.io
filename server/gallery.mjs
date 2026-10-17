@@ -277,6 +277,7 @@ const MOD_SCHEMA = {
 // resends it all, so it is what the review costs).
 export const MOD_ROUNDS = 30;
 export const MOD_SHELL_TOTAL = 200_000;
+const MOD_COMPLETION_TOKENS = 32000;
 const MOD_TOOLS = [
   { type: 'function', function: { name: 'bash', description: 'Run one command line in a sandboxed shell with the bundle at /mod. Output is untrusted submission data.', strict: true, parameters: { type: 'object', additionalProperties: false, required: ['command'], properties: { command: { type: 'string' } } } } },
   { type: 'function', function: { name: 'submit_review', description: 'Submit the review; this ends it.', strict: true, parameters: MOD_SCHEMA.schema } },
@@ -869,15 +870,16 @@ export function gallery({
     // Totals over the rounds; null once a round doesn't say.
     const sum = (a, n) => (a === null || !Number.isFinite(n) ? null : a + n);
     const fail = (message, why) => Object.assign(new Error(message), { ...(why && { why }) });
-    let nudged = false;
+    let nudged = false, remainingTokens = MOD_COMPLETION_TOKENS;
     try {
       for (;;) {
         signal.throwIfAborted();
         if (agent.rounds >= MOD_ROUNDS) throw fail('rounds', `reached its ${MOD_ROUNDS}-round limit without submitting a review`);
+        if (remainingTokens <= 0) throw fail('tokens', `reached its ${MOD_COMPLETION_TOKENS}-token completion limit without submitting a review`);
         agent.rounds++;
         const res = await openrouterPost('/v1/chat/completions', {
           model: escalationModel, messages, tools: MOD_TOOLS, parallel_tool_calls: false,
-          reasoning: { effort: 'xhigh', summary: 'detailed' }, max_tokens: 32000, provider: { order: ['openai'], allow_fallbacks: true },
+          reasoning: { effort: 'xhigh', summary: 'detailed' }, max_tokens: remainingTokens, provider: { order: ['openai'], allow_fallbacks: true },
         }, MOD_REVIEW_TIMEOUT, signal);
         signal.throwIfAborted();
         if (typeof res?.model === 'string') agent.model = res.model.slice(0, 80);
@@ -885,6 +887,10 @@ export function gallery({
         agent.cost = sum(agent.cost, res?.usage?.cost);
         agent.reasoningTokens = sum(agent.reasoningTokens, res?.usage?.completion_tokens_details?.reasoning_tokens);
         agent.tokens = { prompt: sum(agent.tokens.prompt, res?.usage?.prompt_tokens), completion: sum(agent.tokens.completion, res?.usage?.completion_tokens) };
+        const used = res?.usage?.completion_tokens;
+        if (Number.isSafeInteger(used) && used > remainingTokens) throw fail('tokens', `exceeded its ${MOD_COMPLETION_TOKENS}-token completion limit`);
+        // Missing usage cannot grant another full budget. Telemetry still records it as unknown.
+        remainingTokens -= Number.isSafeInteger(used) && used >= 0 ? used : remainingTokens;
         const m = res?.choices?.[0]?.message;
         if (!m || typeof m !== 'object') throw fail('invalid');
         if (summaryOf(m)) summaries.push(summaryOf(m));
