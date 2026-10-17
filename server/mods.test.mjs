@@ -480,6 +480,19 @@ test('personal data with a network host always goes to a person, even when the r
   assert.ok(mails[1].includes('Decline: grades go to the host.'));
 });
 
+test('human escalation mail bounds UTF-8 lines even for unbroken permission reasons and model prose', async () => {
+  await start();
+  const why = '😀'.repeat(280);
+  const m = await make(countdown({ permissions: [{ id: 'grades', why }, { id: 'network:api.weather.gov', why }] }), { 'hooks.js': te.encode(GRADES_HOOKS) });
+  plan.chat = review('accept', { rationale: '界'.repeat(1200), overview: '😀'.repeat(1000), summary: '界'.repeat(1500), recommendation: '😀'.repeat(700) });
+  const r = await reviewed(m.bytes);
+  assert.equal(r.row.status, 'pending');
+  await waitFor(() => mails.length === 1);
+  for (const line of mails[0].split('\r\n')) assert.ok(Buffer.byteLength(line) <= 998, `SMTP line is ${Buffer.byteLength(line)} bytes`);
+  assert.ok(mails[0].replace(/\r\n/g, '').includes(why), 'wrapping preserves the complete reason');
+  assert.ok(!/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(mails[0]), 'wrapping preserves Unicode characters');
+});
+
 test('a mod carrying sticker and pet packs describes them in checks, review facts and its published card', async () => {
   await start();
   const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);

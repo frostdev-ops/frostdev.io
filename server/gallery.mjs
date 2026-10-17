@@ -811,7 +811,7 @@ export function gallery({
   };
   // A mod that needs a person: what the reviewer made of it first, then the facts and the commands. Prose is wrapped, since
   // mail lines should stay under 998 characters.
-  const wrap = (t) => String(t ?? '').split('\n').map((l) => (l.length > 76 ? l.replace(/(.{1,76})(?:\s+|$)/g, '$1\n').trimEnd() : l)).join('\n');
+  const wrap = (t) => String(t ?? '').split('\n').map((l) => (l.length > 76 ? l.replace(/(.{1,76})(?:\s+|$)|(.{76})/gu, '$1$2\n').trimEnd() : l)).join('\n');
   const mailForMod = (row) => {
     const { review: r = {}, person } = JSON.parse(row.decision);
     const s = JSON.parse(row.summary);
@@ -828,7 +828,10 @@ export function gallery({
         ...(r.reasoning ? ['', `Its reasoning (summary, ${r.reasoningTokens ?? '?'} reasoning tokens):`, wrap(r.reasoning)] : []),
         '', `Name:     ${row.name}`, `Version:  ${row.version}`, `Author:   ${row.credit} (key ${row.key})`, `Id:       ${row.id}`, `Hash:     ${row.hash}`,
         '', 'Permissions, with the author\'s reasons:',
-        ...(JSON.parse(row.permissions).map((p) => `  ${p.id}: ${permissionWords(p.id).means} The author says: "${p.why}"`)),
+        ...(JSON.parse(row.permissions).map((p) => {
+          const line = `  ${p.id}: ${permissionWords(p.id).means} The author says: "${p.why}"`;
+          return Buffer.byteLength(line) > 998 ? wrap(line) : line;
+        })),
         ...(JSON.parse(row.permissions).length ? [] : ['  none']),
         `Hosts:    ${s.hosts.join(', ') || 'none'}`,
         ...(s.warnings.length ? ['', ...s.warnings] : []),
