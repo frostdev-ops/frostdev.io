@@ -12,7 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { after, afterEach, before, test } from 'node:test';
-import { GLAZE_KEY, MOD_BODY_MAX, MOD_POLICY, MOD_REVIEW_TIMEOUT, MOD_ROUNDS, MOD_SHELL_TIMEOUT, MOD_SHELL_TOTAL, MOD_TEXT_MAX, canon, fitOutput, gallery, modFacts, modReviewInput, modShell } from './gallery.mjs';
+import { GLAZE_KEY, MOD_BODY_MAX, MOD_IMAGE_MAX, MOD_IMAGES, MOD_IMAGE_TOTAL, modImageType, MOD_POLICY, MOD_REVIEW_TIMEOUT, MOD_ROUNDS, MOD_SHELL_TIMEOUT, MOD_SHELL_TOTAL, MOD_TEXT_MAX, canon, fitOutput, gallery, modFacts, modReviewInput, modShell } from './gallery.mjs';
 
 const MB = createRequire(path.join(process.cwd(), 'vendor/glaze/'))('./lib/modbundle.js');
 const ORIGIN = 'https://frostdev.io';
@@ -207,8 +207,8 @@ test('submit queues the bundle and answers at once; the review publishes it; the
   assert.deepEqual(sent.reasoning, { effort: 'xhigh', summary: 'detailed' });
   assert.deepEqual(sent.provider, { order: ['openai'], allow_fallbacks: true });
   assert.equal(sent.max_tokens, 32000);
-  assert.deepEqual(sent.tools.map((t) => t.function.name), ['bash', 'submit_review']);
-  assert.deepEqual(sent.tools[1].function.parameters.required, ['decision', 'reason', 'rationale', 'overview', 'summary', 'recommendation']);
+  assert.deepEqual(sent.tools.map((t) => t.function.name), ['bash', 'view_image', 'submit_review']);
+  assert.deepEqual(sent.tools[2].function.parameters.required, ['decision', 'reason', 'rationale', 'overview', 'summary', 'recommendation']);
   assert.equal(sent.response_format, undefined);
   assert.equal(sent.messages[0].content, MOD_POLICY);
   const user = sent.messages[1].content;
@@ -344,8 +344,8 @@ test('a bundled background file is taken, never shown to the reviewer, and alway
   assert.match(input, /"media": \{\s*"type": "lottie",\s*"path": "media\/slide.json"/);
   assert.ok(!input.includes('BEGIN FILE') || !/BEGIN FILE \S+ media\/slide\.json/.test(input), 'the file is not read as text');
   assert.ok(!input.includes('"nm":"box"'));
-  assert.ok(readFileSync('src/pages/glaze/mods/submit.astro', 'utf8').includes("A background file, including Lottie JSON, stays on frostdev.io and always needs a person's check"), 'the submit disclosure must exclude background JSON from model review');
-  assert.match(calls.chat[0].body.messages[0].content, /never claim to have seen it/);
+  assert.ok(readFileSync('src/pages/glaze/mods/submit.astro', 'utf8').includes("background media, including Lottie JSON, always needs a person's check"), 'the submit disclosure must exclude background JSON from model review');
+  assert.match(calls.chat[0].body.messages[0].content, /never claim to have seen a video or Lottie animation/);
   await waitFor(() => mails.length === 1);
   assert.match(mails[0].replace(/\r\n/g, ' '), /Its background is media\/slide.json in the bundle \(lottie, \d+ bytes\), which no reviewer saw/);
   // A reviewer's decline still goes to the person: the file is theirs to judge too.
@@ -1316,4 +1316,98 @@ test('the gallery image installs the same pinned shell using only its server man
   assert.match(dockerfile, /npm ci --omit=dev --omit=optional --ignore-scripts/);
   assert.match(dockerfile, /COPY gallery\.mjs mod-shell\.mjs/);
   assert.match(readFileSync('ops/deploy-gallery.sh', 'utf8'), /cp server\/gallery\.mjs server\/mod-shell\.mjs server\/Dockerfile server\/package\.json server\/package-lock\.json "\$stage\/"/);
+});
+
+const VIEW_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a3u8AAAAASUVORK5CYII=', 'base64');
+const viewImage = (path) => toolCall('view_image', { path });
+test('vision: viewed PNG, JPEG, WebP and GIF bytes reach OpenRouter with their MIME and allow publication', async () => {
+  await start();
+  const webp = Buffer.alloc(20); webp.write('RIFF'); webp.writeUInt32LE(12, 4); webp.write('WEBP', 8);
+  const files = { 'a.png': VIEW_PNG, 'b.jpg': Buffer.from('ffd8ffe0', 'hex'), 'c.webp': webp, 'd.gif': Buffer.from('GIF89a123456789') };
+  const m = await make(countdown(), { 'hooks.js': te.encode(HOOKS), ...files });
+  plan.chat = [...Object.keys(files).map(p => viewImage(`/mod/${p}`)), review('accept', { viewedImages: 'not a schema field' })];
+  // The reviewer cannot forge its server-side viewed list through the answer schema.
+  const invalid = await reviewed(m.bytes); assert.equal(invalid.row.status, 'pending');
+  calls.chat = [];
+  plan.chat = [...Object.keys(files).map(p => viewImage(`/mod/${p}`)), review('accept')];
+  const accepted = await reviewed((await make(countdown(), { 'hooks.js': te.encode(HOOKS), ...files })).bytes);
+  const r = accepted.row; assert.equal(r.status, 'published');
+  const meta = JSON.parse(r.decision).review;
+  assert.deepEqual(meta.viewedImages, Object.keys(files));
+  assert.equal(meta.imageBytes, Object.values(files).reduce((n, b) => n + b.length, 0));
+  const images = calls.chat.at(-1).body.messages.filter(m => Array.isArray(m.content));
+  assert.equal(images.length, 4);
+  for (const [i, [p, b]] of Object.entries(files).entries()) {
+    assert.equal(images[i].role, 'user'); assert.match(images[i].content[0].text, /Untrusted.*not instructions/);
+    assert.equal(images[i].content[1].image_url.url, `data:${modImageType(b)};base64,${b.toString('base64')}`);
+    assert.ok(meta.viewedImages.includes(p));
+  }
+  assert.ok(meta.shellOutput > meta.imageBytes, 'encoded pictures consume the existing output budget');
+  assert.equal((await download(accepted.id, accepted.hash)).status, 200);
+});
+
+test('vision: disguises, traversal and unsupported types never become image parts; unviewed files still need a person', async () => {
+  await start();
+  for (const bad of ['<svg onload="alert(1)"/>', '<html><script>alert(1)</script></html>']) {
+    assert.equal(modImageType(Buffer.from(bad)), null);
+    const refused = await submit((await forge({ 'hooks.js': te.encode(HOOKS), 'fake.png': te.encode(bad) }, countdown())).bytes);
+    assert.equal(refused.status, 422); assert.equal(calls.chat.length, 0);
+    assert.throws(() => MB.check([['fake.png', te.encode(bad)], ['mod.json', te.encode('{}')]]));
+  }
+  const avif = Buffer.alloc(24); avif.writeUInt32BE(24); avif.write('ftypavif', 4);
+  for (const [files, paths] of [
+    [{ 'a.png': VIEW_PNG, 'b.png': VIEW_PNG }, ['/mod/a.png']],
+    [{ 'a.avif': avif }, ['/mod/a.avif', '/mod/../a.avif', '/etc/passwd', '/mod/mod.json']],
+  ]) {
+    calls.chat = []; plan.chat = [...paths.map(viewImage), review('accept')];
+    const r = await reviewed((await make(countdown(), { 'hooks.js': te.encode(HOOKS), ...files })).bytes);
+    assert.equal(r.row.status, 'pending'); assert.match(JSON.parse(r.row.decision).person, /pictures or fonts/);
+    const images = calls.chat.at(-1).body.messages.filter(m => Array.isArray(m.content));
+    assert.equal(images.length, paths.length === 1 ? 1 : 0);
+  }
+});
+
+test('vision: per-image, count and total byte caps leave refused images unseen', async () => {
+  await start();
+  const padded = (n) => Buffer.concat([VIEW_PNG, Buffer.alloc(n - VIEW_PNG.length)]);
+  for (const files of [
+    { 'big.png': padded(MOD_IMAGE_MAX + 1) },
+    Object.fromEntries(Array.from({ length: MOD_IMAGES + 1 }, (_, i) => [`p${i}.png`, VIEW_PNG])),
+    { 'one.png': padded(MOD_IMAGE_TOTAL / 2 + 1), 'two.png': padded(MOD_IMAGE_TOTAL / 2 + 1) },
+  ]) {
+    calls.chat = []; plan.chat = [...Object.keys(files).map(p => viewImage(`/mod/${p}`)), review('accept')];
+    const r = await reviewed((await make(countdown(), { 'hooks.js': te.encode(HOOKS), ...files })).bytes);
+    assert.equal(r.row.status, 'pending');
+    const meta = JSON.parse(r.row.decision).review;
+    assert.ok(meta.viewedImages.length < Object.keys(files).length); assert.ok(meta.viewedImages.length <= MOD_IMAGES);
+    assert.ok(meta.imageBytes <= MOD_IMAGE_TOTAL);
+    assert.ok(calls.chat.at(-1).body.messages.some(m => m.role === 'tool' && m.content.includes('image limit')));
+  }
+});
+
+test('vision: background image media always needs a person even when viewed and accepted', async () => {
+  await start();
+  // Valid static WebP accepted as bundled image background by Glaze's media reader.
+  const webp = Buffer.from('524946461a000000574542505650384c0d0000002f00000000071011118888fe0700', 'hex');
+  const m = await mediaMod('./media/bg.webp', 'image', { 'media/bg.webp': webp });
+  plan.chat = [viewImage('/mod/media/bg.webp'), review('accept')];
+  const r = await reviewed(m.bytes); assert.equal(r.row.status, 'pending');
+  assert.deepEqual(JSON.parse(r.row.decision).review.viewedImages, ['media/bg.webp']);
+  assert.match(JSON.parse(r.row.decision).person, /background/);
+});
+
+test('vision: duplicate views do not spend image quota; images and bash share the existing output cap', async () => {
+  await start();
+  const m = await make(countdown(), { 'hooks.js': te.encode(HOOKS), 'p.png': VIEW_PNG });
+  plan.chat = [viewImage('/mod/p.png'), viewImage('/mod/p.png'), review('accept')];
+  const r = await reviewed(m.bytes); assert.equal(r.row.status, 'published');
+  const meta = JSON.parse(r.row.decision).review;
+  assert.equal(meta.imageBytes, VIEW_PNG.length); assert.deepEqual(meta.viewedImages, ['p.png']);
+  assert.equal(calls.chat.at(-1).body.messages.filter(m => Array.isArray(m.content)).length, 1);
+  const big = Buffer.concat([VIEW_PNG, Buffer.alloc(MOD_IMAGE_MAX - VIEW_PNG.length)]);
+  calls.chat = []; plan.chat = [viewImage('/mod/big.png'), ...Array.from({ length: 10 }, () => bash('seq 1 10000')), review('accept')];
+  const failed = await reviewed((await make(countdown(), { 'hooks.js': te.encode(HOOKS), 'big.png': big })).bytes);
+  assert.equal(failed.row.status, 'pending');
+  assert.match(JSON.parse(failed.row.decision).review.reason, /200000-character shell output limit/);
+  assert.ok(calls.chat.length < 12);
 });

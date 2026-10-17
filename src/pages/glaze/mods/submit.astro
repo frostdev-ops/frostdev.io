@@ -12,7 +12,7 @@ const guide = 'https://github.com/frostdev-ops/frostdev.io/blob/main/docs/looks-
     <section class="looks-hero" aria-labelledby="submit-title">
       <p class="product-eyebrow"><a href="/glaze">Glaze</a> · <a href="/glaze/mods">Mods</a> · Share</p>
       <h1 class="product-title" id="submit-title">Share your mod.</h1>
-      <p class="product-lead">In Glaze's editor, under <strong>Mods</strong>, export your mod: Glaze signs it with your author key and saves a <code>.glazemod</code> file. Choose it here and it's checked at once. When you submit, an AI reviewer reads its text files, usually within a few minutes. A person checks any pictures or fonts before publication, and your status link shows the outcome. One a day.</p>
+      <p class="product-lead">In Glaze's editor, under <strong>Mods</strong>, export your mod: Glaze signs it with your author key and saves a <code>.glazemod</code> file. Choose it here and it's checked at once. When you submit, an AI reviewer reads its text files and views supported pictures, usually within a few minutes. A person checks pictures the reviewer could not view, fonts and background media before publication, and your status link shows the outcome. One a day.</p>
     </section>
 
     <div class="submit-grid">
@@ -59,7 +59,7 @@ const guide = 'https://github.com/frostdev-ops/frostdev.io/blob/main/docs/looks-
       <div class="product-section-heading">
         <p class="product-eyebrow">What happens to it</p>
         <h2 id="privacy-heading">Who reads your mod, and what's kept.</h2>
-        <p>Choosing a file sends it to frostdev.io to be checked by Glaze's own code; nothing is kept from that. <strong>When you submit, mod.json and every other text file except a background file, plus the names and sizes of all files, is sent to the reviewer: OpenRouter, which passes it to OpenAI's <code>gpt-6-luna-pro</code>.</strong> It reads those text files and accepts, declines with a reason you'll see, or asks a person. Picture and font contents stay on frostdev.io and need a person's check before publication. A background file, including Lottie JSON, stays on frostdev.io and always needs a person's check after the automated review. A mod that can read courses, To Do or grades and also reach a website always goes to a person, the maintainer, who gets the review by email and can read the bundle on the server. <a class="looks-link" href={guide}>How the review works</a></p>
+        <p>Choosing a file sends it to frostdev.io to be checked by Glaze's own code; nothing is kept from that. <strong>When you submit, mod.json and every other text file except a background file, plus supported pictures it opens and the names and sizes of all files, are sent to the reviewer: OpenRouter, which passes it to OpenAI's <code>gpt-6-luna-pro</code>.</strong> It reads those text files and accepts, declines with a reason you'll see, or asks a person. Pictures it views (PNG, JPEG, WebP or GIF within its limits) are also sent to that reviewer. Unviewed or unsupported pictures and fonts need a person's check before publication. Background pictures may be sent too; background media, including Lottie JSON, always needs a person's check after the automated review. Videos and Lottie file contents stay on frostdev.io. A mod that can read courses, To Do or grades and also reach a website always goes to a person, the maintainer, who gets the review by email and can read the bundle on the server. <a class="looks-link" href={guide}>How the review works</a></p>
       </div>
       <div class="product-panel">
         <h3>What's kept</h3>
@@ -174,7 +174,7 @@ const guide = 'https://github.com/frostdev-ops/frostdev.io/blob/main/docs/looks-
       if (r.status === 202 && typeof body.token === 'string') {
         bytes = null; ok = false;
         history.replaceState(null, '', `#status=${encodeURIComponent(body.token)}`);
-        say(el('h2', 'Your mod is waiting for its review.', 'submit-h2'), el('p', 'The AI review usually takes a few minutes; pictures or fonts also need a person to check them. This page checks again by itself.'), statusLink(body.token));
+        say(el('h2', 'Your mod is waiting for its review.', 'submit-h2'), el('p', 'The AI review usually takes a few minutes; unviewed pictures, fonts and background media also need a person to check them. This page checks again by itself.'), statusLink(body.token));
         watch(body.token);
         return;
       }
