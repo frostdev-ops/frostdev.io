@@ -37,7 +37,7 @@ export function adminFileType(bytes) {
   return plain;
 }
 
-export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide, decideMod, readMod, readLookMedia, permissionWords,
+export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide, decideMod, readMod, readLookMedia, permissionWords, live = () => new Map(),
   limits, blocklist, googleClientId, googleClientSecret, adminEmails, googleFetch = fetch }) {
   const emails = new Set(String(adminEmails || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean));
   const enabled = !!(googleClientId && googleClientSecret && emails.size);
@@ -194,12 +194,18 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
         const decision = JSON.parse(r.decision);
         return { kind: 'looks', id: r.id, name: r.name, credit: r.credit, status: r.status, created: Date.parse(r.created), person: decision.person || decision.escalation?.reason || r.reason };
       });
-      const mods = sql('SELECT * FROM mods ORDER BY created, hash').all().map((r) => ({ kind: 'mods', id: r.id, hash: r.hash, name: r.name, credit: r.credit, version: r.version, status: r.status, created: r.created, person: JSON.parse(r.decision).person || r.reason }));
+      const mods = sql('SELECT * FROM mods ORDER BY created, hash').all().map((r) => ({ kind: 'mods', id: r.id, hash: r.hash, name: r.name, credit: r.credit, version: r.version, status: r.status, created: r.created, person: JSON.parse(r.decision).person || r.reason, reviewing: live().has(r.hash) }));
       let list = null;
       try { list = JSON.parse(blocklist()).list; } catch { /* none */ }
       return reply(res, 200, { email: session.email, csrf: session.csrf, looks, mods, limits,
         blocklist: list ? { seq: list.seq, expires: list.expires, mods: list.mods.length, bundles: list.bundles.length, authors: list.authors.length } : null,
         audit: sql('SELECT * FROM admin_audit ORDER BY seq DESC LIMIT 200').all() });
+    }
+    // The running review agents' events, newest last; `?hash=` for one.
+    if (p === '/api/live') {
+      const hash = url.searchParams.get('hash');
+      const feeds = [...live()].filter(([h]) => !hash || h === hash).map(([h, f]) => ({ hash: h, id: f.id, name: f.name, version: f.version, started: f.started, rounds: f.rounds || 0, events: f.events }));
+      return reply(res, 200, { feeds });
     }
     if (p === '/api/audit') {
       const before = Number(url.searchParams.get('before'));

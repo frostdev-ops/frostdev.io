@@ -882,7 +882,15 @@ export function gallery({
   // → chat's answer plus { rounds, commands } (the commands cut to 200 characters, for the maintainer). Throws on an error,
   // a timeout, an invalid submission or a reply without a tool call after one nudge; a bound it hits throws with `why`.
   // Every error carries `agent`, what it did so far.
+  // What each running review agent is doing, for the dashboard's live view: in memory only, gone when the review ends.
+  const live = new Map();
   const reviewModAgent = async (got, stop) => {
+    try { return await runModAgent(got, stop); } finally { live.delete(got.hash); }
+  };
+  const runModAgent = async (got, stop) => {
+    const feed = { id: got.id, name: got.prompt?.name || '', version: got.version, started: now(), events: [] };
+    live.set(got.hash, feed);
+    const note = (kind, text) => { feed.events.push({ at: now(), kind, text: String(text ?? '').slice(0, 2000) }); if (feed.events.length > 400) feed.events.shift(); };
     const signal = AbortSignal.any([AbortSignal.timeout(MOD_REVIEW_TIMEOUT), stop]);
     const messages = [{ role: 'system', content: MOD_POLICY }, { role: 'user', content: modReviewInput(got, modFacts(got)) }];
     const agent = { rounds: 0, commands: [], viewedImages: [], imageBytes: 0, shellOutput: 0, model: escalationModel, provider: '', cost: 0, reasoningTokens: 0, tokens: { prompt: 0, completion: 0 } };
@@ -890,13 +898,14 @@ export function gallery({
     // Totals over the rounds; null once a round doesn't say.
     const sum = (a, n) => (a === null || !Number.isFinite(n) ? null : a + n);
     const fail = (message, why) => Object.assign(new Error(message), { ...(why && { why }) });
-    let nudged = false, remainingTokens = MOD_COMPLETION_TOKENS;
+    let nudged = false, gated = 0, remainingTokens = MOD_COMPLETION_TOKENS;
     try {
       for (;;) {
         signal.throwIfAborted();
         if (agent.rounds >= MOD_ROUNDS) throw fail('rounds', `reached its ${MOD_ROUNDS}-round limit without submitting a review`);
         if (remainingTokens <= 0) throw fail('tokens', `reached its ${MOD_COMPLETION_TOKENS}-token completion limit without submitting a review`);
         agent.rounds++;
+        feed.rounds = agent.rounds;
         const res = await openrouterPost('/v1/chat/completions', {
           model: escalationModel, messages, tools: MOD_TOOLS, parallel_tool_calls: false,
           reasoning: { effort: 'xhigh', summary: 'detailed' }, max_tokens: remainingTokens, provider: { order: ['openai'], allow_fallbacks: true },
@@ -913,7 +922,7 @@ export function gallery({
         remainingTokens -= Number.isSafeInteger(used) && used >= 0 ? used : remainingTokens;
         const m = res?.choices?.[0]?.message;
         if (!m || typeof m !== 'object') throw fail('invalid');
-        if (summaryOf(m)) summaries.push(summaryOf(m));
+        if (summaryOf(m)) { summaries.push(summaryOf(m)); note('think', summaryOf(m)); }
         const finish = res.choices[0].finish_reason;
         if (finish && !['tool_calls', 'stop'].includes(finish)) throw fail(`incomplete: ${finish}`, 'returned an incomplete review');
         if (m.tool_calls != null && !Array.isArray(m.tool_calls)) throw fail('invalid');
@@ -931,7 +940,16 @@ export function gallery({
         }
         const c = calls[0];
         if (c.function.name === 'submit_review') {
+          // A model that samples a few pictures and submits is sent back to view the rest (twice at most; then a person does).
+          const left = Object.keys(got.files).filter((f) => !agent.viewedImages.includes(f) && got.files[f].length <= MOD_IMAGE_MAX && modImageType(got.files[f]))
+            .slice(0, Math.max(0, MOD_IMAGES - agent.viewedImages.length));
+          if (left.length && gated++ < 2) {
+            note('gate', `Sent back to view ${left.length} more picture${left.length === 1 ? '' : 's'}`);
+            messages.push({ role: 'tool', tool_call_id: c.id, content: JSON.stringify({ error: `Not submitted: view every picture before deciding. Still unviewed: ${left.map((f) => `/mod/${f}`).join(', ')}` }) });
+            continue;
+          }
           const v = answerOf(c.function.arguments, MOD_SCHEMA);
+          note('submit', `${v.decision}: ${v.reason || ''}`);
           return { v, ...agent, reasoning: prose(summaries.join('\n'), REASONING_MAX) };
         }
         let out, picture;
@@ -954,7 +972,9 @@ export function gallery({
           const args = JSON.parse(c.function.arguments);
           if (!args || typeof args.command !== 'string' || !args.command.trim() || Object.keys(args).length !== 1) throw fail('invalid');
           agent.commands.push(args.command.slice(0, 200));
+          note('bash', args.command);
           out = await modShell(got.files, args.command, signal);
+          note('output', `${out.stdout || ''}${out.stderr ? `\n${out.stderr}` : ''}`.slice(0, 1500) || `(exit ${out.exitCode})`);
           signal.throwIfAborted();
           if ([124, 126].includes(out.exitCode)) throw fail('shell limit', `hit a shell command ${out.exitCode === 124 ? 'time' : 'resource'} limit`);
         }
@@ -964,6 +984,7 @@ export function gallery({
         if (agent.shellOutput + outputSize > MOD_SHELL_TOTAL) throw fail('output', `reached its ${MOD_SHELL_TOTAL}-character shell output limit without submitting a review`);
         agent.shellOutput += outputSize;
         messages.push({ role: 'tool', tool_call_id: c.id, content });
+        if (c.function.name === 'view_image') note('image', out.viewed ? `/mod/${out.viewed}` : out.alreadyViewed ? `/mod/${out.alreadyViewed} (again)` : out.error);
         if (picture) {
           agent.viewedImages.push(out.viewed);
           agent.imageBytes += out.bytes;
@@ -1431,7 +1452,7 @@ export function gallery({
     return ok;
   };
   const admin = galleryAdmin({ db, siteOrigin, now, readJson, decide, decideMod, readMod: readStoredMod, readLookMedia: readMedia,
-    permissionWords, limits, blocklist, googleClientId, googleClientSecret, adminEmails, googleFetch,
+    permissionWords, limits, blocklist, live: () => live, googleClientId, googleClientSecret, adminEmails, googleFetch,
     clientKey: (req) => hmac(saltOf(today(now())), clientOf(req)),
   });
 

@@ -1359,7 +1359,8 @@ test('vision: disguises, traversal and unsupported types never become image part
     [{ 'a.png': VIEW_PNG, 'b.png': VIEW_PNG }, ['/mod/a.png']],
     [{ 'a.avif': avif }, ['/mod/a.avif', '/mod/../a.avif', '/etc/passwd', '/mod/mod.json']],
   ]) {
-    calls.chat = []; plan.chat = [...paths.map(viewImage), review('accept')];
+    // An early submit is sent back twice to view the rest, then accepted, and a person checks the unviewed picture.
+    calls.chat = []; plan.chat = [...paths.map(viewImage), review('accept'), review('accept'), review('accept')];
     const r = await reviewed((await make(countdown(), { 'hooks.js': te.encode(HOOKS), ...files })).bytes);
     assert.equal(r.row.status, 'pending'); assert.match(JSON.parse(r.row.decision).person, /pictures or fonts/);
     const images = calls.chat.at(-1).body.messages.filter(m => Array.isArray(m.content));
@@ -1418,6 +1419,16 @@ test('requeue during a review invalidates the old result and drains a fresh revi
   assert.equal(await g.decideMod(m.id, m.hash, 'queued', '', 'owner@example.edu'), true);
   assert.equal(row(m.hash).tries, 0); release(); await g.drain();
   assert.equal(calls.chat.length, 2); assert.equal(row(m.hash).status, 'published'); assert.equal(row(m.hash).tries, 1);
+});
+
+test('vision: submitting before viewing every picture is sent back to view the rest', async () => {
+  await start();
+  const m = await make(countdown(), { 'hooks.js': te.encode(HOOKS), 'a.png': VIEW_PNG, 'b.png': Buffer.concat([VIEW_PNG, Buffer.from([0])]) });
+  plan.chat = [viewImage('/mod/a.png'), review('accept'), viewImage('/mod/b.png'), review('accept')];
+  const r = await reviewed(m.bytes);
+  assert.equal(r.row.status, 'published');
+  assert.deepEqual(JSON.parse(r.row.decision).review.viewedImages.sort(), ['a.png', 'b.png']);
+  assert.ok(calls.chat.at(-1).body.messages.some((x) => x.role === 'tool' && x.content.includes('Still unviewed: /mod/b.png')));
 });
 
 test('vision: duplicate views do not spend image quota; pictures do not count against the shell output cap', async () => {

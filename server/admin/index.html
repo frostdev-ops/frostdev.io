@@ -4,57 +4,36 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <title>Gallery review · Glaze · Frostdev</title>
+  <title>Gallery admin · Glaze</title>
   <link rel="stylesheet" href="/glaze/admin/style.css">
   <script src="/glaze/admin/viewer.js" defer></script>
   <script src="/glaze/admin/app.js" defer></script>
 </head>
-<body>
-  <a class="skip" href="#queue">Skip to review queue</a>
-  <header class="masthead shell">
+<body class="app">
+  <header class="bar">
     <a class="brand" href="/glaze"><strong>frostdev</strong><span aria-hidden="true">/</span> Glaze</a>
-    <div class="account"><span id="email">Gallery admin</span><button id="refresh" class="secondary" type="button">Refresh</button><button id="logout" class="quiet" type="button" disabled>Sign out</button></div>
+    <nav class="sections" aria-label="Sections">
+      <a id="nav-mods" href="#mods">Mods <span class="count" id="count-mods"></span></a>
+      <a id="nav-looks" href="#looks">Looks <span class="count" id="count-looks"></span></a>
+      <a id="nav-activity" href="#activity">Activity</a>
+    </nav>
+    <div class="who"><span id="email"></span><button id="logout" class="quiet" type="button">Sign out</button></div>
   </header>
-  <main class="shell">
-    <div class="intro">
-      <div><p class="eyebrow">Glaze · Gallery workspace</p><h1>Gallery review.</h1><p class="lead">Review submissions, check their files, and decide what goes live.</p></div>
-      <a class="text-link" href="/glaze/looks">View public gallery <span aria-hidden="true">↗</span></a>
-    </div>
-    <nav class="dashboard-nav" aria-label="Dashboard"><a href="#queue">Review queue <span id="nav-count" class="nav-count">—</span></a><a href="#all-looks">Looks</a><a href="#all-mods">Mods</a><a href="#manage">Manage</a><a href="#audit">Audit log</a></nav>
-    <div class="stats" role="group" aria-label="Gallery summary">
-      <a class="stat priority" href="#queue"><span class="stat-label">Needs review</span><strong id="queue-count">—</strong><span>Waiting for a person</span></a>
-      <div class="stat"><span class="stat-label">Published</span><strong id="published-count">—</strong><span>Looks and mod versions</span></div>
-      <div class="stat"><span class="stat-label">All submissions</span><strong id="total-count">—</strong><span>Across every status</span></div>
-    </div>
-    <p id="message" class="status loading" role="status" aria-live="polite" aria-atomic="true">Loading gallery…</p>
-    <div class="workspace">
-      <section id="queue" aria-labelledby="queue-title" aria-busy="true">
-        <div class="section-heading"><div><p class="eyebrow">Start here</p><h2 id="queue-title" tabindex="-1">Review queue</h2></div><span class="muted small">Oldest first</span></div>
-        <p class="section-note">Open a submission to read its review and inspect its media.</p>
-        <div id="pending" class="items queue-items"><p class="empty loading">Loading review queue…</p></div>
-      </section>
-    </div>
-    <dialog id="detail" class="review-panel" aria-labelledby="detail-title">
-      <div class="review-heading"><div><p class="eyebrow">Submission review</p><h2 id="detail-title" tabindex="-1">Choose a submission</h2></div><button id="close-detail" class="quiet" type="button" hidden>Close review</button></div>
-      <p id="detail-notice" role="alert"></p>
-      <div id="detail-body"><div class="empty detail-empty"><span class="empty-symbol" aria-hidden="true">↖</span><h3>A little context before the call.</h3><p>Select an item from the queue or the lists below.<br>Its review, files, and decision controls will appear here.</p></div></div>
-    </dialog>
-    <section id="all-looks" class="archive" aria-labelledby="looks-title">
-      <div class="section-heading"><div><p class="eyebrow">The collection</p><h2 id="looks-title">All Looks <span id="looks-count" class="count" role="status"></span></h2></div><a class="text-link" href="/glaze/looks">Public Looks <span aria-hidden="true">↗</span></a></div>
-      <div class="filters"><label>Search Looks<input id="looks-search" type="search" placeholder="Name, author or ID" aria-controls="looks"></label><label>Status<select id="looks-filter" aria-controls="looks"><option value="">Every status</option><option value="pending">Pending</option><option value="published">Published</option><option value="declined">Declined</option><option value="removed">Removed</option></select></label></div>
-      <div id="looks" class="items" aria-busy="true"><p class="empty loading">Loading Looks…</p></div>
-    </section>
-    <section id="all-mods" class="archive" aria-labelledby="mods-title">
-      <div class="section-heading"><div><p class="eyebrow">Every version, every decision</p><h2 id="mods-title">All mods <span id="mods-count" class="count" role="status"></span></h2></div><a class="text-link" href="/glaze/mods">Public Mods <span aria-hidden="true">↗</span></a></div>
-      <div class="filters"><label>Search mods<input id="mods-search" type="search" placeholder="Name, author, ID or hash" aria-controls="mods"></label><label>Status<select id="mods-filter" aria-controls="mods"><option value="">Every status</option><option value="pending">Pending</option><option value="queued">Queued</option><option value="published">Published</option><option value="declined">Declined</option><option value="removed">Removed</option></select></label></div>
-      <div id="mods" class="items" aria-busy="true"><p class="empty loading">Loading mods…</p></div>
-    </section>
-    <div class="support-grid">
-      <section id="manage" class="panel" aria-labelledby="manage-title"><p class="eyebrow">Gallery settings</p><h2 id="manage-title">Manage</h2><h3>Submission limits</h3><p id="limits" class="muted">Loading limits…</p><h3>Blocklist</h3><p id="blocklist" class="muted">Loading blocklist…</p></section>
-      <section id="audit" class="panel" aria-labelledby="audit-title"><p class="eyebrow">Decision history</p><h2 id="audit-title">Audit log</h2><p class="section-note">Latest first, with the reason saved for each decision.</p><ol id="audit-rows"><li class="empty loading">Loading audit log…</li></ol><button id="older" class="secondary" type="button" hidden>Load older entries</button></section>
-    </div>
-    <noscript><p class="status error">This dashboard needs JavaScript. The gallery moderation CLI also remains available.</p></noscript>
+  <p id="message" class="toast" role="status" aria-live="polite" hidden></p>
+  <main id="workspace" class="workspace">
+    <aside class="sidebar" aria-label="Submissions">
+      <div class="filters" id="filters" role="group" aria-label="Show"></div>
+      <input id="search" type="search" placeholder="Search name, author or id" aria-label="Search">
+      <ul id="list" class="list" aria-live="polite"></ul>
+    </aside>
+    <section id="detail" class="detail" tabindex="-1" aria-live="polite"></section>
   </main>
-  <footer class="shell footer"><span>Frostdev · Glaze gallery</span><span>Made to be shared. Reviewed with care.</span></footer>
+  <main id="activity" class="activity" hidden>
+    <h1>Activity</h1>
+    <p class="muted">Every decision made in this dashboard, newest first.</p>
+    <div id="limits" class="note"></div>
+    <ol id="audit" class="audit"></ol>
+    <button id="older" class="secondary" type="button" hidden>Show older</button>
+  </main>
 </body>
 </html>

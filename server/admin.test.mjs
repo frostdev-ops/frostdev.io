@@ -382,79 +382,50 @@ test('audit pages can reach older records and have no public route; nginx and Do
   assert.match(deploy, /cp server\/gallery-admin\.mjs/); assert.match(deploy, /cp -R server\/admin/);
 });
 
-test('browser UI keeps hostile names, reviews and source in text sinks, filters records and posts a reason with CSRF', async () => {
+test('browser UI keeps hostile names and reviews in text sinks, separates mods and Looks, and declines with a reason and CSRF', async () => {
   class Node {
-    constructor(tag = 'div') { this.tagName = tag; this.children = []; this.events = {}; this.dataset = {}; this.style = { setProperty() {} }; this.value = ''; this._text = ''; this.classList = { add() {}, remove() {}, toggle() {} }; }
+    constructor(tag = 'div') { this.tagName = tag; this.children = []; this.events = {}; this.dataset = {}; this.attrs = {}; this.style = {}; this.value = ''; this._text = ''; this.classList = { toggle() {}, add() {}, remove() {} }; }
     set textContent(text) { this._text = String(text); this.children = []; }
     get textContent() { return this._text + this.children.map((n) => n.textContent).join(''); }
     set innerHTML(_) { throw new Error('untrusted markup sink'); }
     append(...nodes) { this.children.push(...nodes); }
     replaceChildren(...nodes) { this._text = ''; this.children = nodes; }
-    setAttribute(name, value) { this[name] = value; }
+    get lastChild() { return this.children.at(-1); }
+    setAttribute(k, v) { this.attrs[k] = String(v); } removeAttribute(k) { delete this.attrs[k]; } getAttribute(k) { return this.attrs[k] ?? null; }
     addEventListener(type, fn) { (this.events[type] ||= []).push(fn); }
-    async fire(type) { for (const fn of this.events[type] || []) await fn({ preventDefault() {} }); }
-    get childElementCount() { return this.children.length; }
-    focus() {} scrollIntoView() {} setCustomValidity() {} reportValidity() {}
-    showModal() { this.open = true; } close() { this.open = false; } querySelectorAll() { return []; } click() { this.fire('click'); }
+    async fire(type) { for (const fn of this.events[type] || []) await fn({ preventDefault() {}, target: this }); }
+    focus() {} scrollIntoView() {}
   }
-  const ids = ['email', 'message', 'pending', 'looks', 'mods', 'looks-search', 'looks-filter', 'mods-search', 'mods-filter', 'looks-count', 'mods-count', 'queue', 'queue-title', 'queue-count', 'nav-count', 'published-count', 'total-count', 'limits', 'blocklist', 'audit-rows', 'older', 'refresh', 'logout', 'detail', 'detail-notice', 'detail-title', 'detail-body', 'close-detail'];
+  const ids = ['workspace', 'activity', 'nav-mods', 'nav-looks', 'nav-activity', 'count-mods', 'count-looks', 'email', 'logout', 'message', 'filters', 'search', 'list', 'detail', 'limits', 'audit', 'older'];
   const nodes = Object.fromEntries(ids.map((id) => [id, new Node()]));
-  const id = 'c-0000000001', hash = 'a'.repeat(43), modId = 'a'.repeat(16);
-  const row = { kind: 'looks', id, name: HOSTILE, credit: HOSTILE, status: 'pending', created: Date.parse('2026-10-17'), person: HOSTILE };
-  const mod = { kind: 'mods', id: modId, hash, name: 'Media', credit: 'Student', version: '1.0.0', status: 'declined', created: 1 };
-  const posts = [], links = [], events = {}, confirmations = [], location = { hash: `#looks/${id}`, assign(v) { links.push(v); }, reload() {} };
-  let confirmed = false, failData = true, failDetail = false, failAction = true;
+  const id = 'a'.repeat(16), hash = 'b'.repeat(43);
+  const mod = { kind: 'mods', id, hash, name: HOSTILE, credit: HOSTILE, version: '1.0.0', status: 'pending', created: 1, person: HOSTILE };
+  const look = { kind: 'looks', id: 'c-0000000001', name: 'Look', credit: 'Kai', status: 'published', created: 2 };
+  const posts = [];
   const fakeFetch = async (url, init = {}) => {
-    if (url.endsWith('/api/data')) return failData ? Response.json({ error: 'Offline' }, { status: 503 }) : Response.json({ email: EMAIL, csrf: 'session-csrf', looks: [row], mods: [mod], audit: [], limits: true, blocklist: null });
-    if (url.endsWith(`/api/looks/${id}`)) return failDetail ? Response.json({ error: 'Review unavailable' }, { status: 503 }) : Response.json({ ...row, decision: { first: { model: HOSTILE }, escalation: { rationale: HOSTILE } }, described, code: HOSTILE });
-    if (url.endsWith(`/api/looks/${id}/decline`)) {
-      if (failAction) return Response.json({ error: 'The item changed. Refresh and check it.' }, { status: 409 });
-      posts.push({ url, init }); row.status = 'declined'; return Response.json({ ok: true });
-    }
-    if (url.endsWith('/logout')) { posts.push({ url, init }); return Response.json({ ok: true }); }
+    if (url.endsWith('/api/data')) return Response.json({ email: EMAIL, csrf: 'session-csrf', looks: [look], mods: [mod], audit: [], limits: true, blocklist: null });
+    if (url.endsWith(`/api/mods/${id}/${hash}`)) return Response.json({ ...mod, key: 'k', decision: { person: HOSTILE, review: { decision: 'accept', reason: HOSTILE, rationale: HOSTILE } }, summary: { warnings: [HOSTILE] }, permissions: [{ id: 'todo', why: HOSTILE }], files: [], versions: [] });
+    if (url.endsWith(`/api/mods/${id}/${hash}/decline`)) { posts.push({ url, init }); mod.status = 'declined'; return Response.json({ ok: true }); }
     throw new Error(`Unexpected UI fetch ${url}`);
   };
-  const context = vm.createContext({ document: { body: new Node('body'), getElementById: (id) => nodes[id], createElement: (tag) => new Node(tag), createTextNode: (text) => { const n = new Node('#text'); n.textContent = text; return n; } },
-    location, window: { addEventListener: (k, fn) => { events[k] = fn; }, confirm: (text) => { confirmations.push(text); return confirmed; } }, fetch: fakeFetch, console });
-  vm.runInContext(readFileSync('server/admin/viewer.js', 'utf8'), context);
+  const location = { hash: `#mods/pending/${id}/${hash}`, assign() {} };
+  const context = vm.createContext({ document: { hidden: false, getElementById: (k) => nodes[k], createElement: (tag) => new Node(tag), createTextNode: (text) => { const n = new Node('#text'); n.textContent = text; return n; } },
+    location, window: { addEventListener() {} }, fetch: fakeFetch, setInterval: () => 0, clearInterval() {}, setTimeout: () => 0, clearTimeout() {}, console, GalleryViewer: {} });
   vm.runInContext(readFileSync('server/admin/app.js', 'utf8'), context);
-  const wait = async (f) => { for (let i = 0; i < 100 && !f(); i++) await new Promise((r) => setTimeout(r, 2)); assert.ok(f()); };
-  await wait(() => nodes.message.className === 'status error');
-  assert.match(nodes.pending.textContent, /Unable to load/); assert.equal(nodes.queue.ariaBusy, 'false'); assert.equal(nodes.refresh.disabled, false);
-  failData = false;
-  await nodes.refresh.fire('click');
-  await wait(() => nodes['detail-body'].textContent.includes('Decision reason'));
-  assert.equal(nodes['queue-count'].textContent, '1'); assert.equal(nodes['total-count'].textContent, '2');
-  assert.match(nodes['audit-rows'].textContent, /No decisions yet/);
-  assert.ok(nodes.pending.textContent.includes(HOSTILE)); assert.ok(nodes['detail-body'].textContent.includes(HOSTILE));
+  const wait = async (f) => { for (let i = 0; i < 200 && !f(); i++) await new Promise((r) => setTimeout(r, 2)); assert.ok(f()); };
+  await wait(() => nodes.detail.textContent.includes('Reviewer'));
+  assert.ok(nodes.list.textContent.includes(HOSTILE)); assert.ok(nodes.detail.textContent.includes(HOSTILE));
+  assert.ok(!nodes.list.textContent.includes('Look'), 'mods and Looks are listed separately');
+  assert.equal(nodes['count-mods'].textContent, '1');
   const find = (node, tag, text) => node.tagName === tag && (!text || node.textContent === text) ? node : node.children.map((n) => find(n, tag, text)).find(Boolean);
-  assert.ok(find(nodes['detail-body'], 'code', HOSTILE), 'source is literal text in the code viewer');
-  assert.equal(nodes.detail.open, true);
-  assert.match(nodes.pending.children[0].className, /selected/);
-  nodes['looks-search'].value = 'no match'; await nodes['looks-search'].fire('input'); assert.match(nodes.looks.textContent, /No matches/);
-  nodes['mods-filter'].value = 'pending'; await nodes['mods-filter'].fire('change'); assert.match(nodes.mods.textContent, /No matches/);
-  const textarea = find(nodes['detail-body'], 'textarea'); textarea.value = HOSTILE;
-  await find(nodes['detail-body'], 'button', 'Remove from gallery').fire('click');
-  await wait(() => confirmations.length === 1); assert.equal(posts.length, 0);
-  await find(nodes['detail-body'], 'button', 'Decline').fire('click');
-  await wait(() => confirmations.length === 2); assert.equal(posts.length, 0, 'canceling decline never posts');
-  confirmed = true;
-  await find(nodes['detail-body'], 'button', 'Decline').fire('click');
-  await wait(() => nodes['detail-body'].textContent.includes('The item changed.'));
-  assert.equal(posts.length, 0); assert.equal(find(nodes['detail-body'], 'button', 'Decline').disabled, false);
-  failAction = false;
-  await find(nodes['detail-body'], 'button', 'Decline').fire('click');
-  await wait(() => posts.length === 1 && nodes.message.textContent.includes('Saved to the audit log'));
+  await find(nodes.detail, 'button', 'Decline…').fire('click');
+  assert.equal(posts.length, 0, 'decline asks first');
+  await find(nodes.detail, 'button', 'Decline').fire('click');
+  assert.equal(posts.length, 0, 'decline needs a reason');
+  find(nodes.detail, 'textarea').value = HOSTILE;
+  await find(nodes.detail, 'button', 'Decline').fire('click');
+  await wait(() => posts.length === 1);
   assert.equal(posts[0].init.headers['x-csrf-token'], 'session-csrf'); assert.equal(posts[0].init.method, 'POST'); assert.deepEqual(JSON.parse(posts[0].init.body), { reason: HOSTILE });
-  assert.match(nodes.pending.textContent, /All caught up/);
-  failDetail = true;
-  location.hash = '#all-looks';
-  await nodes.refresh.fire('click'); await wait(() => nodes['detail-title'].textContent === 'Review unavailable');
-  assert.ok(find(nodes['detail-body'], 'button', 'Try again')); assert.equal(nodes.detail.ariaBusy, 'false');
-  failDetail = false;
-  await find(nodes['detail-body'], 'button', 'Try again').fire('click'); await wait(() => nodes['detail-body'].textContent.includes('Theme code'));
-  await nodes['close-detail'].fire('click'); assert.equal(nodes['detail-title'].textContent, 'Choose a submission'); assert.equal(location.hash, '#queue');
-  await nodes.logout.fire('click'); await wait(() => links.length); assert.equal(links[0], `${ROOT}/login`);
 });
 
 test('byte sniffing permits only the explicit media formats; renamed active documents remain text', () => {
