@@ -387,6 +387,32 @@ test('the mod submit page keeps the latest file when older checks finish later',
   assert.equal(uploaded, b, 'the selected file must be the file submitted');
 });
 
+test('a mod upload locks its file and prevents duplicate submits until its response body finishes', async () => {
+  let answerUpload, answerBody;
+  let uploads = 0;
+  const ui = submitPage((url) => {
+    if (url.endsWith('/check')) return Promise.resolve(new Response(JSON.stringify({ problems: [], mod: null })));
+    uploads++;
+    return new Promise((resolve) => { answerUpload = resolve; });
+  }, 'mods');
+  ui.get('f-file').files = [{ size: 1, arrayBuffer: async () => new ArrayBuffer(1) }];
+  await ui.get('f-file').events.change();
+  ui.get('f-code').checked = ui.get('f-art').checked = true;
+  const pending = ui.get('submit-form').events.submit({ preventDefault() {} });
+  assert.equal(ui.get('f-file').disabled, true, 'changing files during an upload would let its result erase a newer selection');
+  assert.equal(ui.get('f-submit').disabled, true);
+  await ui.get('submit-form').events.submit({ preventDefault() {} });
+  assert.equal(uploads, 1);
+  answerUpload({ status: 422, json: () => new Promise((resolve) => { answerBody = resolve; }) });
+  await new Promise(setImmediate);
+  assert.equal(ui.get('f-file').disabled, true, 'headers alone do not finish an upload');
+  answerBody({ problems: ['test refusal'] });
+  await pending;
+  assert.equal(ui.get('f-file').disabled, false);
+  assert.equal(ui.get('f-submit').disabled, false, 'a failed upload can be corrected and retried');
+  assert.equal(ui.get('f-submit').textContent, 'Submit for review');
+});
+
 test('clearing the mod file invalidates an outstanding check', async () => {
   let answer;
   const ui = submitPage(() => new Promise((resolve) => { answer = resolve; }), 'mods');

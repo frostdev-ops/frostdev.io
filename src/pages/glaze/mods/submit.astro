@@ -123,7 +123,8 @@ const guide = 'https://github.com/frostdev-ops/frostdev.io/blob/main/docs/looks-
   let bytes: ArrayBuffer | null = null;
   let ok = false;
   let choice = 0;
-  const ready = () => { button.disabled = !(bytes && ok); };
+  let uploading = false;
+  const ready = () => { button.disabled = uploading || !(bytes && ok); };
   file.addEventListener('change', async () => {
     const chosen = ++choice;
     bytes = null; ok = false; ready(); show(null); problems([]);
@@ -158,30 +159,37 @@ const guide = 'https://github.com/frostdev-ops/frostdev.io/blob/main/docs/looks-
   };
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!bytes || !ok) return;
+    if (uploading || !bytes || !ok) return;
     if (!code.checked || !art.checked) { problems(['you need to agree to share its code under MIT and its pictures and other content under CC BY 4.0'], 'f-license-error'); (code.checked ? art : code).focus(); return; }
     problems([]);
-    button.disabled = true;
-    button.textContent = 'Uploading…';
-    let r: Response | null = null;
-    try { r = await fetch(`${API}/submit?code=MIT&art=CC-BY-4.0`, { method: 'POST', headers: { 'content-type': 'application/zip' }, body: bytes }); } catch { r = null; }
-    button.textContent = 'Submit for review';
-    if (!r) { closed(); ready(); return; }
-    const body = await r.json().catch(() => ({}));
-    if (r.status === 202 && typeof body.token === 'string') {
-      bytes = null; ok = false;
-      history.replaceState(null, '', `#status=${encodeURIComponent(body.token)}`);
-      say(el('h2', 'Your mod is waiting for its review.', 'submit-h2'), el('p', 'The AI review usually takes a few minutes; pictures or fonts also need a person to check them. This page checks again by itself.'), statusLink(body.token));
-      watch(body.token);
-      return;
-    }
-    if (r.status === 422) { problems(Array.isArray(body.problems) ? body.problems.map(String) : []); say(el('p', 'Fix the problems marked above; nothing was used up.')); }
-    else if (r.status === 429) {
-      const when = typeof body.resets === 'string' ? new Date(body.resets).toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' }) : 'tomorrow';
-      say(el('p', `${str(body.error) || 'You can submit one mod a day.'} You can submit again ${when}.`));
-    } else if (r.status === 413) problems(['that file is bigger than a mod can be (2 MiB of files)']);
-    else closed();
+    uploading = true;
+    file.disabled = true;
     ready();
+    button.textContent = 'Uploading…';
+    try {
+      let r: Response | null = null;
+      try { r = await fetch(`${API}/submit?code=MIT&art=CC-BY-4.0`, { method: 'POST', headers: { 'content-type': 'application/zip' }, body: bytes }); } catch { r = null; }
+      if (!r) { closed(); return; }
+      const body = await r.json().catch(() => ({}));
+      if (r.status === 202 && typeof body.token === 'string') {
+        bytes = null; ok = false;
+        history.replaceState(null, '', `#status=${encodeURIComponent(body.token)}`);
+        say(el('h2', 'Your mod is waiting for its review.', 'submit-h2'), el('p', 'The AI review usually takes a few minutes; pictures or fonts also need a person to check them. This page checks again by itself.'), statusLink(body.token));
+        watch(body.token);
+        return;
+      }
+      if (r.status === 422) { problems(Array.isArray(body.problems) ? body.problems.map(String) : []); say(el('p', 'Fix the problems marked above; nothing was used up.')); }
+      else if (r.status === 429) {
+        const when = typeof body.resets === 'string' ? new Date(body.resets).toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' }) : 'tomorrow';
+        say(el('p', `${str(body.error) || 'You can submit one mod a day.'} You can submit again ${when}.`));
+      } else if (r.status === 413) problems(['that file is bigger than a mod can be (2 MiB of files)']);
+      else closed();
+    } finally {
+      uploading = false;
+      file.disabled = false;
+      button.textContent = 'Submit for review';
+      ready();
+    }
   });
 
   // ---- #status=<token>: what became of a submission -----------------------------------------------------------------
