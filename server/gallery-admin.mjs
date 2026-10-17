@@ -17,7 +17,7 @@ const cookieOf = (req, name) => {
   const value = values.length === 1 ? values[0].slice(name.length + 1) : '';
   return /^[\w-]{43}$/.test(value) ? value : '';
 };
-const CSP = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'";
+const CSP = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; object-src 'none'";
 const plain = 'text/plain; charset=utf-8';
 const mediaTypes = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', mp4: 'video/mp4', webm: 'video/webm' };
 
@@ -55,7 +55,9 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
   const audit = (email, action, kind, id, bundleHash, reason) => sql('INSERT INTO admin_audit (email, action, kind, id, hash, at, reason) VALUES (?, ?, ?, ?, ?, ?, ?)').run(email, action, kind, id, bundleHash, now(), reason);
   const reply = (res, status, body, type = 'application/json; charset=utf-8', headers = {}) => {
     res.writeHead(status, { 'content-type': type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff',
-      'content-security-policy': CSP, 'referrer-policy': 'no-referrer', 'x-frame-options': 'DENY', ...headers });
+      // same-origin, not no-referrer: under no-referrer browsers send `Origin: null` on every POST (forms and same-origin
+      // fetch alike), which the Origin checks below refuse.
+      'content-security-policy': CSP, 'referrer-policy': 'same-origin', 'x-frame-options': 'DENY', ...headers });
     res.end(type.startsWith('application/json') ? JSON.stringify(body) : body);
   };
   const redirect = (res, to, headers = {}) => reply(res, 303, '', plain, { location: to, ...headers });
@@ -108,7 +110,7 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
     if (!enabled) return reply(res, 404, { error: 'Not found.' });
     const p = url.pathname.slice(ROOT.length);
     if (p === '/login' && req.method === 'GET') return reply(res, 200,
-      '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Gallery sign-in</title><main><h1>Glaze gallery admin</h1><form method="post" action="/glaze/admin/login"><button>Sign in with Google</button></form></main></html>', 'text/html; charset=utf-8');
+      '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Gallery sign-in</title><link rel="stylesheet" href="/glaze/admin/style.css"><main><h1>Glaze gallery admin</h1><form method="post" action="/glaze/admin/login"><button>Sign in with Google</button></form></main></html>', 'text/html; charset=utf-8');
     if (p === '/login' && req.method === 'POST') {
       if (req.headers.origin !== siteOrigin) return refuse(res);
       sweep();
@@ -149,6 +151,8 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
         return redirect(res, ROOT, { 'set-cookie': [cookie(FLOW, '', 0), cookie(SESSION, session, HOURS12 / 1000)] });
       } catch { return refuse(res); }
     }
+    // The stylesheet is no secret, and the sign-in page needs it before there is a session.
+    if (p === '/style.css' && req.method === 'GET') return reply(res, 200, readFileSync(new URL('./admin/style.css', import.meta.url)), 'text/css; charset=utf-8');
     const session = getSession(req);
     if (!session) return (p === '' || p === '/') && req.method === 'GET' ? redirect(res, `${ROOT}/login`) : reply(res, 401, { error: 'Sign in to continue.' });
     if (req.method === 'POST') {

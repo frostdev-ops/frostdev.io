@@ -168,6 +168,17 @@ test('bad state, wrong browser, expired flow, replayed state and replayed code n
   assert.equal((await finish(denied)).status, 403);
 });
 
+test('the sign-in page lets browsers send their Origin and follow the redirect to Google, styled before any session', async () => {
+  await start();
+  const page = await request('/login');
+  assert.equal(page.headers.get('referrer-policy'), 'same-origin', 'no-referrer makes browsers send Origin: null on POST');
+  assert.match(page.headers.get('content-security-policy'), /form-action 'self' https:\/\/accounts\.google\.com;/);
+  assert.match(await page.text(), /href="\/glaze\/admin\/style\.css"/);
+  const css = await request('/style.css');
+  assert.equal(css.status, 200);
+  assert.match(css.headers.get('content-type'), /^text\/css/);
+});
+
 test('login starts require the site Origin and are limited per trusted client network, including IPv6 /64', async () => {
   await start();
   assert.equal((await request('/login', { method: 'POST' })).status, 403);
@@ -184,7 +195,7 @@ test('login starts require the site Origin and are limited per trusted client ne
 test('every private route refuses without a session; sessions persist, expire and sign out with CSRF and Origin', async () => {
   await start();
   const look = seedLook(), mod = await seedMod();
-  const routes = ['/app.js', '/style.css', '/api/data', '/api/audit?before=20', `/api/looks/${look.id}`, `/api/mods/${mod.id}/${mod.hash}`,
+  const routes = ['/app.js', '/api/data', '/api/audit?before=20', `/api/looks/${look.id}`, `/api/mods/${mod.id}/${mod.hash}`,
     `/files/looks/${look.id}`, `/files/mods/${mod.id}/${mod.hash}?path=page.html`, `/bundles/mods/${mod.id}/${mod.hash}`, '/unknown'];
   for (const p of routes) {
     assert.equal((await request(p)).status, 401, p);
