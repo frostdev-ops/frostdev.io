@@ -229,7 +229,7 @@ test('submit queues the bundle and answers at once; the review publishes it; the
   // What "Use in Glaze" leads to: exactly the reviewed bundle, which Glaze's own reader takes with the same id and hash.
   const d = await download(m.id, m.hash);
   assert.equal(d.status, 200);
-  assert.equal(d.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assert.equal(d.headers.get('cache-control'), 'public, no-cache');
   assert.equal(d.headers.get('etag'), `"${m.hash}"`);
   assert.equal(d.headers.get('content-type'), 'application/zip');
   assert.equal(d.headers.get('x-content-type-options'), 'nosniff');
@@ -566,6 +566,22 @@ test('bundles are served only for published hashes, and the route can\'t reach a
   g.setBlocklist(blocklist(1, { bundles: [later.hash] }));
   assert.equal((await download(later.id, later.hash)).status, 404);
   assert.equal((await (await fetch(`${api}/mods`)).json()).total, 0);
+});
+
+test('bundle caches must revalidate publication and blocklist state even for conditional downloads', async () => {
+  await start({ blocklistKey: BL_PUB });
+  const m = await make();
+  await reviewed(m.bytes);
+  const first = await download(m.id, m.hash);
+  assert.equal(first.headers.get('cache-control'), 'public, no-cache');
+  const headers = { 'if-none-match': `W/"other", W/"${m.hash}"` };
+  const cached = await download(m.id, m.hash, { headers });
+  assert.equal(cached.status, 304);
+  assert.equal(cached.headers.get('cache-control'), 'public, no-cache');
+  g.setBlocklist(blocklist(1, { bundles: [m.hash] }));
+  assert.equal((await download(m.id, m.hash, { headers })).status, 404);
+  await g.decideMod(m.id, m.hash, 'removed');
+  assert.equal((await download(m.id, m.hash, { headers: { 'if-none-match': '*' } })).status, 404);
 });
 
 test('published downloads refuse missing, unsigned, damaged or replaced bundles before ETag matching', async () => {

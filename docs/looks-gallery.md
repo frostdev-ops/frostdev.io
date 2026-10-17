@@ -637,7 +637,7 @@ gallery isn't answering.
 | `POST submit?code=MIT&art=CC-BY-4.0` (the file as the body) | 202 `{outcome: "queued", id, hash, name, version, token}` at once; the review runs afterwards. 422 with `problems` (nothing used up), 429 with `limit` and `resets`. |
 | `GET status/<token>` | `queued`, `published` (with `/glaze/mods#<id>`), `pending` (a person decides), `declined` (with the reason) or `removed`, with the id, hash, name and version. |
 | `GET mods?page=n` | The newest published version of each mod, newest first, 24 a page: `{mods, page, pages, total}`. Each: `id, hash, name, version, credit, key, date, adds, code, frame, permissions [{id, why, label, means}], warnings, size, download`. No files. `Cache-Control: public, max-age=60`. |
-| `GET mods/<id>/<hash>.glazemod` (and HEAD) | The bundle, byte for byte as uploaded, only while that exact hash is published (and not blocked): `application/zip`, `Content-Disposition: attachment`, `ETag: "<hash>"` (304 on `If-None-Match`), `Cache-Control: public, max-age=31536000, immutable`. Anything else is 404: the path must be a 16-character id and a 43-character hash, and the database must publish that pair before the file is touched. |
+| `GET mods/<id>/<hash>.glazemod` (and HEAD) | The bundle, byte for byte as uploaded, only while that exact hash is published (and not blocked): `application/zip`, `Content-Disposition: attachment`, `ETag: "<hash>"` (304 on `If-None-Match`), `Cache-Control: public, no-cache`. Anything else is 404: the path must be a 16-character id and a 43-character hash, and the database must publish that pair before the file is touched. |
 | `GET blocklist` | The signed mod blocklist (below). |
 
 POSTs need `Origin: https://frostdev.io`, `Content-Type: application/zip` or `application/octet-stream` (a type a
@@ -838,9 +838,7 @@ page locations, `location = /glaze/mods/api/blocklist` and `location ^~ /glaze/m
 `/etc/glaze-gallery.env` is required (`MOD_REVIEWS_PER_DAY` is optional, default 40); the bundles go in the existing
 `glaze-gallery` volume, under `/data/mods`, which the server creates. The nightly backup copies the database only; the
 bundles are files beside it (published ones can also be downloaded again, declined ones are deleted after 30 days), so
-add `/var/lib/docker/volumes/glaze-gallery/_data/mods` to any off-box copy. Leave Cloudflare's default caching for
-`/glaze/mods/api/`: a cache rule for the bundles would keep serving a removed one from the edge (the blocklist, not
-removal, is what stops a harmful mod). Existing glaze1 Looks
+add `/var/lib/docker/volumes/glaze-gallery/_data/mods` to any off-box copy. Honor the bundle response's `Cache-Control: public, no-cache`: caches must revalidate before reuse so removed or blocked bundles return 404. Do not override this with a Cloudflare cache rule. The blocklist also reaches extensions that already installed a harmful mod. Existing glaze1 Looks
 keep their fingerprints and description bytes (the tests hold all 16 curated Looks to their old values).
 Existing glaze2 metadata is refreshed automatically on startup as described above.
 

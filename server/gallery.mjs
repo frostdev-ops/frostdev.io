@@ -1102,7 +1102,7 @@ export function gallery({
         }
       } catch { /* invalid or missing file: not served */ }
       if (!body) return send(res, 404, { error: 'No such mod in the gallery.' });
-      const headers = { etag: `"${row.hash}"`, 'cache-control': 'public, max-age=31536000, immutable', 'referrer-policy': 'no-referrer' };
+      const headers = { etag: `"${row.hash}"`, 'cache-control': 'public, no-cache', 'referrer-policy': 'no-referrer' };
       if (unchanged(req, headers.etag)) { res.writeHead(304, headers); return res.end(); }
       res.writeHead(200, { 'content-type': 'application/zip', 'content-length': body.length, 'content-disposition': `attachment; filename="${row.id}-${row.version}.glazemod"`, 'x-content-type-options': 'nosniff', ...headers });
       return res.end(req.method === 'HEAD' ? undefined : body);
