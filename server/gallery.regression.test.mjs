@@ -1,7 +1,7 @@
 // Socket-free adversarial cases: exercise the real request handler with mock upstreams.
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import net from 'node:net';
 import tls from 'node:tls';
 import path from 'node:path';
@@ -12,8 +12,8 @@ import { afterEach, mock, test } from 'node:test';
 import zlib from 'node:zlib';
 import vm from 'node:vm';
 import ts from 'typescript';
-import { gallery, networkOf, sendMail } from './gallery.mjs';
-import { checkCode, loadLooks } from '../scripts/looks.mjs';
+import { BODY_MAX, gallery, networkOf, sendMail } from './gallery.mjs';
+import { checkCode, describe, loadLooks } from '../scripts/looks.mjs';
 
 const tmp = mkdtempSync(path.resolve('.review-tests-'));
 const galleries = [];
@@ -395,7 +395,7 @@ test('trust boundaries reject foreign Origin, streamed oversize, arrays and spoo
   const g = await create({ trustedProxies: '10.0.0.1' });
   assert.equal((await post(g, look(), { origin: 'https://evil.example' })).status, 403);
   assert.equal((await post(g, '[1]', { route: '/check' })).status, 400);
-  assert.equal((await post(g, JSON.stringify({ code: 'x'.repeat(17000) }), { route: '/check' })).status, 413);
+  assert.equal((await post(g, JSON.stringify({ code: 'x'.repeat(BODY_MAX) }), { route: '/check' })).status, 413);
   const a = await post(g, look(), { ip: '192.0.2.20' });
   const b = await post(g, look(), { ip: '192.0.2.21' });
   assert.equal(a.status, 200);
@@ -540,4 +540,78 @@ test('v3 surface overrides reach both model evidence and the preview', async () 
   assert.equal(vars['--lp-surface-color'], '#ffffff');
   assert.equal(vars['--lp-opacity'], '100%');
   assert.equal(vars['--lp-shadow-color'], '#ff0000');
+});
+
+// ---- glaze2: Look parts ----------------------------------------------------------------------------------------------
+const hex84 = () => `${(0x2a7fd4 + ++seq * 4099).toString(16)}6fb6ff0a244004121f101a24070c12e9eef39aa7b466727f1b27332b3a4a34d399fbbf24f87171`;
+const code2 = (x, b, extra = {}) => `glaze2:${zlib.deflateRawSync(Buffer.from(JSON.stringify({ c: hex84(), ...(b && { b }), ...extra, x }))).toString('base64url')}`;
+const SHADER = 'vec4 scene(vec2 uv) { return vec4(mix(uC1, uC2, uv.x), amt(uv.y)); }';
+
+test('glaze1 Looks keep the identity and the description they had before Look parts existed', async () => {
+  // Fingerprints of curated Looks as the gallery computed them before glaze2 (the deployed database holds these).
+  for (const [id, fingerprint] of [['frost', 'a1u6VkSUHtCQlaM14b6d7CXTP2trJlXuV4goKaBZm04'], ['midnight', 'gQvAyY1WEuQaJBLs4_ni9cmy0Tfp56n99zW4xjGjstY'], ['graveyard', 'OohqTsStfm66oBQTuttV3nG94mY4LujImUgyuOhINYg']]) {
+    const r = await checkCode(JSON.parse(readFileSync(`src/data/looks/${id}.json`, 'utf8')).code);
+    assert.deepEqual(r.problems, []);
+    assert.equal(r.fingerprint, fingerprint, id);
+    assert.equal('parts' in describe(r.look), false);
+    assert.equal('live' in describe(r.look), false);
+  }
+  // A glaze1 code is still capped at 1,200 characters and 8 KiB, whatever glaze2 allows.
+  assert.ok((await checkCode(`glaze1:${'A'.repeat(1201)}`)).problems.length);
+  assert.ok((await checkCode(`${code()}`.replace('glaze1:', 'glaze3:'))).problems.length);
+});
+
+test('glaze2 inflation is bounded at 48 KiB before parsing', async () => {
+  const Native = globalThis.DecompressionStream;
+  let inflated = 0;
+  mock.method(globalThis, 'DecompressionStream', function (format) {
+    const stream = new Native(format);
+    return { writable: stream.writable, readable: stream.readable.pipeThrough(new TransformStream({ transform(chunk, c) { inflated += chunk.length; c.enqueue(chunk); } })) };
+  });
+  const bomb = `glaze2:${zlib.deflateRawSync(Buffer.from(JSON.stringify({ c: '0'.repeat(84), x: { cursor: { kind: 'trail' } } }) + ' '.repeat(5 * 1024 * 1024))).toString('base64url')}`;
+  assert.ok(bomb.length < 20000);
+  assert.ok((await checkCode(bomb)).problems.length);
+  assert.ok(inflated <= 48 * 1024 + 65536, `inflated ${inflated} bytes before refusal`);
+});
+
+test('a shader reaches the gallery only through Glaze\'s checker, and a refused one is no Look', async () => {
+  assert.deepEqual((await checkCode(code2({ bg: { shader: { src: SHADER } } }, { kind: 'shader' }))).problems, []);
+  // Each of these compiles somewhere, and each is refused by GZ_GLSL.check (lib/glsl.js) before the code is a Look.
+  for (const src of ['void main() {}', `#version 300 es\n${SHADER}`, `uniform float k;\n${SHADER}`, `${SHADER}\n// é`, `${SHADER}\n#pragma optimize(off)`, 'vec4 scene(vec2 uv) { for (int i = 0; i < 300; i++) {} return vec4(1.); }']) {
+    const r = await checkCode(code2({ bg: { shader: { src } } }, { kind: 'shader' }));
+    assert.equal(r.look, null, src);
+    assert.match(r.problems[0], /refuses the code/);
+  }
+});
+
+test('describe says what the parts are, with every color resolved and nothing from the code left raw', async () => {
+  const code = code2({ bg: { layers: [{ k: 'particles', shape: 'heart', c: ['accent', 'warn', '#00ff00'] }, { k: 'noise', blend: 'screen' }] }, nav: { links: [{ id: 'abcdefghijkl', n: 'Library', u: 'https://library.example.edu/a%20b', i: 'book' }], groups: [{ items: ['link:abcdefghijkl'] }] } }, { kind: 'layers', intensity: 60 });
+  const { look } = await checkCode(code);
+  const d = describe(look);
+  assert.equal(d.live.kind, 'layers');
+  assert.deepEqual(d.live.layers[0].c, [d.colors['--gz-accent'], d.colors['--gz-warn'], '#00ff00']);
+  assert.equal(d.live.layers[1].c, undefined, 'a layer that names no colors takes the background\'s');
+  assert.equal(d.live.ground, d.colors['--gz-surface-2']);
+  assert.ok(Math.abs(d.live.dim - 0.3) < 1e-9 && Math.abs(d.live.amount - 0.6) < 1e-9 && Math.abs(d.live.pace - 1.1) < 1e-9, 'Glaze\'s GZ_SCENE_LOOK for intensity 60');
+  assert.equal(d.live.layers[0].count, 60, 'a layer\'s absent keys are Glaze\'s defaults');
+  assert.equal(d.parts.nav.links[0].host, 'library.example.edu');
+  assert.deepEqual(d.partsText.links, [{ name: 'Library', url: 'https://library.example.edu/a%20b' }]);
+  assert.equal(d.animated, true);
+  // A static shader and a static stack are not "animated".
+  const still = describe((await checkCode(code2({ bg: { shader: { src: SHADER } } }, { kind: 'shader' }))).look);
+  assert.equal(still.animated, false);
+  assert.equal(describe((await checkCode(code2({ bg: { layers: [{ k: 'gradient', c: ['accent', 'ok'] }] } }, { kind: 'layers' }))).look).animated, false);
+});
+
+test('curated glaze2 entries are checked like any other, and an unused shader stops the build', async () => {
+  const dir = mkdtempSync(path.join(tmp, 'curated-'));
+  const entry = (name, code) => writeFileSync(path.join(dir, `${name}.json`), JSON.stringify({ name, author: 'sam', created: '2026-10-01', tags: [], code }));
+  entry('shady', code2({ bg: { shader: { src: SHADER } }, cursor: { kind: 'trail' } }, { kind: 'shader' }));
+  const ok = await loadLooks(dir, path.join(tmp, 'none'));
+  assert.deepEqual(ok.errors, []);
+  assert.equal(ok.looks[0].bg.kind, 'shader');
+  assert.equal(ok.looks[0].live.src, SHADER);
+  entry('unused', code2({ bg: { shader: { src: SHADER } } }, { kind: 'solid' }));
+  const bad = await loadLooks(dir, path.join(tmp, 'none'));
+  assert.ok(bad.errors.some((e) => /unused\.json.*shader background it doesn't use/.test(e)), JSON.stringify(bad.errors));
 });

@@ -5,7 +5,9 @@
 // server runs on community submissions. CI runs this file directly, which prints every problem and fails on any:
 //   node scripts/looks.mjs [entries dir] [previews dir]
 // Theme codes are read by Glaze's own code, pinned in vendor/glaze (scripts/vendor-glaze.sh), so a code
-// passes here exactly when that Glaze would take it whole.
+// passes here exactly when that Glaze would take it whole. That includes glaze2 codes (Look parts: shader and layer
+// backgrounds, animations, effects, a cursor effect, a nav layout, rules for school pages), which Glaze's decoder
+// cleans part by part; describe() says what they are for the cards, the live preview and both reviewers.
 import crypto from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -16,9 +18,16 @@ import { pathToFileURL } from 'node:url';
 const root = process.cwd();
 const glaze = createRequire(path.join(root, 'vendor/glaze/'));
 const SHARE = glaze('./lib/share.js');
-const { GZ_COLORS, GZ_SPEC, GZ_CONTRAST, GZ_BG_COLORS } = glaze('./defaults.js');
+const { GZ_COLORS, GZ_SPEC, GZ_CONTRAST, GZ_BG_COLORS, GZ_SCENE_LOOK } = glaze('./defaults.js');
 const COLOR = glaze('./lib/color.js');
 const FONTS = glaze('./lib/fonts.js');
+const XPARTS = glaze('./lib/lookparts.js');
+const GLSL = glaze('./lib/glsl.js');
+const MX = glaze('./lib/motionx.js');
+// lib/lookparts.js looks for the shader checker and the parts registry by their global names, as Glaze loads them on a
+// page; without them a shader would not be checked and rules would only be checked for their shape.
+globalThis.GZ_GLSL ??= GLSL;
+globalThis.GZ_PARTS ??= glaze('./lib/parts.js');
 // [CSS variable, what it's for] for the 14 palette roles, in Glaze's order.
 export const ROLES = GZ_COLORS.map(([v, label]) => [v, label]);
 export const GLAZE_VERSION = readFileSync(path.join(root, 'vendor/glaze/VERSION'), 'utf8').trim();
@@ -39,6 +48,8 @@ const OPTIONAL = ['previews'];
 const MODES = ['light', 'dark'];
 // Glaze takes codes up to 4,000 characters; a palette and a full Look are under 400.
 export const MAX_CODE = 1200;
+// A glaze2 code (Look parts) is up to 20,000 characters and 48 KiB of JSON in Glaze; the gallery takes all of that.
+export const MAX_CODE2 = SHARE.MAX_CODE2;
 const MAX_PREVIEW = 200 * 1024;
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+){0,7}$/;
 // GitHub's rules for a username.
@@ -86,9 +97,26 @@ const preview = async (file) => {
   return fits('width') && fits('height') ? '' : `is ${info.width}×${info.height}; previews are ${PREVIEW_SIZE.width.join('–')} wide and ${PREVIEW_SIZE.height.join('–')} tall`;
 };
 
+// A shader the way two copies of it agree: no comments, indentation or blank lines (comments are stripped at encode, but
+// a code made by hand may keep them, and a copy must not become a different Look by that).
+const shaderKey = (src) => src.replace(/\r\n?/g, '\n').replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, ' ').split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n');
+const sorted = (_, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) : v);
+// What makes a Look this Look, whatever its code looks like: everything Glaze decodes, in a fixed order. A glaze1 code has
+// no parts, and the decoder's `parts: null` is left out, so a glaze1 Look keeps the identity it had before parts existed.
+// Parts are part of the identity: the same colors with another shader are another Look.
+const identity = ({ parts, ...rest }) => {
+  if (!parts) return rest;
+  const x = parts.x?.bg?.shader ? { ...parts.x, bg: { ...parts.x.bg, shader: { src: shaderKey(parts.x.bg.shader.src) } } } : parts.x;
+  return { ...rest, parts: { ...parts, x } };
+};
+
 // One theme code: { problems, look } where look is what Glaze decodes it to (null when it refuses it).
 export async function checkCode(code) {
-  if (typeof code !== 'string' || !/^glaze1:[\w-]+$/.test(code) || code !== code.trim() || code.length > MAX_CODE) return { problems: [`the code must be a Glaze theme code of at most ${MAX_CODE} characters`], look: null };
+  // glaze1 as ever (1,200 characters here, Glaze takes 4,000); glaze2, which carries Look parts, up to Glaze's own limits.
+  const v2 = typeof code === 'string' && code.startsWith('glaze2:');
+  if (typeof code !== 'string' || !(v2 ? /^glaze2:[\w-]+$/ : /^glaze1:[\w-]+$/).test(code) || code !== code.trim() || code.length > (v2 ? MAX_CODE2 : MAX_CODE)) {
+    return { problems: [`the code must be a Glaze theme code of at most ${MAX_CODE} characters, or a glaze2: code (Look parts) of at most ${MAX_CODE2}`], look: null };
+  }
   let got;
   try { got = await SHARE.decode(code); } catch (err) { return { problems: [`Glaze ${GLAZE_VERSION} refuses the code: ${err.message}`], look: null }; }
   const problems = [];
@@ -97,9 +125,26 @@ export async function checkCode(code) {
   if (got.bg.image && !got.bg.image.startsWith('https:')) problems.push('a background image must be an https: address');
   // Pictures for the course menu or the course cards would load from other sites too, with no host shown here.
   if (got.nav.u || got.cards.some((c) => c.u)) problems.push('the code links pictures for the course menu or course cards; the gallery takes a background image only, so remove those pictures in Glaze and copy the code again');
-  const canonical = JSON.stringify(got, (_, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) : v);
-  return { problems, look: got, fingerprint: crypto.createHash('sha256').update(canonical).digest('base64url') };
+  if (v2) problems.push(...partsProblems(got));
+  return { problems, look: got, fingerprint: crypto.createHash('sha256').update(JSON.stringify(identity(got), sorted)).digest('base64url') };
 }
+
+// What a glaze2 code may not carry in the gallery, beyond what Glaze's decoder has already refused (a shader its checker
+// refuses, a rule it can't clean, any part that doesn't come back unchanged).
+const partsProblems = (got) => {
+  const out = [];
+  const x = got.parts?.x;
+  // Glaze writes glaze1 when a Look has no parts, so a glaze2 code without any is not one Glaze made.
+  if (!x && !got.parts?.m) out.push('a glaze2: code must carry Look parts; this one has none, so copy it again from Glaze (it should start with glaze1:)');
+  if (got.parts?.m) out.push("the code lists mods it works with; the gallery takes Look parts only for now, so remove the mods in Glaze and copy the code again");
+  // A shader or layers the background doesn't use would be weight no one sees, and nothing the reviewers could judge.
+  const kind = got.bg.kind;
+  if (x?.bg?.shader && kind !== 'shader') out.push("the code carries a shader background it doesn't use; set the background to the shader, or remove the shader, and copy the code again");
+  if (x?.bg?.layers && kind !== 'layers') out.push("the code carries background layers it doesn't use; set the background to layers, or remove them, and copy the code again");
+  if (kind === 'shader' && !x?.bg?.shader) out.push('the background is a shader, but the code has no shader');
+  if (kind === 'layers' && !x?.bg?.layers) out.push('the background is layers, but the code has no layers');
+  return out;
+};
 
 // A name, a community credit (when given) and tags, the tags checked against the decoded code. partial: check only
 // the fields given (the submit page's live check, as the student fills the form in).
@@ -123,25 +168,93 @@ export function checkMeta({ name, credit, tags }, got, { community = false, part
   return problems;
 }
 
-// A look group is more than a palette when it sets something other than the surface defaults Glaze 3 always decodes.
-const isLook = (got) => Object.keys(got.bg).length > 0
+// A look group is more than a palette when it sets something other than the surface defaults Glaze 3 always decodes,
+// or when it carries Look parts.
+const isLook = (got) => Object.keys(got.bg).length > 0 || !!got.parts?.x
   || Object.entries(got.look).some(([k, v]) => !/^(surface|shadow)/.test(k) || JSON.stringify(v) !== JSON.stringify(GZ_SPEC.look[k][0]));
 const d = (g, k, got) => got[g][k] ?? GZ_SPEC[g][k][0];
 const hostOf = (url) => { try { return new URL(url).hostname; } catch { return ''; } };
 
+// ---- Look parts ---------------------------------------------------------------------------------------------------------
+// What a glaze2 code's parts (x) come to, in three pieces. Every value came through Glaze's own cleaners (lib/lookparts.js),
+// so colors are palette tokens or #rrggbb, numbers are in range and words are from Glaze's lists.
+//   parts: a faithful, compact description, which the reviewers read and the cards' badges come from. No free text in it:
+//          names are Glaze's own (moments, events, kinds, part names), and a link is its host.
+//   text:  the free text the parts carry (group labels, link names and addresses, rule labels), which only the safety
+//          review reads: it is judged as the name and credit are, and the host of a link counts as advertising.
+//   live:  what the preview draws a shader or layers background with (the shader's source, the colors, how far they sit
+//          from the ground), already resolved to #rrggbb.
+const pick = (o, keys) => Object.fromEntries(keys.filter((k) => o[k] !== undefined).map((k) => [k, o[k]]));
+const spans = (stops, key) => { const v = stops.map((s) => s[key]).filter((n) => n !== undefined); return v.length ? [Math.min(...v), Math.max(...v)] : null; };
+const byKey = (o) => Object.fromEntries(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+const hash12 = (x) => crypto.createHash('sha256').update(x).digest('base64url').slice(0, 12);
+function describeParts(x, got, bgKind) {
+  const ink = (c) => (c[0] === '#' ? c : got.colors[`--gz-${c}`]);
+  const out = {}, text = {};
+  let live = null, animated = false;
+  if (bgKind === 'shader' && x.bg?.shader) {
+    const src = x.bg.shader.src;
+    out.background = { kind: 'shader', bytes: src.length, lines: src.split('\n').length, estimatedCost: GLSL.estimate(src), costLimit: GLSL.COST_LIMIT, key: hash12(shaderKey(src)) };
+    animated = /\buTime\b/.test(src);
+    live = { kind: 'shader', src };
+  } else if (bgKind === 'layers' && x.bg?.layers) {
+    const layers = x.bg.layers.map((l) => ({ ...XPARTS.DEFAULTS.layer[l.k], ...l, ...(l.c && { c: l.c.map(ink) }) }));
+    out.background = { kind: 'layers', layers, key: hash12(JSON.stringify(layers.map(({ c, ...rest }) => rest))) };
+    animated = layers.some((l) => l.k !== 'gradient' && l.speed > 0);
+    live = { kind: 'layers', layers };
+  }
+  if (live) {
+    const t = GZ_SCENE_LOOK(d('bg', 'intensity', got));
+    // The ground and the three colors a scene is drawn with, and how far they sit from it, as Glaze's content.js hands them to lib/scene.js.
+    Object.assign(live, { ground: got.colors['--gz-surface-2'], colors: GZ_BG_COLORS(d('bg', 'colors', got), got.colors), dim: t.dim, amount: t.amount, pace: t.pace });
+  }
+  if (x.anim) {
+    out.animations = MX.MOMENTS.filter((m) => x.anim[m]).map((m) => {
+      const a = x.anim[m];
+      const ranges = Object.fromEntries(Object.keys(MX.RANGE).map((k) => [k, spans(a.s, k)]).filter(([, r]) => r));
+      return { moment: m, stops: a.s.length, ...pick(a, ['ms', 'delay', 'stagger']), ranges };
+    });
+  }
+  if (x.fx) out.effects = MX.EVENTS.filter((e) => x.fx[e]).map((e) => ({ event: e, ...pick(x.fx[e], ['kind', 'count', 'life', 'size']) }));
+  if (x.cursor) out.cursor = pick(x.cursor, ['kind', 'size', 'len', 'fade']);
+  if (x.nav) {
+    const n = x.nav;
+    const host = Object.fromEntries((n.links || []).map((l) => [`link:${l.id}`, `link:${hostOf(l.u)}`]));
+    out.nav = {
+      ...(n.place && { place: n.place }),
+      ...(n.groups && { groups: n.groups.map((g) => ({ labelled: !!g.label, items: g.items.map((id) => host[id] || id) })) }),
+      ...(n.hidden && { hidden: n.hidden }),
+      ...(n.links && { links: n.links.map((l) => ({ host: hostOf(l.u), icon: l.i })) }),
+      ...(n.icons && { icons: Object.keys(n.icons).length }),
+    };
+    const groups = (n.groups || []).map((g) => g.label).filter(Boolean);
+    if (groups.length) text.groups = groups;
+    if (n.links?.length) text.links = n.links.map((l) => ({ name: l.n, url: l.u }));
+  }
+  if (x.rules) {
+    const count = (key) => byKey(x.rules.reduce((o, r) => ({ ...o, [r[key]]: (o[r[key]] || 0) + 1 }), {}));
+    out.rules = { count: x.rules.length, byAction: count('do'), byPart: count('p') };
+    const labels = x.rules.filter((r) => r.t).map((r) => ({ part: r.p, text: r.t }));
+    if (labels.length) text.labels = labels;
+  }
+  return { parts: out, text: Object.keys(text).length ? text : null, live, animated };
+}
+
 // Everything a card and a live preview need from a decoded code. Every value came through GZ_SANITIZE: colors
 // are #rrggbb, numbers are in Glaze's ranges, words are from its fixed lists. A palette keeps the wearer's own
-// fonts, shape and background, so those are Glaze's defaults here, and font is null.
+// fonts, shape and background, so those are Glaze's defaults here, and font is null. A glaze2 code's parts come with
+// it (describeParts): `parts` and `live` for a code that has them, `partsText` when they carry free text.
 export function describe(got) {
   const kind = isLook(got) ? 'look' : 'palette';
   const L = (k) => d('look', k, got);
   const B = (k) => d('bg', k, got);
   const text = kind === 'look' ? font(L('font')) : null;
   const bgKind = kind === 'look' ? B('kind') : 'solid';
+  const more = got.parts?.x ? describeParts(got.parts.x, got, bgKind) : null;
   return {
     kind,
     mode: COLOR.brightness(COLOR.parse(got.colors['--gz-surface'])) < 0.5 ? 'dark' : 'light',
-    animated: ['scene', 'aurora'].includes(bgKind),
+    animated: ['scene', 'aurora'].includes(bgKind) || !!more?.animated,
     colors: Object.fromEntries(GZ_COLORS.map(([v]) => [v, got.colors[v]])),
     chips: ['--gz-surface-2', '--gz-surface', '--gz-accent', '--gz-accent-hi', '--gz-ink-muted', '--gz-ink'].map((v) => got.colors[v]),
     font: text,
@@ -157,6 +270,7 @@ export function describe(got) {
       image: bgKind === 'image' ? B('image') : '', imageHost: bgKind === 'image' ? hostOf(B('image')) : '',
     },
     contrast: GZ_CONTRAST(got.colors).map(({ label, min, ratio, pass }) => ({ label, min, ratio: Math.round(ratio * 100) / 100, pass })),
+    ...(more && { parts: more.parts, ...(more.live && { live: more.live }), ...(more.text && { partsText: more.text }) }),
   };
 }
 
@@ -174,16 +288,22 @@ const mean = (xs) => xs.reduce((s, x) => s + x, 0) / xs.length;
 // How far apart two described Looks are: the mean perceptual color difference over the 14 palette roles (OKLab x100,
 // so ~1 is a just-noticeable step), plus 10 for a different text font (5 if it's the same kind of font), plus 10 for
 // a different background kind (5 for a different scene or gradient style, else half the background colors' mean
-// difference). 0 is the same Look. For scale: Glaze's own dark palettes Frost and Midnight (cyan and violet accents
+// difference), plus 3 for each other kind of part that differs. 0 is the same Look. For scale: Glaze's own dark palettes Frost and Midnight (cyan and violet accents
 // on near-black) are 4.6 apart, as palettes; a Look and the palette it's built on are about 20 apart. It ranks
 // neighbours for the review; it decides nothing itself.
 export function distance(a, b) {
   const colors = mean(GZ_COLORS.map(([v]) => delta(a.colors[v], b.colors[v])));
   const fontGap = a.font?.id === b.font?.id ? 0 : a.font?.family === b.font?.family ? 5 : 10;
-  const bgGap = a.bg.kind !== b.bg.kind ? 10
+  // A shader or a layer stack is a background of its own: another one is as different as another kind of background, and
+  // the same one with other colors is only a recolor (half the background colors' difference, as for a gradient).
+  const custom = ['shader', 'layers'].includes(a.bg.kind);
+  const bgGap = a.bg.kind !== b.bg.kind || (custom && a.parts?.background?.key !== b.parts?.background?.key) ? 10
     : (a.bg.kind === 'scene' && a.bg.scene !== b.bg.scene) || (a.bg.kind === 'gradient' && a.bg.style !== b.bg.style) ? 5
       : a.bg.kind === 'solid' ? 0 : mean(a.bg.colors.map((c, i) => delta(c, b.bg.colors[i]))) / 2;
-  return Math.round((colors + fontGap + bgGap) * 10) / 10;
+  // Each other part that differs (animations, effects, the cursor, the nav layout, the rules) adds 3. Looks without parts
+  // have none, so two of them are as far apart as ever.
+  const partsGap = ['animations', 'effects', 'cursor', 'nav', 'rules'].filter((k) => JSON.stringify(a.parts?.[k]) !== JSON.stringify(b.parts?.[k])).length * 3;
+  return Math.round((colors + fontGap + bgGap + partsGap) * 10) / 10;
 }
 
 // The `n` nearest of `looks` (each with a .described) to a described Look.
