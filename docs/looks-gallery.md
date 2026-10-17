@@ -45,7 +45,8 @@ JSON except background-file responses, `X-Content-Type-Options: nosniff`, no COR
 20,000 characters with a 40-character name and a 32-character credit written as `\uXXXX` escapes, six tags and
 the licence is 21,012 bytes; the tests build it and hold both numbers to it. It was 16 KB for glaze1. `submit`
 alone takes up to 16,406 KiB (`SUBMIT_MAX`, and its own nginx location), for a Look's background file as base64
-(below). The shared body reader reserves each route's maximum until its whole handler finishes (including review);
+(below). The shared body reader reserves a valid positive Content-Length, or the route's maximum for an unknown-length
+body, until its whole handler finishes (including review);
 all in-flight uploads together reserve at most twice `SUBMIT_MAX` (about 32 MiB before decoded copies). A full budget
 answers 503 and closes that upload connection after sending the response, without using the daily quota.
 

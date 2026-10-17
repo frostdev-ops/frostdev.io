@@ -692,14 +692,18 @@ export function gallery({
   let inFlight = 0;
   const bodyReservations = new WeakMap();
   const readBody = (req, max) => new Promise((resolve, reject) => {
-    if (Number(req.headers['content-length']) > max) return reject(fail(413, 'That is too big.'));
-    if (inFlight + max > 2 * SUBMIT_MAX) return reject(Object.assign(fail(503, 'Uploads are busy right now; nothing was used up. Try again later.'), { close: true }));
-    inFlight += max;
-    bodyReservations.set(req, max);
+    const length = Number(req.headers['content-length']);
+    if (length > max) return reject(fail(413, 'That is too big.'));
+    // Node's HTTP parser enforces Content-Length; unknown-length bodies reserve the route cap.
+    const reserved = Number.isSafeInteger(length) && length > 0 ? length : max;
+    if (inFlight + reserved > 2 * SUBMIT_MAX) return reject(Object.assign(fail(503, 'Uploads are busy right now; nothing was used up. Try again later.'), { close: true }));
+    inFlight += reserved;
+    bodyReservations.set(req, reserved);
     const parts = [];
     let size = 0;
     req.on('data', (d) => { size += d.length; if (size > max) { req.pause(); reject(fail(413, 'That is too big.')); } else parts.push(d); });
     req.on('end', () => resolve(Buffer.concat(parts)));
+    req.on('aborted', () => reject(fail(400, 'Upload interrupted.')));
     req.on('error', reject);
   });
   const readJson = async (req, max = BODY_MAX) => {

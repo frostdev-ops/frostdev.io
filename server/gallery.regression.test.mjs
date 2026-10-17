@@ -12,7 +12,7 @@ import { afterEach, mock, test } from 'node:test';
 import zlib from 'node:zlib';
 import vm from 'node:vm';
 import ts from 'typescript';
-import { BODY_MAX, gallery, networkOf, sendMail } from './gallery.mjs';
+import { BODY_MAX, SUBMIT_MAX, gallery, networkOf, sendMail } from './gallery.mjs';
 import { checkCode, describe, loadLooks } from '../scripts/looks.mjs';
 
 const tmp = mkdtempSync(path.resolve('.review-tests-'));
@@ -32,10 +32,10 @@ const create = async (options = {}) => {
   await g.ready;
   return g;
 };
-const post = (g, body, { ip = '192.0.2.1', cookie = '', type = 'application/json', method = 'POST', route = '/submit', origin = 'https://frostdev.io', peer = '127.0.0.1' } = {}) => new Promise((resolve, reject) => {
+const post = (g, body, { ip = '192.0.2.1', cookie = '', type = 'application/json', method = 'POST', route = '/submit', origin = 'https://frostdev.io', peer = '127.0.0.1', length } = {}) => new Promise((resolve, reject) => {
   const raw = typeof body === 'string' ? body : JSON.stringify(body);
   const req = Readable.from([Buffer.from(raw)]);
-  Object.assign(req, { method, url: `/glaze/looks/api${route}`, headers: { origin, 'content-type': type, 'x-real-ip': ip, cookie }, socket: { remoteAddress: peer, destroy() {} } });
+  Object.assign(req, { method, url: `/glaze/looks/api${route}`, headers: { origin, 'content-type': type, 'x-real-ip': ip, cookie, ...(length === undefined ? {} : { 'content-length': String(length) }) }, socket: { remoteAddress: peer, destroy() {} } });
   const chunks = [];
   const res = new Writable({ write(chunk, enc, cb) { chunks.push(chunk); cb(); } });
   res.writeHead = (status, headers) => { res.statusCode = status; res.headers = headers; res.headersSent = true; };
@@ -883,13 +883,13 @@ test('concurrent large bodies are refused before reading and disconnected upload
   const g = await create();
   const hold = (url = '/glaze/looks/api/submit', type = 'application/json') => {
     const req = new Readable({ read() {} });
-    Object.assign(req, { method: 'POST', url, headers: { origin: 'https://frostdev.io', 'content-type': type }, socket: { remoteAddress: '127.0.0.1', destroy() {} } });
+    Object.assign(req, { method: 'POST', url, headers: { origin: 'https://frostdev.io', 'content-type': type, 'content-length': String(type === 'application/json' ? SUBMIT_MAX : 1) }, socket: { remoteAddress: '127.0.0.1', destroy() {} } });
     const res = new Writable({ write(chunk, enc, cb) { cb(); } });
     res.writeHead = (status) => { res.statusCode = status; res.headersSent = true; };
     const done = new Promise((resolve) => res.on('finish', () => resolve(res.statusCode)));
     g.server.emit('request', req, res);
     req.push('{');
-    return { req, done };
+    return { req, res, done };
   };
   const a = hold(), b = hold();
   try {
@@ -901,7 +901,10 @@ test('concurrent large bodies are refused before reading and disconnected upload
     mod.req.destroy();
     assert.equal((await post(g, {}, { route: '/unknown' })).status, 404);
     assert.equal((await post(g, {}, { route: '/looks', method: 'HEAD' })).status, 404);
-    a.req.destroy(new Error('test disconnect'));
+    a.req.emit('aborted');
+    await new Promise(setImmediate);
+    assert.equal(a.res.writableFinished, true, 'an aborted body settles without waiting for another error event');
+    a.req.destroy();
     await a.done;
     assert.equal((await post(g, { code: 'invalid' })).status, 422, 'a disconnect releases capacity');
     assert.equal((await post(g, { code: 'invalid' }, { route: '/check' })).status, 200);
@@ -914,6 +917,8 @@ test('concurrent large bodies are refused before reading and disconnected upload
 
 test('the body reservation lasts through model waits and releases after the handler finishes', async () => {
   const g = await create();
+  const requests = [];
+  g.server.on('request', (req) => requests.push(req));
   const waiting = [];
   mock.method(globalThis, 'fetch', async (url, options) => new Promise((resolve) => waiting.push(() => resolve(new Response(JSON.stringify(answer(options)))))));
   const a = post(g, look(), { ip: '192.0.2.11' });
@@ -921,7 +926,8 @@ test('the body reservation lasts through model waits and releases after the hand
   try {
     for (let i = 0; i < 100 && waiting.length < 4; i++) await new Promise(setImmediate);
     assert.equal(waiting.length, 4);
-    assert.equal((await post(g, { code: 'invalid' })).status, 503, 'finished bodies awaiting review still hold capacity');
+    requests[0].emit('aborted');
+    assert.equal((await post(g, { code: 'invalid' })).status, 503, 'a post-upload disconnect must not release data still retained by review');
   } finally {
     for (const resolve of waiting) resolve();
     await Promise.all([a, b]);
@@ -946,5 +952,23 @@ test('the Look submit page refuses oversized files before reading them into base
     await ui.get('submit-form').events.submit({ preventDefault() {} });
     assert.equal(ui.get('f-media').attrs['aria-invalid'], 'true', type);
     assert.equal(calls, 1, 'the file is refused before another request or FileReader allocation');
+  }
+});
+
+
+test('small known body lengths leave capacity for checks while reviews wait', async () => {
+  const g = await create();
+  const waiting = [];
+  mock.method(globalThis, 'fetch', async (url, options) => new Promise((resolve) => waiting.push(() => resolve(new Response(JSON.stringify(answer(options)))))));
+  const first = look(), second = look();
+  const a = post(g, first, { ip: '192.0.2.21', length: Buffer.byteLength(JSON.stringify(first)) });
+  const b = post(g, second, { ip: '192.0.2.22', length: Buffer.byteLength(JSON.stringify(second)) });
+  try {
+    for (let i = 0; i < 100 && waiting.length < 4; i++) await new Promise(setImmediate);
+    assert.equal(waiting.length, 4);
+    assert.equal((await post(g, { code: 'invalid' }, { route: '/check' })).status, 200);
+  } finally {
+    for (const resolve of waiting) resolve();
+    await Promise.all([a, b]);
   }
 });
