@@ -817,7 +817,7 @@ export function gallery({
         '', 'Overview (the reviewer\'s):', wrap(r.overview || '(none)'),
         '', 'What the code does and where data goes (the reviewer\'s summary):', wrap(r.summary || '(none)'),
         '', 'The reviewer recommends:', wrap(r.recommendation || '(none)'),
-        '', `Its decision (${r.model}${r.provider ? ` via ${r.provider}` : ''}): ${r.decision}. ${r.reason || ''}`,
+        '', `Its decision (${r.model}${r.provider ? ` via ${r.provider}` : ''}): ${r.decision}. ${r.reason || ''}${r.error ? ` (${r.error})` : ''}`,
         ...(r.rationale ? ['', 'Its rationale:', wrap(r.rationale)] : []),
         ...(r.reasoning ? ['', `Its reasoning (summary, ${r.reasoningTokens ?? '?'} reasoning tokens):`, wrap(r.reasoning)] : []),
         '', `Name:     ${row.name}`, `Version:  ${row.version}`, `Author:   ${row.credit} (key ${row.key})`, `Id:       ${row.id}`, `Hash:     ${row.hash}`,
@@ -1019,7 +1019,8 @@ export function gallery({
   // ---- the review queue: the queued rows, oldest first, one at a time, in this process. A restart picks up where it
   // stopped, since a row stays queued until its review is stored. ------------------------------------------------------
   const stopping = new AbortController();
-  const failedReview = (why) => ({ decision: 'human', reason: `The reviewer ${why}, so a person will decide.`, failed: true, model: escalationModel });
+  // error: what went wrong, for the maintainer (our own message: an HTTP status, a timeout, "invalid").
+  const failedReview = (why, error = '') => ({ decision: 'human', reason: `The reviewer ${why}, so a person will decide.`, failed: true, model: escalationModel, ...(error && { error: String(error).slice(0, 200) }) });
   const reviewMod = async (row) => {
     q.modTry.run(row.hash);
     let review;
@@ -1042,7 +1043,7 @@ export function gallery({
         } catch (e) {
           // The server is closing: the row stays queued for the next start, and this try doesn't count.
           if (stopping.signal.aborted) { q.modUntry.run(row.hash); return; }
-          review = failedReview(e.message === 'invalid' || e instanceof SyntaxError ? 'answered something other than a review' : 'did not answer');
+          review = failedReview(e.message === 'invalid' || e instanceof SyntaxError ? 'answered something other than a review' : 'did not answer', `${e.name}: ${e.message}`);
         }
       }
     }
@@ -1296,6 +1297,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
         'Permissions:', ...r.permissions.map((p) => `  ${p.id}: ${JSON.stringify(p.why)}`), ...(r.summary.warnings || []),
         `Adds: ${r.summary.adds.join('; ') || 'nothing listed'}`,
         'Files:', ...r.summary.files.map((f) => `  ${f.path}  ${f.bytes} bytes${f.lines ? `, ${f.lines} lines, the longest ${f.longestLine}` : ''}${f.hidden ? `, ${f.hidden} hidden characters` : ''}`),
+        ...(v.error ? [`Review error: ${v.error}`] : []),
         ...(v.decision ? [`Review (${v.model}${v.provider ? ` via ${v.provider}` : ''}, ${v.reasoningTokens ?? '?'} reasoning tokens${typeof v.cost === 'number' ? `, $${v.cost}` : ''}): ${v.decision}`, `Reason: ${v.reason}`] : ['Not reviewed yet.']),
         ...['overview', 'summary', 'recommendation', 'rationale'].filter((k) => v[k]).map((k) => `${k[0].toUpperCase()}${k.slice(1)}: ${v[k]}`),
         ...(v.reasoning ? [`Reasoning summary:\n${v.reasoning}`] : []), '',

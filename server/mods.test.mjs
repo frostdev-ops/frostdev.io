@@ -429,6 +429,7 @@ test('an invalid answer, an error or no key goes to a person', async () => {
     assert.equal(r.row.status, 'pending', what);
     const d = JSON.parse(r.row.decision);
     assert.equal(d.review.failed, true, what);
+    assert.match(d.review.error, /^\w*Error: /, what);
     await waitFor(() => mails.length === 1);
     await g.close();
     g = null;
