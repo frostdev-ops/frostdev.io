@@ -753,3 +753,50 @@ test('the public gallery omits review-only parts text and retains live preview d
   assert.equal(published.live.src, SHADER);
   assert.equal(g.show(result.body.id).partsText.labels.length, 40);
 });
+
+for (const status of ['published', 'pending', 'removed']) test(`startup refreshes stored glaze2 identity and description for a ${status} Look`, async () => {
+  mock.method(globalThis, 'fetch', async (url, options) => new Response(JSON.stringify(String(url).endsWith('/decisions') ? answer(options) : chat({ decision: 'accept', reason: 'Readable and distinct.' }))));
+  const db = path.join(tmp, `v2-migration-${status}-${++seq}.db`);
+  const g = await create({ db });
+  const sub = look({ code: code2({ bg: { shader: { src: SHADER } }, rules: [{ p: 'canvas.dashboard-card.title', do: 'label', t: 'My courses' }] }, { kind: 'shader' }, { c: '2a7fd46fb6ff0a244004121f101a24070c12e9eef39aa7b466727f1b27332b3a4a34d399fbbf24f87171' }) });
+  const r = await post(g, sub);
+  assert.equal(r.body.outcome, 'published');
+  const v1 = await post(g, look(), { ip: '192.0.2.2' });
+  assert.equal(v1.body.outcome, 'published');
+  const preserved = g.db.prepare('SELECT fingerprint, described FROM looks WHERE id = ?').get(v1.body.id);
+  const checked = await checkCode(sub.code);
+  const expected = describe(checked.look);
+  const old = structuredClone(expected);
+  delete old.parts.rules.items;
+  // These are the values the previous shader normalizer produced for this fixed fixture.
+  old.parts.background.key = 'g47ZCkT9mSpV';
+  const previousFingerprint = 'X9maoc9bLaKCTj6n9nxGFzQNXtwVn953iVJsP3dTl00';
+  assert.notEqual(previousFingerprint, checked.fingerprint);
+  await g.close();
+  galleries.splice(galleries.indexOf(g), 1);
+  const previous = new DatabaseSync(db);
+  previous.prepare('UPDATE looks SET status = ?, fingerprint = ?, described = ? WHERE id = ?').run(status, previousFingerprint, JSON.stringify(old), r.body.id);
+  previous.close();
+  const reopened = await create({ db });
+  const alias = await post(reopened, { name: 'Renamed shader', code: sub.code }, { route: '/check' });
+  assert.ok(alias.body.problems.some((p) => /exact code/.test(p)), JSON.stringify(alias.body.problems));
+  const refreshed = reopened.db.prepare('SELECT fingerprint, described FROM looks WHERE id = ?').get(r.body.id);
+  assert.equal(refreshed.fingerprint, checked.fingerprint);
+  assert.deepEqual(JSON.parse(refreshed.described), expected);
+  assert.deepEqual(reopened.db.prepare('SELECT fingerprint, described FROM looks WHERE id = ?').get(v1.body.id), preserved);
+});
+
+for (const [code, fingerprint] of [['glaze1:invalid', ''], ['glaze2:invalid', 'previous-fingerprint']]) test(`startup rejects an invalid stored ${code.slice(0, 6)} code`, async () => {
+  mock.method(globalThis, 'fetch', async (url, options) => new Response(JSON.stringify(answer(options))));
+  const db = path.join(tmp, `invalid-migration-${++seq}.db`);
+  const g = await create({ db });
+  const r = await post(g, look());
+  await g.close();
+  galleries.splice(galleries.indexOf(g), 1);
+  const previous = new DatabaseSync(db);
+  previous.prepare('UPDATE looks SET code = ?, fingerprint = ? WHERE id = ?').run(code, fingerprint, r.body.id);
+  previous.close();
+  const reopened = gallery({ db });
+  galleries.push(reopened);
+  await assert.rejects(reopened.ready, /an existing Look has an invalid code/);
+});

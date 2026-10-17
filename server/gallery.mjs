@@ -314,6 +314,7 @@ export function gallery({
     release: 'DELETE FROM reviewing WHERE id = ?',
     expiredReviews: 'DELETE FROM reviewing WHERE expires <= ?',
     setFingerprint: 'UPDATE looks SET fingerprint = ? WHERE id = ?',
+    refreshLook: 'UPDATE looks SET fingerprint = ?, described = ? WHERE id = ?',
     byId: 'SELECT * FROM looks WHERE id = ?',
     byToken: 'SELECT * FROM looks WHERE token = ?',
     insert: 'INSERT INTO looks (id, name, credit, created, tags, code, fingerprint, described, status, decision, reason, token, unmailed, decided) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -362,10 +363,12 @@ export function gallery({
       const { look, fingerprint } = await L.checkCode(e.code);
       if (look) curated.push({ id: f.slice(0, -5), name: e.name, code: e.code, fingerprint, source: 'curated', described: L.describe(look) });
     }
-    for (const row of q.blocking.all()) if (!row.fingerprint) {
-      const { problems, fingerprint } = await L.checkCode(row.code);
+    // glaze2's shader identity and review description may change with its checker.
+    for (const row of q.blocking.all()) if (!row.fingerprint || row.code.startsWith('glaze2:')) {
+      const { problems, look, fingerprint } = await L.checkCode(row.code);
       if (problems.length) throw new Error('an existing Look has an invalid code');
-      q.setFingerprint.run(fingerprint, row.id);
+      if (row.code.startsWith('glaze2:')) q.refreshLook.run(fingerprint, JSON.stringify(L.describe(look)), row.id);
+      else q.setFingerprint.run(fingerprint, row.id);
     }
   })();
   const community = () => q.published.all().map((r) => ({ id: r.id, name: r.name, code: r.code, source: 'community', described: JSON.parse(r.described) }));
