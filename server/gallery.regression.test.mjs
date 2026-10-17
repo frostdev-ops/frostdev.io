@@ -301,7 +301,7 @@ test('CLI decisions cannot overwrite a concurrent takedown', async () => {
 });
 
 // A small DOM harness for the submit script's async ordering; no rendering or browser process.
-const submitPage = (fetch) => {
+const submitPage = (fetch, section = 'looks') => {
   class Element {
     constructor(tag = 'div') { this.tagName = tag; this.value = ''; this.checked = false; this.hidden = false; this.children = []; this.events = {}; this.attrs = {}; this.dataset = {}; this.style = { setProperty() {} }; }
     addEventListener(type, cb) { this.events[type] = cb; }
@@ -319,7 +319,7 @@ const submitPage = (fetch) => {
   const preview = new Element('button');
   let timer;
   const doc = { getElementById: get, createElement: (tag) => new Element(tag), querySelector: () => preview };
-  const source = readFileSync('src/pages/glaze/looks/submit.astro', 'utf8').split('<script>')[1].split('</script>')[0].replace(/import .*? from .*?;/s, '');
+  const source = readFileSync(`src/pages/glaze/${section}/submit.astro`, 'utf8').split('<script>')[1].split('</script>')[0].replace(/import .*? from .*?;/s, '');
   const js = ts.transpile(source, { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None });
   vm.runInNewContext(js, {
     document: doc, location: { hash: '', origin: 'https://frostdev.io' }, URLSearchParams,
@@ -357,6 +357,47 @@ test('live-check errors announce themselves and credit errors focus credit', asy
   await ui.get('submit-form').events.submit({ preventDefault() {} });
   assert.equal(ui.get('f-credit').attrs['aria-invalid'], 'true');
   assert.equal(ui.get('f-code').attrs['aria-invalid'], undefined);
+});
+
+test('the mod submit page keeps the latest file when older checks finish later', async () => {
+  const checks = [];
+  let uploaded;
+  const ui = submitPage((url, options) => {
+    if (url.endsWith('/check')) return new Promise((resolve) => checks.push(resolve));
+    uploaded = options.body;
+    return Promise.resolve(new Response(JSON.stringify({ problems: ['test refusal'] }), { status: 422 }));
+  }, 'mods');
+  const choose = (data) => {
+    ui.get('f-file').files = [{ size: data.byteLength, arrayBuffer: async () => data }];
+    return ui.get('f-file').events.change();
+  };
+  const a = new Uint8Array([1]).buffer, b = new Uint8Array([2]).buffer;
+  const old = choose(a);
+  await new Promise(setImmediate);
+  const latest = choose(b);
+  await new Promise(setImmediate);
+  const checked = (name) => new Response(JSON.stringify({ problems: [], mod: { name, id: 'a'.repeat(16), hash: 'b'.repeat(43) } }));
+  checks[1](checked('Latest file'));
+  await latest;
+  checks[0](checked('Old file'));
+  await old;
+  assert.equal(ui.get('m-name').textContent, 'Latest file');
+  ui.get('f-code').checked = ui.get('f-art').checked = true;
+  await ui.get('submit-form').events.submit({ preventDefault() {} });
+  assert.equal(uploaded, b, 'the selected file must be the file submitted');
+});
+
+test('clearing the mod file invalidates an outstanding check', async () => {
+  let answer;
+  const ui = submitPage(() => new Promise((resolve) => { answer = resolve; }), 'mods');
+  ui.get('f-file').files = [{ size: 1, arrayBuffer: async () => new ArrayBuffer(1) }];
+  const pending = ui.get('f-file').events.change();
+  await new Promise(setImmediate);
+  ui.get('f-file').files = [];
+  await ui.get('f-file').events.change();
+  answer(new Response(JSON.stringify({ problems: [], mod: null })));
+  await pending;
+  assert.equal(ui.get('f-submit').disabled, true);
 });
 
 test('submit form cannot leak fields through a default GET before scripts initialize', () => {

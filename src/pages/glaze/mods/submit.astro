@@ -122,19 +122,24 @@ const guide = 'https://github.com/frostdev-ops/frostdev.io/blob/main/docs/looks-
 
   let bytes: ArrayBuffer | null = null;
   let ok = false;
+  let choice = 0;
   const ready = () => { button.disabled = !(bytes && ok); };
   file.addEventListener('change', async () => {
+    const chosen = ++choice;
     bytes = null; ok = false; ready(); show(null); problems([]);
     $('check-status').textContent = '';
     const f = file.files?.[0];
     if (!f) return;
     if (f.size > MAX) { problems(['that file is bigger than a mod can be (2 MiB of files)']); return; }
     const data = await f.arrayBuffer();
+    if (chosen !== choice) return;
     $('check-status').textContent = 'Checking…';
     let r: Response;
-    try { r = await fetch(`${API}/check`, { method: 'POST', headers: { 'content-type': 'application/zip' }, body: data }); } catch { $('check-status').textContent = ''; closed(); return; }
+    try { r = await fetch(`${API}/check`, { method: 'POST', headers: { 'content-type': 'application/zip' }, body: data }); } catch { if (chosen === choice) { $('check-status').textContent = ''; closed(); } return; }
+    if (chosen !== choice) return;
     if (r.status === 429) { $('check-status').textContent = 'Slow down a little, then choose the file again.'; return; }
     const body = await r.json().catch(() => null);
+    if (chosen !== choice) return;
     if (!r.ok || !body) { $('check-status').textContent = ''; if (r.status === 413) problems(['that file is bigger than a mod can be (2 MiB of files)']); else closed(); return; }
     const list = Array.isArray(body.problems) ? body.problems.map(String) : [];
     problems(list);
