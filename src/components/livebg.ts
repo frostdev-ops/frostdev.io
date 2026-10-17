@@ -79,7 +79,7 @@ const MAX_PIXELS = 640;
 const FPS = 30;
 
 type Stop = () => void;
-type Ctx = { still: boolean; fail: () => void };
+type Ctx = { still: boolean; current: () => boolean; fail: () => void };
 
 function canvasIn(el: HTMLElement) {
   const host = el.querySelector<HTMLElement>('.lp-bg');
@@ -91,8 +91,9 @@ function canvasIn(el: HTMLElement) {
   return canvas;
 }
 
-async function runShader(el: HTMLElement, spec: Extract<Live, { kind: 'shader' }>, { still, fail }: Ctx): Promise<Stop> {
+async function runShader(el: HTMLElement, spec: Extract<Live, { kind: 'shader' }>, { still, current, fail }: Ctx): Promise<Stop> {
   const G = await loadGlsl();
+  if (!current()) return () => {};
   // The shader has been through Glaze's checker twice already (the code's decoder, the server); a third time before any GL.
   if (!G || !G.check(spec.src).ok) throw new Error('refused');
   const canvas = canvasIn(el);
@@ -181,9 +182,10 @@ async function runShader(el: HTMLElement, spec: Extract<Live, { kind: 'shader' }
   } catch (e) { lose(); throw e; }
 }
 
-async function runLayers(el: HTMLElement, spec: Extract<Live, { kind: 'layers' }>, { still, fail }: Ctx): Promise<Stop> {
+async function runLayers(el: HTMLElement, spec: Extract<Live, { kind: 'layers' }>, { still, current, fail }: Ctx): Promise<Stop> {
   // Glaze's own engine and its three.js build, as a chunk of their own: fetched when the first Look with layers is on screen.
   const engine = await import('../../vendor/glaze-scene/lib/scene.js');
+  if (!current()) return () => {};
   const canvas = canvasIn(el);
   let scene: { update(o: unknown): void; stop(): void } | null = null;
   try {
@@ -214,6 +216,7 @@ const release = (s: Session) => {
   if (was) active--;
 };
 const pump = () => {
+  if (document.hidden) return;
   for (const s of sessions.values()) {
     if (active >= MAX_LIVE) return;
     if (s.visible && !s.busy && !s.failed) begin(s);
@@ -223,7 +226,8 @@ function begin(s: Session) {
   s.busy = true;
   active++;
   const token = ++s.token;
-  const ctx: Ctx = { still: !!motion?.matches, fail: () => { s.failed = true; release(s); pump(); } };
+  const current = () => s.token === token;
+  const ctx: Ctx = { still: !!motion?.matches, current, fail: () => { if (current()) { s.failed = true; release(s); pump(); } } };
   (s.spec.kind === 'shader' ? runShader(s.el, s.spec, ctx) : runLayers(s.el, s.spec, ctx)).then((stop) => {
     // Gone off screen (or replaced) while it was loading.
     if (s.token !== token) { stop(); return; }
@@ -244,6 +248,10 @@ const observer = typeof IntersectionObserver === 'function'
   : null;
 // A change of the system's motion setting starts what is drawing over, as a still frame or moving.
 motion?.addEventListener('change', () => { for (const s of sessions.values()) if (s.busy) release(s); pump(); });
+if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { for (const s of sessions.values()) if (s.busy) release(s); }
+  else pump();
+});
 
 // Draw `spec` in the background of a preview (LookPreview.astro's markup) while it is on screen.
 export function watch(el: HTMLElement, spec: Live | null) {
