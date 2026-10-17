@@ -333,6 +333,7 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
   const LOTTIE = { nodes: 60000, depth: 32, layers: 500, instances: 2000, comps: 64, nest: 8, frames: 3600, seconds: 60, rep: 100, side: 4096, area: 8388608, embed: 384 << 10, text: 512 };
   const TOP = ['v', 'fr', 'ip', 'op', 'w', 'h', 'nm', 'ddd', 'assets', 'layers', 'markers'];
   const LAYER = [0, 1, 2, 3, 4, 13];
+  const matte = (v) => v === undefined || (Number.isInteger(v) && v >= 0 && v <= 4);
   const DATA = /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
   const lottie = (raw, max = LIMIT.bg.lottie) => {
     let o = raw;
@@ -341,11 +342,16 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
     const out = {};
     for (const k of TOP) if (Object.hasOwn(o, k)) out[k] = o[k];
     let nodes = 0, copies = 0, expansion = 1;
+    const weights = new WeakMap();
     // Keyframe endpoints count too: the player interpolates between s and e.
-    const count = (c) => {
+    const count = (c, lo = 0) => {
       const k = isObj(c) ? c.k : null;
+      const unit = (v) => (Array.isArray(v) ? v.length > 0 && v.every(unit) : typeof v === 'number' && v >= 0 && v <= 1);
+      // Count endpoints are not a bound if their interpolation handles can overshoot them.
+      if (Array.isArray(k) && k.some((f) => !['i', 'o'].every((side) => f?.[side] === undefined
+        || (isObj(f[side]) && unit(f[side].x) && unit(f[side].y))))) return null;
       const vals = typeof k === 'number' ? [k] : Array.isArray(k) ? k.flatMap((e) => isObj(e) && Array.isArray(e.s) ? [...e.s, ...(Array.isArray(e.e) ? e.e : [])] : [NaN]) : [NaN];
-      return vals.length && vals.every((v) => typeof v === 'number' && v >= 0 && v <= LOTTIE.rep) ? Math.ceil(Math.max(...vals)) : null;
+      return vals.length && vals.every((v) => typeof v === 'number' && v >= lo && v <= LOTTIE.rep) ? Math.ceil(Math.max(...vals)) : null;
     };
     const rep = (c) => {
       const n = count(c);
@@ -353,17 +359,35 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
       expansion *= Math.max(1, n);
       return n !== null && copies <= LOTTIE.rep && expansion <= LOTTIE.rep;
     };
+    const zigzag = (c) => {
+      const n = count(c);
+      expansion *= Math.max(1, n + 1);
+      return n !== null && expansion <= LOTTIE.rep;
+    };
+    const gradient = (g) => {
+      if (!isObj(g) || !Number.isSafeInteger(g.p) || g.p < 1 || !Array.isArray(g.k?.k) || !g.k.k.length) return false;
+      const k = g.k.k;
+      const samples = typeof k[0] === 'number' ? [k] : k.flatMap((f) => [f?.s, f?.e].filter((v) => v !== undefined));
+      const length = samples[0]?.length;
+      // The player allocates from p before reading the stops; every allocation must be backed by bounded input.
+      return Array.isArray(samples[0]) && length >= 4 * g.p && (length - 4 * g.p) % 2 === 0
+        && samples.every((s) => Array.isArray(s) && s.length === length && s.every((v) => typeof v === 'number'));
+    };
     const scan = (v, depth, key) => {
       if (++nodes > LOTTIE.nodes || depth > LOTTIE.depth) return false;
+      const start = nodes;
       if (typeof v === 'number') return Number.isFinite(v);
       if (typeof v === 'string') return v.length <= (key === 'p' ? LOTTIE.embed : LOTTIE.text);
       if (typeof v === 'boolean' || v === null) return true;
       if (Array.isArray(v)) return v.every((e) => scan(e, depth + 1, key));
       if (!isObj(v)) return false;
       for (const k of Object.keys(v)) {
-        if (k === '__proto__' || k === 'constructor' || k === 'prototype' || (k === 'x' && typeof v[k] === 'string') || !scan(v[k], depth + 1, k)) return false;
+        if (k.startsWith('__') || k === 'constructor' || k === 'prototype' || (k === 'x' && typeof v[k] === 'string') || !scan(v[k], depth + 1, k)) return false;
       }
-      return (v.ty !== 'rp' || rep(v.c)) && (v.ty !== 'sr' || count(v.pt) !== null);
+      weights.set(v, nodes - start + 1);
+      return (v.ty !== 'rp' || (rep(v.c) && (v.o === undefined || count(v.o, -LOTTIE.rep) !== null)))
+        && (v.ty !== 'sr' || count(v.pt) !== null) && (v.ty !== 'zz' || zigzag(v.r))
+        && (!['gf', 'gs'].includes(v.ty) || gradient(v.g));
     };
     if (!scan(out, 0, '') || nodes * expansion > LOTTIE.nodes) return null;
     const num = (v, lo, hi) => typeof v === 'number' && v >= lo && v <= hi;
@@ -376,6 +400,7 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
     let embed = 0, imagePixels = 0, layerCount = 0;
     for (const a of assets) {
       if (!isObj(a) || typeof a.id !== 'string' || !a.id || a.id.length > 64 || comps.has(a.id) || images.has(a.id)) return null;
+      if (!matte(a.tt)) return null;
       if (Array.isArray(a.layers)) { if (comps.size >= LOTTIE.comps) return null; comps.set(a.id, a.layers); continue; }
       // A picture: embedded as a data address, never a file name or a link to fetch.
       if (typeof a.p !== 'string' || !DATA.test(a.p) || (a.u !== undefined && a.u !== '') || (a.e !== undefined && a.e !== 1)) return null;
@@ -400,7 +425,9 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
       const byId = new Map(list.filter(isObj).map((l) => [l.ind, l]));
       if (list.some((l) => l?.parent !== undefined) && byId.size !== list.length) return false;
       for (const l of list) {
-        if (!isObj(l) || !LAYER.includes(l.ty)) return false;
+        if (!isObj(l) || !LAYER.includes(l.ty) || !matte(l.tt)) return false;
+        // Only the player may expand refId into children or mark a layer as already processed.
+        if (Object.hasOwn(l, 'layers') || Object.hasOwn(l, 'completed')) return false;
         if (l.ty === 0 && (typeof l.refId !== 'string' || !comps.has(l.refId))) return false;
         if (l.ty === 2 && (typeof l.refId !== 'string' || !images.has(l.refId))) return false;
         const seen = new Set([l]);
@@ -416,27 +443,37 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
     for (const list of comps.values()) if (!layers(list)) return null;
     // No precomp inside itself, no deeper than LOTTIE.nest, and no more layers once every precomp is counted as often as
     // it is used than LOTTIE.instances (a few precomps naming each other twice would make millions).
+    // Shape nodes count on each use too: one complex layer can be far heavier than many empty layers.
     const memo = new Map();
     const reach = (id, open) => {
-      if (open.has(id)) return { depth: Infinity, count: Infinity };
+      if (open.has(id)) return { depth: Infinity, count: Infinity, work: Infinity, buffers: Infinity, luma: false };
       if (memo.has(id)) return memo.get(id);
       open.add(id);
       const own = id ? comps.get(id) : out.layers;
-      let depth = 0, count = own.length;
-      for (const l of own) if (l.ty === 0) { const r = reach(l.refId, open); depth = Math.max(depth, r.depth); count += r.count; }
+      let depth = 0, count = own.length, work = own.reduce((n, l) => n + weights.get(l), 0);
+      let buffers = own.filter((l) => l.tt >= 1).length * 2, luma = own.some((l) => l.tt >= 3);
+      for (const l of own) if (l.ty === 0) { const r = reach(l.refId, open); depth = Math.max(depth, r.depth); count += r.count; work += r.work; buffers += r.buffers; luma ||= r.luma; }
       open.delete(id);
-      const r = { depth: depth + 1, count };
+      const r = { depth: depth + 1, count, work, buffers, luma };
       memo.set(id, r);
       return r;
     };
     for (const id of ['', ...comps.keys()]) {
       const top = reach(id, new Set());
-      if (top.depth > LOTTIE.nest + 1 || top.count * expansion > LOTTIE.instances) return null;
+      if (top.depth > LOTTIE.nest + 1 || top.count * expansion > LOTTIE.instances || top.work * expansion > LOTTIE.nodes) return null;
     }
-    const instances = reach('', new Set()).count + assets.filter((a) => a.xt && comps.has(a.id)).reduce((n, a) => n + reach(a.id, new Set()).count, 0);
-    if (instances * expansion > LOTTIE.instances) return null;
+    const extras = assets.filter((a) => a.xt && comps.has(a.id)).map((a) => {
+      const r = reach(a.id, new Set());
+      return { ...r, buffers: r.buffers + (a.tt >= 1 ? 2 : 0), luma: r.luma || a.tt >= 3 };
+    });
+    const instances = reach('', new Set()).count + extras.reduce((n, r) => n + r.count, 0);
+    const work = reach('', new Set()).work + extras.reduce((n, r) => n + r.work, 0);
+    if (instances * expansion > LOTTIE.instances || work * expansion > LOTTIE.nodes) return null;
+    const main = reach('', new Set());
+    // Mattes allocate viewport-sized buffers, irrespective of the authored composition's dimensions.
+    const canvases = 1 + main.buffers + extras.reduce((n, r) => n + r.buffers, 0) + (main.luma || extras.some((r) => r.luma) ? 1 : 0);
     const bytes = te.encode(JSON.stringify(out));
-    return bytes.length <= max ? { json: out, bytes, mime: 'application/json', w: out.w, h: out.h, frames: out.op - out.ip, fr: out.fr } : null;
+    return bytes.length <= max ? { json: out, bytes, mime: 'application/json', w: out.w, h: out.h, frames: out.op - out.ip, fr: out.fr, canvases } : null;
   };
   const lottieBytes = (b, max) => {
     let i = 0;
@@ -510,7 +547,7 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
   const fileOf = (src) => (typeof src === 'string' && src.startsWith('file:') && HASH.test(src.slice(5)) ? src.slice(5) : null);
   const lottieFrom = async (src, local, env) => {
     const h = fileOf(src);
-    if (h) { const f = await read(local, h); return f?.type === 'lottie' ? { ok: true, json: JSON.parse(td.decode(f.bytes)) } : { ok: false, error: 'missing' }; }
+    if (h) { const f = await read(local, h); return f?.type === 'lottie' ? { ok: true, json: JSON.parse(td.decode(f.bytes)), canvases: f.canvases } : { ok: false, error: 'missing' }; }
     const url = X().MEDIA.url(src);
     if (!url || url !== src || !env.fetch) return { ok: false, error: 'bad' };
     if (!await env.allow(src)) return { ok: false, error: 'bad' };
@@ -532,7 +569,7 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
       }
     } catch { return { ok: false, error: 'network' }; }
     const got = lottie(td.decode(cat(...parts)));
-    return got ? { ok: true, json: got.json } : { ok: false, error: 'type' };
+    return got ? { ok: true, json: got.json, canvases: got.canvases } : { ok: false, error: 'type' };
   };
   // ops: put { kind, b64, expect? } → { ok, h (its name), type, mime, size, width?, height?, frames? }; list; drop { h }; lottie { src } → { ok, json }.
   // env: { fetch, allow(src) → whether this page may have that address fetched } for lottie.

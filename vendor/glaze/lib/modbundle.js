@@ -346,11 +346,12 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
     if ((raw.permissions || []).some((p) => DATA.includes(p.id)) && Object.keys(files).some((p) => ext(p) === 'html')) bad('ui');
     return raw;
   };
-  // What a manifest can do that the student is asked about: its permissions, and 'frame' when it has a page of its own
-  // (which can contact other sites).
+  // What a manifest asks the student to consent to: declared permissions, its own frame, and a remote background's host.
   const caps = (m) => {
     const slots = [...(m.ui?.tiles || []), ...(m.ui?.rail || []), m.ui?.nav, m.ui?.background];
-    return [...(m.permissions || []).map((p) => p.id), ...(slots.some((s) => s?.file) ? ['frame'] : [])];
+    const media = m.parts?.bg?.media?.src;
+    return [...(m.permissions || []).map((p) => p.id), ...(slots.some((s) => s?.file) ? ['frame'] : []),
+      ...(typeof media === 'string' && media.startsWith('https:') ? [`media:${new URL(media).hostname}`] : [])];
   };
 
   // Display-only manifest for install prompts and editor labels; the signed manifest and files stay byte-for-byte intact.
@@ -530,7 +531,7 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
         && u.hash.startsWith('#1.r.') && canon(u.hash.slice(5), 80);
     } catch { return false; }
   };
-  const OPS = ['install', 'list', 'enable', 'disable', 'revoke', 'grant', 'remove', 'clearTrust', 'export', 'dismissOffer', 'replace'];
+  const OPS = ['author', 'install', 'list', 'enable', 'disable', 'revoke', 'grant', 'remove', 'clearTrust', 'export', 'dismissOffer', 'replace'];
   const slot = (id) => `mod:${id}`;
   const replaceSlot = (id) => `modReplace:${id}`;
   const api = () => (typeof GZ_MODAPI !== 'undefined' ? GZ_MODAPI : require('./modapi.js'));
@@ -539,6 +540,12 @@ var GZ_MODBUNDLE = globalThis.GZ_MODBUNDLE || (() => {
   const summary = ({ files, ...r }) => ({ ...r, prompt: prompt(r.manifest) });
   // The broker loads lib/blocklist.js before every decision; a missing module is an error, never an empty list.
   const change = async (m, { local }, { blocked = (r) => GZ_BLOCKLIST.blocked(local, r) } = {}) => {
+    if (m.op === 'author') {
+      const { modAuthor } = await local.get('modAuthor');
+      if (modAuthor !== undefined) return await keyPair(modAuthor) ? { ok: true, key: modAuthor, created: false } : { ok: false, error: 'key' };
+      const key = await makeKey();
+      return await local.set({ modAuthor: key }) ? { ok: true, key, created: true } : { ok: false, error: 'write' };
+    }
     if (m.op === 'dismissOffer') {
       if (m.zip !== null && (typeof m.zip !== 'string' || m.zip.length > Math.ceil(CAP.archive / 3) * 4)) return { ok: false, error: 'bad' };
       const offer = (await local.get('modOffer')).modOffer;
