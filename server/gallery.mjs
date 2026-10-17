@@ -916,6 +916,7 @@ export function gallery({
           agent.commands.push(args.command.slice(0, 200));
           out = await modShell(got.files, args.command, signal);
           signal.throwIfAborted();
+          if ([124, 126].includes(out.exitCode)) throw fail('shell limit', `hit a shell command ${out.exitCode === 124 ? 'time' : 'resource'} limit`);
         }
         const content = JSON.stringify(out);
         if (agent.shellOutput + content.length > MOD_SHELL_TOTAL) throw fail('output', `reached its ${MOD_SHELL_TOTAL}-character shell output limit without submitting a review`);

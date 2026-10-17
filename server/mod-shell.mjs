@@ -39,7 +39,7 @@ export const modShell = async (files, command, signal, timeout = MOD_SHELL_TIMEO
       }, timeout);
     });
   } catch (e) {
-    return { ...fitOutput('', `${e.message}\n`), exitCode: expired ? 124 : 1 };
+    return { ...fitOutput('', `${e.message}\n`), exitCode: expired ? 124 : e.code === 'ERR_WORKER_OUT_OF_MEMORY' ? 126 : 1 };
   } finally {
     clearTimeout(timer);
     if (abort) signal?.removeEventListener('abort', abort);

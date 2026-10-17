@@ -856,7 +856,8 @@ after changing the loop, `MOD_POLICY` or the model.
 | --- | --- |
 | No `OPENROUTER_API_KEY`, an error, a 30-minute timeout, two 429/5xx, an invalid tool call, an incomplete answer, or an answer outside the schema | `pending` (`failed: true`), mailed |
 | 30 rounds, 200,000 characters of tool results, or a second reply without tool calls | `pending` (`failed: true`), mailed with the bound reached and work so far |
-| A shell command fails or hits its own deadline | a bounded error result to the model; the review can continue within its overall bounds |
+| A shell command hits a time or resource limit | `pending` (`failed: true`), mailed with the bound reached and work so far |
+| A shell command fails normally (for example, a missing file) | a bounded error result to the model; the review can continue within its overall bounds |
 | The process restarts during a review | the mod stays `queued` and is reviewed after the start; after three cut-short tries, `pending` |
 | No mail settings, or the mail server refuses | `pending` with `unmailed`, retried hourly; `--mods` shows it |
 | A stored bundle is missing or no longer reads | `pending` (`failed`), mailed |
