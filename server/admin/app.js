@@ -211,7 +211,10 @@
 
   function agentView(m, review) {
     const s = statusOf(m), wrap = h('div', { className: 'panel' });
-    const feedList = (events) => h('ol', { className: 'feed' }, ...events.map((e) => h('li', { className: e.kind }, h('span', { className: 'kind' }, e.kind), h('span', { className: 'text' }, e.text))));
+    const fileUrl = (p) => `${ROOT}/files/mods/${m.id}/${m.hash}?path=${encodeURIComponent(p)}`;
+    // A picture the agent looked at shows as the picture itself, not just its path.
+    const shown = (e) => { const p = e.kind === 'image' && /^\/mod\/(\S+)$/.exec(e.text.replace(/ \(again\)$/, '')); return p ? h('span', { className: 'text' }, h('img', { className: 'seen', src: fileUrl(p[1]), alt: p[1], loading: 'lazy' }), e.text) : h('span', { className: 'text' }, e.text); };
+    const feedList = (events) => h('ol', { className: 'feed' }, ...events.map((e) => h('li', { className: e.kind }, h('span', { className: 'kind' }, e.kind), shown(e))));
     if (s === 'reviewing' || s === 'queued') {
       const status = h('p', { className: 'muted' }, s === 'queued' ? 'Waiting for the agent to start…' : 'Connecting…'), list = h('div');
       wrap.append(card('Live', status, list));

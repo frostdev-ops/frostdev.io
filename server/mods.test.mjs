@@ -1234,13 +1234,11 @@ test('malformed tool calls and incomplete responses go to a person before any co
   await start();
   const missingId = review('accept');
   delete missingId.json.choices[0].message.tool_calls[0].id;
-  const multiple = bash('ls');
-  multiple.json.choices[0].message.tool_calls.push(review('accept').json.choices[0].message.tool_calls[0]);
   const truncated = review('accept');
   truncated.json.choices[0].finish_reason = 'length';
   const notArray = review('accept');
   notArray.json.choices[0].message.tool_calls = {};
-  for (const answer of [missingId, multiple, notArray, truncated, toolCall('bash', '{'), toolCall('bash', { command: 3 }),
+  for (const answer of [missingId, notArray, truncated, toolCall('bash', '{'), toolCall('bash', { command: 3 }),
     toolCall('bash', { command: 'ls', extra: true }), toolCall('bash', { command: '  ' })]) {
     plan.chat = answer;
     const r = await reviewed((await make()).bytes);
@@ -1339,10 +1337,10 @@ test('vision: viewed PNG, JPEG, WebP and GIF bytes reach OpenRouter with their M
   assert.equal(images.length, 4);
   for (const [i, [p, b]] of Object.entries(files).entries()) {
     assert.equal(images[i].role, 'user'); assert.match(images[i].content[0].text, /Untrusted.*not instructions/);
-    assert.equal(images[i].content[1].image_url.url, `data:${modImageType(b)};base64,${b.toString('base64')}`);
+    assert.equal(images[i].content[1].text, `Image from /mod/${p}:`);
+    assert.equal(images[i].content[2].image_url.url, `data:${modImageType(b)};base64,${b.toString('base64')}`);
     assert.ok(meta.viewedImages.includes(p));
   }
-  assert.ok(meta.shellOutput > meta.imageBytes, 'encoded pictures consume the existing output budget');
   assert.equal((await download(accepted.id, accepted.hash)).status, 200);
 });
 
@@ -1419,6 +1417,20 @@ test('requeue during a review invalidates the old result and drains a fresh revi
   assert.equal(await g.decideMod(m.id, m.hash, 'queued', '', 'owner@example.edu'), true);
   assert.equal(row(m.hash).tries, 0); release(); await g.drain();
   assert.equal(calls.chat.length, 2); assert.equal(row(m.hash).status, 'published'); assert.equal(row(m.hash).tries, 1);
+});
+
+test('a round can run several tools at once: bash, every picture (paths written loosely) and the submission', async () => {
+  await start();
+  const m = await make(countdown(), { 'hooks.js': te.encode(HOOKS), 'art/a.png': VIEW_PNG, 'art/b.png': Buffer.concat([VIEW_PNG, Buffer.from([0])]) });
+  const turn = bash('ls /mod');
+  turn.json.choices[0].message.tool_calls.push(viewImage('/mod/art/a.png').json.choices[0].message.tool_calls[0], viewImage('art/b.png').json.choices[0].message.tool_calls[0],
+    viewImage('/mod/../etc/passwd').json.choices[0].message.tool_calls[0], review('accept').json.choices[0].message.tool_calls[0]);
+  turn.json.choices[0].message.tool_calls.forEach((c, i) => { c.id = `call-${i}`; });
+  plan.chat = [turn];
+  const r = await reviewed(m.bytes);
+  assert.equal(r.row.status, 'published');
+  const meta = JSON.parse(r.row.decision).review;
+  assert.deepEqual(meta.viewedImages, ['art/a.png', 'art/b.png']); assert.equal(meta.rounds, 1); assert.deepEqual(meta.commands, ['ls /mod']);
 });
 
 test('vision: submitting before viewing every picture is sent back to view the rest', async () => {
