@@ -810,7 +810,7 @@ export function gallery({
     };
   };
   // A mod that needs a person: what the reviewer made of it first, then the facts and the commands. Prose is wrapped, since
-  // mail lines should stay under 998 characters.
+  // SMTP lines must stay within 998 bytes.
   const wrap = (t) => String(t ?? '').split('\n').map((l) => (l.length > 76 ? l.replace(/(.{1,76})(?:\s+|$)|(.{76})/gu, '$1$2\n').trimEnd() : l)).join('\n');
   const mailForMod = (row) => {
     const { review: r = {}, person } = JSON.parse(row.decision);
@@ -823,7 +823,7 @@ export function gallery({
         '', 'Overview (the reviewer\'s):', wrap(r.overview || '(none)'),
         '', 'What the code does and where data goes (the reviewer\'s summary):', wrap(r.summary || '(none)'),
         '', 'The reviewer recommends:', wrap(r.recommendation || '(none)'),
-        '', `Its decision (${r.model}${r.provider ? ` via ${r.provider}` : ''}): ${r.decision}. ${r.reason || ''}${r.error ? ` (${r.error})` : ''}`,
+        '', wrap(`Its decision (${r.model}${r.provider ? ` via ${r.provider}` : ''}): ${r.decision}. ${r.reason || ''}${r.error ? ` (${r.error})` : ''}`),
         ...(r.rationale ? ['', 'Its rationale:', wrap(r.rationale)] : []),
         ...(r.reasoning ? ['', `Its reasoning (summary, ${r.reasoningTokens ?? '?'} reasoning tokens):`, wrap(r.reasoning)] : []),
         '', `Name:     ${row.name}`, `Version:  ${row.version}`, `Author:   ${row.credit} (key ${row.key})`, `Id:       ${row.id}`, `Hash:     ${row.hash}`,
@@ -833,8 +833,8 @@ export function gallery({
           return Buffer.byteLength(line) > 998 ? wrap(line) : line;
         })),
         ...(JSON.parse(row.permissions).length ? [] : ['  none']),
-        `Hosts:    ${s.hosts.join(', ') || 'none'}`,
-        ...(s.warnings.length ? ['', ...s.warnings] : []),
+        wrap(`Hosts:    ${s.hosts.join(', ') || 'none'}`),
+        ...(s.warnings.length ? ['', ...s.warnings.map(wrap)] : []),
         '', `Files (${s.size} bytes, ${s.text} of them text):`,
         ...s.files.map((f) => `  ${f.path}  ${f.bytes} bytes${f.lines ? `, ${f.lines} lines, the longest ${f.longestLine}` : ''}${f.hidden ? `, ${f.hidden} hidden characters` : ''}`),
         '', 'To read it and decide, on the server:', cmd(`--mod ${row.id}`),

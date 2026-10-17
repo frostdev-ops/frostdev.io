@@ -499,8 +499,9 @@ test('personal data with a network host always goes to a person, even when the r
 test('human escalation mail bounds UTF-8 lines even for unbroken permission reasons and model prose', async () => {
   await start();
   const why = '😀'.repeat(280);
-  const m = await make(countdown({ permissions: [{ id: 'grades', why }, { id: 'network:api.weather.gov', why }] }), { 'hooks.js': te.encode(GRADES_HOOKS) });
-  plan.chat = review('accept', { rationale: '界'.repeat(1200), overview: '😀'.repeat(1000), summary: '界'.repeat(1500), recommendation: '😀'.repeat(700) });
+  const hosts = ['api.weather.gov', ...Array.from({ length: 7 }, (_, i) => `h${i}${'a'.repeat(58)}.${'b'.repeat(60)}.${'c'.repeat(60)}.example.edu`)];
+  const m = await make(countdown({ permissions: [{ id: 'grades', why }, ...hosts.map((h) => ({ id: `network:${h}`, why }))] }), { 'hooks.js': te.encode(GRADES_HOOKS) });
+  plan.chat = review('accept', { reason: '😀'.repeat(300), rationale: '界'.repeat(1200), overview: '😀'.repeat(1000), summary: '界'.repeat(1500), recommendation: '😀'.repeat(700) });
   const r = await reviewed(m.bytes);
   assert.equal(r.row.status, 'pending');
   await waitFor(() => mails.length === 1);
