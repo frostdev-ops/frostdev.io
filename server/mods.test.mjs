@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import { createRequire } from 'node:module';
 import net from 'node:net';
@@ -292,6 +292,37 @@ test('posts need the site\'s Origin, a bundle\'s type, and at most the bundle ca
   assert.equal(exact.status, 200, 'the cap itself gets as far as the checks');
   assert.equal(MOD_BODY_MAX, MB.CAP.archive);
   assert.equal(MOD_BODY_MAX, 2304 * 1024);
+});
+
+for (const failure of ['insert', 'commit']) test(`failed row ${failure} rolls back quota and removes the renamed bundle`, async () => {
+  await start();
+  const m = await make();
+  if (failure === 'insert') g.db.exec("CREATE TRIGGER reject_mod BEFORE INSERT ON mods BEGIN SELECT RAISE(ABORT, 'test insert failure'); END");
+  else g.db.exec(`PRAGMA foreign_keys = ON;
+    CREATE TABLE parent (id INTEGER PRIMARY KEY);
+    CREATE TABLE child (id INTEGER REFERENCES parent(id) DEFERRABLE INITIALLY DEFERRED);
+    CREATE TRIGGER reject_mod AFTER INSERT ON mods BEGIN INSERT INTO child VALUES (1); END;`);
+  const r = await submit(m.bytes);
+  assert.equal(r.status, 500);
+  assert.equal(modQuota(), 0);
+  assert.equal(row(m.hash), undefined);
+  assert.deepEqual(readdirSync(path.join(dir, 'mods')), []);
+  g.db.exec('DROP TRIGGER reject_mod');
+  assert.equal((await submit(m.bytes)).status, 202, 'a failed write can be retried');
+});
+
+test('startup removes bundles left by a crash before the row committed', async () => {
+  await start();
+  const m = await make();
+  await reviewed(m.bytes);
+  await g.close();
+  const orphan = await make();
+  writeFileSync(path.join(dir, 'mods', `${orphan.hash}.glazemod`), orphan.bytes);
+  writeFileSync(path.join(dir, 'mods', 'unfinished.tmp'), 'partial');
+  writeFileSync(path.join(dir, 'mods', 'keep.txt'), 'owner file');
+  await open();
+  assert.deepEqual(readdirSync(path.join(dir, 'mods')).sort(), [`${m.hash}.glazemod`, 'keep.txt'].sort());
+  assert.equal((await download(m.id, m.hash)).status, 200);
 });
 
 test('one mod a day per cookie and per network, and a daily review cap, apart from Looks', async () => {

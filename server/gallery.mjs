@@ -545,6 +545,10 @@ export function gallery({
   q.setMeta.run('cookie-key', crypto.randomBytes(32));
   const cookieKey = q.meta.get('cookie-key').v;
   const tx = (fn) => { db.exec('BEGIN IMMEDIATE'); try { const r = fn(); db.exec('COMMIT'); return r; } catch (e) { db.exec('ROLLBACK'); throw e; } };
+  // Called with the write lock held, so another uploader cannot claim the file during cleanup.
+  const removeOrphan = (hash) => {
+    if (!q.modByHash.get(hash)) try { unlinkSync(bundleFile(hash)); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+  };
   // The signed mod blocklist as published (its text), or null.
   const blocklist = () => { const r = q.meta.get('blocklist'); return r ? Buffer.from(r.v).toString('utf8') : null; };
   const blocklistSeq = () => { try { return JSON.parse(blocklist()).list.seq; } catch { return 0; } };
@@ -1010,6 +1014,9 @@ export function gallery({
           JSON.stringify(facts.permissions), sha(token), t);
         return {};
       });
+    } catch (e) {
+      tx(() => removeOrphan(facts.hash));
+      throw e;
     } finally { try { unlinkSync(tmp); } catch { /* renamed */ } }
     if (r.problems) return send(res, 422, { error: 'Fix these first; nothing was used up.', problems: r.problems }, setCookie);
     if (r.over) {
@@ -1191,8 +1198,14 @@ export function gallery({
     server, db, ready, mailPending, sweep,
     listen: async (port, host) => {
       await ready;
-      // A temporary file left by a server that died between writing a bundle and naming it (only the server writes them).
-      for (const f of readdirSync(bundleDir)) if (f.endsWith('.tmp')) unlinkSync(path.join(bundleDir, f));
+      // Recover files left by a crash before the row committed; protect concurrent uploaders with the write lock.
+      tx(() => {
+        for (const f of readdirSync(bundleDir)) {
+          const bundle = /^([\w-]{43})\.glazemod$/.exec(f);
+          if (f.endsWith('.tmp')) unlinkSync(path.join(bundleDir, f));
+          else if (bundle) removeOrphan(bundle[1]);
+        }
+      });
       sweep();
       timers.push(setInterval(sweep, 3600e3), setInterval(() => mailPending(), 3600e3), setInterval(drain, 3600e3));
       for (const t of timers) t.unref();
