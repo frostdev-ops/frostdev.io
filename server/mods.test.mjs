@@ -338,6 +338,7 @@ test('a bundled background file is taken, never shown to the reviewer, and alway
   assert.match(input, /"media": \{\s*"type": "lottie",\s*"path": "media\/slide.json"/);
   assert.ok(!input.includes('BEGIN FILE') || !/BEGIN FILE \S+ media\/slide\.json/.test(input), 'the file is not read as text');
   assert.ok(!input.includes('"nm":"box"'));
+  assert.ok(readFileSync('src/pages/glaze/mods/submit.astro', 'utf8').includes("A background file, including Lottie JSON, stays on frostdev.io and always needs a person's check"), 'the submit disclosure must exclude background JSON from model review');
   assert.match(calls.chat[0].body.messages[0].content, /never claim to have seen it/);
   await waitFor(() => mails.length === 1);
   assert.match(mails[0].replace(/\r\n/g, ' '), /Its background is media\/slide.json in the bundle \(lottie, \d+ bytes\), which no reviewer saw/);
