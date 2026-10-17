@@ -476,7 +476,7 @@ Glaze's own reader (vendored `lib/media.js`, the background limits: video 12 MiB
 refuses it unless it is that type and that hash. Nothing is used up by a refusal.
 
 The reviewers are told only that there is a file (`summarize()`'s `background.file`); a Look with one never publishes on
-the reviews alone: a decline still declines, and anything else goes to a person, whose mail says how to copy the file
+the reviews alone: every automated decision goes to a person, whose mail says how to copy the file
 off the server (`docker cp`) and see the whole Look in Glaze. The file is written as `media/<hash>` next to the database
 in the same transaction as the Look's row (a `.tmp` and a rename; a failure gives the day's submission back, and the next
 start removes `.tmp` files and files no published or pending Look names). Declining or removing a Look deletes its file

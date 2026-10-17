@@ -1123,7 +1123,7 @@ test('media: an accepted Look with a file goes to a person, who sees how to get 
   assert.equal((await media(h)).status, 404);
 });
 
-test('media: taking a Look down stops serving its file unless another published Look uses it; a review decline keeps nothing', async () => {
+test('media: takedown preserves shared files and every automated decision still goes to a person', async () => {
   const dir = await startMedia();
   const file = lottie('shared');
   const h = await hashOf(file);
@@ -1140,11 +1140,12 @@ test('media: taking a Look down stops serving its file unless another published 
   const three = await post('/submit', await mediaLook(lottie('declined')), fresh());
   assert.ok(g.decide(three.body.id, 'declined', 'No.'));
   assert.deepEqual(readdirSync(dir), []);
-  // A review that declines it stores no file at all.
+  // A review that declines it still leaves the media decision to a person.
   plan.decisions = decisionSays({ quality: 0.5 });
   const four = await post('/submit', await mediaLook(lottie('poor')), fresh());
-  assert.equal(four.body.outcome, 'declined');
-  assert.deepEqual(readdirSync(dir), []);
+  assert.equal(four.body.outcome, 'pending');
+  assert.deepEqual(readdirSync(dir), [await hashOf(lottie('poor'))]);
+  assert.equal((await media(await hashOf(lottie('poor')))).status, 404);
 });
 
 test('media: a failed write keeps no file and gives the day back; startup removes leftovers', async () => {

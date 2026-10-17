@@ -984,8 +984,8 @@ export function gallery({
         escalation = await escalate({ ...state, submission: { ...state.submission, credit: body.credit, ...(described.partsText && { partsText: described.partsText }) } }, a);
         outcome = { accept: 'accept', decline: 'decline', human: 'human' }[escalation.decision];
       }
-      // A background file is something no reviewer saw: a Look with one always ends with a person (a decline still declines).
-      const person = media && outcome !== 'decline' ? 'Its background is a video or animation file, which a person always checks.' : null;
+      // A background file is something no reviewer saw: a person decides with the automated review, whatever it concluded.
+      const person = media ? 'Its background is a video or animation file, which a person always checks.' : null;
       if (person) outcome = 'human';
       const nearestOut = near.map((n) => ({ id: n.look.id, name: n.look.name, source: n.look.source, distance: n.distance }));
       const decision = { first: a, escalation, nearest: nearestOut, dropped, ...(person && { person }), at: new Date(t).toISOString() };
