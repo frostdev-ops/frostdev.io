@@ -301,7 +301,7 @@ test('CLI decisions cannot overwrite a concurrent takedown', async () => {
 });
 
 // A small DOM harness for the submit script's async ordering; no rendering or browser process.
-const submitPage = (fetch, section = 'looks') => {
+const submitPage = (fetch, section = 'looks', globals = {}) => {
   class Element {
     constructor(tag = 'div') { this.tagName = tag; this.value = ''; this.checked = false; this.hidden = false; this.children = []; this.events = {}; this.attrs = {}; this.dataset = {}; this.style = { setProperty() {} }; }
     addEventListener(type, cb) { this.events[type] = cb; }
@@ -322,7 +322,7 @@ const submitPage = (fetch, section = 'looks') => {
   const source = readFileSync(`src/pages/glaze/${section}/submit.astro`, 'utf8').split('<script>')[1].split('</script>')[0].replace(/import .*? from .*?;/s, '');
   const js = ts.transpile(source, { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None });
   vm.runInNewContext(js, {
-    document: doc, location: { hash: '', origin: 'https://frostdev.io' }, URLSearchParams,
+    ...globals, document: doc, location: { hash: '', origin: 'https://frostdev.io' }, URLSearchParams,
     paintPreview() {}, wireDialog() {}, fontLine: () => 'font', fetch,
     clearTimeout() { timer = null; }, window: { setTimeout(cb) { timer = cb; return 1; } },
   });
@@ -971,4 +971,38 @@ test('small known body lengths leave capacity for checks while reviews wait', as
     for (const resolve of waiting) resolve();
     await Promise.all([a, b]);
   }
+});
+
+
+test('a stale Lottie preview does not reject a valid video size while its new code is being checked', async () => {
+  const sent = [];
+  let reads = 0;
+  const ui = submitPage(async (url, options) => {
+    sent.push({ url, body: JSON.parse(options.body) });
+    return new Response(JSON.stringify(url.endsWith('/check')
+      ? { look: { media: { type: 'lottie', hash: 'a'.repeat(43) } }, problems: [], nearest: [] }
+      : { problems: ['test refusal'] }), { status: url.endsWith('/check') ? 200 : 422 });
+  }, 'looks', { FileReader: class {
+    readAsDataURL() { reads++; this.result = 'data:video/webm;base64,AAAA'; this.onload(); }
+  } });
+  ui.get('f-code').value = code2({ bg: { media: { type: 'lottie', src: `file:${'a'.repeat(43)}` } } }, { kind: 'media' });
+  ui.get('f-name').value = 'Media Look';
+  ui.get('f-credit').value = 'Sam';
+  ui.get('f-license').checked = true;
+  ui.get('f-code').events.input();
+  await ui.check();
+  const next = code2({ bg: { media: { type: 'video', src: `file:${'b'.repeat(43)}` } } }, { kind: 'media' });
+  ui.get('f-code').value = next;
+  ui.get('f-code').events.input();
+  ui.get('f-media').files = [{ size: 2 * 1024 ** 2 }];
+  await ui.get('submit-form').events.submit({ preventDefault() {} });
+  assert.equal(reads, 1, 'only the current checked code may impose the Lottie cap');
+  assert.equal(sent.length, 2);
+  assert.equal(sent[1].body.code, next);
+  assert.equal(sent[1].body.media, 'AAAA');
+  ui.get('f-media').files = [{ size: 12 * 1024 ** 2 + 1 }];
+  await ui.get('submit-form').events.submit({ preventDefault() {} });
+  assert.equal(reads, 1, 'a stale preview still enforces the universal 12 MiB bound');
+  assert.equal(sent.length, 2);
+  assert.equal(ui.get('f-media').attrs['aria-invalid'], 'true');
 });
