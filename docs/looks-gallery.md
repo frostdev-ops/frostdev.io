@@ -690,6 +690,11 @@ Then:
   can't read everything can't vouch for it.
 - **New.** The exact bundle hash was never submitted; no other version of the mod is queued or pending; the version is
   above every published or removed one; no other mod (another id) uses the name, case-insensitively.
+- **Background media in the bundle.** A video, animated picture or Lottie background (`parts.bg.media`) must be a file
+  the bundle carries (`./<path>`), which the reader has already checked with Glaze's background limits within the
+  bundle's 2 MiB; a linked (`https:`) one is refused, since it could change after the review. The reviewer is told its
+  type and size (`media` in the facts) and never reads it, a Lottie file included; a mod with one always goes to a person
+  after the review, whatever it decided (as personal data with a network host does), and the mail says where it is.
 - **Licence** (submit only): code under MIT and the rest (pictures, text, other content) under CC BY 4.0, both ticked.
 
 ### Quota
