@@ -928,3 +928,23 @@ test('the body reservation lasts through model waits and releases after the hand
   }
   assert.equal((await post(g, { code: 'invalid' })).status, 422);
 });
+
+test('the Look submit page refuses oversized files before reading them into base64', async () => {
+  for (const [type, mib] of [['video', 12], ['image', 6], ['lottie', 1]]) {
+    let calls = 0;
+    const ui = submitPage(async () => {
+      calls++;
+      return new Response(JSON.stringify({ look: { media: { type, hash: 'a'.repeat(43) } }, problems: [], nearest: [] }));
+    });
+    ui.get('f-code').value = code();
+    ui.get('f-name').value = 'Media Look';
+    ui.get('f-credit').value = 'Sam';
+    ui.get('f-license').checked = true;
+    ui.get('f-code').events.input();
+    await ui.check();
+    ui.get('f-media').files = [{ size: mib * 1024 ** 2 + 1 }];
+    await ui.get('submit-form').events.submit({ preventDefault() {} });
+    assert.equal(ui.get('f-media').attrs['aria-invalid'], 'true', type);
+    assert.equal(calls, 1, 'the file is refused before another request or FileReader allocation');
+  }
+});

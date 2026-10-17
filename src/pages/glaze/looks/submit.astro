@@ -254,7 +254,9 @@ const access: [string, string, string][] = [
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (reviewing) return;
-    const missing = [!code.value.trim() && 'paste your theme code', !name.value.trim() && 'give it a name', !credit.value.trim() && 'say how to credit you', !license.checked && 'you need to agree to share it under CC BY 4.0', needsFile() && !mediaInput.files?.length && 'add the background file this Look names'].filter(Boolean) as string[];
+    const file = needsFile() ? mediaInput.files?.[0] : undefined;
+    const cap = lastLook?.media?.type === 'video' ? 12 : lastLook?.media?.type === 'image' ? 6 : 1;
+    const missing = [!code.value.trim() && 'paste your theme code', !name.value.trim() && 'give it a name', !credit.value.trim() && 'say how to credit you', !license.checked && 'you need to agree to share it under CC BY 4.0', needsFile() && !file && 'add the background file this Look names', file && file.size > cap * 1024 ** 2 && `the background file is too big (the most is ${cap} MiB)`].filter(Boolean) as string[];
     if (missing.length) { showProblems(missing.map((m) => m.replace('give it a name', 'the name is missing: give it a name'))); form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(); return; }
     reviewing = true; ++seq; clearTimeout(timer);
     $('check-status').textContent = '';
@@ -264,7 +266,6 @@ const access: [string, string, string][] = [
     say(el('p', 'Reviewing your Look. This takes a few seconds.'));
     let r: Response;
     try {
-      const file = needsFile() ? mediaInput.files?.[0] : undefined;
       const media = file ? await base64(file) : undefined;
       r = await fetch(`${API}/submit`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: code.value.trim(), name: name.value, credit: credit.value, tags: tags(), license: license.checked, ...(media && { media }) }) });
     } catch { closed(); return done(); }
