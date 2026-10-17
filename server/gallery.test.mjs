@@ -801,7 +801,7 @@ test('summarize puts parts in a compact description with no free text and no sou
   assert.deepEqual(s.parts.effects, [{ event: 'grade', kind: 'ring' }]);
   assert.deepEqual(s.parts.cursor, { kind: 'glow', size: 20 });
   assert.deepEqual(s.parts.nav, { place: 'top', groups: [{ labelled: true, items: ['course', 'calendar', 'link:library.example.edu'] }], hidden: ['help'], links: [{ host: 'library.example.edu', icon: 'book' }] });
-  assert.deepEqual(s.parts.rules, { count: 3, byAction: { hide: 1, label: 1, style: 1 }, byPart: { 'canvas.dashboard-card.title': 1, 'ultra.course-card': 1, 'ultra.course-card.title': 1 } });
+  assert.deepEqual(s.parts.rules, { count: 3, byAction: { hide: 1, label: 1, style: 1 }, byPart: { 'canvas.dashboard-card.title': 1, 'ultra.course-card': 1, 'ultra.course-card.title': 1 }, items: RULES.map(({ t, ...rule }) => rule) });
   assert.doesNotMatch(JSON.stringify(s), /Library|Study|My courses|search\?q/);
   // A Look without parts is summarized as it always was.
   assert.equal('parts' in summarize(L.describe((await L.checkCode(code())).look)), false);
