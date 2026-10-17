@@ -329,7 +329,7 @@ test('a bundled background file is taken, never shown to the reviewer, and alway
   const m = await mediaMod();
   const check = await post('/check', m.bytes);
   assert.deepEqual(check.body.problems, []);
-  assert.ok(check.body.mod.adds.some((a) => /background is a video or animation file that comes with it, checked by Glaze \(a Lottie animation, 0\.0 MB\)/.test(a)), JSON.stringify(check.body.mod.adds));
+  assert.ok(check.body.mod.adds.some((a) => /background is a video or animation file that comes with it, checked by Glaze \(a Lottie animation, \d+ bytes\)/.test(a)), JSON.stringify(check.body.mod.adds));
   plan.chat = review('accept');
   const r = await reviewed(m.bytes);
   assert.equal(r.row.status, 'pending');

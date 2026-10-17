@@ -293,7 +293,7 @@ export const modFacts = (got) => {
     ...(m.replaces || []).map((r) => `Can replace Glaze's ${r.replace(/^bg$/, 'background').replace(/^nav$/, 'navigation').replace(/^effect:/, 'effect for ').replace(/^tile:/, 'tile ')}`),
     ...(m.settings?.length ? [`${m.settings.length} setting${m.settings.length === 1 ? '' : 's'} in the editor`] : []),
     // Glaze's install prompt's words, with what the file is.
-    ...(media ? [`Its background is a video or animation file that comes with it, checked by Glaze (${{ video: 'a video', image: 'an animated picture', lottie: 'a Lottie animation' }[media.type]}, ${(media.bytes / 1048576).toFixed(1)} MB).`] : []),
+    ...(media ? [`Its background is a video or animation file that comes with it, checked by Glaze (${{ video: 'a video', image: 'an animated picture', lottie: 'a Lottie animation' }[media.type]}, ${media.bytes} bytes).`] : []),
   ];
   const warnings = [
     ...(data.length && hosts.length ? [`This mod could send your ${data.map((d) => DATA_WORDS[d][0].toLowerCase()).join(', ')} to ${hosts.join(', ')}.`] : []),
