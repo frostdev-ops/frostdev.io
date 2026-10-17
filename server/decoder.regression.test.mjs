@@ -47,11 +47,20 @@ test('all curated glaze1 fingerprints and description bytes match the pre-parts 
 });
 
 test('glaze1 refuses the new background kinds that require glaze2 parts', async () => {
-  for (const kind of ['shader', 'layers']) {
+  for (const kind of ['shader', 'layers', 'media']) {
     const legacy = encode({ c: palette, b: { kind } }, 1);
     const r = await checkCode(legacy);
     assert.equal(r.look, null);
     assert.match(r.problems[0], /glaze1:.*Look parts/);
+  }
+});
+
+test('glaze2 refuses media backgrounds even when unused, for every media type and source', async () => {
+  for (const type of ['video', 'image', 'lottie']) for (const src of ['https://media.example.edu/background', `file:${'a'.repeat(43)}`]) {
+    for (const kind of ['media', 'solid']) {
+      const r = await checkCode(code({ bg: { media: { type, src } } }, { kind }));
+      assert.ok(r.problems.some((p) => /video or animation background/.test(p)), `${kind}: ${type}: ${src}`);
+    }
   }
 });
 

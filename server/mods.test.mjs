@@ -281,6 +281,22 @@ test('refusals: unsigned, tampered, damaged, invalid, blocked, unlicensed, too m
   assert.equal(g.db.prepare('SELECT COUNT(*) n FROM mods').get().n, 0);
 });
 
+test('media backgrounds are refused for every media type and source before storage, quota or review', async () => {
+  await start();
+  for (const type of ['video', 'image', 'lottie']) for (const src of ['https://media.example.edu/background', `file:${'a'.repeat(43)}`]) {
+    const m = await make({ glaze: 1, name: `Media ${++modSeq}`, version: '1.0.0', author: { name: 'Kai' }, parts: { bg: { media: { type, src } } } }, {});
+    const check = await post('/check', m.bytes);
+    assert.equal(check.status, 200);
+    assert.ok(check.body.problems.some((p) => /video or animation background/.test(p)), `${type}: ${src}`);
+    const r = await submit(m.bytes);
+    assert.equal(r.status, 422);
+  }
+  assert.equal(modQuota(), 0);
+  assert.equal(g.db.prepare('SELECT COUNT(*) n FROM mods').get().n, 0);
+  assert.deepEqual(readdirSync(path.join(dir, 'mods')), []);
+  assert.equal(calls.chat.length, 0);
+});
+
 test('posts need the site\'s Origin, a bundle\'s type, and at most the bundle cap', async () => {
   await start();
   const m = await make();
