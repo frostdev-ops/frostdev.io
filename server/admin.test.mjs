@@ -233,7 +233,7 @@ test('Looks and every mod version include declined records, queue reasons, revie
   const m = await (await request(`/api/mods/${mod.id}/${mod.hash}`, who)).json();
   assert.equal(m.versions.length, 2); assert.deepEqual(m.decision.review.commands, ['cat page.html', 'find . -type f']); assert.equal(m.decision.review.rounds, 3);
   assert.equal(m.permissions[0].why, HOSTILE); assert.match(m.permissions[0].means, /To Do/); assert.ok(m.summary.hosts.includes('api.weather.gov'));
-  for (const route of ['', '/app.js', '/style.css']) { const text = await (await request(route, who)).text(); assert.ok(!text.includes(HOSTILE)); assert.ok(!text.includes('private-submitter-token')); }
+  for (const route of ['', '/app.js', '/viewer.js', '/style.css']) { const text = await (await request(route, who)).text(); assert.ok(!text.includes(HOSTILE)); assert.ok(!text.includes('private-submitter-token')); }
 });
 
 test('all six moderation actions share CLI state transitions and atomically record actor, item, time and reason', async () => {
@@ -384,7 +384,7 @@ test('audit pages can reach older records and have no public route; nginx and Do
 
 test('browser UI keeps hostile names, reviews and source in text sinks, filters records and posts a reason with CSRF', async () => {
   class Node {
-    constructor(tag = 'div') { this.tagName = tag; this.children = []; this.events = {}; this.dataset = {}; this.style = { setProperty() {} }; this.value = ''; this._text = ''; }
+    constructor(tag = 'div') { this.tagName = tag; this.children = []; this.events = {}; this.dataset = {}; this.style = { setProperty() {} }; this.value = ''; this._text = ''; this.classList = { add() {}, remove() {}, toggle() {} }; }
     set textContent(text) { this._text = String(text); this.children = []; }
     get textContent() { return this._text + this.children.map((n) => n.textContent).join(''); }
     set innerHTML(_) { throw new Error('untrusted markup sink'); }
@@ -395,8 +395,9 @@ test('browser UI keeps hostile names, reviews and source in text sinks, filters 
     async fire(type) { for (const fn of this.events[type] || []) await fn({ preventDefault() {} }); }
     get childElementCount() { return this.children.length; }
     focus() {} scrollIntoView() {} setCustomValidity() {} reportValidity() {}
+    showModal() { this.open = true; } close() { this.open = false; } querySelectorAll() { return []; } click() { this.fire('click'); }
   }
-  const ids = ['email', 'message', 'pending', 'looks', 'mods', 'looks-search', 'looks-filter', 'mods-search', 'mods-filter', 'looks-count', 'mods-count', 'queue', 'queue-title', 'queue-count', 'nav-count', 'published-count', 'total-count', 'limits', 'blocklist', 'audit-rows', 'older', 'refresh', 'logout', 'detail', 'detail-title', 'detail-body', 'close-detail'];
+  const ids = ['email', 'message', 'pending', 'looks', 'mods', 'looks-search', 'looks-filter', 'mods-search', 'mods-filter', 'looks-count', 'mods-count', 'queue', 'queue-title', 'queue-count', 'nav-count', 'published-count', 'total-count', 'limits', 'blocklist', 'audit-rows', 'older', 'refresh', 'logout', 'detail', 'detail-notice', 'detail-title', 'detail-body', 'close-detail'];
   const nodes = Object.fromEntries(ids.map((id) => [id, new Node()]));
   const id = 'c-0000000001', hash = 'a'.repeat(43), modId = 'a'.repeat(16);
   const row = { kind: 'looks', id, name: HOSTILE, credit: HOSTILE, status: 'pending', created: Date.parse('2026-10-17'), person: HOSTILE };
@@ -413,8 +414,10 @@ test('browser UI keeps hostile names, reviews and source in text sinks, filters 
     if (url.endsWith('/logout')) { posts.push({ url, init }); return Response.json({ ok: true }); }
     throw new Error(`Unexpected UI fetch ${url}`);
   };
-  vm.runInNewContext(readFileSync('server/admin/app.js', 'utf8'), { document: { getElementById: (id) => nodes[id], createElement: (tag) => new Node(tag) },
+  const context = vm.createContext({ document: { body: new Node('body'), getElementById: (id) => nodes[id], createElement: (tag) => new Node(tag), createTextNode: (text) => { const n = new Node('#text'); n.textContent = text; return n; } },
     location, window: { addEventListener: (k, fn) => { events[k] = fn; }, confirm: (text) => { confirmations.push(text); return confirmed; } }, fetch: fakeFetch, console });
+  vm.runInContext(readFileSync('server/admin/viewer.js', 'utf8'), context);
+  vm.runInContext(readFileSync('server/admin/app.js', 'utf8'), context);
   const wait = async (f) => { for (let i = 0; i < 100 && !f(); i++) await new Promise((r) => setTimeout(r, 2)); assert.ok(f()); };
   await wait(() => nodes.message.className === 'status error');
   assert.match(nodes.pending.textContent, /Unable to load/); assert.equal(nodes.queue.ariaBusy, 'false'); assert.equal(nodes.refresh.disabled, false);
@@ -425,7 +428,8 @@ test('browser UI keeps hostile names, reviews and source in text sinks, filters 
   assert.match(nodes['audit-rows'].textContent, /No decisions yet/);
   assert.ok(nodes.pending.textContent.includes(HOSTILE)); assert.ok(nodes['detail-body'].textContent.includes(HOSTILE));
   const find = (node, tag, text) => node.tagName === tag && (!text || node.textContent === text) ? node : node.children.map((n) => find(n, tag, text)).find(Boolean);
-  assert.ok(find(nodes['detail-body'], 'pre', HOSTILE), 'source is literal text in a pre element');
+  assert.ok(find(nodes['detail-body'], 'code', HOSTILE), 'source is literal text in the code viewer');
+  assert.equal(nodes.detail.open, true);
   assert.match(nodes.pending.children[0].className, /selected/);
   nodes['looks-search'].value = 'no match'; await nodes['looks-search'].fire('input'); assert.match(nodes.looks.textContent, /No matches/);
   nodes['mods-filter'].value = 'pending'; await nodes['mods-filter'].fire('change'); assert.match(nodes.mods.textContent, /No matches/);
@@ -497,4 +501,29 @@ test('dashboard requeue requires Origin and CSRF, audits the admin email, refuse
   for (const status of ['pending', 'declined', 'queued']) {
     const item = await seedMod(status); assert.equal((await action(`mods/${item.id}/${item.hash}/requeue`, who)).status, 200); await g.drain();
   }
+});
+
+test('highlighter renders hostile HTML, closing script tags and bidi as inert text in every supported language', () => {
+  class Text { constructor(text) { this.textContent = text; this.nodeType = 3; } }
+  class Element {
+    constructor(tag) { assert.equal(tag, 'span'); this.tagName = tag; this.children = []; this.nodeType = 1; }
+    set textContent(text) { this.children = [new Text(text)]; }
+    get textContent() { return this.children.map(n => n.textContent).join(''); }
+    set innerHTML(_) { throw new Error('markup sink'); }
+    append(...nodes) { this.children.push(...nodes); }
+  }
+  const context = vm.createContext({ document: { createElement: tag => new Element(tag), createTextNode: t => new Text(t) } });
+  vm.runInContext(readFileSync('server/admin/viewer.js', 'utf8'), context);
+  const viewer = context.GalleryViewer;
+  const source = '</script><img src=x onerror="alert(1)">\u202Econst safe = "no";\u2066\u0000';
+  for (const lang of ['js', 'json', 'html', 'css', 'md', 'glsl', 'text']) {
+    const parent = new Element('span'); viewer.highlight(parent, source, lang);
+    assert.equal(parent.textContent, viewer.visible(source));
+    assert.match(parent.textContent, /⟦U\+202E⟧/); assert.match(parent.textContent, /⟦U\+2066⟧/); assert.match(parent.textContent, /⟦U\+0000⟧/);
+    for (const child of parent.children) {
+      if (child.nodeType === 1) { assert.equal(child.tagName, 'span'); assert.ok(child.children.every(n => n.nodeType === 3)); }
+      else assert.equal(child.nodeType, 3);
+    }
+  }
+  for (const file of ['server/admin/app.js', 'server/admin/viewer.js']) assert.doesNotMatch(readFileSync(file, 'utf8'), /innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function\(|\.srcdoc/);
 });

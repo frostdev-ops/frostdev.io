@@ -186,7 +186,7 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
       return reply(res, ok ? 200 : 409, ok ? { ok: true } : { error: 'The item changed, is blocked, or cannot take that action. Refresh and check it.' });
     }
     if (req.method !== 'GET') return reply(res, 405, { error: 'GET or POST only.' }, undefined, { allow: 'GET, POST' });
-    const asset = { '': ['index.html', 'text/html; charset=utf-8'], '/': ['index.html', 'text/html; charset=utf-8'], '/app.js': ['app.js', 'text/javascript; charset=utf-8'], '/style.css': ['style.css', 'text/css; charset=utf-8'] }[p];
+    const asset = { '': ['index.html', 'text/html; charset=utf-8'], '/': ['index.html', 'text/html; charset=utf-8'], '/app.js': ['app.js', 'text/javascript; charset=utf-8'], '/viewer.js': ['viewer.js', 'text/javascript; charset=utf-8'], '/style.css': ['style.css', 'text/css; charset=utf-8'] }[p];
     if (asset) return reply(res, 200, readFileSync(new URL(`./admin/${asset[0]}`, import.meta.url)), asset[1]);
     if (p === '/api/data') {
       // shortcut: lists fit in one response today; page in SQL when the gallery holds thousands of submissions.

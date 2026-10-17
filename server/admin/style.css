@@ -208,3 +208,46 @@ pre { margin: .75rem 0 0; padding: 1rem; max-height: 30rem; overflow: auto; whit
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+/* Native modal supplies the focus trap and inert background; hash navigation owns its lifetime. */
+body.review-open { overflow: hidden; }
+.workspace { display: block; }
+.queue-items { grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); max-height: none; }
+dialog.review-panel { position: fixed; inset: 0; width: 100%; height: 100dvh; max-width: none; max-height: none; margin: 0; border: 0; border-radius: 0; padding: 0 2rem 2rem; overflow: auto; color: var(--ink); background: var(--surface); }
+dialog::backdrop { background: var(--bg); }
+dialog .review-heading { position: sticky; top: 0; z-index: 2; margin-inline: -2rem; padding: 1.25rem 2rem; background: var(--surface); }
+dialog .review-heading h2 { font-size: 1.3rem; }
+#detail-notice:not(:empty) { color: var(--danger); padding-block: .75rem; }
+.file-workspace { display: grid; grid-template-columns: minmax(10rem, 15rem) minmax(0, 1fr); border: 1px solid var(--line); border-radius: .5rem; margin-block: 1rem 2rem; overflow: hidden; }
+.file-tree { padding: .75rem; background: var(--bg); border-right: 1px solid var(--line); max-height: 75vh; overflow: auto; }
+.file-tree button { display: flex; width: 100%; justify-content: start; text-align: left; padding: .4rem .6rem; overflow-wrap: anywhere; }
+.file-tree button[aria-current=true] { color: var(--accent); background: var(--raised); border-color: var(--strong-line); }
+.file-directory { padding-left: .75rem; }
+.file-tree details { border: 0; padding: 0; }
+.file-pane { min-width: 0; padding: 1rem; }
+.file-pane h3 { overflow-wrap: anywhere; }
+.viewer-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-block: .75rem; }
+.viewer-tools button { padding: .45rem .65rem; min-height: 44px; font-size: .75rem; }
+.viewer-tools input[type=search] { flex: 1 1 12rem; width: auto; }
+.viewer-tools input[type=range] { flex: 1 1 9rem; width: 9rem; padding: 0; }
+.viewer pre.source { max-height: 65vh; padding: .5rem 0; white-space: pre; overflow-wrap: normal; line-height: 1.65; }
+.source-line { display: flex; min-height: 1.65em; }
+.source-line > code { font-size: inherit; overflow-wrap: normal; padding-right: 1rem; }
+.line-number { position: sticky; left: 0; flex: 0 0 5.5em; padding-right: 1em; text-align: right; user-select: none; background: var(--bg); color: var(--dim); border-right: 1px solid var(--line); margin-right: 1em; }
+.source.wrap .source-line > code { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+.syntax-comment { color: var(--dim); }
+.syntax-string { color: var(--good); }
+.syntax-number { color: var(--warn); }
+.syntax-keyword { color: var(--accent); }
+.source mark { background: var(--warn); color: var(--bg); }
+.image-stage { overflow: auto; max-height: 65vh; min-height: 12rem; padding: 1rem; background-color: #283341; background-image: conic-gradient(#46515e 25%, transparent 0 50%, #46515e 0 75%, transparent 0); background-size: 20px 20px; }
+.viewer .image-stage img { max-width: none; max-height: none; border-radius: 0; background: transparent; }
+.viewer .image-stage.fit img { width: auto !important; max-width: 100%; max-height: 60vh; margin: auto; object-fit: contain; }
+.image-stage.pixelated img { image-rendering: pixelated; }
+@media (max-width: 700px) {
+  dialog.review-panel { padding-inline: 1rem; }
+  dialog .review-heading { margin-inline: -1rem; padding: 1rem; }
+  .file-workspace { grid-template-columns: minmax(0, 1fr); }
+  .file-tree { max-height: 12rem; border-right: 0; border-bottom: 1px solid var(--line); }
+  .file-pane { padding: .75rem; }
+}
+@media (prefers-reduced-motion: no-preference) { dialog[open] { animation: enter .22s ease-out both; } }

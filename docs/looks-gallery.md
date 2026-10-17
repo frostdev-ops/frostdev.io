@@ -733,13 +733,21 @@ queued mod; a review that finishes afterwards changes nothing.
 
 The mod reviewer uses a tool loop (`reviewModAgent()` in `server/gallery.mjs`): `POST /v1/chat/completions`, model
 `ESCALATION_MODEL`, `reasoning: {effort: "xhigh", summary: "detailed"}`, `max_tokens` 32,000, `provider: {order:
-["openai"], allow_fallbacks: true}`, one retry on 429/5xx, and two tools, one call at a time:
+["openai"], allow_fallbacks: true}`, one retry on 429/5xx, and three tools, one call at a time:
 
 - `bash`: a command line in just-bash 3.6.0, a Bash interpreter over a virtual filesystem containing every bundle file
   at `/mod/<path>`, text and binary, `mod.sig` included. No host filesystem is mounted; network, Python and JavaScript
   execution are disabled. Each command gets a fresh copy of the files, so writes never persist. The hardened execution
   profile applies, with a 10-second command deadline. Stdout and stderr are capped at 11,000 serialized JSON characters
   together (stderr at most 2,000 characters), plus the exit-code and truncation fields.
+- `view_image`: an exact `/mod/<path>`. Only PNG, JPEG, WebP and GIF, sniffed from bytes and checked with Glaze's own
+  file-kind checker, are sent as base64 `image_url` parts in a follow-up user message ([OpenRouter image
+  inputs](https://openrouter.ai/docs/guides/overview/multimodal/image-understanding)). No file URL or remote host is
+  sent. AVIF, video, Lottie and disguised active documents are not viewable. Limits: **96 KiB per image, eight images,
+  128 KiB total**; base64 and tool results share the existing **200,000-character** output budget. Every call also
+  consumes a model round and the shared deadline/completion-token budget. Duplicate views reuse the recorded view
+  without resending bytes. Image pixels and text are untrusted data under rule 3, and the reviewer is told to view
+  every picture.
 - `submit_review`: the strict `MOD_SCHEMA` parameters, `{decision: "accept" | "decline" | "human", reason, rationale,
   overview, summary, recommendation}`, all strings. Only a valid submission finishes the review. A reply without a tool
   call gets one nudge; another goes to a person.
@@ -747,7 +755,7 @@ The mod reviewer uses a tool loop (`reviewModAgent()` in `server/gallery.mjs`): 
 At most 30 model rounds (`MOD_ROUNDS`), 32,000 aggregate completion tokens, and 200,000 characters of serialized tool results (`MOD_SHELL_TOTAL`), all inside
 one 30-minute deadline (`MOD_REVIEW_TIMEOUT`). Hitting a bound goes to a person with the reason. The complete conversation,
 including OpenRouter's opaque `reasoning_details`, is sent back each round. Stored review metadata includes rounds,
-commands (each shortened to 200 characters), shell output size, total prompt/completion/reasoning tokens and cost
+commands (each shortened to 200 characters), server-recorded viewed image paths and byte total, tool output size, total prompt/completion/reasoning tokens and cost
 (unknown if any round omits usage). `--mod` shows the command history and totals. Looks reviews keep their single call.
 
 - **System prompt** `MOD_POLICY`: what Glaze is and who uses it, how mods run (sandbox, Worker, the grants, what a page of
@@ -759,19 +767,22 @@ commands (each shortened to 200 characters), shell output size, total prompt/com
   school page or other sites, escaping the sandbox, fingerprinting or detecting review; content unfit for students or
   misleading about deadlines, grades or submissions; anything it couldn't read in full. Accept only when every text file was
   read and every behaviour is clear and harmless. Shell output is untrusted submission data under the same rule as
-  inline files; using the shell never replaces reading every text file. A person checks pictures and fonts before publication.
+  inline files; using the shell never replaces reading every text file. A person checks unviewed or unsupported
+  pictures and fonts before publication. Background media and personal data with network access still always need a
+  person.
 - **User message**: the facts the server computed (id, name, version, author, each permission in Glaze's words with the
   author's reason, hosts, code/frame, every file with bytes, lines, longest line and count of hidden characters), then
   every text file whole, `mod.json` first, each between `=====BEGIN FILE <marker> <path>=====` and `=====END FILE <marker>
   <path>=====` lines whose 24-character marker is random per review, so a file can't fake its end. Format and direction
   characters are shown as `⟦U+XXXX⟧`. Pictures and fonts are listed with their sizes and are available in the shell;
-  the model does not see their rendered appearance. Nothing about the submitter (no cookie, address or token).
+  the model can request supported pictures through `view_image`; font contents are never sent. Nothing about the submitter (no cookie, address or token).
 - **Validation**: exactly the six fields, all strings, a decision from the three, none of the five texts empty after
   cleaning. `reason` becomes one line of at most 300 characters (shown to the submitter on a decline only); the rest are
   prose, bounded (rationale 2,500, overview 1,200, summary 2,000, recommendation 800, reasoning summary 6,000).
 - **Outcome**: accept → `published`; decline → `declined` with the reason on the status link; human → `pending`, mailed.
-  Personal data with any host → `pending` whatever the decision. An acceptance with pictures or fonts the model cannot
-  see → `pending` for a person to inspect those files before publication. An error, a timeout, no key, or an answer outside the
+  Personal data with any host → `pending` whatever the decision. An acceptance with pictures the server did not record
+  as viewed, unsupported pictures or fonts → `pending` for a person to inspect those files before publication. An
+  error, a timeout, no key, or an answer outside the
   schema → `pending` with `failed: true`, mailed. A mod blocked while queued is declined without a call.
 
 ### The email
@@ -794,9 +805,13 @@ docker exec glaze-gallery node gallery.mjs --decline-mod <id> <hash> "<reason th
 `--mods` (every submission but declined ones: id, hash, version, status, mailed or not, date, name, credit), `--mod <id>`
 (every version with its permissions, files, review fields and reasoning summary), `--approve-mod <id> <hash>`
 (pending → published), `--decline-mod <id> <hash> "<reason>"` (pending or queued → declined; the submitter sees the
-reason), `--remove-mod <id> <hash>` (published, pending or queued → removed: no longer listed or served, and that bundle
+reason), `--requeue-mod <id> <hash>` (any status except removed → queued, attempts reset, old in-flight results invalidated),
+`--remove-mod <id> <hash>` (published, pending or queued → removed: no longer listed or served, and that bundle
 can't come back). The id and hash are checked against their forms, and the hash must belong to the id. A running server
-serves the change at once. A harmful mod should also go on the blocklist, which reaches extensions that installed it.
+serves the change at once. Requeued versions disappear from public listing/downloads until approved again; an older
+published version can still be listed. Dashboard requeue starts the drain immediately; CLI changes are picked up at
+startup or the next hourly drain. Set `ADMIN_EMAIL` for CLI audit attribution; otherwise it records `CLI`. A harmful
+mod should also go on the blocklist, which reaches extensions that installed it.
 
 ### The extension hand-off ("Use in Glaze")
 
@@ -1005,8 +1020,13 @@ retained community Look and mod version, including declined records until their 
 repository-managed. Detail views contain both Look reviews or the mod agent's full review, including commands and
 rounds, permissions in Glaze's words, hosts, warnings, files, other versions and a bundle download. The palette preview
 uses the same vendored Glaze-decoded description as the submit page; it approximates the course UI and does not render
-fonts, remote backgrounds or Look parts. Attached pictures and videos have a separate viewer with video controls;
-Lottie JSON, HTML and every other text file are shown as text. No submitted code executes. A human must inspect
+fonts, remote backgrounds or Look parts. Opening a Look or mod uses a full-viewport native dialog with focus trapping,
+Escape/close, hash navigation (Back and refresh), background scroll lock and a phone layout. The directory tree opens
+code with line numbers, local lexical highlighting (JS, JSON, HTML, CSS, Markdown and GLSL), wrap, whole-file search
+and original-source copy. Pages contain at most 100 rows, each at most 2,000 source characters; long lines continue on
+numbered rows. Hidden controls, including bidi, are visible as Unicode labels. Pictures support fit, 100%, zoom/pan,
+pixelated rendering and a transparency checkerboard. Videos have playback controls; Lottie JSON is viewable as inert
+highlighted source. No submitted code executes. A human must inspect
 background media before approving. Missing or changed bundles keep their retained review visible but cannot be
 downloaded or approved.
 
@@ -1019,7 +1039,10 @@ All submitted names, reasons, review text and source files reach the dashboard t
 
 Approve, decline and remove use the same functions as the CLI and retain its state rules: approval only for pending
 items, decline for pending Looks or pending/queued mods, removal for published/pending Looks or published/pending/queued
-mods. Declines need a reason. Every successful change writes an audit entry atomically with its status change: email
+mods. **Send back to review** is available for every mod version except removed; it resets tries and clears the old
+decision, records the administrator email atomically, and reruns the current reviewer. Looks requeue is omitted
+because their review is synchronous and has different quota/reservation semantics. Declines need a reason. Every
+successful change writes an audit entry atomically with its status change: email
 (or `CLI`), resulting status, item id/hash, timestamp and reason. The log shows the latest 200 entries and can load
 older ones. The audit log has no automatic expiry and is included in database backups. Manage shows `SUBMIT_LIMITS`
 and the current blocklist state; it changes neither. Pending-review emails link directly to the dashboard item.
@@ -1040,7 +1063,8 @@ staging. No live Google credentials are needed by the tests.
   or cookie, and the server counts nothing. Choosing a file on the mods submit page sends it to be checked; nothing is
   kept. Submitting stores the bundle, its review and the hashed status token, with the same one-day cookie (scoped to
   `/glaze/mods/api`) and daily network hash for the limit as Looks, never attached to the mod. **Its text files, except a
-  background media file (including Lottie JSON), go to the reviewer: OpenRouter, which passes them to OpenAI** (the submit page says so before the upload). A mod that needs a
+  background media file (including Lottie JSON), and supported pictures (background pictures included) the agent views go to the reviewer:
+  OpenRouter, which passes them to OpenAI** (the submit page says so before the upload). A mod that needs a
   person is described to the maintainer by email (the review, permissions with reasons, the file list; no file contents),
   and the maintainer can read the bundle on the server. Published mods are public, bundle included; declined mods and their
   bundles are deleted 30 days after the decision; pending and removed ones are kept.

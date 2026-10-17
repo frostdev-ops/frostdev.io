@@ -19,9 +19,12 @@ const button = (text, run) => {
 const date = (v) => v ? new Date(v).toLocaleString(undefined, { timeZone: 'UTC', timeZoneName: 'short' }) : '—';
 const address = (r) => `${r.kind}/${encodeURIComponent(r.id)}${r.hash ? `/${encodeURIComponent(r.hash)}` : ''}`;
 const status = (text, state = '') => { $('message').textContent = text; $('message').className = `status ${state}`; };
-const showError = (e) => status(`${e.message || 'Something went wrong.'} Use Refresh to try again.`, 'error');
+const showError = (e) => {
+  status(`${e.message || 'Something went wrong.'} Use Refresh to try again.`, 'error');
+  if ($('detail').open) $('detail-notice').textContent = e.message || 'Something went wrong.';
+};
 const badge = (row) => el('span', `${row.kind === 'looks' ? 'Look' : 'Mod'} · ${row.status}`, `badge ${row.status}`);
-let data, selection, detailRequest = 0, fileRequest = 0, refreshRequest = 0;
+let data, selection, returnFocus, detailRequest = 0, fileRequest = 0, refreshRequest = 0;
 async function api(path, options = {}) {
   const response = await fetch(`${ROOT}${path}`, { credentials: 'same-origin', cache: 'no-store', ...options });
   if (response.status === 401) { location.assign(`${ROOT}/login`); throw new Error('Sign in to continue.'); }
@@ -151,13 +154,13 @@ function actions(parent, row) {
   const help = el('p', 'Up to 300 characters. Your reason is saved with the decision.', 'help'); help.id = 'decision-help'; form.append(help);
   const buttons = el('div', '', 'buttons');
   const error = el('p', '', 'action-error'); error.role = 'alert';
-  const states = { approve: ['pending'], decline: ['pending', ...(row.kind === 'mods' ? ['queued'] : [])], remove: ['published', 'pending', ...(row.kind === 'mods' ? ['queued'] : [])] };
-  for (const verb of ['approve', 'decline', 'remove']) {
+  const states = { approve: ['pending'], decline: ['pending', ...(row.kind === 'mods' ? ['queued'] : [])], remove: ['published', 'pending', ...(row.kind === 'mods' ? ['queued'] : [])], requeue: row.kind === 'mods' ? ['queued', 'pending', 'published', 'declined'] : [] };
+  for (const verb of ['approve', 'decline', 'remove', 'requeue']) {
     if (!states[verb].includes(row.status)) continue;
-    const control = button(verb === 'remove' ? 'Remove from gallery' : verb === 'approve' ? 'Approve' : 'Decline', async () => {
+    const control = button(verb === 'requeue' ? 'Send back to review' : verb === 'remove' ? 'Remove from gallery' : verb === 'approve' ? 'Approve' : 'Decline', async () => {
       if (verb === 'decline' && !reason.value.trim()) { reason.setCustomValidity('Give the submitter a reason.'); reason.reportValidity(); reason.focus(); return; }
       reason.setCustomValidity('');
-      if (verb !== 'approve' && !window.confirm(verb === 'decline' ? `Decline ${row.name}? Your reason will be saved with this decision.` : `Remove ${row.name} from the gallery?`)) return;
+      if (['decline', 'remove'].includes(verb) && !window.confirm(verb === 'decline' ? `Decline ${row.name}? Your reason will be saved with this decision.` : `Remove ${row.name} from the gallery?`)) return;
       const value = reason.value;
       error.textContent = '';
       for (const node of buttons.children) node.disabled = true;
@@ -167,24 +170,27 @@ function actions(parent, row) {
         await refresh();
         await detail(false);
         $('detail-title').focus({ preventScroll: true });
-        status(`${row.name}: ${verb === 'approve' ? 'published' : verb === 'decline' ? 'declined' : 'removed'}. Saved to the audit log.`);
+        status(`${row.name}: ${verb === 'approve' ? 'published' : verb === 'decline' ? 'declined' : verb === 'requeue' ? 'queued for review' : 'removed'}. Saved to the audit log.`);
       } catch (e) { error.textContent = e.message || 'Unable to save. Try again.'; throw e; }
       finally { for (const node of buttons.children) node.disabled = false; control.textContent = text; form.ariaBusy = 'false'; }
     });
-    if (verb !== 'approve') control.className = 'danger';
+    if (verb !== 'approve') control.className = verb === 'requeue' ? 'secondary' : 'danger';
     buttons.append(control);
   }
   if (buttons.childElementCount) { form.append(buttons, error); parent.append(form); }
   form.addEventListener('submit', (event) => event.preventDefault());
   reason.addEventListener('input', () => reason.setCustomValidity(''));
 }
+function stopMedia(parent) {
+  for (const video of parent.querySelectorAll('video')) { video.pause(); video.removeAttribute('src'); video.load(); }
+}
 async function showFile(target, url, type, name) {
+  stopMedia(target);
   const ticket = ++fileRequest;
   target.replaceChildren(el('p', `Loading ${name}…`, 'loading'));
-  if (type.startsWith('image/') || type.startsWith('video/')) {
-    const media = el(type.startsWith('video/') ? 'video' : 'img');
-    media.ariaLabel = name;
-    if (type.startsWith('video/')) { media.controls = true; media.preload = 'metadata'; media.playsInline = true; } else media.alt = name;
+  if (type.startsWith('image/')) GalleryViewer.image(target, url, name);
+  else if (type.startsWith('video/')) {
+    const media = el('video'); media.ariaLabel = name; media.controls = true; media.preload = 'metadata'; media.playsInline = true;
     media.src = url;
     media.addEventListener('error', () => { target.replaceChildren(el('p', 'This browser could not display the media. Download it to inspect it.')); });
     target.replaceChildren(media);
@@ -192,24 +198,68 @@ async function showFile(target, url, type, name) {
     const response = await fetch(`${url}${url.includes('?') ? '&' : '?'}view=text`, { credentials: 'same-origin', cache: 'no-store' });
     if (!response.ok || !response.headers.get('content-type')?.startsWith('text/plain')) throw new Error('This file is unavailable as text. Use its download link.');
     const text = await response.text();
-    if (ticket === fileRequest) target.replaceChildren(el('pre', text));
+    if (ticket === fileRequest) GalleryViewer.code(target, text, name);
   }
+}
+function fileTree(parent, files, selection) {
+  const workspace = el('div', '', 'file-workspace'), tree = el('nav', '', 'file-tree'), pane = el('div', '', 'file-pane');
+  tree.ariaLabel = 'Bundle file tree';
+  const heading = el('h3', 'Choose a file'), download = link('', 'Download file'), viewer = el('div', '', 'viewer');
+  download.hidden = true; pane.append(heading, download, viewer); workspace.append(tree, pane);
+  parent.append(el('h3', 'Bundle files'), el('p', 'Source and Lottie JSON are inert. Hidden characters are visible. Media stays on this site.', 'section-note'), workspace);
+  // Real directory groups preserve hierarchy while keeping every file reachable by keyboard.
+  const dirs = new Map([['', tree]]);
+  for (const file of [...files].sort((a, b) => a.path.localeCompare(b.path))) {
+    const pieces = file.path.split('/'); let folder = '';
+    for (const part of pieces.slice(0, -1)) {
+      const key = folder ? `${folder}/${part}` : part;
+      if (!dirs.has(key)) {
+        const group = el('details'); group.open = true; group.append(el('summary', part));
+        const children = el('div', '', 'file-directory'); group.append(children); dirs.get(folder).append(group); dirs.set(key, children);
+      }
+      folder = key;
+    }
+    const url = `${ROOT}/files/${selection}?path=${encodeURIComponent(file.path)}`;
+    const view = button(pieces.at(-1), async () => {
+      for (const b of tree.querySelectorAll('button')) b.ariaCurrent = 'false';
+      view.ariaCurrent = 'true'; heading.textContent = `${file.path} · ${file.bytes.toLocaleString()} bytes`;
+      download.href = `${url}&download=1`; download.hidden = false;
+      try { await showFile(viewer, url, file.type, file.path); }
+      catch (e) { viewer.replaceChildren(el('p', e.message, 'attention')); }
+    });
+    view.ariaLabel = `View ${file.path}`; view.className = 'quiet'; dirs.get(folder).append(view);
+    if (file.path === 'mod.json') view.click();
+  }
+}
+function closeDetail() {
+  detailRequest++; fileRequest++; selection = undefined;
+  stopMedia($('detail'));
+  $('detail').close(); document.body.classList.remove('review-open');
+  $('detail').ariaBusy = 'false';
+  $('detail-title').textContent = 'Choose a submission'; $('detail-body').replaceChildren();
+  lists();
+  if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
+  else $('queue-title').focus({ preventScroll: true });
 }
 async function detail(moveFocus = true) {
   const pattern = /^#(looks\/(c-[0-9a-f]{10})|mods\/([a-z2-7]{16})\/([\w-]{43}))$/;
   const match = pattern.exec(location.hash) || (!moveFocus && selection ? pattern.exec(`#${selection}`) : null);
-  if (!match) return;
+  if (!match) { if ($('detail').open) closeDetail(); return; }
   const request = ++detailRequest;
+  stopMedia($('detail'));
   fileRequest++;
   selection = match[1];
   lists();
   $('close-detail').hidden = false;
+  $('detail-notice').textContent = '';
+  if (!$('detail').open) { returnFocus = document.activeElement; $('detail').showModal(); document.body.classList.add('review-open'); }
   $('detail-title').textContent = 'Loading submission…';
   $('detail').ariaBusy = 'true';
   const body = $('detail-body'); body.replaceChildren(el('p', 'Loading review and files…', 'empty loading'));
   if (moveFocus) {
+    $('detail').scrollTop = 0;
     $('detail-title').focus({ preventScroll: true });
-    $('detail').scrollIntoView({ block: 'start', behavior: 'instant' });
+
   }
   let row;
   try { row = await api(`/api/${selection}`); }
@@ -240,7 +290,7 @@ async function detail(moveFocus = true) {
     palette(body, row.described);
     review(body, 'First review', row.decision.first);
     review(body, 'Second review', row.decision.escalation);
-    json(body, 'Theme code', row.code);
+    const source = el('div', '', 'viewer'); body.append(el('h3', 'Theme code'), source); GalleryViewer.code(source, row.code, 'theme.txt');
     json(body, 'Full review record · numbers, decisions, reasons and rationale', row.decision);
     json(body, 'Look description and parts', row.described);
     if (row.media) {
@@ -250,7 +300,7 @@ async function detail(moveFocus = true) {
       if (type === 'video' || type === 'image') {
         // The sniffed MIME is supplied by the file response, never by submitted text.
         showFile(viewer, row.media, row.mediaType || 'text/plain', 'Look background').catch((e) => viewer.replaceChildren(el('p', e.message)));
-      } else showFile(viewer, row.media, 'text/plain', 'Lottie JSON').catch((e) => viewer.replaceChildren(el('p', e.message)));
+      } else showFile(viewer, row.media, 'text/plain', 'lottie.json').catch((e) => viewer.replaceChildren(el('p', e.message)));
     }
   } else {
     field(body, 'Author key', row.key); field(body, 'Bundle hash', row.hash);
@@ -268,24 +318,9 @@ async function detail(moveFocus = true) {
     json(body, 'What it adds', row.summary.adds || []);
     body.append(link(`${ROOT}/bundles/${selection}`, 'Download .glazemod'));
     if (row.fileError) body.append(el('p', row.fileError, 'attention'));
-    const files = el('div', '', 'files'), viewer = el('div', '', 'viewer');
-    body.append(el('h3', 'Bundle files'), el('p', 'Text is shown as text. Pictures and videos have a media viewer; Lottie is shown as JSON.'), files, viewer);
-    for (const file of row.files) {
-      const url = `${ROOT}/files/${selection}?path=${encodeURIComponent(file.path)}`;
-      const line = el('div', '', 'file');
-      const view = button('View', () => showFile(viewer, url, file.type, file.path));
-      view.ariaLabel = `View ${file.path}`;
-      const download = link(`${url}&download=1`, 'Download');
-      download.ariaLabel = `Download ${file.path}`;
-      line.append(el('code', `${file.path} · ${file.bytes.toLocaleString()} bytes`), view, download);
-      files.append(line);
-    }
+    fileTree(body, row.files, selection);
     const bg = row.summary.media;
-    if (bg) {
-      body.append(el('p', `Background: ${bg.path} (${bg.type}). A human must check this before approving.`, 'attention'));
-      const file = row.files.find((f) => f.path === bg.path);
-      if (file) showFile(viewer, `${ROOT}/files/${selection}?path=${encodeURIComponent(file.path)}`, file.type, file.path).catch((e) => viewer.replaceChildren(el('p', e.message)));
-    }
+    if (bg) body.append(el('p', `Background: ${bg.path} (${bg.type}). A human must check this before approving.`, 'attention'));
     const versions = el('ul');
     for (const v of row.versions) { const item = el('li'); item.append(link(`#mods/${v.id}/${v.hash}`, `${v.version} · ${v.status} · ${date(v.created)}`)); versions.append(item); }
     body.append(el('h3', 'Version history'), versions);
@@ -296,13 +331,8 @@ for (const kind of ['looks', 'mods']) {
   $(`${kind}-search`).addEventListener('input', () => filter(kind));
   $(`${kind}-filter`).addEventListener('change', () => filter(kind));
 }
-$('close-detail').addEventListener('click', () => {
-  detailRequest++; fileRequest++; selection = undefined;
-  $('detail').ariaBusy = 'false'; $('close-detail').hidden = true;
-  $('detail-title').textContent = 'Choose a submission';
-  $('detail-body').replaceChildren(el('p', 'Select an item from the queue or the lists below to read its review.', 'empty detail-empty'));
-  lists(); location.hash = '#queue'; $('queue-title').focus({ preventScroll: true }); $('queue').scrollIntoView({ block: 'start', behavior: 'instant' });
-});
+$('close-detail').addEventListener('click', () => { closeDetail(); location.hash = '#queue'; });
+$('detail').addEventListener('cancel', (event) => { event.preventDefault(); closeDetail(); location.hash = '#queue'; });
 $('refresh').addEventListener('click', () => refresh().then(() => detail(false)).catch(showError));
 $('logout').addEventListener('click', () => api('/logout', { method: 'POST', headers: { 'x-csrf-token': data?.csrf || '' } }).then(() => location.assign(`${ROOT}/login`)).catch(showError));
 $('older').addEventListener('click', async () => {
