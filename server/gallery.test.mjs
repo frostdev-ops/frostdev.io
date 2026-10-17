@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import http from 'node:http';
 import net from 'node:net';
@@ -1111,7 +1111,14 @@ test('media: an accepted Look with a file goes to a person, who sees how to get 
   // The listing gives the cards what they draw.
   const { looks } = await (await fetch(`${base}/looks`)).json();
   assert.equal(looks[0].media.hash, h);
-  // A file changed on disk is not served.
+  // A query string is another cache key at Cloudflare: refused, so it can't bring requests here.
+  assert.equal((await media(`${h}?x=1`)).status, 404);
+  // A file changed on disk (another size, or the same size and a later mtime) is checked again and not served.
+  const good = readFileSync(path.join(dir, h));
+  const same = Buffer.from(good); same[same.length - 2] ^= 1;
+  writeFileSync(path.join(dir, h), same);
+  utimesSync(path.join(dir, h), new Date(), new Date(Date.now() + 5000));
+  assert.equal((await media(h)).status, 404, 'same size, new mtime');
   writeFileSync(path.join(dir, h), '{"v":"5.7.0"}');
   assert.equal((await media(h)).status, 404);
 });

@@ -37,7 +37,7 @@
 // Glaze's own reader (lib/media.js) and kept in media/ next to DB by its hash; a person always decides it, and while it is
 // published GET /glaze/looks/api/media/<hash> serves exactly that file (Glaze's "Use this Look" downloads it from there).
 import crypto from 'node:crypto';
-import { mkdirSync, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { createReadStream, mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import { createRequire } from 'node:module';
 import net from 'node:net';
@@ -573,12 +573,22 @@ export function gallery({
   const dropMedia = (hash) => {
     if (hash && !q.mediaKept.get(hash)) try { unlinkSync(mediaFile(hash)); } catch (e) { if (e.code !== 'ENOENT') throw e; }
   };
-  // A stored file, read and cleaned again: { bytes, mime } only when it is still exactly the file named, else null.
+  // A stored file, checked once per process: its bytes must be the cleaned file itself (cleaning them again changes nothing)
+  // and hash to its name. Checked again only when its size or mtime changes. → { file, size, mime } or null.
+  const verified = new Map();
   const readMedia = async (hash) => {
+    const file = mediaFile(hash);
+    let st;
+    try { st = statSync(file); } catch { return null; }
+    const seen = verified.get(hash);
+    if (seen && seen.size === st.size && seen.mtime === st.mtimeMs) return { file, size: st.size, mime: seen.mime };
+    verified.delete(hash);
     let b;
-    try { b = new Uint8Array(readFileSync(mediaFile(hash))); } catch { return null; }
-    const got = MEDIA.check(b, 'bg');
-    return got && await MEDIA.sha(got.bytes) === hash ? { bytes: got.bytes, mime: got.mime } : null;
+    try { b = new Uint8Array(readFileSync(file)); } catch { return null; }
+    const got = b.length === st.size ? MEDIA.check(b, 'bg') : null;
+    if (!got || got.bytes.length !== b.length || await MEDIA.sha(b) !== hash || await MEDIA.sha(got.bytes) !== hash) return null;
+    verified.set(hash, { size: st.size, mtime: st.mtimeMs, mime: got.mime });
+    return { file, size: st.size, mime: got.mime };
   };
   // The signed mod blocklist as published (its text), or null.
   const blocklist = () => { const r = q.meta.get('blocklist'); return r ? Buffer.from(r.v).toString('utf8') : null; };
@@ -1235,13 +1245,14 @@ export function gallery({
     const md = /^\/media\/([\w-]{43})$/.exec(p);
     if (md) {
       if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, { error: 'GET only.' }, { allow: 'GET, HEAD' });
-      // ponytail: reads and checks the file on every request (12 MiB at most); Cloudflare caches it for a year (immutable).
-      const f = q.mediaPublished.get(md[1]) ? await readMedia(md[1]) : null;
+      // No query string: each one would be another cache key for Cloudflare, so another trip here.
+      const f = !url.search && q.mediaPublished.get(md[1]) ? await readMedia(md[1]) : null;
       if (!f || !q.mediaPublished.get(md[1])) return send(res, 404, { error: 'No such file in the gallery.' });
       const headers = { etag: `"${md[1]}"`, 'cache-control': 'public, max-age=31536000, immutable', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' };
       if (unchanged(req, headers.etag)) { res.writeHead(304, headers); return res.end(); }
-      res.writeHead(200, { 'content-type': f.mime, 'content-length': f.bytes.length, 'content-disposition': 'attachment', ...headers });
-      return res.end(req.method === 'HEAD' ? undefined : f.bytes);
+      res.writeHead(200, { 'content-type': f.mime, 'content-length': f.size, 'content-disposition': 'attachment', ...headers });
+      if (req.method === 'HEAD') return res.end();
+      return createReadStream(f.file).on('error', () => res.destroy()).pipe(res);
     }
     const st = /^\/status\/([\w-]{32})$/.exec(p);
     if (req.method === 'GET' && st) {
