@@ -732,6 +732,7 @@ export function gallery({
       v, reasoning: prose(summary, REASONING_MAX), reasoningTokens: Number.isInteger(tokens) ? tokens : null,
       model: typeof res?.model === 'string' ? res.model.slice(0, 80) : escalationModel, provider: typeof res?.provider === 'string' ? res.provider.slice(0, 40) : '',
       cost: typeof res?.usage?.cost === 'number' ? res.usage.cost : null,
+      tokens: { prompt: Number.isInteger(res?.usage?.prompt_tokens) ? res.usage.prompt_tokens : null, completion: Number.isInteger(res?.usage?.completion_tokens) ? res.usage.completion_tokens : null },
     };
   };
   const escalate = async (state, answers) => {
