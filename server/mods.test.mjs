@@ -1083,6 +1083,33 @@ test('a command that runs forever is cut off, and output is capped', async () =>
   assert.notEqual((await modShell({}, 'echo should-not-run', stopped.signal)).exitCode, 0);
 });
 
+test('a synchronous command cannot block the server or outlive its deadline or stop signal', () => {
+  // Run the regression in a child: the old in-process diff blocks even the test runner's timeout.
+  const child = spawnSync(process.execPath, ['--max-old-space-size=128', '-e', `
+    (async () => {
+      const assert = (await import('node:assert/strict')).default;
+      const { modShell } = await import('./server/gallery.mjs');
+      const files = Object.fromEntries(['a', 'b'].map(c => [c + '.txt', Buffer.from(
+        Array.from({length: 20000}, (_, i) => c + i).join('\\n'))]));
+      for (const cancel of [false, true]) {
+        let ticks = 0;
+        const pulse = setInterval(() => ticks++, 10);
+        const stop = new AbortController();
+        const timer = cancel && setTimeout(() => stop.abort(), 100);
+        const start = Date.now();
+        const r = await modShell(files, 'diff a.txt b.txt', stop.signal, cancel ? 10000 : 100);
+        clearInterval(pulse);
+        clearTimeout(timer);
+        assert.notEqual(r.exitCode, 0);
+        assert.ok(Date.now() - start < 1500, 'execution actually stopped');
+        assert.ok(ticks > 1, 'server event loop stayed responsive');
+        assert.equal((await modShell({}, 'echo still-running')).stdout, 'still-running\\n');
+      }
+    })().catch(e => { console.error(e); process.exitCode = 1; });
+  `], { encoding: 'utf8', timeout: 4000 });
+  assert.equal(child.status, 0, `${child.error?.message || ''}\n${child.stderr}`);
+});
+
 test('the loop\'s bounds and failures go to a person with what the agent did; a stop mid-loop keeps the row queued', async () => {
   await start();
   plan.chat = bash('true');
@@ -1241,5 +1268,6 @@ test('the gallery image installs the same pinned shell using only its server man
   const dockerfile = readFileSync('server/Dockerfile', 'utf8');
   assert.match(dockerfile, /COPY package\.json package-lock\.json/);
   assert.match(dockerfile, /npm ci --omit=dev --omit=optional --ignore-scripts/);
-  assert.match(readFileSync('ops/deploy-gallery.sh', 'utf8'), /cp server\/gallery\.mjs server\/Dockerfile server\/package\.json server\/package-lock\.json "\$stage\/"/);
+  assert.match(dockerfile, /COPY gallery\.mjs mod-shell\.mjs/);
+  assert.match(readFileSync('ops/deploy-gallery.sh', 'utf8'), /cp server\/gallery\.mjs server\/mod-shell\.mjs server\/Dockerfile server\/package\.json server\/package-lock\.json "\$stage\/"/);
 });

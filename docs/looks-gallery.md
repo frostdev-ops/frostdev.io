@@ -875,7 +875,11 @@ Tests: `server/mods.test.mjs` (in `npm run test:gallery`, with mock OpenRouter a
 the queue across restarts, personal data with a host going to a person whatever the reviewer says, invalid answers,
 serving only published hashes, path traversal on the bundle route, the CLI, the email and the nginx locations. Tool-loop
 tests cover cross-file reads, preserved reasoning, host/network isolation, binary files, ephemeral writes, cancellation,
-command and output bounds, malformed tool calls, the nudge and aggregate usage.
+command and output bounds, malformed tool calls, the nudge and aggregate usage. Every shell command runs in a fresh
+worker with an empty host environment, a 64 MiB old-generation heap limit, and parent-owned cancellation and deadline;
+the parent waits for termination. Defense-in-depth patches stay in that worker. In addition to the hardened interpreter
+profile, live allocations are limited to 16 MiB, retained files, database images and expanded archives to 8 MiB each,
+and generated output to 1 MiB before the transcript's smaller output cap.
 
 ## Deploy
 

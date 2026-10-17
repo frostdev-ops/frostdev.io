@@ -25,7 +25,7 @@ host=loothing-vps
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT
 mkdir -p "$stage/scripts" "$stage/vendor" "$stage/src/data"
-cp server/gallery.mjs server/Dockerfile server/package.json server/package-lock.json "$stage/"
+cp server/gallery.mjs server/mod-shell.mjs server/Dockerfile server/package.json server/package-lock.json "$stage/"
 cp scripts/looks.mjs "$stage/scripts/"
 cp -R vendor/glaze "$stage/vendor/"
 cp -R src/data/looks "$stage/src/data/"

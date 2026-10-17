@@ -45,7 +45,8 @@ import path from 'node:path';
 import tls from 'node:tls';
 import { DatabaseSync, backup as sqliteBackup } from 'node:sqlite';
 import { pathToFileURL } from 'node:url';
-import { Bash } from 'just-bash';
+import { modShell } from './mod-shell.mjs';
+export { modShell, fitOutput, MOD_SHELL_TIMEOUT } from './mod-shell.mjs';
 
 const L = await import(pathToFileURL(path.resolve('scripts/looks.mjs')).href);
 
@@ -272,43 +273,6 @@ const MOD_SCHEMA = {
   },
 };
 
-// The mod reviewer's shell (just-bash: a bash interpreter over a virtual filesystem, not a process): the bundle's files at
-// /mod/<path> and nothing from the host, no network (no fetch), no python or js-exec, the hardened limits. A fresh shell
-// per command over a copy of the same bytes, so a write never lasts and never touches anything real.
-export const MOD_SHELL_TIMEOUT = 10e3;
-const SHELL_OUT = 11000, SHELL_ERR = 2000;
-// One command's output, cut by its size as JSON (escapes inflate text), as the model gets it.
-export const fitOutput = (stdout, stderr) => {
-  let out = stdout, err = stderr.slice(0, SHELL_ERR);
-  for (;;) {
-    const n = JSON.stringify({ stdout: out, stderr: err }).length;
-    if (n <= SHELL_OUT) break;
-    if (out.length) out = out.slice(0, Math.max(0, Math.floor((out.length * SHELL_OUT) / n) - 64));
-    else err = err.slice(0, Math.max(0, Math.floor((err.length * SHELL_OUT) / n) - 64));
-  }
-  return { stdout: out, stderr: err, truncated: out.length < stdout.length || err.length < stderr.length };
-};
-// files: { path: Uint8Array } (MB.read's). → { stdout, stderr, exitCode, truncated }; a command the shell refuses, one that
-// throws or one that runs out of time is reported as failing, never thrown.
-export const modShell = async (files, command, signal, timeout = MOD_SHELL_TIMEOUT) => {
-  const bash = new Bash({
-    files: Object.fromEntries(Object.entries(files).map(([p, b]) => [`/mod/${p}`, new Uint8Array(b)])),
-    cwd: '/mod', env: { HOME: '/mod' }, executionLimitProfile: 'hardened', python: false, javascript: false, defenseInDepth: true,
-    executionLimits: { maxExecutionTimeMs: timeout },
-  });
-  const stop = new AbortController();
-  let timer;
-  try {
-    // The race too, in case a command doesn't heed the signal.
-    const r = await Promise.race([
-      bash.exec(command, { signal: signal ? AbortSignal.any([signal, stop.signal]) : stop.signal }),
-      new Promise((_, reject) => { timer = setTimeout(() => { stop.abort(); reject(new Error(`timed out after ${timeout / 1000} s`)); }, timeout); }),
-    ]);
-    return { ...fitOutput(String(r.stdout ?? ''), String(r.stderr ?? '')), exitCode: stop.signal.aborted ? 124 : r.exitCode ?? 0 };
-  } catch (e) {
-    return { ...fitOutput('', `${e.message}\n`), exitCode: stop.signal.aborted ? 124 : 1 };
-  } finally { clearTimeout(timer); stop.abort(); }
-};
 // The review's bounds, all inside MOD_REVIEW_TIMEOUT: model calls, and shell output sent back to the model (each round
 // resends it all, so it is what the review costs).
 export const MOD_ROUNDS = 30;
