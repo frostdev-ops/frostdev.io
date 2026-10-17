@@ -55,11 +55,13 @@ test('glaze1 refuses the new background kinds that require glaze2 parts', async 
   }
 });
 
-test('glaze2 refuses media backgrounds even when unused, for every media type and source', async () => {
+test('glaze2 takes a media background only as a used file: never a link, never unused', async () => {
   for (const type of ['video', 'image', 'lottie']) for (const src of ['https://media.example.edu/background', `file:${'a'.repeat(43)}`]) {
     for (const kind of ['media', 'solid']) {
       const r = await checkCode(code({ bg: { media: { type, src } } }, { kind }));
-      assert.ok(r.problems.some((p) => /video or animation background/.test(p)), `${kind}: ${type}: ${src}`);
+      const ok = kind === 'media' && src.startsWith('file:');
+      assert.equal(r.problems.length === 0, ok, `${kind}: ${type}: ${src}: ${r.problems}`);
+      if (ok) assert.deepEqual(describe(r.look).media, { type, hash: 'a'.repeat(43), fit: 'cover', dim: 40 });
     }
   }
 });

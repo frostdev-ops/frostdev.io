@@ -12,7 +12,7 @@ import { afterEach, mock, test } from 'node:test';
 import zlib from 'node:zlib';
 import vm from 'node:vm';
 import ts from 'typescript';
-import { BODY_MAX, gallery, networkOf, sendMail } from './gallery.mjs';
+import { BODY_MAX, SUBMIT_MAX, gallery, networkOf, sendMail } from './gallery.mjs';
 import { checkCode, describe, loadLooks } from '../scripts/looks.mjs';
 
 const tmp = mkdtempSync(path.resolve('.review-tests-'));
@@ -32,10 +32,10 @@ const create = async (options = {}) => {
   await g.ready;
   return g;
 };
-const post = (g, body, { ip = '192.0.2.1', cookie = '', type = 'application/json', method = 'POST', route = '/submit', origin = 'https://frostdev.io', peer = '127.0.0.1' } = {}) => new Promise((resolve, reject) => {
+const post = (g, body, { ip = '192.0.2.1', cookie = '', type = 'application/json', method = 'POST', route = '/submit', origin = 'https://frostdev.io', peer = '127.0.0.1', length } = {}) => new Promise((resolve, reject) => {
   const raw = typeof body === 'string' ? body : JSON.stringify(body);
   const req = Readable.from([Buffer.from(raw)]);
-  Object.assign(req, { method, url: `/glaze/looks/api${route}`, headers: { origin, 'content-type': type, 'x-real-ip': ip, cookie }, socket: { remoteAddress: peer, destroy() {} } });
+  Object.assign(req, { method, url: `/glaze/looks/api${route}`, headers: { origin, 'content-type': type, 'x-real-ip': ip, cookie, ...(length === undefined ? {} : { 'content-length': String(length) }) }, socket: { remoteAddress: peer, destroy() {} } });
   const chunks = [];
   const res = new Writable({ write(chunk, enc, cb) { chunks.push(chunk); cb(); } });
   res.writeHead = (status, headers) => { res.statusCode = status; res.headers = headers; res.headersSent = true; };
@@ -301,7 +301,7 @@ test('CLI decisions cannot overwrite a concurrent takedown', async () => {
 });
 
 // A small DOM harness for the submit script's async ordering; no rendering or browser process.
-const submitPage = (fetch, section = 'looks') => {
+const submitPage = (fetch, section = 'looks', globals = {}) => {
   class Element {
     constructor(tag = 'div') { this.tagName = tag; this.value = ''; this.checked = false; this.hidden = false; this.children = []; this.events = {}; this.attrs = {}; this.dataset = {}; this.style = { setProperty() {} }; }
     addEventListener(type, cb) { this.events[type] = cb; }
@@ -322,7 +322,7 @@ const submitPage = (fetch, section = 'looks') => {
   const source = readFileSync(`src/pages/glaze/${section}/submit.astro`, 'utf8').split('<script>')[1].split('</script>')[0].replace(/import .*? from .*?;/s, '');
   const js = ts.transpile(source, { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None });
   vm.runInNewContext(js, {
-    document: doc, location: { hash: '', origin: 'https://frostdev.io' }, URLSearchParams,
+    ...globals, document: doc, location: { hash: '', origin: 'https://frostdev.io' }, URLSearchParams,
     paintPreview() {}, wireDialog() {}, fontLine: () => 'font', fetch,
     clearTimeout() { timer = null; }, window: { setTimeout(cb) { timer = cb; return 1; } },
   });
@@ -876,4 +876,133 @@ for (const [code, fingerprint] of [['glaze1:invalid', ''], ['glaze2:invalid', 'p
   const reopened = gallery({ db });
   galleries.push(reopened);
   await assert.rejects(reopened.ready, /an existing Look has an invalid code/);
+});
+
+// Upload limits cover all simultaneously retained bodies, including validation and model waits.
+test('concurrent large bodies are refused before reading and disconnected uploads release their reservations', async () => {
+  const g = await create();
+  const hold = (url = '/glaze/looks/api/submit', type = 'application/json') => {
+    const req = new Readable({ read() {} });
+    Object.assign(req, { method: 'POST', url, headers: { origin: 'https://frostdev.io', 'content-type': type, 'content-length': String(type === 'application/json' ? SUBMIT_MAX : 1) }, socket: { remoteAddress: '127.0.0.1', destroy() {} } });
+    const res = new Writable({ write(chunk, enc, cb) { cb(); } });
+    res.writeHead = (status) => { res.statusCode = status; res.headersSent = true; };
+    const done = new Promise((resolve) => res.on('finish', () => resolve(res.statusCode)));
+    g.server.emit('request', req, res);
+    req.push('{');
+    return { req, res, done };
+  };
+  const a = hold(), b = hold();
+  try {
+    const busy = await post(g, { code: 'invalid' });
+    assert.equal(busy.status, 503);
+    assert.match(busy.body.error, /upload/i);
+    const mod = hold('/glaze/mods/api/check', 'application/zip');
+    assert.equal(await mod.done, 503, 'raw mod uploads share the same budget');
+    mod.req.destroy();
+    assert.equal((await post(g, {}, { route: '/unknown' })).status, 404);
+    assert.equal((await post(g, {}, { route: '/looks', method: 'HEAD' })).status, 404);
+    a.req.emit('aborted');
+    await new Promise(setImmediate);
+    assert.equal(a.res.writableFinished, true, 'an aborted body settles without waiting for another error event');
+    a.req.destroy();
+    await a.done;
+    assert.equal((await post(g, { code: 'invalid' })).status, 422, 'a disconnect releases capacity');
+    assert.equal((await post(g, { code: 'invalid' }, { route: '/check' })).status, 200);
+  } finally {
+    if (!a.req.destroyed) a.req.destroy(new Error('test disconnect'));
+    b.req.destroy(new Error('test disconnect'));
+    await Promise.all([a.done, b.done]);
+  }
+});
+
+test('the body reservation lasts through model waits and releases after the handler finishes', async () => {
+  const g = await create();
+  const requests = [];
+  g.server.on('request', (req) => requests.push(req));
+  const waiting = [];
+  mock.method(globalThis, 'fetch', async (url, options) => new Promise((resolve) => waiting.push(() => resolve(new Response(JSON.stringify(answer(options)))))));
+  const a = post(g, look(), { ip: '192.0.2.11' });
+  const b = post(g, look(), { ip: '192.0.2.12' });
+  try {
+    for (let i = 0; i < 100 && waiting.length < 4; i++) await new Promise(setImmediate);
+    assert.equal(waiting.length, 4);
+    requests[0].emit('aborted');
+    assert.equal((await post(g, { code: 'invalid' })).status, 503, 'a post-upload disconnect must not release data still retained by review');
+  } finally {
+    for (const resolve of waiting) resolve();
+    await Promise.all([a, b]);
+  }
+  assert.equal((await post(g, { code: 'invalid' })).status, 422);
+});
+
+test('the Look submit page refuses oversized files before reading them into base64', async () => {
+  for (const [type, mib] of [['video', 12], ['image', 6], ['lottie', 1]]) {
+    let calls = 0;
+    const ui = submitPage(async () => {
+      calls++;
+      return new Response(JSON.stringify({ look: { media: { type, hash: 'a'.repeat(43) } }, problems: [], nearest: [] }));
+    });
+    ui.get('f-code').value = code();
+    ui.get('f-name').value = 'Media Look';
+    ui.get('f-credit').value = 'Sam';
+    ui.get('f-license').checked = true;
+    ui.get('f-code').events.input();
+    await ui.check();
+    ui.get('f-media').files = [{ size: mib * 1024 ** 2 + 1 }];
+    await ui.get('submit-form').events.submit({ preventDefault() {} });
+    assert.equal(ui.get('f-media').attrs['aria-invalid'], 'true', type);
+    assert.equal(calls, 1, 'the file is refused before another request or FileReader allocation');
+  }
+});
+
+
+test('small known body lengths leave capacity for checks while reviews wait', async () => {
+  const g = await create();
+  const waiting = [];
+  mock.method(globalThis, 'fetch', async (url, options) => new Promise((resolve) => waiting.push(() => resolve(new Response(JSON.stringify(answer(options)))))));
+  const first = look(), second = look();
+  const a = post(g, first, { ip: '192.0.2.21', length: Buffer.byteLength(JSON.stringify(first)) });
+  const b = post(g, second, { ip: '192.0.2.22', length: Buffer.byteLength(JSON.stringify(second)) });
+  try {
+    for (let i = 0; i < 100 && waiting.length < 4; i++) await new Promise(setImmediate);
+    assert.equal(waiting.length, 4);
+    assert.equal((await post(g, { code: 'invalid' }, { route: '/check' })).status, 200);
+  } finally {
+    for (const resolve of waiting) resolve();
+    await Promise.all([a, b]);
+  }
+});
+
+
+test('a stale Lottie preview does not reject a valid video size while its new code is being checked', async () => {
+  const sent = [];
+  let reads = 0;
+  const ui = submitPage(async (url, options) => {
+    sent.push({ url, body: JSON.parse(options.body) });
+    return new Response(JSON.stringify(url.endsWith('/check')
+      ? { look: { media: { type: 'lottie', hash: 'a'.repeat(43) } }, problems: [], nearest: [] }
+      : { problems: ['test refusal'] }), { status: url.endsWith('/check') ? 200 : 422 });
+  }, 'looks', { FileReader: class {
+    readAsDataURL() { reads++; this.result = 'data:video/webm;base64,AAAA'; this.onload(); }
+  } });
+  ui.get('f-code').value = code2({ bg: { media: { type: 'lottie', src: `file:${'a'.repeat(43)}` } } }, { kind: 'media' });
+  ui.get('f-name').value = 'Media Look';
+  ui.get('f-credit').value = 'Sam';
+  ui.get('f-license').checked = true;
+  ui.get('f-code').events.input();
+  await ui.check();
+  const next = code2({ bg: { media: { type: 'video', src: `file:${'b'.repeat(43)}` } } }, { kind: 'media' });
+  ui.get('f-code').value = next;
+  ui.get('f-code').events.input();
+  ui.get('f-media').files = [{ size: 2 * 1024 ** 2 }];
+  await ui.get('submit-form').events.submit({ preventDefault() {} });
+  assert.equal(reads, 1, 'only the current checked code may impose the Lottie cap');
+  assert.equal(sent.length, 2);
+  assert.equal(sent[1].body.code, next);
+  assert.equal(sent[1].body.media, 'AAAA');
+  ui.get('f-media').files = [{ size: 12 * 1024 ** 2 + 1 }];
+  await ui.get('submit-form').events.submit({ preventDefault() {} });
+  assert.equal(reads, 1, 'a stale preview still enforces the universal 12 MiB bound');
+  assert.equal(sent.length, 2);
+  assert.equal(ui.get('f-media').attrs['aria-invalid'], 'true');
 });

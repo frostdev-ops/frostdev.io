@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, truncateSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import { createRequire } from 'node:module';
 import net from 'node:net';
@@ -260,7 +260,7 @@ test('refusals: unsigned, tampered, damaged, invalid, blocked, unlicensed, too m
     'a blocked mod id': [blockedId.bytes, /blocked by Glaze/],
     'a blocked bundle': [blockedHash.bytes, /blocked by Glaze/],
     'a blocked author': [blockedAuthor.bytes, /blocked by Glaze/],
-    'a video background': [(await make(countdown({ parts: { bg: { media: { type: 'video', src: 'https://example.com/a.webm' } } } }))).bytes, /doesn't take mods with a video or animation background/],
+    'a video background': [(await make(countdown({ parts: { bg: { media: { type: 'video', src: 'https://example.com/a.webm' } } } }))).bytes, /linked video or animation/],
     'more text than the review reads': [big.bytes, new RegExp(`the review reads at most ${MOD_TEXT_MAX >> 10} KiB`)],
   };
   for (const [what, [bytes, why]] of Object.entries(cases)) {
@@ -281,20 +281,74 @@ test('refusals: unsigned, tampered, damaged, invalid, blocked, unlicensed, too m
   assert.equal(g.db.prepare('SELECT COUNT(*) n FROM mods').get().n, 0);
 });
 
-test('media backgrounds are refused for every media type and source before storage, quota or review', async () => {
+// A small Lottie animation, and a declarative mod whose background is that file in its bundle.
+const LOTTIE = te.encode(JSON.stringify({ v: '5.7.0', fr: 30, ip: 0, op: 60, w: 200, h: 120, nm: 'slide', ddd: 0, assets: [], markers: [], layers: [{ ddd: 0, ind: 1, ty: 4, nm: 'box', sr: 1, ao: 0, ip: 0, op: 60, st: 0, bm: 0, ks: { o: { a: 0, k: 100 }, r: { a: 0, k: 0 }, p: { a: 0, k: [40, 60, 0] }, a: { a: 0, k: [0, 0, 0] }, s: { a: 0, k: [100, 100, 100] } }, shapes: [{ ty: 'gr', nm: 'g', it: [{ ty: 'rc', d: 1, s: { a: 0, k: [40, 40] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 6 } }, { ty: 'fl', c: { a: 0, k: [1, 0, 0, 1] }, o: { a: 0, k: 100 }, r: 1 }, { ty: 'tr', p: { a: 0, k: [0, 0] }, a: { a: 0, k: [0, 0] }, s: { a: 0, k: [100, 100] }, r: { a: 0, k: 0 }, o: { a: 0, k: 100 } }] }] }] }));
+// Signed by KEY exactly as MB.pack signs, without the packer's own checks: what a tampered editor could send.
+const forge = async (files, manifest) => {
+  const all = { ...files, 'mod.json': te.encode(JSON.stringify({ ...manifest, author: { ...manifest.author, key: KEY.x } })) };
+  const hash = await MB.digest(all);
+  const key = await crypto.subtle.importKey('jwk', { kty: 'OKP', crv: 'Ed25519', d: KEY.d, x: KEY.x }, 'Ed25519', false, ['sign']);
+  const sig = new Uint8Array(await crypto.subtle.sign('Ed25519', key, te.encode(`glaze-mod-1|${Buffer.from(hash).toString('base64url')}`)));
+  return { bytes: MB.archive({ ...all, 'mod.sig': te.encode(Buffer.from(sig).toString('base64url')) }) };
+};
+const mediaMod = (src = './media/slide.json', type = 'lottie', files = { 'media/slide.json': LOTTIE }, sign = make) =>
+  sign({ glaze: 1, name: `Media ${++modSeq}`, version: '1.0.0', author: { name: 'Kai' }, parts: { bg: { media: { type, src } } } }, files);
+
+test('linked or kept media backgrounds, and bundled files that are missing, mistyped or outside the bundle, are refused before storage, quota or review', async () => {
   await start();
-  for (const type of ['video', 'image', 'lottie']) for (const src of ['https://media.example.edu/background', `file:${'a'.repeat(43)}`]) {
-    const m = await make({ glaze: 1, name: `Media ${++modSeq}`, version: '1.0.0', author: { name: 'Kai' }, parts: { bg: { media: { type, src } } } }, {});
+  for (const type of ['video', 'image', 'lottie']) {
+    const m = await mediaMod('https://media.example.edu/background', type, {});
     const check = await post('/check', m.bytes);
     assert.equal(check.status, 200);
-    assert.ok(check.body.problems.some((p) => /video or animation background/.test(p)), `${type}: ${src}`);
-    const r = await submit(m.bytes);
-    assert.equal(r.status, 422);
+    assert.ok(check.body.problems.some((p) => /linked video or animation/.test(p)), type);
+    assert.equal((await submit(m.bytes)).status, 422);
+  }
+  // The forged bundle is read at all (so the media check is what refuses the others).
+  assert.deepEqual((await post('/check', (await mediaMod(undefined, undefined, undefined, (a, b) => forge(b, a))).bytes)).body.problems, []);
+  for (const [why, args] of [
+    ['a kept file', [`file:${'a'.repeat(43)}`, 'lottie', {}]],
+    ['a missing file', ['./media/none.json', 'lottie', {}]],
+    ['the wrong type', ['./media/slide.json', 'video']],
+    ['a path out of the bundle', ['./../slide.json', 'lottie', { 'slide.json': LOTTIE }]],
+    ['not a Lottie file', ['./media/slide.json', 'lottie', { 'media/slide.json': te.encode('{"no":1}') }]],
+  ]) {
+    const [src, type, files = { 'media/slide.json': LOTTIE }] = args;
+    const m = await mediaMod(src, type, files, (a, b) => forge(b, a));
+    const check = await post('/check', m.bytes);
+    assert.ok(check.body.problems.length && check.body.mod === null, `${why}: ${JSON.stringify(check.body)}`);
+    assert.equal((await submit(m.bytes)).status, 422, why);
   }
   assert.equal(modQuota(), 0);
   assert.equal(g.db.prepare('SELECT COUNT(*) n FROM mods').get().n, 0);
   assert.deepEqual(readdirSync(path.join(dir, 'mods')), []);
   assert.equal(calls.chat.length, 0);
+});
+
+test('a bundled background file is taken, never shown to the reviewer, and always goes to a person', async () => {
+  await start();
+  const m = await mediaMod();
+  const check = await post('/check', m.bytes);
+  assert.deepEqual(check.body.problems, []);
+  assert.ok(check.body.mod.adds.some((a) => /background is a video or animation file that comes with it, checked by Glaze \(a Lottie animation, \d+ bytes\)/.test(a)), JSON.stringify(check.body.mod.adds));
+  plan.chat = review('accept');
+  const r = await reviewed(m.bytes);
+  assert.equal(r.row.status, 'pending');
+  assert.match(JSON.parse(r.row.decision).person, /background is a video or animation file/);
+  const input = calls.chat[0].body.messages[1].content;
+  assert.match(input, /"media": \{\s*"type": "lottie",\s*"path": "media\/slide.json"/);
+  assert.ok(!input.includes('BEGIN FILE') || !/BEGIN FILE \S+ media\/slide\.json/.test(input), 'the file is not read as text');
+  assert.ok(!input.includes('"nm":"box"'));
+  assert.ok(readFileSync('src/pages/glaze/mods/submit.astro', 'utf8').includes("A background file, including Lottie JSON, stays on frostdev.io and always needs a person's check"), 'the submit disclosure must exclude background JSON from model review');
+  assert.match(calls.chat[0].body.messages[0].content, /never claim to have seen it/);
+  await waitFor(() => mails.length === 1);
+  assert.match(mails[0].replace(/\r\n/g, ' '), /Its background is media\/slide.json in the bundle \(lottie, \d+ bytes\), which no reviewer saw/);
+  // A reviewer's decline still goes to the person: the file is theirs to judge too.
+  const d = await mediaMod();
+  plan.chat = review('decline');
+  assert.equal((await reviewed(d.bytes)).row.status, 'pending');
+  assert.ok(await g.decideMod(m.id, m.hash, 'published'));
+  const list = await (await fetch(`${api}/mods`)).json();
+  assert.ok(list.mods[0].adds.some((a) => /comes with it, checked by Glaze/.test(a)));
 });
 
 test('posts need the site\'s Origin, a bundle\'s type, and at most the bundle cap', async () => {
@@ -895,4 +949,22 @@ test('nginx: the blocklist and published mods are GET only and anonymous; upload
   assert.match(up, /proxy_set_header X-Forwarded-For "";/);
   assert.match(up, /proxy_pass http:\/\/127\.0\.0\.1:8788;/);
   for (const page of ['/glaze/mods', '/glaze/mods/submit']) assert.ok(conf.includes(`location ~ ^${page}/?$ {`), page);
+});
+
+
+test('mods and Look media share the storage budget and a capacity refusal restores quota', async () => {
+  await start();
+  const held = path.join(dir, 'media', 'a'.repeat(43));
+  writeFileSync(held, '');
+  truncateSync(held, 1024 ** 3);
+  const m = await make();
+  const who = fresh();
+  const full = await submit(m.bytes, who);
+  assert.equal(full.status, 503);
+  assert.match(full.body.error, /room/);
+  assert.equal(modQuota(), 0);
+  assert.equal(row(m.hash), undefined);
+  assert.deepEqual(readdirSync(path.join(dir, 'mods')), []);
+  rmSync(held);
+  assert.equal((await submit(m.bytes, who)).status, 202);
 });

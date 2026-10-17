@@ -1,8 +1,8 @@
 # Glaze Looks gallery
 
 `/glaze/looks` is a free, open gallery of Glaze themes. No accounts, likes, comments, counters, analytics
-or payments, ever. Glaze makes no request to it except the mod blocklist and, when a student chooses **Use in Glaze** on a
-mod, that mod's bundle (both below); a student visits it like any other page. The same server runs the Mods section
+or payments, ever. Glaze requests the mod blocklist and, when a student chooses **Use in Glaze**, that mod's bundle or
+that Look's background file (below); a student visits it like any other page. The same server runs the Mods section
 ("Mods", below).
 
 It has two kinds of Looks:
@@ -39,17 +39,23 @@ browser ── /glaze/looks, /glaze/looks/submit ──> nginx (static files, /o
 
 ### API (`/glaze/looks/api/`)
 
-All JSON, `X-Content-Type-Options: nosniff`, no CORS. POSTs need `Origin: https://frostdev.io`
+JSON except background-file responses, `X-Content-Type-Options: nosniff`, no CORS. POSTs need `Origin: https://frostdev.io`
 (`SITE_ORIGIN`), `Content-Type: application/json` and a body of at most 22 KiB (`BODY_MAX`, and nginx's
 `client_max_body_size 22k` for the API location). That is the most a submission can be: a glaze2 code of
 20,000 characters with a 40-character name and a 32-character credit written as `\uXXXX` escapes, six tags and
-the licence is 21,012 bytes; the tests build it and hold both numbers to it. It was 16 KB for glaze1.
+the licence is 21,012 bytes; the tests build it and hold both numbers to it. It was 16 KB for glaze1. `submit`
+alone takes up to 16,406 KiB (`SUBMIT_MAX`, and its own nginx location), for a Look's background file as base64
+(below). The shared body reader reserves a valid positive Content-Length, or the route's maximum for an unknown-length
+body, until its whole handler finishes (including review);
+all in-flight uploads together reserve at most twice `SUBMIT_MAX` (about 32 MiB before decoded copies). A full budget
+answers 503 and closes that upload connection after sending the response, without using the daily quota.
 
 | Request | Answer |
 | --- | --- |
 | `GET looks` | Published community Looks: `id, name, credit, created, tags, code` and everything `describe()` gives (for a glaze2 Look that includes `parts`, the text it carries and `live`, what its preview draws: a shader's source can make a Look's entry 8 KB larger, and the list has no paging yet). `Cache-Control: public, max-age=60`. The gallery fetches it without cookies. |
 | `POST check` `{code, name?, credit?, tags?}` | The deterministic problems, `describe()`, and the 3 nearest published Looks (curated and community) with distances. Never calls a model, never uses quota; 30 a minute per network, in memory. |
-| `POST submit` `{code, name, credit, tags, license: true}` | The review, below. |
+| `POST submit` `{code, name, credit, tags, license: true, media?}` | The review, below. `media`: the background file a `file:` Look names, base64. |
+| `GET media/<hash>` (and HEAD) | A published Look's background file, exactly the cleaned bytes named by `<hash>`; 404 for anything else. Its type's `Content-Type`, `Cache-Control: public, max-age=31536000, immutable`, `ETag: "<hash>"` (304 on a match), `Content-Disposition: attachment`, no cookies. Glaze downloads it on "Use this Look" and checks the hash again. |
 | `GET status/<token>` | `pending`, `published` (with the card's link), `declined` (with the reason) or `removed`. |
 
 ## The submission flow
@@ -463,6 +469,33 @@ previews; it grows with the catalog.
 say they are there). Shaders are not run by the reviewers or the server: only checked and judged by description; a
 strobing or visually busy shader is the second reviewer's and the maintainer's judgment.
 
+### Background files (`file:` media)
+
+A glaze2 Look whose background is a video, an animated picture or a Lottie animation must name a file
+(`x.bg.media.src` = `file:<hash>`, the base64url SHA-256 of the file as Glaze cleans it). A linked (`https:`) one is
+refused, because what a link serves can change after the review. The submit page asks for the file when the check's
+`look.media` names one: the student adds the same file they chose in Glaze's editor, and the server cleans it with
+Glaze's own reader (vendored `lib/media.js`, the background limits: video 12 MiB, picture 6 MiB, Lottie 1 MiB) and
+refuses it unless it is that type and that hash. Nothing is used up by a refusal.
+
+The reviewers are told only that there is a file (`summarize()`'s `background.file`); a Look with one never publishes on
+the reviews alone: every automated decision goes to a person, whose mail says how to copy the file
+off the server (`docker cp`) and see the whole Look in Glaze. The file is written as `media/<hash>` next to the database
+in the same transaction as the Look's row (a `.tmp` and a rename; a failure gives the day's submission back, and the next
+start removes `.tmp` files and files no published or pending Look names). Both galleries together keep at most 1 GiB
+of files; the write lock serializes this check, a shared hash counts once, and a capacity refusal returns 503 and gives
+the day back. An atomic temporary write may briefly need one additional upload’s space. Declining or removing a Look deletes its file
+unless another published or pending Look uses it. Takedown stops new origin responses; the required one-year immutable
+cache header allows previously cached copies to remain available. `GET media/<hash>` checks a file once per process (again only when its
+size or mtime changes) and streams it from disk; a request with a query string is a 404, so it can't be used to miss
+Cloudflare's cache.
+
+The cards and the large preview play a video muted and looping, or show an animated picture, from that route. Nothing
+is downloaded up front: a video (`preload="none"`) gets its address and plays only while near the screen, and is
+paused and unloaded when it leaves; a picture loads lazily. Under `prefers-reduced-motion` a video isn't played and a
+picture isn't shown. A Lottie background shows the
+gradient stand-in. Curated entries can't have a file (there is no route for them).
+
 ## Limits, and why not a MAC address
 
 One review per UTC day **per cookie and per client network**, plus a global cap. A limit per MAC address
@@ -663,6 +696,11 @@ Then:
   can't read everything can't vouch for it.
 - **New.** The exact bundle hash was never submitted; no other version of the mod is queued or pending; the version is
   above every published or removed one; no other mod (another id) uses the name, case-insensitively.
+- **Background media in the bundle.** A video, animated picture or Lottie background (`parts.bg.media`) must be a file
+  the bundle carries (`./<path>`), which the reader has already checked with Glaze's background limits within the
+  bundle's 2 MiB; a linked (`https:`) one is refused, since it could change after the review. The reviewer is told its
+  type and size (`media` in the facts) and never reads it, a Lottie file included; a mod with one always goes to a person
+  after the review, whatever it decided (as personal data with a network host does), and the mail says where it is.
 - **Licence** (submit only): code under MIT and the rest (pictures, text, other content) under CC BY 4.0, both ticked.
 
 ### Quota
@@ -839,7 +877,8 @@ page locations, `location = /glaze/mods/api/blocklist` and `location ^~ /glaze/m
 `/etc/glaze-gallery.env` is required (`MOD_REVIEWS_PER_DAY` is optional, default 40); the bundles go in the existing
 `glaze-gallery` volume, under `/data/mods`, which the server creates. The nightly backup copies the database only; the
 bundles are files beside it (published ones can also be downloaded again, declined ones are deleted after 30 days), so
-add `/var/lib/docker/volumes/glaze-gallery/_data/mods` to any off-box copy. Honor the bundle response's `Cache-Control: public, no-cache`: caches must revalidate before reuse so removed or blocked bundles return 404. Do not override this with a Cloudflare cache rule. The blocklist also reaches extensions that already installed a harmful mod. Existing glaze1 Looks
+add `/var/lib/docker/volumes/glaze-gallery/_data/mods` and `/var/lib/docker/volumes/glaze-gallery/_data/media` to any
+off-box copy; the database backup does not contain either kind of file. Honor the bundle response's `Cache-Control: public, no-cache`: caches must revalidate before reuse so removed or blocked bundles return 404. Do not override this with a Cloudflare cache rule. The blocklist also reaches extensions that already installed a harmful mod. Existing glaze1 Looks
 keep their fingerprints and description bytes (the tests hold all 16 curated Looks to their old values).
 Existing glaze2 metadata is refreshed automatically on startup as described above.
 
@@ -873,7 +912,8 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
 
    It listens on 127.0.0.1:8788 only. Rerun the script after a curated entry changes.
 3. nginx: the `/glaze/looks/submit`, `/glaze/mods`, `/glaze/mods/submit`, `/glaze/looks/api/`, `/glaze/mods/api/blocklist`,
-   `/glaze/mods/api/mods` and `/glaze/mods/api/` locations from `ops/public-site.nginx.conf`.
+   `/glaze/mods/api/mods`, `/glaze/mods/api/` and the larger-body exact `/glaze/looks/api/submit` locations from
+   `ops/public-site.nginx.conf`.
    The API location needs nginx's realip module on the frostdev.io server block (Cloudflare's ranges in
    `set_real_ip_from`, `real_ip_header CF-Connecting-IP`), as share.frostdev.io has, so `$remote_addr`,
    passed on as `X-Real-IP`, is the visitor. It logs nothing.
@@ -892,18 +932,22 @@ numbers, the second reviewer's decision, reason, rationale and any reasoning sum
 
 - The gallery page asks frostdev.io itself for the community list, without cookies; the request is
   answered from the database and recorded nowhere. No request logs, in nginx or the server.
-- The mod blocklist (`GET /glaze/mods/api/blocklist`) is the one request Glaze itself makes here, and only on Chrome while a student has
+- The mod blocklist (`GET /glaze/mods/api/blocklist`) is requested only on Chrome while a student has
   a code mod installed. It carries no cookie, referrer or other identifier, is answered from the database and is recorded
   nowhere: nothing is counted, and nginx's location logs nothing and passes on neither the visitor's address nor cookies.
 - Mods: the listing is fetched without cookies and recorded nowhere. Glaze downloads a mod's bundle only when the student
   chooses **Use in Glaze**; that GET carries no cookie, referrer or identifier, nginx logs nothing and passes on no address
   or cookie, and the server counts nothing. Choosing a file on the mods submit page sends it to be checked; nothing is
   kept. Submitting stores the bundle, its review and the hashed status token, with the same one-day cookie (scoped to
-  `/glaze/mods/api`) and daily network hash for the limit as Looks, never attached to the mod. **The whole bundle goes to
-  the reviewer: OpenRouter, which passes it to OpenAI** (the submit page says so before the upload). A mod that needs a
+  `/glaze/mods/api`) and daily network hash for the limit as Looks, never attached to the mod. **Its text files, except a
+  background media file (including Lottie JSON), go to the reviewer: OpenRouter, which passes them to OpenAI** (the submit page says so before the upload). A mod that needs a
   person is described to the maintainer by email (the review, permissions with reasons, the file list; no file contents),
   and the maintainer can read the bundle on the server. Published mods are public, bundle included; declined mods and their
   bundles are deleted 30 days after the decision; pending and removed ones are kept.
+- A Look background file is sent only on submission, cleaned and retained while any published or pending Look uses it,
+  and never sent to the models. A person reviews it. Glaze downloads it only when the student chooses **Use in Glaze**
+  for that Look, without cookies, a referrer or identifiers; the origin counts and logs nothing. Published gallery previews
+  can also load it. The last decline or takedown deletes it at the origin; previously cached copies may persist.
 - Previewing on the submit page sends the code and fields to frostdev.io to check them; nothing is
   saved as submission records. The check sets the one-day cookie if there is none, and keeps a daily
   keyed network hash in memory for rate limiting. Inactive rate-limit buckets are purged by the
