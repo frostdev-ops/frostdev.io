@@ -379,6 +379,17 @@ test('one review per bundle, one version in review at a time, versions go up, na
   assert.equal((await download(v1.id, v1.hash)).status, 200);
 });
 
+test('mod names stay reserved across authors with non-ASCII case differences', async () => {
+  await start();
+  await reviewed((await make(countdown({ name: 'Café Tile' }))).bytes);
+  const duplicate = await make(countdown({ name: 'CAFÉ TILE' }), undefined, OTHER);
+  const quota = modQuota();
+  const r = await submit(duplicate.bytes);
+  assert.equal(r.status, 422);
+  assert.ok(r.body.problems.some((p) => /another mod in the gallery has that name/.test(p)));
+  assert.equal(modQuota(), quota);
+});
+
 test('personal data with a network host always goes to a person, even when the reviewer accepts; the mail has the review', async () => {
   await start();
   const m = await garden();

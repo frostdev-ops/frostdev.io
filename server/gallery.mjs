@@ -524,7 +524,7 @@ export function gallery({
     modByHash: 'SELECT * FROM mods WHERE hash = ?',
     modByToken: 'SELECT * FROM mods WHERE token = ?',
     modVersions: 'SELECT * FROM mods WHERE id = ? ORDER BY created',
-    modNamed: "SELECT id FROM mods WHERE lower(name) = lower(?) AND id != ? AND status != 'declined' LIMIT 1",
+    modNamed: "SELECT name FROM mods WHERE id != ? AND status != 'declined'",
     modInsert: "INSERT INTO mods (id, hash, version, name, credit, key, summary, permissions, status, token, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'queued', ?, ?)",
     // The newest published version of every mod, newest first.
     // (A later row of the same mod is a higher version: a submission must be above every published one.)
@@ -955,7 +955,7 @@ export function gallery({
     if (waiting) out.push(`version ${waiting.version} of this mod is still being reviewed; submit another when it's decided`);
     const top = versions.filter((r) => r.status === 'published' || r.status === 'removed').map((r) => r.version).sort(MB.compare).at(-1);
     if (top && MB.compare(f.version, top) <= 0) out.push(`version ${top} of this mod is already in the gallery (or was taken down); give this one a higher version`);
-    if (q.modNamed.get(f.name, f.id)) out.push('another mod in the gallery has that name; choose another in mod.json');
+    if (q.modNamed.all(f.id).some((r) => r.name.toLowerCase() === f.name.toLowerCase())) out.push('another mod in the gallery has that name; choose another in mod.json');
     return out;
   };
   // The deterministic checks, shared by check and submit: the bundle exactly as the extension reads it (zip, files,
