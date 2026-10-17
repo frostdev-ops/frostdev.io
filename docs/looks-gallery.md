@@ -480,10 +480,14 @@ the reviews alone: a decline still declines, and anything else goes to a person,
 off the server (`docker cp`) and see the whole Look in Glaze. The file is written as `media/<hash>` next to the database
 in the same transaction as the Look's row (a `.tmp` and a rename; a failure gives the day's submission back, and the next
 start removes `.tmp` files and files no published or pending Look names). Declining or removing a Look deletes its file
-unless another published or pending Look uses it. `GET media/<hash>` reads and checks the file again on every request.
+unless another published or pending Look uses it. `GET media/<hash>` checks a file once per process (again only when its
+size or mtime changes) and streams it from disk; a request with a query string is a 404, so it can't be used to miss
+Cloudflare's cache.
 
-The cards and the large preview play a video muted and looping, or show an animated picture, from that route; under
-`prefers-reduced-motion` a video shows its first frame and a picture isn't shown. A Lottie background shows the
+The cards and the large preview play a video muted and looping, or show an animated picture, from that route. Nothing
+is downloaded up front: a video (`preload="none"`) gets its address and plays only while near the screen, and is
+paused and unloaded when it leaves; a picture loads lazily. Under `prefers-reduced-motion` a video isn't played and a
+picture isn't shown. A Lottie background shows the
 gradient stand-in. Curated entries can't have a file (there is no route for them).
 
 ## Limits, and why not a MAC address

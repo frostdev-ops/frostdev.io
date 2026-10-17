@@ -101,9 +101,23 @@ export function previewState(d: Partial<Described>) {
 }
 
 // A Look's background file: a muted looping video or an animated picture from the gallery's media route (on the submit page,
-// `src`: the file the student chose, which isn't on the server yet). Under prefers-reduced-motion a video shows its first
-// frame and a picture isn't shown. A Lottie animation keeps the gradient stand-in: no player is loaded here.
+// `src`: the file the student chose, which isn't on the server yet). Nothing is downloaded up front (a page can hold many
+// 12 MiB files, and students may pay by the megabyte): a video gets its address only while it is near the screen, and
+// loses it (which stops the download) when it leaves; a picture loads lazily. Under prefers-reduced-motion a video isn't
+// played (it shows its first frame once near) and a picture isn't shown. A Lottie animation keeps the gradient stand-in.
 const FITS = ['cover', 'contain', 'fill'] as const;
+const near = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver((entries) => {
+  for (const { target, isIntersecting } of entries) {
+    const v = target as HTMLVideoElement;
+    if (isIntersecting) {
+      if (!v.getAttribute('src')) v.setAttribute('src', v.dataset.src || '');
+      v.muted = true;
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) v.play().catch(() => {});
+    } else if (v.getAttribute('src')) { v.pause(); v.removeAttribute('src'); v.load(); }
+  }
+}, { rootMargin: '200px' });
+// Videos in a preview (or the large preview's copy) are loaded and played only near the screen.
+export const watchMedia = (el: ParentNode) => { for (const v of el.querySelectorAll<HTMLVideoElement>('video.lp-media')) { v.removeAttribute('src'); near?.observe(v); } };
 function showMedia(el: HTMLElement, d: Partial<Described>, src?: string) {
   el.querySelector('.lp-media')?.remove();
   const m = d.media;
@@ -112,13 +126,19 @@ function showMedia(el: HTMLElement, d: Partial<Described>, src?: string) {
   if (m.type === 'image' && still) return;
   const v = document.createElement(m.type === 'video' ? 'video' : 'img');
   // Attributes, not properties, so the large preview's copy (cloneNode) plays the same way.
-  if (m.type === 'video') for (const a of ['muted', 'loop', 'playsinline', ...(still ? [] : ['autoplay'])]) v.setAttribute(a, '');
-  else Object.assign(v, { alt: '', decoding: 'async', loading: 'lazy' });
-  if (m.type === 'video') { v.setAttribute('preload', 'metadata'); (v as HTMLVideoElement).muted = true; }
+  const url = src || `/glaze/looks/api/media/${m.hash}`;
   v.className = 'lp-media';
   v.style.setProperty('object-fit', word(m.fit, FITS, 'cover'));
-  v.setAttribute('src', src || `/glaze/looks/api/media/${m.hash}`);
+  if (m.type === 'video') {
+    for (const a of ['muted', 'loop', 'playsinline']) v.setAttribute(a, '');
+    v.setAttribute('preload', 'none');
+    v.dataset.src = url;
+  } else {
+    Object.assign(v, { alt: '', decoding: 'async', loading: 'lazy' });
+    v.setAttribute('src', url);
+  }
   el.querySelector('.lp-bg')?.append(v);
+  watchMedia(el);
 }
 
 // Paint a rendered preview (LookPreview.astro's markup) in the browser: setProperty and dataset only.
@@ -126,6 +146,7 @@ export function paintPreview(el: HTMLElement, d: Partial<Described>, mediaSrc?: 
   const { vars, data } = previewState(d);
   for (const [k, v] of Object.entries(vars)) el.style.setProperty(k, v);
   if (!vars['--lp-bg-image']) el.style.removeProperty('--lp-bg-image');
+  for (const v of el.querySelectorAll('video.lp-media')) near?.unobserve(v);
   Object.assign(el.dataset, data);
   const host = el.querySelector<HTMLElement>('[data-f="host"]');
   if (host) host.textContent = typeof d.bg?.imageHost === 'string' ? d.bg.imageHost : '';
@@ -229,14 +250,13 @@ export function wireDialog(root: ParentNode = document) {
     copy.setAttribute('tabindex', '-1');
     copy.setAttribute('aria-hidden', 'true');
     stripLive(copy);
-    // A copy's video keeps the muted attribute but not the state, which autoplay needs.
-    for (const v of copy.querySelectorAll('video')) v.muted = true;
     stage.replaceChildren(copy);
+    watchMedia(copy);
     // The large preview draws its own copy of a shader or layers background.
     watch(copy, specOf(p));
     title.textContent = p.dataset.title || 'Preview';
     dialog.showModal();
   });
   dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
-  dialog.addEventListener('close', () => { for (const lp of stage.querySelectorAll<HTMLElement>('.lp')) unwatch(lp); stage.replaceChildren(); opener?.focus(); opener = null; });
+  dialog.addEventListener('close', () => { for (const lp of stage.querySelectorAll<HTMLElement>('.lp')) unwatch(lp); for (const v of stage.querySelectorAll('video')) near?.unobserve(v); stage.replaceChildren(); opener?.focus(); opener = null; });
 }
