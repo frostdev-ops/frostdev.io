@@ -400,6 +400,16 @@ test('clearing the mod file invalidates an outstanding check', async () => {
   assert.equal(ui.get('f-submit').disabled, true);
 });
 
+test('an unreadable mod file reports the local error without checking or enabling submit', async () => {
+  let calls = 0;
+  const ui = submitPage(() => { calls++; throw new Error('unexpected network'); }, 'mods');
+  ui.get('f-file').files = [{ size: 1, arrayBuffer: async () => { throw new Error('unreadable file'); } }];
+  await assert.doesNotReject(ui.get('f-file').events.change());
+  assert.equal(calls, 0);
+  assert.equal(ui.get('f-submit').disabled, true);
+  assert.ok(ui.get('f-file-error').children.length);
+});
+
 test('submit form cannot leak fields through a default GET before scripts initialize', () => {
   const page = readFileSync('src/pages/glaze/looks/submit.astro', 'utf8');
   assert.ok(/<form[^>]*id="submit-form"[^>]*method="post"/.test(page));
