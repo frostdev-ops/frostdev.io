@@ -877,3 +877,54 @@ for (const [code, fingerprint] of [['glaze1:invalid', ''], ['glaze2:invalid', 'p
   galleries.push(reopened);
   await assert.rejects(reopened.ready, /an existing Look has an invalid code/);
 });
+
+// Upload limits cover all simultaneously retained bodies, including validation and model waits.
+test('concurrent large bodies are refused before reading and disconnected uploads release their reservations', async () => {
+  const g = await create();
+  const hold = (url = '/glaze/looks/api/submit', type = 'application/json') => {
+    const req = new Readable({ read() {} });
+    Object.assign(req, { method: 'POST', url, headers: { origin: 'https://frostdev.io', 'content-type': type }, socket: { remoteAddress: '127.0.0.1', destroy() {} } });
+    const res = new Writable({ write(chunk, enc, cb) { cb(); } });
+    res.writeHead = (status) => { res.statusCode = status; res.headersSent = true; };
+    const done = new Promise((resolve) => res.on('finish', () => resolve(res.statusCode)));
+    g.server.emit('request', req, res);
+    req.push('{');
+    return { req, done };
+  };
+  const a = hold(), b = hold();
+  try {
+    const busy = await post(g, { code: 'invalid' });
+    assert.equal(busy.status, 503);
+    assert.match(busy.body.error, /upload/i);
+    const mod = hold('/glaze/mods/api/check', 'application/zip');
+    assert.equal(await mod.done, 503, 'raw mod uploads share the same budget');
+    mod.req.destroy();
+    assert.equal((await post(g, {}, { route: '/unknown' })).status, 404);
+    assert.equal((await post(g, {}, { route: '/looks', method: 'HEAD' })).status, 404);
+    a.req.destroy(new Error('test disconnect'));
+    await a.done;
+    assert.equal((await post(g, { code: 'invalid' })).status, 422, 'a disconnect releases capacity');
+    assert.equal((await post(g, { code: 'invalid' }, { route: '/check' })).status, 200);
+  } finally {
+    if (!a.req.destroyed) a.req.destroy(new Error('test disconnect'));
+    b.req.destroy(new Error('test disconnect'));
+    await Promise.all([a.done, b.done]);
+  }
+});
+
+test('the body reservation lasts through model waits and releases after the handler finishes', async () => {
+  const g = await create();
+  const waiting = [];
+  mock.method(globalThis, 'fetch', async (url, options) => new Promise((resolve) => waiting.push(() => resolve(new Response(JSON.stringify(answer(options)))))));
+  const a = post(g, look(), { ip: '192.0.2.11' });
+  const b = post(g, look(), { ip: '192.0.2.12' });
+  try {
+    for (let i = 0; i < 100 && waiting.length < 4; i++) await new Promise(setImmediate);
+    assert.equal(waiting.length, 4);
+    assert.equal((await post(g, { code: 'invalid' })).status, 503, 'finished bodies awaiting review still hold capacity');
+  } finally {
+    for (const resolve of waiting) resolve();
+    await Promise.all([a, b]);
+  }
+  assert.equal((await post(g, { code: 'invalid' })).status, 422);
+});

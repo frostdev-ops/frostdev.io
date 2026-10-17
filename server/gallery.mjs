@@ -688,8 +688,14 @@ export function gallery({
     res.end(JSON.stringify(body));
   };
   const typeOf = (req) => String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+  // Keep body reservations through validation and review: releasing at end-of-upload would leave those copies unbounded.
+  let inFlight = 0;
+  const bodyReservations = new WeakMap();
   const readBody = (req, max) => new Promise((resolve, reject) => {
     if (Number(req.headers['content-length']) > max) return reject(fail(413, 'That is too big.'));
+    if (inFlight + max > 2 * SUBMIT_MAX) return reject(Object.assign(fail(503, 'Uploads are busy right now; nothing was used up. Try again later.'), { close: true }));
+    inFlight += max;
+    bodyReservations.set(req, max);
     const parts = [];
     let size = 0;
     req.on('data', (d) => { size += d.length; if (size > max) { req.pause(); reject(fail(413, 'That is too big.')); } else parts.push(d); });
@@ -1309,10 +1315,13 @@ export function gallery({
 
   const server = http.createServer((req, res) => {
     handle(req, res).catch((e) => {
-      if (e.status === 413) res.once('finish', () => req.socket.destroy());
+      if (e.status === 413 || e.close) res.once('finish', () => req.socket.destroy());
       if (res.headersSent || res.destroyed) return;
       send(res, e.status || 500, { error: e.status ? e.message : 'Something went wrong.', ...(e.extra || {}) });
       if (!e.status) console.error('gallery:', e.message);
+    }).finally(() => {
+      inFlight -= bodyReservations.get(req) || 0;
+      bodyReservations.delete(req);
     });
   });
   server.requestTimeout = 90e3;
