@@ -1025,8 +1025,8 @@ test('blocklist: the CLI publishes a signed file and says why when it refuses on
 
 test('blocklist: nginx passes GET alone to the gallery, with a tiny body cap and nothing that identifies the visitor', () => {
   const conf = readFileSync('ops/public-site.nginx.conf', 'utf8');
-  const loc = /location \^~ \/glaze\/mods\/api\/ \{([\s\S]*?)\n\}/.exec(conf)?.[1];
-  assert.ok(loc, 'a location for /glaze/mods/api/');
+  const loc = /location = \/glaze\/mods\/api\/blocklist \{([\s\S]*?)\n\}/.exec(conf)?.[1];
+  assert.ok(loc, 'a location for /glaze/mods/api/blocklist');
   assert.match(loc, /limit_except GET \{\s*deny all;\s*\}/);
   assert.equal(/client_max_body_size (\d+)k;/.exec(loc)[1], '1');
   assert.match(loc, /proxy_pass http:\/\/127\.0\.0\.1:8788;/);
