@@ -1,0 +1,48 @@
+:root { color-scheme: dark; font: 16px/1.6 system-ui, sans-serif; background: #08121e; color: #e8f2fa; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+header, nav, main { max-width: 1180px; margin: auto; padding: 1.5rem; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+h1, h2, h3, p { margin: 0 0 .7rem; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); letter-spacing: -.04em; }
+h2 { font-size: 1.5rem; } h3 { font-size: 1.05rem; }
+.eyebrow, .muted { color: #9cb3c9; } .eyebrow { font-size: .85rem; letter-spacing: .08em; }
+a { color: #6fdcff; text-underline-offset: .2em; overflow-wrap: anywhere; }
+nav { display: flex; flex-wrap: wrap; gap: 1.4rem; padding-top: 0; border-bottom: 1px solid #24405f; }
+section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+#detail { background: #0d1b2e; border: 1px solid #315475; padding: 1.5rem; border-radius: 16px; }
+.account, .buttons, .file { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; }
+button, input, select, textarea { font: inherit; border-radius: 8px; border: 1px solid #416283; padding: .55rem .8rem; }
+button { cursor: pointer; background: #6fdcff; color: #04121f; font-weight: 650; }
+button.secondary, #logout, #refresh { background: #132c43; color: #e8f2fa; }
+button:disabled { opacity: .55; cursor: wait; }
+input, select, textarea { color: #e8f2fa; background: #08121e; max-width: 100%; }
+textarea { display: block; width: 100%; margin-top: .4rem; }
+label { display: grid; gap: .35rem; }
+:focus-visible { outline: 3px solid #6fdcff; outline-offset: 4px; }
+.filters { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; }
+.filters input { min-width: min(320px, 100%); }
+.items { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); gap: 1rem; }
+.item { padding: 1.2rem; background: #0d1b2e; border: 1px solid #24405f; border-radius: 12px; min-width: 0; }
+.item p, .item code { font-size: .9rem; }
+.badge { display: inline-block; padding: .1rem .6rem; border-radius: 20px; border: 1px solid #416283; font-size: .8rem; margin-bottom: .65rem; }
+.pending { border-color: #fbbf24; } .published { border-color: #34d399; }
+.attention { border-left: 3px solid #fbbf24; padding-left: .8rem; color: #ffe2a2; }
+.field { margin: 1rem 0; } .field p, code { overflow-wrap: anywhere; }
+details { border-top: 1px solid #24405f; padding: 1rem 0; } summary { cursor: pointer; font-weight: 650; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 38rem; overflow: auto; background: #060d18; padding: 1rem; border-radius: 8px; font: .85rem/1.6 ui-monospace, monospace; }
+.file { justify-content: flex-start; padding: .65rem 0; border-bottom: 1px solid #24405f; }
+.file code { flex: 1 1 230px; }
+.viewer { margin: 1rem 0; } .viewer:empty { display: none; }
+.viewer img, .viewer video { display: block; max-width: 100%; max-height: 65vh; background: #060d18; }
+.actions { margin-top: 2rem; border-top: 1px solid #416283; padding-top: 1.5rem; } .buttons { margin-top: 1rem; }
+#audit-rows { padding-left: 1.5rem; } #audit-rows li { padding: .8rem 0; border-bottom: 1px solid #24405f; overflow-wrap: anywhere; }
+#message { color: #a9d8ef; min-height: 1.6em; }
+.preview { max-width: 680px; padding: 1.2rem; margin: 1rem 0; background: var(--gz-surface, #0d1b2e); color: var(--gz-ink, #e8f2fa); border: 1px solid var(--gz-line, #24405f); }
+.preview-top { border-bottom: 1px solid var(--gz-line-strong, #416283); padding-bottom: .6rem; }
+.preview-muted { color: var(--gz-ink-muted, #9cb3c9); }
+.preview-button { display: inline-block; background: var(--gz-accent, #17c8f4); color: var(--gz-accent-ink, #04121f); padding: .3rem 1rem; border-radius: 6px; }
+.skip { position: absolute; left: -9999px; } .skip:focus { position: fixed; left: 1rem; top: .5rem; background: #08121e; padding: .5rem; z-index: 2; }
+[hidden] { display: none !important; }
+@media (max-width: 650px) { header { align-items: flex-start; flex-direction: column; } header, nav, main { padding: 1rem; } #detail { padding: 1rem; } .account { font-size: .85rem; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
