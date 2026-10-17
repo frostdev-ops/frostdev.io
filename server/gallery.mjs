@@ -722,7 +722,7 @@ export function gallery({
       // verifies the signature itself, so nothing here identifies or trusts anyone; no request is counted or logged.
       const etag = `"${sha(body)}"`;
       const headers = { etag, 'cache-control': 'public, max-age=3600' };
-      if (String(req.headers['if-none-match'] || '').split(',').some((t) => t.trim().replace(/^W\//, '') === etag)) {
+      if (String(req.headers['if-none-match'] || '').split(',').some((t) => t.trim() === '*' || t.trim().replace(/^W\//, '') === etag)) {
         res.writeHead(304, { ...headers, 'referrer-policy': 'no-referrer' });
         return res.end();
       }

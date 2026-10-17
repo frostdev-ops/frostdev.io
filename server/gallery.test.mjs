@@ -843,6 +843,13 @@ test('blocklist: the fixed vector signs and checks the same text on both sides',
   assert.equal(canon({ b: [2, { z: 1, a: 'é"' }], a: null }), '{"a":null,"b":[2,{"a":"é\\"","z":1}]}');
 });
 
+test('blocklist: the signature domain separates the list from other signed data', () => {
+  for (const domain of ['', 'glaze-mod-1|', 'glaze-blocklist-2|']) {
+    const sig = crypto.sign(null, Buffer.from(domain + canon(BL_VECTOR.list)), blKey).toString('base64url');
+    assert.throws(() => checkBlocklist(JSON.stringify({ list: BL_VECTOR.list, sig }), BL_PUB, { now: Date.parse('2026-10-18T00:00:00Z') }), /not by BLOCKLIST_KEY/);
+  }
+});
+
 test('blocklist: nothing is served until the owner publishes one', async () => {
   await blStart();
   const r = await blGet();
@@ -877,6 +884,7 @@ test('blocklist: the signed document is served as published, cacheable for an ho
   assert.equal((await blGet({ headers: { 'if-none-match': `W/${etag}` } })).status, 304, 'a weak copy of it (a proxy that compresses) matches too');
   assert.equal((await blGet({ headers: { 'if-none-match': `"other", ${etag}` } })).status, 304);
   assert.equal((await blGet({ headers: { 'if-none-match': '"other"' } })).status, 200);
+  assert.equal((await blGet({ headers: { 'if-none-match': '*' } })).status, 304);
   const head = await blGet({ method: 'HEAD' });
   assert.deepEqual([head.status, await head.text(), head.headers.get('etag')], [200, '', etag]);
   assert.equal(Number(head.headers.get('content-length')), Buffer.byteLength(JSON.stringify(doc)));
@@ -995,6 +1003,17 @@ test('blocklist: the CLI publishes a signed file and says why when it refuses on
   assert.equal(wrong.status, 1);
   assert.match(wrong.stderr, /signature is not by BLOCKLIST_KEY/);
   assert.equal((await (await blGet()).json()).list.seq, 2);
+  for (const [document, error] of [
+    [blSign(blList(1, real)), /not higher than the stored 2/],
+    [blSign(blList(3, real - 8 * 864e5)), /expired/],
+    [blSign(blList(3, real, { padding: 'x'.repeat(BLOCKLIST_MAX) })), /over \d+ bytes/],
+  ]) {
+    write(document);
+    const refused = cli('--blocklist', file);
+    assert.equal(refused.status, 1);
+    assert.match(refused.stderr, error);
+    assert.equal((await (await blGet()).json()).list.seq, 2);
+  }
   const nokey = run({ ...env, BLOCKLIST_KEY: '' }, '--blocklist', file);
   assert.equal(nokey.status, 1);
   assert.match(nokey.stderr, /BLOCKLIST_KEY is not set/);
