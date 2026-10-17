@@ -392,14 +392,15 @@ apply as before. One bad part refuses the whole code, and a refused code uses no
 - `parts.animations`: each moment with its stops, duration and the range each property moves through;
   `parts.effects`: event, kind, count, life, size; `parts.cursor`: kind, size, length, fade.
 - `parts.nav`: placement, each group (labelled or not, its item ids, a link as `link:<host>`), hidden items, links as
-  host and icon; `parts.rules`: how many, by action and by part name (names from Glaze's registry).
+  host and icon; `parts.rules`: how many, by action and by part name, plus each rule's action, target,
+  destination and style values (names from Glaze's registry; labels go only in `partsText`).
 - Not in it: group labels, link names, link addresses and rule labels. That text goes to the **safety call** next to
   the name and credit, as `parts: { groups, links: [{ name, url }], labels: [{ part, text }] }`, and to stage 2 as
   `submission.partsText`; the Look call never sees it. The host of a link counts for the `ad` question, and a Look
   with any such text is never accepted on stage 1 alone.
-- A full set of parts (a shader, every moment and event, six nav groups and eight links, 40 rules) adds about 2,700
-  characters to a Look's summary (3,926 in all against 1,144 for a plain Look) and each nearest Look with parts about as
-  much: a few thousand tokens more, still about $0.0002 a stage-1 review.
+- Rule evidence grows with the number and size of the rules, including their destinations and style values;
+  each nearest Look with parts carries that evidence too. Earlier summary-size and review-cost measurements
+  used only rule counts and do not measure the current representation.
 
 **Probes** (2026-10-16, 18 live calls, about $0.008; the questions for parts are new and only this thin). `liquid/d1-ultra`
 safety call on `{ name, credit, parts }`: a benign library link 0.02 for `ad`, a benign label 0.00; a shop link with a
@@ -423,30 +424,38 @@ backgrounds:
   `prefers-reduced-motion`, and when it leaves the screen its canvas and context are released. Any error (no
   WebGL, a failed compile, a lost context, the engine over its budget) leaves the gradient, which is also what shows
   before it draws.
-- A shader is a raw-WebGL quad with `GZ_GLSL.VERT` and `GZ_GLSL.wrap`, drawn at 0.6 of the preview's size (at most 640
-  px wide) and 30 fps; four slow frames running halve it once and then hold one frame (a rough guard: Glaze's is
-  fence-timed, and the checker's cost limit is what bounds a shader). `lib/glsl.js` is loaded as a script the first
-  time one is needed.
-- Layers use Glaze's own `lib/scene.js` and its three.js build, dynamically imported the first time a Look with
-  layers is on screen.
+- Shaders and layers use Glaze's own `lib/scene.js` and its three.js build, dynamically imported the first time
+  either is on screen. A shader first passes the client-side checker, then starts at a tiny probe resolution.
+  The engine measures GPU completion with fences and waits while a sampled draw is outstanding; it steps down
+  resolution, holds one frame or falls back to the gradient when over budget. An unmeasurable shader stays on
+  the gradient. `lib/glsl.js` is loaded as a script before any shader context is created.
+- Pending loads check that their preview is still current before creating a context. Hiding the tab releases
+  pending and running previews; showing it starts the visible ones again.
 - The large preview (click a card) draws its own copy; the submit page's preview does the same for a pasted code.
 
 **Page weight** (built, `dist/`, gzip level 9, brotli in brackets):
 
 | | Before | After |
 |---|---|---|
-| `/glaze/looks` up front (HTML, CSS, scripts) | 131,874 B raw, 24,602 B gz (20,048 br) | 140,155 B raw, 27,953 B gz (23,028 br) |
-| `/glaze/looks/submit` up front | 54,789 B raw, 19,664 B gz (16,850 br) | 62,508 B raw, 22,963 B gz (19,795 br) |
+| `/glaze/looks` up front (HTML, CSS, scripts) | 131,874 B raw, 24,602 B gz (20,048 br) | 138,045 B raw, 26,978 B gz (22,165 br) |
+| `/glaze/looks/submit` up front | 54,789 B raw, 19,664 B gz (16,850 br) | 60,398 B raw, 21,987 B gz (18,922 br) |
 | first shader on screen: `lib/glsl.js` | | +18,510 B raw, 7,432 B gz (6,552 br) |
-| first layers Look on screen: `lib/scene.js` + three.js | | +554,589 B raw, 138,798 B gz (114,884 br) |
+| first shader or layers Look on screen: `lib/scene.js` + three.js | | +554,589 B raw, 138,798 B gz (114,884 br) |
 
-The up-front growth is `looks.ts` + `livebg.ts` (+7 KB raw), the five new filter chips and a little CSS. The layers
+The up-front growth is `looks.ts` + `livebg.ts`, the five new filter chips and a little CSS. The scene
 chunk is almost all three.js (531,696 B raw, 132,545 B gz as Glaze ships it); it is paid only by a page that shows a
-Look with layers. The marketing layout already loads the site's own three.js build for the ambient background on
-idle, so such a page loads two copies (three.js logs "Multiple instances of Three.js being imported"). Pointing
+Look with a shader or layers. The shader path now pays this cost too, to reuse the engine's calibrated GPU guard.
+The marketing layout already loads the site's own three.js build for the ambient background on idle, so such a
+page loads two copies (three.js logs "Multiple instances of Three.js being imported"). Pointing
 the vendored engine at the site's three build brings the chunk to 29,811 B raw, 10,644 B gz (measured), but it is
 not done: Glaze's `scene.js` sets the global `ColorManagement.enabled = false`, which would change the site's own
 background, and the two versions (0.186.1 and 0.180.0) would then have to move together.
+
+The community list omits `partsText`, which the browser never reads; safety, escalation, email and the CLI still
+receive it. In an offline 300-row serialization of one valid rich Look (8 KiB shader and 40 long rule labels),
+the response fell from 10,833,911 to 6,608,711 bytes, including the added per-rule evidence. This is a synthetic
+size measurement, not 300 reviews. The list remains unpaginated and still carries the source needed for live
+previews; it grows with the catalog.
 
 **Not covered.** The preview doesn't show animations, effects, the cursor effect, the nav layout or rules (the badges
 say they are there). Shaders are not run by the reviewers or the server: only checked and judged by description; a
@@ -539,7 +548,9 @@ That copy is for testing a branch here: `ops/deploy.sh` and `ops/deploy-gallery.
 `vendor/glaze/VERSION` is a release tag (`vX.Y.Z`). A release is only ever vendored from its tag. The branch is
 currently on `local 554364db38f7` (Glaze's `mods` branch). On opening an existing gallery database, the server adds the
 fingerprint column if needed and backfills existing published, pending and removed records before
-serving; CLI commands also wait for that migration.
+serving; CLI commands also wait for that migration. Existing glaze2 records are revalidated and their
+fingerprints and descriptions refreshed together, so an older spelling key cannot bypass duplicate or
+takedown checks and old rule summaries gain their per-rule evidence. Populated glaze1 metadata stays unchanged.
 
 ## Content safety
 
@@ -579,7 +590,8 @@ deploy scripts refuse. To ship it: after the Glaze release whose tag includes gl
 `npm run check` and `npm run build`, commit, then `ops/deploy.sh` and `ops/deploy-gallery.sh`, in that order. nginx
 needs the `client_max_body_size 22k` change in the API location (it is in `ops/public-site.nginx.conf`; install it
 before the gallery server runs the new code, or a large code is refused with nginx's own 413). Existing glaze1 Looks
-keep their fingerprints (the tests hold three curated ones to their old values), so the database needs no migration.
+keep their fingerprints and description bytes (the tests hold all 16 curated Looks to their old values).
+Existing glaze2 metadata is refreshed automatically on startup as described above.
 
 The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`). The server, once:
 
@@ -619,8 +631,8 @@ The site as usual (`ops/deploy.sh`, which now also checks `/glaze/looks/submit`)
    45 3 * * * root docker exec glaze-gallery node gallery.mjs --backup /data/backup-$(date +\%F).db && find /var/lib/docker/volumes/glaze-gallery/_data -name 'backup-*.db' -mtime +14 -delete
    ```
 
-The CLI, inside the container: `--list`, `--pending`, `--show <id>` (a Look's review: both reviewers' numbers, the
-second reviewer's decision, reason, rationale and any reasoning summary), `--approve <id>`, `--decline <id> "<reason>"`,
+The CLI, inside the container: `--list`, `--pending`, `--show <id>` (a Look's parts and part text, both reviewers'
+numbers, the second reviewer's decision, reason, rationale and any reasoning summary), `--approve <id>`, `--decline <id> "<reason>"`,
 `--remove <id>`, `--backup <file>`.
 
 ## Privacy
