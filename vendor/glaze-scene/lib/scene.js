@@ -4,7 +4,7 @@
 // (the softness is the look), at most 30 frames a second, and all movement is worked out in the
 // shaders from one time uniform, so a frame is one uniform write and one draw. Motion off draws a
 // single still frame and stops; background tabs get no animation frames at all.
-// What is drawn: a built-in scene, a student's own shader (lib/glsl.js checks and wraps it; docs/mods.md "Backgrounds"),
+// What is drawn: a built-in scene, a student's own shader (lib/glsl.js checks and wraps it),
 // or up to four layers blended bottom first. All of them run under the budget guard below.
 import {
   WebGLRenderer, Scene, OrthographicCamera, PerspectiveCamera, Mesh, Points, PlaneGeometry,
@@ -767,7 +767,8 @@ export const start = (canvas, live = () => true, onFail = () => {}, onStep = () 
   // three calls this, during render(), when a program fails to compile or link.
   const onShader = (gl, program, vs, fs) => {
     const errors = def.G.parseLog(gl.getShaderInfoLog(fs), def.lines);
-    fail('compile', errors.length ? errors : [{ line: 0, message: `The graphics driver rejected the shader. ${String(gl.getProgramInfoLog(program)).trim()}`.trim() }]);
+    const message = String(gl.getProgramInfoLog(program)).trim();
+    fail('compile', errors.length ? errors : [{ line: 0, message: message ? 'The graphics driver rejected the shader. {message}' : 'The graphics driver rejected the shader.', ...(message && { vars: { message } }) }]);
   };
   const wantsLoop = () => (speed > 0 && !still) || g?.level < 0;
   // The guard moved to a level: its resolution, and whether it still animates.

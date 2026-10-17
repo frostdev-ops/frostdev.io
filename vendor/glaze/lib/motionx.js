@@ -1,4 +1,4 @@
-// Look parts that move (docs/mods.md "Animations", "Event effects"): the parts that don't touch the page, so node can test
+// Look parts that move: the parts that don't touch the page, so node can test
 // them. x.anim becomes CSS text (a @keyframes per moment, and values for the knobs motion.css reads); x.fx and x.cursor
 // become the particles features/motionx.js draws. Everything arrives already cleaned (lib/lookparts.js), and is clamped
 // again here anyway: the CSS is built from numbers and names looked up in the tables below, never from a string of the
@@ -15,7 +15,7 @@ var GZ_MX = globalThis.GZ_MX || (() => {
   // --gz-<knob>) and that knob's own length in ms. The two that hold a state while it lasts (hover, press) feed lift/press.
   const ENTERING = { 'page.enter': ['enter-page', 450], 'panel.enter': ['enter-panel', 300], 'card.enter': ['enter', 600], 'tile.enter': ['enter-tile', 600], 'rail.open': ['rail-open', 300], 'tooltip.in': ['tip-in', 160] };
   const MOMENTS = [...Object.keys(ENTERING), 'card.hover', 'button.press'];
-  // A stop's keys and their limits (docs/mods.md "The x object").
+  // A stop's keys and their limits.
   const RANGE = { x: [-200, 200], y: [-200, 200], sc: [0.5, 1.5], r: [-180, 180], kx: [-30, 30], ky: [-30, 30], o: [0, 1], bl: [0, 20], br: [0, 2], sa: [0, 2], hu: [-180, 180] };
   // The names an easing may take. The motion.css curves stay Glaze's, so the level (Expressive's spring) still shapes them.
   const EASES = { linear: 'linear', ease: 'ease', 'ease-in': 'ease-in', 'ease-out': 'ease-out', 'ease-in-out': 'ease-in-out', smooth: 'var(--gz-ease)', spring: 'var(--gz-spring)' };

@@ -37,11 +37,18 @@ const GZ_SHARE = (() => {
     const n = Object.fromEntries(NAV.filter((k) => nav[k] !== G.GZ_SPEC.nav[k][0]).map((k) => [k, nav[k]]));
     if (nav.k !== 'default') raw.n = n;
     // A shader goes into a code without its comments and indentation; the editor keeps the author's text.
-    const extra = parts?.x || parts?.m ? { ...(parts.x && { x: X.compact(parts.x) }), ...(parts.m && { m: parts.m }) } : null;
+    let extra = parts?.x || parts?.m ? { ...(parts.x && { x: X.compact(parts.x) }), ...(parts.m && { m: parts.m }) } : null;
     if (extra) {
       const clean = X.bundle(extra);
       if (!clean || !X.same(clean, extra)) fail("This theme has extras Glaze can't put in a code.");
-      Object.assign(raw, clean);
+      // Inactive background drafts stay in storage; a code carries only what this Look uses.
+      if (clean.x?.bg) {
+        for (const key of ['shader', 'layers']) if (s.bg.kind !== key) delete clean.x.bg[key];
+        if (!Object.keys(clean.x.bg).length) delete clean.x.bg;
+        if (!Object.keys(clean.x).length) delete clean.x;
+      }
+      extra = Object.keys(clean).length ? clean : null;
+      Object.assign(raw, extra);
     }
     const json = JSON.stringify(raw);
     const bytes = new TextEncoder().encode(json);

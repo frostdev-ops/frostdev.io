@@ -20,8 +20,9 @@ usage() { echo "usage: scripts/vendor-glaze.sh <glaze release tag, like v3.1.0>
 [ $# -ge 1 ] || usage
 root=$(cd "$(dirname "$0")/.." && pwd)
 # defaults.js and lib/*: share.js and lookparts.js read the rest (cards, color, fonts, surfaces; glsl, motionx,
-# navlayout, nav, nav-items, parts) for the parts a glaze2 code can carry.
-DECODE="defaults.js lib/cards.js lib/color.js lib/fonts.js lib/share.js lib/surfaces.js lib/lookparts.js lib/glsl.js lib/motionx.js lib/navlayout.js lib/nav.js lib/nav-items.js lib/parts.js LICENSE"
+# navlayout, nav, nav-items, parts) for the parts a glaze2 code can carry. modbundle.js reads and verifies a mod bundle for
+# the Mods section, with zip.js and widgets.js (its tile names and sizes).
+DECODE="defaults.js lib/cards.js lib/color.js lib/fonts.js lib/share.js lib/surfaces.js lib/lookparts.js lib/glsl.js lib/motionx.js lib/navlayout.js lib/nav.js lib/nav-items.js lib/parts.js lib/modbundle.js lib/zip.js lib/widgets.js LICENSE"
 SCENE="lib/scene.js lib/three.min.js lib/three.LICENSE"
 if [ "$1" = --dev ]; then
     [ $# -eq 2 ] || usage

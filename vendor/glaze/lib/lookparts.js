@@ -1,4 +1,4 @@
-// Look parts (docs/mods.md, "The `x` object"): what a theme code can carry beyond palette, look and background, as data
+// Look parts: what a theme code can carry beyond palette, look and background, as data
 // Glaze interprets along fixed paths: custom backgrounds, animations, event effects, a cursor effect, a nav layout and
 // restyle rules. `x` holds the parts and `m` the mods a Look works with. Both arrive from other people, so every value
 // is cleaned here before anything reads it, and a code whose parts don't come back unchanged is refused whole.
@@ -17,7 +17,7 @@
 //   (GZ_NAV_LAYOUT.clean, x.nav). Used when there: GZ_GLSL.check(src) -> { ok, errors } (shader source) and
 //   GZ_PARTS.rules(list) (the LMS part registry cleans the whole rules part); without them only the shape is checked.
 //
-// Storage (docs/mods.md "Storage"): the parts of the Look being worn are one packed string in storage.sync `lookX` when it
+// Storage: the parts of the Look being worn are one packed string in storage.sync `lookX` when it
 // fits a sync item; otherwise it is in storage.local `lookX` and sync holds { h: hash }. '' in sync means none (a Look
 // clears the parts in the same write that changes the Look, so everyone sees one change).
 // Classic script (page, worker, extension pages, loaded on demand); module.exports for node.

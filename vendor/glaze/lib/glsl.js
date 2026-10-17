@@ -1,4 +1,4 @@
-// Glaze — custom shader backgrounds (x.bg.shader): the checker and the wrapper. docs/mods.md, "Backgrounds > Shader".
+// Glaze — custom shader backgrounds (x.bg.shader): the checker and the wrapper.
 // The author writes helpers plus ONE entry point, in GLSL ES 1.00:
 //     vec4 scene(vec2 uv)    // uv 0..1, y up, as the built-in scenes' vUv; rgb is colour, a is coverage over the ground
 // wrap() puts the shared uniforms, helpers and `#line 1` in front and the dither and main() behind, so compiler errors carry
@@ -67,7 +67,7 @@ var GZ_GLSL = globalThis.GZ_GLSL || (() => {
     const consts = new Map();
     const num = (k) => (/^\d+$/.test(k) ? +k : consts.get(k));
     for (const m of author.matchAll(/\bconst\s+int\s+([A-Za-z_]\w*)\s*=\s*(\d+|[A-Za-z_]\w*)\s*;/g)) {
-      if (consts.has(m[1])) errors.push({ line: author.slice(0, m.index).split('\n').length, message: `Use a unique name for const int ${m[1]} so loop bounds are unambiguous.` });
+      if (consts.has(m[1])) errors.push({ line: author.slice(0, m.index).split('\n').length, message: 'Use a unique name for const int {name} so loop bounds are unambiguous.', vars: { name: m[1] } });
       const v = num(m[2]); if (v !== undefined) consts.set(m[1], v);
     }
     const [P, PL] = tokens(PRELUDE);
@@ -96,7 +96,7 @@ var GZ_GLSL = globalThis.GZ_GLSL || (() => {
     };
     // The passes of one loop, from its tokens `( int i = A ; i < B ; i++ )`; 1 and an error when it can't be read.
     const passes = (h, line) => {
-      const bad = (message) => { errors.push({ line, message }); return 1; };
+      const bad = (message, vars) => { errors.push({ line, message, ...(vars && { vars }) }); return 1; };
       const parts = [[]];
       for (const k of h.slice(1, -1)) k === ';' ? parts.push([]) : parts.at(-1).push(k);
       const [init, cond, step] = parts;
@@ -111,7 +111,7 @@ var GZ_GLSL = globalThis.GZ_GLSL || (() => {
       if (a === undefined || b === undefined || !(by > 0)) return bad('Can\'t tell how many times this loop runs. Write it as `for (int i = 0; i < 8; i++)`, with whole numbers (or a #define or const int that is one) for the start and the end.');
       if (lt === (s.includes('-'))) return bad('This loop never reaches its end: count up with `<` and `i++` or `i += n`, down with `>` and `i--` or `i -= n`.');
       const n = Math.max(0, Math.ceil((lt ? b - a + or : a - b + or) / by));
-      if (n > MAX_LOOP) bad(`A loop of ${n} passes is more than a background can afford (limit ${MAX_LOOP}).`);
+      if (n > MAX_LOOP) bad('A loop of {n} passes is more than a background can afford (limit {limit}).', { n, limit: MAX_LOOP });
       // ESSL mediump integers guarantee only 16 bits, including the final increment used to exit the loop.
       else if (![a, b, by, a + (lt ? 1 : -1) * n * by].every((v) => Number.isSafeInteger(v) && Math.abs(v) <= 32767)) bad('Loop counters must stay within -32767..32767, including the final increment, to avoid integer overflow.');
       return n;
@@ -145,21 +145,21 @@ var GZ_GLSL = globalThis.GZ_GLSL || (() => {
   const estimate = (src) => analyze(src).cost;
 
   // ---- check ------------------------------------------------------------------------------------------------------
-  // Everything below is a refusal (see the list in docs/mods.md). Returns { ok, errors: [{ line, message }] }: line is 1-based
+  // Everything below is a refusal. Returns { ok, errors: [{ line, message, vars? }] }: line is 1-based
   // in the author's source, 0 for the whole file. At most 20 errors, in line order, so a pasted wall of junk stays readable.
   const check = (src) => {
     const errs = [];
-    const e = (line, message) => errs.push({ line, message });
+    const e = (line, message, vars) => errs.push({ line, message, ...(vars && { vars }) });
     const done = () => ({ ok: !errs.length, errors: errs.sort((a, b) => a.line - b.line).slice(0, 20) });
     if (typeof src !== 'string') { e(0, 'The shader is not text.'); return done(); }
-    if (src.length > MAX) { e(0, `The shader is ${src.length} characters; the limit is ${MAX}.`); return done(); } // nothing else reads a megabyte
+    if (src.length > MAX) { e(0, 'The shader is {n} characters; the limit is {limit}.', { n: src.length, limit: MAX }); return done(); } // nothing else reads a megabyte
     const lines = src.replace(/\r\n?/g, '\n').split('\n');
     const code = bare(src);
     const cleanLines = code.split('\n');
     // ASCII only (tab and newline allowed). ANGLE accepts NUL and non-ASCII in comments; other drivers don't.
     lines.forEach((l, i) => {
       const m = l.match(/[^\t\x20-\x7e\r]/);
-      if (m) e(i + 1, `Only plain ASCII is allowed (found character code ${m[0].codePointAt(0)} at column ${m.index + 1}).`);
+      if (m) e(i + 1, 'Only plain ASCII is allowed (found character code {code} at column {column}).', { code: String(m[0].codePointAt(0)), column: m.index + 1 });
       if (l.includes('\\')) e(i + 1, 'Backslash line continuations are not allowed.');
     });
     // Directives: a whitelist, matched on the raw text so a tricky comment can't hide one (a comment that names #extension
@@ -167,8 +167,8 @@ var GZ_GLSL = globalThis.GZ_GLSL || (() => {
     lines.forEach((l, i) => {
       for (const m of `${l}\n${cleanLines[i]}`.matchAll(/#\s*([A-Za-z_]*)/g)) {
         const d = m[1];
-        if (['extension', 'version', 'pragma', 'line', 'error', 'include'].includes(d)) e(i + 1, `#${d} is not allowed: Glaze sets the GLSL version and extensions itself.`);
-        else if (d && d !== 'define') e(i + 1, `#${d} is not allowed: only unconditional #define constants can be checked safely.`);
+        if (['extension', 'version', 'pragma', 'line', 'error', 'include'].includes(d)) e(i + 1, '#{name} is not allowed: Glaze sets the GLSL version and extensions itself.', { name: d });
+        else if (d && d !== 'define') e(i + 1, '#{name} is not allowed: only unconditional #define constants can be checked safely.', { name: d });
       }
     });
     // Macros: object-like constants only. ANGLE refuses nested function-like macros (out of memory) but accepts chained
@@ -182,23 +182,23 @@ var GZ_GLSL = globalThis.GZ_GLSL || (() => {
         defs.push({ line: i + 1, name: m[1], fn: m[2] === '(', body: m[3] });
       } else if (l.trim()) authorCode = true;
     });
-    if (defs.length > 32) e(0, `At most 32 #define lines (found ${defs.length}).`);
+    if (defs.length > 32) e(0, 'At most 32 #define lines (found {n}).', { n: defs.length });
     for (const d of defs.length > 32 ? [] : defs) {
       if (!/^[A-Z][A-Z0-9_]*$/.test(d.name)) e(d.line, '#define names must be uppercase constants.');
-      if (defs.some((o) => o !== d && o.name === d.name)) e(d.line, `#define ${d.name}: each constant must have a unique name.`);
-      if (d.fn) e(d.line, `#define ${d.name}(...): function-like macros are not allowed; write a function.`);
-      else if (d.body.length > 64) e(d.line, `#define ${d.name}: a macro body is at most 64 characters.`);
-      else if (defs.some((o) => new RegExp(`\\b${o.name}\\b`).test(d.body))) e(d.line, `#define ${d.name}: a macro may not use another macro (they multiply).`);
+      if (defs.some((o) => o !== d && o.name === d.name)) e(d.line, '#define {name}: each constant must have a unique name.', { name: d.name });
+      if (d.fn) e(d.line, '#define {name}(...): function-like macros are not allowed; write a function.', { name: d.name });
+      else if (d.body.length > 64) e(d.line, '#define {name}: a macro body is at most 64 characters.', { name: d.name });
+      else if (defs.some((o) => new RegExp(`\\b${o.name}\\b`).test(d.body))) e(d.line, '#define {name}: a macro may not use another macro (they multiply).', { name: d.name });
     }
     const at = (idx) => code.slice(0, idx).split('\n').length;
     // Glaze's declarations and its main().
-    for (const m of code.matchAll(/\b(uniform|attribute|varying)\b/g)) e(at(m.index), `\`${m[1]}\` is not allowed: Glaze provides the inputs (uTime uAspect uPx uAmount uGround uC1 uC2 uC3).`);
+    for (const m of code.matchAll(/\b(uniform|attribute|varying)\b/g)) e(at(m.index), '`{name}` is not allowed: Glaze provides the inputs (uTime uAspect uPx uAmount uGround uC1 uC2 uC3).', { name: m[1] });
     for (const m of code.matchAll(/\bmain\b/g)) e(at(m.index), 'Don\'t write main(): write `vec4 scene(vec2 uv)`; Glaze calls it for every pixel.');
-    for (const m of code.matchAll(/\bgl_\w+/g)) if (m[0] !== 'gl_FragCoord') e(at(m.index), `${m[0]}: write the colour as the result of scene(); other gl_ names are Glaze's or reserved.`);
-    for (const m of code.matchAll(/\b\w*__\w*/g)) e(at(m.index), `${m[0]}: names containing a double underscore are reserved by GLSL.`);
+    for (const m of code.matchAll(/\bgl_\w+/g)) if (m[0] !== 'gl_FragCoord') e(at(m.index), "{name}: write the colour as the result of scene(); other gl_ names are Glaze's or reserved.", { name: m[0] });
+    for (const m of code.matchAll(/\b\w*__\w*/g)) e(at(m.index), '{name}: names containing a double underscore are reserved by GLSL.', { name: m[0] });
     for (const r of RESERVED) {
       const m = code.match(new RegExp(`(?:^|[;{}\\n]\\s*)(?:float|vec[234]|mat[234]|int|bool|void|const\\s+\\w+)\\s+${r}\\b`));
-      if (m) e(at(m.index + 1), `\`${r}\` is already provided by Glaze; use it, or rename yours.`);
+      if (m) e(at(m.index + 1), '`{name}` is already provided by Glaze; use it, or rename yours.', { name: r });
     }
     if (!/\bvec4\s+scene\s*\(\s*(?:in\s+)?vec2\s+\w+\s*\)\s*\{/.test(code)) e(0, 'Missing the entry point: `vec4 scene(vec2 uv) { ... }`.');
     // Loops and cost, once nothing else is wrong (the estimate reads a shader that is at least shaped right).
@@ -207,14 +207,14 @@ var GZ_GLSL = globalThis.GZ_GLSL || (() => {
         const a = analyze(src);
         errs.push(...a.errors);
         if (!a.errors.length && !Number.isFinite(a.cost)) e(0, 'A function calls itself; GLSL ES 1.00 has no recursion.'); // (or 0 x infinity)
-        else if (!a.errors.length && a.cost > COST_LIMIT) e(0, `Too heavy: about ${a.cost} operations per pixel (limit ${COST_LIMIT}). Nested loops multiply.`);
+        else if (!a.errors.length && a.cost > COST_LIMIT) e(0, 'Too heavy: about {n} operations per pixel (limit {limit}). Nested loops multiply.', { n: a.cost, limit: COST_LIMIT });
       } catch { e(0, 'This shader is nested too deeply to check.'); }
     }
     return done();
   };
 
   // ---- compiler messages ------------------------------------------------------------------------------------------
-  // ANGLE's info log -> [{ line, message }] in the author's numbering (the wrapper's `#line 1` did the work). authorLines is
+  // ANGLE's info log -> [{ line, message, vars? }] in the author's numbering (the wrapper's `#line 1` did the work). authorLines is
   // the number of lines in the author's source: an error past it is in Glaze's wrapper (a broken signature, an unclosed
   // brace or comment), reported as line 0. Warnings are dropped.
   const parseLog = (log, authorLines) => {
@@ -224,7 +224,7 @@ var GZ_GLSL = globalThis.GZ_GLSL || (() => {
       if (m) {
         if (m[1] !== 'ERROR') continue;
         const n = m[3] === '?' ? 0 : +m[3];
-        if (n > authorLines) out.push({ line: 0, message: `${m[4]} (in Glaze's wrapper, after your last line: check the signature \`vec4 scene(vec2 uv)\`)` });
+        if (n > authorLines) out.push({ line: 0, message: "{message} (in Glaze's wrapper, after your last line: check the signature `vec4 scene(vec2 uv)`)", vars: { message: m[4] } });
         else out.push({ line: n, message: m[4] });
       } else if (/^ERROR: /.test(l)) out.push({ line: 0, message: l.slice(7) });
     }
@@ -252,7 +252,7 @@ var GZ_GLSL = globalThis.GZ_GLSL || (() => {
     gl.deleteShader(vs); gl.deleteShader(fs);
     if (ok && linkOK) return { ok: true, errors: [] };
     const errors = parseLog(log, src.split('\n').length);
-    if (linked) errors.push({ line: 0, message: `Link: ${linked.trim()}` });
+    if (linked) errors.push({ line: 0, message: 'Link: {message}', vars: { message: linked.trim() } });
     return { ok: false, errors: errors.length ? errors : [{ line: 0, message: 'The graphics driver rejected the shader.' }], stage: 'compile' };
   };
 

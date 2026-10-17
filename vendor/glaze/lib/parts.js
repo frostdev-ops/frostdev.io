@@ -1,4 +1,4 @@
-// LMS parts: the names a Look's rules (x.rules, docs/mods.md "LMS rules") use for pieces of an LMS page, and the cleaner
+// LMS parts: the names a Look's rules (x.rules) use for pieces of an LMS page, and the cleaner
 // for those rules. A rule never holds a selector: it names a part here, so a shared Look can't reach past this list and an
 // LMS update is fixed in one place. Each part: its selector, its container (where `move` may put it, and the part it may
 // be moved beside must share it), whether it may be hidden, whether its text may be relabelled, and which style keys

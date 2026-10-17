@@ -1,4 +1,4 @@
-// A Look's nav layout (x.nav, docs/mods.md): its cleaner, and the one ordered, grouped model every site's rail draws
+// A Look's nav layout (x.nav): its cleaner, and the one ordered, grouped model every site's rail draws
 // (features/nav.js). Site-neutral and pure: the sites only say which native items they have.
 var GZ_NAV_LAYOUT = globalThis.GZ_NAV_LAYOUT || (() => {
   const N = typeof GZ_NAV_ITEMS === 'undefined' ? require('./nav-items.js') : GZ_NAV_ITEMS;
