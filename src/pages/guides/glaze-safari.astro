@@ -2,8 +2,8 @@
 import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
-const release = `${source}/releases/tag/v3.0.4`;
-const dmg = `${source}/releases/download/v3.0.4/glaze-3.0.4-safari-macos.dmg`;
+const release = `${source}/releases/tag/v3.0.5`;
+const dmg = `${source}/releases/download/v3.0.5/glaze-3.0.5-safari-macos.dmg`;
 const apple = 'https://support.apple.com/102343';
 const chapters = [
   { id: 'prepare', title: 'Check your Mac and school site' },
@@ -25,12 +25,12 @@ const chapters = [
 ---
 
 <GuideLayout
-  title="Glaze 3.0.4 on Blackboard, Canvas and Moodle in Safari"
+  title="Glaze 3.0.5 on Blackboard, Canvas and Moodle in Safari"
   description="Install Glaze on your Mac, allow it on your school’s Blackboard Ultra, Canvas or Moodle site, and set up your palette, fonts, background and helpers."
   path="/guides/glaze-safari"
   project="Glaze"
   duration="15 min read"
-  updated="2026-10-16"
+  updated="2026-10-17"
   chapters={chapters}
 >
   <section class="guide-section" id="prepare">
@@ -49,9 +49,9 @@ const chapters = [
 
   <section class="guide-section" id="install">
     <h2>Install the Safari app</h2>
-    <p><a href={release}>Glaze 3.0.4</a> is a signed, Apple-notarized Mac app that installs itself.</p>
+    <p><a href={release}>Glaze 3.0.5</a> is a signed, Apple-notarized Mac app that installs itself.</p>
     <ol class="guide-steps">
-      <li><a href={dmg}>Download glaze-3.0.4-safari-macos.dmg</a> and open it.</li>
+      <li><a href={dmg}>Download glaze-3.0.5-safari-macos.dmg</a> and open it.</li>
       <li>Open <strong>Glaze</strong> and click <strong>Install Glaze</strong>. It copies itself into Applications (your own Applications folder if you aren’t an administrator) and reopens from there.</li>
       <li>Glaze opens Safari’s Extensions settings beside a two-step guide, covered next.</li>
     </ol>
@@ -135,7 +135,9 @@ const chapters = [
       <figcaption>Import and preview pets in the editor; choose your character in the habitat on your school page.</figcaption>
     </figure>
     <p>Click an animated pet to wave, or focus it and press <kbd>Enter</kbd> or <kbd>Space</kbd> to jump. Animation pauses when hidden or offscreen. Reduced motion and Glaze Motion off show a still frame.</p>
-    <p>The habitat earns XP from stored handed-in work, kept “do on” plans and verified streak days when Streak is enabled. Focus sessions and petting add no XP. There are no notifications or missed-day penalties. Progress and decorations belong to your signed-in school account.</p>
+    <p>The habitat earns XP from stored handed-in work, kept “do on” plans and verified streak days when Streak is enabled. Levels continue across semesters; settings backups carry progress, furniture and learned preferences. Focus sessions and petting add no XP. There are no notifications or missed-day penalties. Progress and decorations belong to your signed-in school account.</p>
+    <p>Choose a room, moss garden, water tank or cloud loft, then place furniture and ball or yarn toys from the tray. Drag a toy onto the page to invite a short play session, or let your companion settle on a favorite perch. Typing, scrolling and focus keep it calm.</p>
+    <p><strong>Learn from how I play</strong> adapts routines and toy preferences from bounded numeric signals such as petting, play and time of day. Six meters show mood, playfulness, energy, bond, curiosity and comfort. The model stays in this account’s local pet record and chosen backups; typed text and page content are not training data, and no cloud model is used. Turn learning off or use <strong>Reset learned behavior</strong> without changing XP.</p>
     <aside class="guide-callout"><strong>New in 3.0.4: mods.</strong><p>Add backgrounds (shaders, layered scenes, videos, animated pictures, Lottie), motion and event effects, nav layouts, page tweaks, and sticker and pet packs and widgets made by others, from a code, link, file or the gallery's Mods section. Each mod shows what it may read, and why, before you add it. Safari gets mods without code. Updates are signed, with an opt-out signed blocklist, and a no-code widget builder makes your own. Looks can also use a looping video, animated WebP/AVIF or Lottie background: muted, still when motion is off, paused in hidden tabs. See the <a href="/guides/glaze-mods-api">mods guide</a>.</p></aside>
   </section>
 
