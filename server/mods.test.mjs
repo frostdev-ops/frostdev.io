@@ -1178,6 +1178,7 @@ test('shell deadline and resource bounds end the review before a later acceptanc
     assert.deepEqual(d.commands, [command]);
   }
   // Ordinary shell failures can still be corrected by the reviewer.
+  t.mock.restoreAll();
   plan.chat = [bash('cat /mod/missing.txt'), review('accept')];
   assert.equal((await reviewed((await make()).bytes)).row.status, 'published');
 });
