@@ -48,3 +48,25 @@ added to either repository; concurrent Glaze release work was left to its owner.
 ## 3.0.3 publication update
 
 Direct download links and headings now target 3.0.3. Shared companions and Blackboard preview repair are described as available; Chrome/store availability remains separate. The signed 3.0.3 Safari appcast is included and deploys after GitHub downloads are public. Historical 3.0.2 editor captures keep their original captions and filenames. The site is checked at 1440, 390 and 320 pixels with all images decoded; no horizontal page overflow, missing images, old download links or page errors. The local browser receipts are in Glaze's release/3.0.3/validation/site-local folder.
+
+## 3.0.6 website update — October 18, 2026
+
+The published GitHub 3.0.6 release contains the Chrome ZIP. The overview and Chrome
+guide link to it and explain incomplete-grade and partial-search handling. Safari
+and Firefox downloads remain on their published 3.0.5 assets, labelled separately;
+the Safari update feed remains unchanged. No store approval is inferred.
+
+The short privacy, feature and development guides were refreshed with Glaze's
+docs-mirror.js from sources matching v3.0.6. The public privacy page now supplies
+the linked sharing, mod-permission and blocklist anchors and explains paused-session
+backup keys and unavailable Google Calendar sync. The gallery's decoder and scene
+files are byte-identical between the old v3.0.4 pin and v3.0.6; only their VERSION
+markers change. The later local dashboard-scrolling fix is not advertised as part
+of the published 3.0.6 package.
+
+Validation: npm run check, npm run build and all 16 Looks entries passed. Browser
+checks covered seven affected or related pages at 1440, 390 and 320 pixels (21
+page/viewport combinations): HTTP 200, no horizontal overflow, decoded images,
+valid chapter anchors and no page errors. The three privacy-summary targets resolve
+on the full policy. The Chrome 3.0.6 ZIP, Safari 3.0.5 DMG and Firefox 3.0.5 ZIP
+returned anonymous HTTP 200. Review captures are in docs/screenshots/glaze-3.0.6-*.jpg.

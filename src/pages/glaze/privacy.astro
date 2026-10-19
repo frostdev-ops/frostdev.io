@@ -10,7 +10,7 @@ const source = 'https://github.com/frostdev-ops/glaze';
       <h1>Your grades aren't<br />a <em>business model.</em></h1>
       <p class="policy-lead">Your education is expensive enough. Your sidebar doesn't need a subscription. And your coursework doesn't belong in somebody else's analytics dashboard.</p>
       <div class="policy-pills"><span>No telemetry</span><span>No data sales</span><span>No Pro. Ever.</span></div>
-      <p class="policy-date">Privacy policy · Effective <time datetime="2026-10-15">October 15, 2026</time></p>
+      <p class="policy-date">Privacy policy · Updated <time datetime="2026-10-18">October 18, 2026</time></p>
     </div>
     <div class="privacy-orbit" aria-hidden="true">
       <div class="orbit-ring orbit-ring-one"></div><div class="orbit-ring orbit-ring-two"></div>
@@ -57,15 +57,18 @@ const source = 'https://github.com/frostdev-ops/glaze';
           <li><strong>Gradescope:</strong> only after enabling it and approving the account/course mapping, Glaze reads that site's work into your device-local planner. No Gradescope password is stored.</li>
           <li><strong>Downloads and updates:</strong> browser stores and GitHub deliver the extension. The Safari app checks Frostdev's update feed and downloads updates from GitHub. Those servers necessarily process network requests.</li>
           <li><strong>Exports:</strong> files are created on your device. What happens after you send a file or import a calendar elsewhere is your choice, under that recipient's policy.</li>
+          <li id="user-installed-mods"><strong>Mods you install:</strong> course data requires declared and granted permissions. On Chrome, code with access to personal data runs in a Worker. A mod granted both data and network access can send that data to its approved hosts. Firefox and Safari use declarative parts only.</li>
+          <li id="signed-mod-blocklist"><strong>Signed mod blocklist:</strong> on Chrome, when Glaze and this optional setting are on and a code mod is installed, Glaze makes a credential-free check at most daily. Failed checks retry after an hour. The host receives ordinary connection metadata. Declarative-only mods, Firefox and Safari do not make this request.</li>
+          <li><strong>Google Calendar:</strong> sync is unavailable while Google verification is pending. Local calendar-file export remains available without connecting Google.</li>
         </ul>
         <p>We do not add analytics to these connections. Browser and provider services have their own privacy practices. Features that aren't available in your release are not enabled by this policy.</p>
       </section>
 
       <section id="sharing">
-        <p class="policy-kicker">03 / Sharing is your verb</p><h2>You choose the audience.<br />We don't get the key.</h2>
+        <p class="policy-kicker">03 / Sharing is your verb</p><h2 id="optional-encrypted-share-sessions">You choose the audience.<br />We don't get the key.</h2>
         <p>Sharing starts off. Create, Join or Resume connects only when you choose it. Selected notes, tasks, Looks and attachments are encrypted on your device before they reach the relay you select. Your school assignments and account identifiers are not included as shared content. Local tools work fully without a sharing server.</p>
         <p>Encryption keys live in the invitation's fragment and in your extension. The relay receives encrypted bytes, random identifiers, signatures, sizes and connection metadata. Its network infrastructure can see IP addresses and timing. The default relay uses Cloudflare infrastructure; a custom operator controls its own hosting, logs and backups. This is necessary service processing, not a student analytics program. We do not sell it or use it for advertising or profiling.</p>
-        <p><strong>Keep invitations and backups private.</strong> Anyone with a link's key can access that session at the link's permission level. Settings backups and Notes Export all include share keys and creator delete tokens; someone with a creator token may delete a session. Opening an invitation in a browser can leave its fragment in browser history.</p>
+        <p><strong>Keep invitations and backups private.</strong> Anyone with a link's key can access that session at the link's permission level. Settings backups and Notes Export all include share keys and creator delete tokens for all sessions, including paused ones; someone with a creator token may delete a session. Single-note exports do not contain session keys. Opening an invitation in a browser can leave its fragment in browser history.</p>
         <p>Pause stops new session traffic. Leave keeps your local copies. Creator deletion removes the live session; an optional setting expires a session after a year unused. Recipients' copies and older operator backups are not erased by that action. Removed items can remain in encrypted history until compaction. If a disclosure is legally required, we can provide only information we actually hold; we cannot provide encryption keys we never received.</p>
         <p><a href={`${source}/blob/main/server/README.md`}>Run your own relay</a> or read the <a href={`${source}/blob/main/PRIVACY.md#optional-encrypted-share-sessions`}>full sharing and retention details</a>.</p>
       </section>
