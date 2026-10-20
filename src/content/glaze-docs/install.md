@@ -52,8 +52,8 @@ the frosted-glass blur needs Safari 18.
 1. Open the `.dmg`, open **Glaze** and click **Install Glaze**. It copies itself into Applications
    (your own `~/Applications` if you aren't an administrator) and reopens from there. Dragging it into
    **Applications** works too. (A `.zip` of the same app is there too.)
-2. Glaze opens Safari's Extensions settings and shows an illustrated guide: tick Glaze, then allow it
-   on your Blackboard, Canvas or Moodle site. The guide ticks off the first step as soon as Safari turns Glaze on.
+2. Glaze shows an illustrated guide. Use its button to open Safari's Extensions settings, tick Glaze,
+   then allow it on your Blackboard, Canvas or Moodle site. The guide ticks off the first step as soon as Safari turns Glaze on.
 
 The downloaded Mac app checks `https://frostdev.io/projects/glaze/appcast.xml` about once a day
 while Glaze is in use and downloads updates from GitHub. Sparkle system profiling is disabled.
@@ -61,6 +61,18 @@ Background checks stay silent and skip updates that need user interaction; openi
 can show the standard updater interface. An installation previously prepared through that interface
 may still show its existing progress window when a background check finishes it. The Mac App Store
 and iPhone/iPad apps use App Store updates and include no Sparkle updater.
+
+Open Glaze to see its installed version and update source. In the downloaded Mac app, **Updates**
+lets you check now, choose automatic checks, and choose automatic downloads and installation.
+Turning off automatic checks also stops check requests from Safari from starting a check. Update
+approvals, when needed, come from macOS and Sparkle during installation. App Store builds instead
+offer **Open App Store**; automatic App Store updates are controlled by the system's app-update settings.
+
+The setup app does not need to stay open, launch at login, or use iOS Background App Refresh.
+Safari manages the extension's background work. The guide checks extension status only while it is
+active and refreshes when you return from Settings. An enabled extension still needs access to your
+school's website, in each Safari profile where you use it; private browsing has its own permission.
+**Next steps and permissions** explains these controls and how to open the editor's sample page.
 
 ## iPhone and iPad
 

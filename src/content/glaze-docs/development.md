@@ -1,7 +1,7 @@
 ---
 title: "Development"
 description: "How Glaze is put together, and how to build, test, package and publish it."
-updated: "2026-10-19"
+updated: "2026-10-20"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Development"
 ---
 <!-- Mirrored from Glaze's docs/development.md by its scripts/docs-mirror.js: edit it there. -->
@@ -143,6 +143,13 @@ anything. Upload the DMG to its GitHub release before publishing that feed at
 `https://frostdev.io/projects/glaze/appcast.xml` (the frostdev.io path is `/projects/glaze/appcast.xml`).
 Use the same Sparkle Keychain account for key generation and appcast signing; if you choose a
 custom account, set `SAFARI_UPDATE_KEY_ACCOUNT` to it when running the helper.
+
+The containing app's **Updates** controls use Sparkle's persisted `automaticallyChecksForUpdates`
+and `automaticallyDownloadsUpdates` settings. Explicit **Check for Updates…** uses Sparkle's user
+initiated check, including its progress and installation approval UI. Quiet native checks honor the
+automatic-check setting. Update controls are compiled into the Developer ID app only; the shared
+guide shows the App Store link in store builds. The guide's message bridge accepts only its bundled
+main-frame page, and status checks stop when the app is inactive or the guide goes away.
 
 ### iPhone and iPad
 
