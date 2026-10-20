@@ -105,9 +105,10 @@ const sorted = (_, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Obje
 // What makes a Look this Look, whatever its code looks like: everything Glaze decodes, in a fixed order. A glaze1 code has
 // no parts, and the decoder's `parts: null` is left out, so a glaze1 Look keeps the identity it had before parts existed.
 // Parts are part of the identity: the same colors with another shader are another Look.
-// A Look without navigation settings (every code before Glaze 3.1.0 carried them) keeps the identity it always had.
-const identity = ({ parts, navbar, ...all }) => {
+// Codes without navigation settings (3.1.0) or sidebar settings (3.3.0) keep their existing identities.
+const identity = ({ parts, navbar, sidebar, ...all }) => {
   const rest = navbar && Object.keys(navbar).length ? { ...all, navbar } : all;
+  if (sidebar && Object.keys(sidebar).length) rest.sidebar = sidebar;
   if (!parts) return rest;
   const x = parts.x?.bg?.shader ? { ...parts.x, bg: { ...parts.x.bg, shader: { src: shaderKey(parts.x.bg.shader.src) } } } : parts.x;
   return { ...rest, parts: { ...parts, x } };
