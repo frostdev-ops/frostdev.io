@@ -3,10 +3,11 @@ import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
 const store = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
+const firefoxStore = 'https://addons.mozilla.org/en-US/firefox/addon/glaze/';
 const release = `${source}/releases/tag/v3.3.0`;
 const chapters = [
   { id: 'install', title: 'Install Glaze' },
-  { id: 'firefox', title: 'Try the Firefox preview' },
+  { id: 'firefox', title: 'Install in Firefox' },
   { id: 'ultra', title: 'Check your Blackboard page' },
   { id: 'popup', title: 'Start with the popup' },
   { id: 'palette', title: 'Make a palette your own' },
@@ -25,8 +26,8 @@ const chapters = [
 ---
 
 <GuideLayout
-  title="Glaze 3.3.0 in Chrome, with Firefox preview setup"
-  description="Set up Glaze on Blackboard Ultra, Canvas or Moodle: Chrome installation, Firefox preview, glass and frost controls, animated pets and study tools."
+  title="Glaze 3.3.0 in Chrome and Firefox"
+  description="Set up Glaze on Blackboard Ultra, Canvas or Moodle: Chrome and Firefox installation, glass and frost controls, animated pets and study tools."
   path="/guides/glaze-chrome"
   project="Glaze"
   duration="15 min read"
@@ -34,7 +35,7 @@ const chapters = [
   chapters={chapters}
 >
   <div slot="visual" class="guide-overview" aria-label="Glaze setup overview">
-    <div class="guide-overview-top"><span class="guide-status-dot" aria-hidden="true"></span><span>Glaze for Chrome</span><span class="guide-overview-tag">Your daily study space</span></div>
+    <div class="guide-overview-top"><span class="guide-status-dot" aria-hidden="true"></span><span>Glaze for Chrome and Firefox</span><span class="guide-overview-tag">Your daily study space</span></div>
     <ol class="guide-overview-flow">
       <li style="--step:0"><span class="guide-overview-number">01</span><span>Open your school’s site</span><span class="guide-overview-line" aria-hidden="true"></span></li>
       <li style="--step:1"><span class="guide-overview-number">02</span><span>Pick a palette and fonts</span><span class="guide-overview-line" aria-hidden="true"></span></li>
@@ -61,15 +62,16 @@ const chapters = [
   </section>
 
   <section id="firefox" class="guide-section">
-    <h2>Try the Firefox preview</h2>
-    <p>The latest Firefox package is Glaze 3.3.0 for <strong>desktop Firefox 140 or newer</strong>. This is a temporary development installation; it is not an Add-ons store installation. Mozilla explains the difference in its <a href="https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/">temporary-installation guide</a>.</p>
+    <h2>Install in Firefox</h2>
+    <p>Glaze 3.3.0 is available on <a href={firefoxStore}>Firefox Add-ons</a> for <strong>desktop Firefox 140 or newer</strong> and <strong>Firefox for Android 142 or newer</strong>.</p>
     <ol class="guide-steps">
-      <li>Download <a href={`${source}/releases/download/v3.3.0/glaze-v3.3.0-firefox.zip`}>glaze-v3.3.0-firefox.zip</a>.</li>
-      <li>Open <code>about:debugging#/runtime/this-firefox</code>, choose <strong>Load Temporary Add-on…</strong> and select the ZIP.</li>
+      <li>Open <a href={firefoxStore}>Glaze on Firefox Add-ons</a> in Firefox and choose <strong>Add to Firefox</strong>.</li>
+      <li>Review Firefox’s installation prompt and confirm. Open Glaze from Firefox’s Extensions menu.</li>
       <li>Open your school’s Blackboard Ultra, Canvas or Moodle site and reload. Check Glaze’s site access if it does not appear.</li>
     </ol>
-    <p>Firefox removes temporary add-ons when it quits, so load the package again for a later session. Back up settings and notes before removing or changing copies; do not rely on this temporary installation as your only copy of study data. Google Calendar sync is not included. Local <strong>Export calendar (.ics)</strong> is available.</p>
-    <p>The theme, surfaces, pets and school-specific sections below apply to this package too. The <code>chrome://extensions</code> instructions elsewhere in this guide apply to Chrome.</p>
+    <p>The store installation stays installed when Firefox restarts and receives updates through Firefox. If you used a temporary development copy, first save <strong>Export settings</strong> and Notes <strong>Export all</strong>, then switch to the store copy and import both backups. Keep backups private: they include share keys.</p>
+    <p>Google Calendar sign-in sync is not included; local <strong>Export calendar (.ics)</strong> is available. Firefox supports code-free mods, not code mods. The theme, surfaces, pets and school-specific sections below apply to Firefox too. Manage the desktop extension at <code>about:addons</code>; the <code>chrome://extensions</code> instructions elsewhere in this guide apply to Chrome.</p>
+    <p>For development only, the <a href={`${source}/releases/download/v3.3.0/glaze-v3.3.0-firefox.zip`}>Firefox ZIP</a> can still be loaded through <code>about:debugging#/runtime/this-firefox</code> → <strong>Load Temporary Add-on…</strong>. That temporary copy is removed when Firefox quits.</p>
   </section>
 
   <section id="ultra" class="guide-section">
@@ -154,7 +156,7 @@ const chapters = [
     <p>The habitat earns XP from stored handed-in work, kept “do on” plans and verified streak days when Streak is enabled. Levels continue across semesters; settings backups carry progress, furniture and learned preferences. Focus sessions and petting add no XP. There are no notifications or missed-day penalties. Progress and decorations belong to your signed-in school account.</p>
     <p>Choose a room, moss garden, water tank or cloud loft, then place furniture and ball or yarn toys from the tray. Drag a toy onto the page to invite a short play session, or let your companion settle on a favorite perch. Typing, scrolling and focus keep it calm.</p>
     <p><strong>Learn from how I play</strong> adapts routines and toy preferences from bounded numeric signals such as petting, play and time of day. Six meters show mood, playfulness, energy, bond, curiosity and comfort. The model stays in this account’s local pet record and chosen backups; typed text and page content are not training data, and no cloud model is used. Turn learning off or use <strong>Reset learned behavior</strong> without changing XP.</p>
-    <aside class="guide-callout"><strong>New in 3.0.4: mods.</strong><p>Add backgrounds (shaders, layered scenes, videos, animated pictures, Lottie), motion and event effects, nav layouts, page tweaks, and sticker and pet packs and widgets made by others, from a code, link, file or the gallery's Mods section. Each mod shows what it may read, and why, before you add it. Code mods run sandboxed. Updates are signed, with an opt-out signed blocklist, and a no-code widget builder makes your own. Looks can also use a looping video, animated WebP/AVIF or Lottie background: muted, still when motion is off, paused in hidden tabs. See the <a href="/guides/glaze-mods-api">mods guide</a>.</p></aside>
+    <aside class="guide-callout"><strong>New in 3.0.4: mods.</strong><p>Add backgrounds (shaders, layered scenes, videos, animated pictures, Lottie), motion and event effects, nav layouts, page tweaks, and sticker and pet packs and widgets made by others, from a code, link, file or the gallery's Mods section. Each mod shows what it may read, and why, before you add it. Code mods run sandboxed in Chrome; Firefox supports code-free mods. Updates are signed, with an opt-out signed blocklist, and a no-code widget builder makes your own. Looks can also use a looping video, animated WebP/AVIF or Lottie background: muted, still when motion is off, paused in hidden tabs. See the <a href="/guides/glaze-mods-api">mods guide</a>.</p></aside>
   </section>
 
   <section id="courses" class="guide-section">
@@ -231,7 +233,7 @@ const chapters = [
   <section id="recovery" class="guide-section">
     <h2>Fix a problem.</h2>
     <ul class="guide-checklist">
-      <li><strong>Features from this guide missing:</strong> check the version on <code>chrome://extensions</code>. For Glaze 3.3.0, use the GitHub package above.</li>
+      <li><strong>Features from this guide missing:</strong> check the version on <code>chrome://extensions</code> in Chrome or <code>about:addons</code> in desktop Firefox. For Glaze 3.3.0, use the Chrome GitHub package or the Firefox Add-ons listing above.</li>
       <li><strong>Courses missing in the editor:</strong> open any Blackboard page with Glaze on, then reopen the editor.</li>
       <li><strong>Popup works, Blackboard doesn’t change:</strong> check the theme switch and the <code>/ultra/</code> address, then refresh the tab.</li>
       <li><strong>A Blackboard file preview is blank:</strong> Glaze 3.0.4 refreshes expired viewer tickets for the same document and retries previews while an uploaded file converts, for up to five minutes. Save any unsaved work before manually reloading the page. Glaze does not resubmit the file.</li>
@@ -242,10 +244,10 @@ const chapters = [
       <li><strong>A page is hard to use:</strong> switch Glaze off to compare, go back to a built-in palette, and turn off the last helper you changed.</li>
       <li><strong>“Not saved”:</strong> keep the editor open and read the error. Use <strong>Export settings</strong> and Notes <strong>Export all</strong> before uninstalling.</li>
     </ul>
-    <p>When reporting an issue, include your Chrome and Glaze versions and the page type, and hide names and grades in screenshots.</p>
+    <p>When reporting an issue, include your browser and Glaze versions and the page type, and hide names and grades in screenshots.</p>
     <div class="guide-sources">
       <h3>Keep exploring Glaze.</h3>
-      <p>See the <a href="/glaze">Glaze overview</a>, <a href="/guides/glaze-safari">Safari guide</a>, <a href={store}>Chrome Web Store listing</a>, <a href={release}>release notes</a> and <a href={`${source}/issues`}>issue tracker</a>.</p>
+      <p>See the <a href="/glaze">Glaze overview</a>, <a href="/guides/glaze-safari">Safari guide</a>, <a href={store}>Chrome Web Store listing</a>, <a href={firefoxStore}>Firefox Add-ons listing</a>, <a href={release}>release notes</a> and <a href={`${source}/issues`}>issue tracker</a>.</p>
       <p>Blackboard is a trademark of Anthology Inc. Canvas is a trademark of Instructure, Inc. Glaze is an independent project and is not affiliated with or endorsed by Blackboard, Canvas or Moodle.</p>
     </div>
   </section>

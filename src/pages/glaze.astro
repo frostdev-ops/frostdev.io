@@ -12,9 +12,10 @@ const safariZip = `${source}/releases/download/v3.3.0/glaze-3.3.0-safari-macos.z
 const chromeZip = `${source}/releases/download/v3.3.0/glaze-v3.3.0.zip`;
 const firefoxZip = `${source}/releases/download/v3.3.0/glaze-v3.3.0-firefox.zip`;
 const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
+const firefoxStore = 'https://addons.mozilla.org/en-US/firefox/addon/glaze/';
 ---
 
-<MarketingLayout title="Glaze 3.3.0 — Blackboard, Canvas and Moodle, made yours" description="Make your school site yours: themes, glass and frost controls, animated pets, live course tabs, notes and planning. Free for Chrome and Safari, with a Firefox preview." path="/glaze" image="/projects/glaze/cover.webp">
+<MarketingLayout title="Glaze 3.3.0 — Blackboard, Canvas and Moodle, made yours" description="Make your school site yours: themes, glass and frost controls, animated pets, live course tabs, notes and planning. Free for Chrome, Safari and Firefox." path="/glaze" image="/projects/glaze/cover.webp">
   <div class:list={["product-page glaze-page", { "is-halloween": halloween }]}>
     <section class="product-hero" aria-labelledby="glaze-title">
       {halloween && <div class="halloween-hero" aria-hidden="true">
@@ -42,9 +43,13 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
           <a class="product-button" href={chromeStore}>Get from Chrome Web Store <span aria-hidden="true">↗</span></a>
           <a class="product-button secondary" href="/guides/glaze-chrome">Chrome guide <span aria-hidden="true">→</span></a>
         </div>
+        <div class="product-actions" data-glaze-install="firefox">
+          <a class="product-button" href={firefoxStore}>Get from Firefox Add-ons <span aria-hidden="true">↗</span></a>
+          <a class="product-button secondary" href="/guides/glaze-chrome#firefox">Firefox guide <span aria-hidden="true">→</span></a>
+        </div>
         {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.<br />A little Halloween for your study space.</p>}
         <p class="product-meta">Free and open source<br />Chrome, Safari and Firefox 3.3.0<br />No analytics. No account.</p>
-        <p class="product-caption"><a href="/guides/glaze-chrome#firefox">Try the Firefox preview →</a></p>
+        <p class="product-caption"><a href="#browser-heading">See all browser downloads →</a></p>
         <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>
       </div>
       <figure class="glaze-preview">
@@ -142,9 +147,9 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
       <div class="browser-guides">
         <a class="product-panel browser-guide" href="/guides/glaze-safari"><span class="product-eyebrow">Safari on Mac</span><h3>Signed, notarized Mac app.</h3><p>Install Glaze 3.3.0, enable the extension, allow your Blackboard, Canvas or Moodle site.</p><span class="product-text-link">Safari guide →</span></a>
         <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Store or GitHub package.</h3><p>The store version may differ. Load the GitHub package unpacked for the 3.3.0 features in this guide.</p><span class="product-text-link">Chrome guide →</span></a>
-        <a class="product-panel browser-guide" href="/guides/glaze-chrome#firefox"><span class="product-eyebrow">Firefox preview</span><h3>Try the Firefox package.</h3><p>The 3.3.0 preview needs Firefox 140 or newer on desktop. Load it temporarily for this browser session; it is removed when Firefox quits.</p><span class="product-text-link">Firefox setup →</span></a>
+        <a class="product-panel browser-guide" href={firefoxStore}><span class="product-eyebrow">Firefox</span><h3>Install from Firefox Add-ons.</h3><p>Glaze 3.3.0 is available for Firefox 140 or newer on desktop and Firefox 142 or newer on Android. Install once and receive updates through Firefox.</p><span class="product-text-link">Get Glaze for Firefox ↗</span></a>
       </div>
-      <p class="product-caption">GitHub downloads: <a href={safariZip}>Safari Mac ZIP (3.3.0)</a> · <a href={chromeZip}>Chrome extension ZIP (3.3.0)</a> · <a href={firefoxZip}>Firefox preview ZIP (3.3.0)</a> · <a href={`${source}/releases/tag/v3.3.0`}>3.3.0 release notes</a>.</p>
+      <p class="product-caption"><a href="/guides/glaze-chrome#firefox">Firefox installation guide</a>. GitHub downloads: <a href={safariZip}>Safari Mac ZIP (3.3.0)</a> · <a href={chromeZip}>Chrome extension ZIP (3.3.0)</a> · <a href={firefoxZip}>Firefox development ZIP (3.3.0)</a> · <a href={`${source}/releases/tag/v3.3.0`}>3.3.0 release notes</a>.</p>
     </section>
 
     <section class="product-cta">
@@ -162,7 +167,8 @@ const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboa
   const ua = navigator.userAgent;
   const mobile = /Android|iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const otherBrowser = /Edg|OPR|Firefox|FxiOS|CriOS/.test(ua);
-  const browser = !mobile && !otherBrowser && /Chrome\//.test(ua) ? 'chrome'
+  const browser = /Firefox\//.test(ua) && !/FxiOS/.test(ua) ? 'firefox'
+    : !mobile && !otherBrowser && /Chrome\//.test(ua) ? 'chrome'
     : !mobile && !otherBrowser && /Macintosh/.test(ua) && /Safari\//.test(ua) && !/Chrome|Chromium/.test(ua) ? 'safari'
     : null;
   if (browser) {
