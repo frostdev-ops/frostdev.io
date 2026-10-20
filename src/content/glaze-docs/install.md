@@ -1,7 +1,7 @@
 ---
 title: "Install"
 description: "Install Glaze in Chrome, Edge or Brave, Firefox, Safari on a Mac, or on iPhone and iPad."
-updated: "2026-10-17"
+updated: "2026-10-20"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Install"
 ---
 <!-- Mirrored from Glaze's docs/install.md by its scripts/docs-mirror.js: edit it there. -->
