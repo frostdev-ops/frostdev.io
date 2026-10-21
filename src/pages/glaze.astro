@@ -49,6 +49,18 @@ const firefoxStore = 'https://addons.mozilla.org/en-US/firefox/addon/glaze/';
           <a class="product-button" href={firefoxStore}>Get from Firefox Add-ons <span aria-hidden="true">↗</span></a>
           <a class="product-button secondary" href="/guides/glaze-chrome#firefox">Firefox guide <span aria-hidden="true">→</span></a>
         </div>
+        <nav class="hero-galleries" aria-label="Glaze galleries">
+          <a class="hero-gallery" href="/glaze/looks">
+            <span class="gallery-icon gallery-swatches" aria-hidden="true"><span></span><span></span><span></span></span>
+            <span class="gallery-copy"><strong>Looks gallery</strong><span>Themes, palettes and backgrounds.</span></span>
+            <span class="gallery-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="hero-gallery" href="/glaze/mods">
+            <span class="gallery-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><path d="M17.5 13v9M13 17.5h9" /></svg></span>
+            <span class="gallery-copy"><strong>Mods gallery</strong><span>Widgets, effects and page tweaks.</span></span>
+            <span class="gallery-arrow" aria-hidden="true">→</span>
+          </a>
+        </nav>
         {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.<br />A little Halloween for your study space.</p>}
         <p class="product-meta">Free and open source<br />Chrome, Safari and Firefox packages {version}<br />No analytics. No account.</p>
         <p class="product-caption"><a href="#browser-heading">See all browser downloads →</a></p>
@@ -191,6 +203,22 @@ const firefoxStore = 'https://addons.mozilla.org/en-US/firefox/addon/glaze/';
   .glaze-page { --product-accent: #6fdcff; }
   .product-hero { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 2.5rem; }
   .product-title span { color: var(--glaze-accent, #83e6f4); }
+  .hero-galleries { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: 1.25rem; }
+  .hero-gallery { display: flex; align-items: center; gap: .75rem; min-width: 0; padding: 1rem; border: 1px solid var(--glaze-line, #36596c); border-radius: .75rem; background: var(--glaze-surface, #0a1725); text-decoration: none; transition: border-color .2s, background .2s; }
+  .hero-gallery:hover { border-color: var(--glaze-accent-secondary, #9ce9fa); background: var(--glaze-hover, #112b40); }
+  .gallery-icon { display: grid; place-items: center; flex: 0 0 1.75rem; height: 1.75rem; color: var(--glaze-accent-secondary, #9ce9fa); }
+  .gallery-icon svg { width: 100%; height: 100%; }
+  .gallery-swatches { position: relative; }
+  .gallery-swatches span { position: absolute; width: .75rem; height: 1.4rem; border-radius: .2rem; transform-origin: 50% 90%; }
+  .gallery-swatches span:nth-child(1) { background: #a78bfa; transform: rotate(-30deg); }
+  .gallery-swatches span:nth-child(2) { background: #67e8f9; }
+  .gallery-swatches span:nth-child(3) { background: #6ee7b7; transform: rotate(30deg); }
+  .gallery-copy { flex: 1; min-width: 0; }
+  .gallery-copy strong { display: block; color: var(--glaze-ink, #e8f2fa); font-size: .9rem; font-weight: 600; }
+  .gallery-copy > span { display: block; margin-top: .35rem; color: var(--glaze-muted, #b3c8dc); font-size: .72rem; line-height: 1.5; }
+  .gallery-arrow { color: var(--glaze-accent-secondary, #9ce9fa); }
+  @media (max-width: 1050px) { .hero-galleries { grid-template-columns: minmax(0, 1fr); } }
+  @media (prefers-reduced-motion: reduce) { .hero-gallery { transition: none; } }
   .hero-film-link { display: inline-flex; align-items: center; gap: .75rem; margin-top: 1.75rem; color: var(--glaze-accent-secondary, #a4e5f5); font-size: .8rem; }
   .hero-film-link > span:first-child { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--glaze-line, #36596c); border-radius: 50%; font-size: .6rem; }
   .glaze-preview { min-width: 0; border: 1px solid var(--glaze-line, #2b4b61); border-radius: 1rem; overflow: hidden; background: var(--glaze-ground, #060d18); animation: preview-arrive .8s ease-out both; }

@@ -34,6 +34,8 @@ const glaze = path === '/glaze' || path.startsWith('/glaze/') || path.startsWith
       <nav aria-label="Main navigation">
         <a href="/#projects">Projects</a>
         <a href="/guides">Guides</a>
+        {glaze && <a href="/glaze/looks" aria-current={path === '/glaze/looks' ? 'page' : undefined}>Looks</a>}
+        {glaze && <a href="/glaze/mods" aria-current={path === '/glaze/mods' ? 'page' : undefined}>Mods</a>}
         <a href={glaze ? "/glaze" : "/login"}>{glaze ? "Get Glaze" : "Sign in"} <span aria-hidden="true">↗</span></a>
       </nav>
     </header>
@@ -66,6 +68,9 @@ const glaze = path === '/glaze' || path.startsWith('/glaze/') || path.startsWith
     color: #b3c8dc;
   }
   .marketing-nav img { width: 3rem; height: 3rem; object-fit: contain; }
+  .marketing-nav > a { flex-shrink: 0; }
+  .marketing-nav nav { flex-wrap: wrap; justify-content: flex-end; row-gap: .75rem; }
+  .marketing-nav a[aria-current="page"] { color: #e8f2fa; text-decoration: underline; text-underline-offset: .35em; }
   nav { display: flex; gap: 1.75rem; }
   a { transition: color 0.2s; }
   a:hover { color: #9be7ff; }
