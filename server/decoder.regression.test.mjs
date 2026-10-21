@@ -18,25 +18,26 @@ const code = (x, b) => encode({ c: palette, ...(b && { b }), x });
 const SHADER = 'vec4 scene(vec2 uv) { return vec4(mix(uC1, uC2, uv.x), amt(uv.y)); }';
 const digest = (s) => createHash('sha256').update(s).digest('base64url');
 
-test('all curated glaze1 fingerprints and description bytes match the pre-parts baseline', async () => {
-  // Captured from d30bdf6 with its own decoder and describe(), before glaze2 existed.
+test('curated glaze1 fingerprints retain the pre-parts identity and descriptions match the contrast baseline', async () => {
+  // Fingerprints captured from d30bdf6 before glaze2 existed. Description hashes reflect
+  // Glaze 3.3.4's expanded text-contrast audit; every other description field stays unchanged.
   const baseline = [
-    ['aurora-night', 'y4iDdkjNS9vyc3zpLY3zVmtjpCelf7I2NmKAoL6eZd4', 'kan0BOkzvkuYXd-DtZhANK9blqMM-IYPjzMECHpIOvA'],
-    ['clear', 'KSShIu6nNYfmkLnTLmuXycE3wMEeI8cXMTXUTrNu4SU', 'EVKMmIkxUnRvEY1TNW3Yp0F6BySuQ2TvFvZ2cxtAO48'],
-    ['ember', 'CqHKdthNSoz1Yx58pLBx6icqw908IcrvxwwtyjKvJ4g', '34IDGl_cIh2AnfkZHkoUP7OZJZVrOVgYu1kQmESKI80'],
-    ['forest', 'nsBszDjX1WPbykp1K2kf3zRpn-iraN3hIgCEMIbfPos', 'Xmuh_MeGVcPcV7HfA9iSbGpj_a9cHHpacy2_zSKdlsI'],
-    ['frost', 'a1u6VkSUHtCQlaM14b6d7CXTP2trJlXuV4goKaBZm04', 'V8J4tl6lat2phXCTmN_PDrnrn_yJFUWWTUnrr89ZZ4w'],
-    ['graveyard', 'OohqTsStfm66oBQTuttV3nG94mY4LujImUgyuOhINYg', '-_2PIi2FE15BUP3x_VRIp06zGYE5xds6RzYK_yYIeKM'],
-    ['lagoon', 'U4IqD9MZRdxadbD6Lk0ShtJpjyPtnwlxDspCU0maeYA', 'bFZXYuaIb3gCpAaNxVNMmsTfDWxj4S6WRWbSK8E9eGc'],
-    ['lava-lounge', '4tHyrt5BNUaqmgMGKIQVO-BxcrtS7ikRHntZnz_Ivv0', 'l9CbS2m3YME2xUDs63Mj7wEYTYl1Y3wfjRoNTND26Rw'],
-    ['library', 'CPnrGQEKa2OtjJfO1h19zIRppXi-e50IflpRAEK4jRw', 'E7wgr4P5aAHKpOcK8blW7YQayx9-9L0RhMLcZEgOiG0'],
-    ['midnight', 'gQvAyY1WEuQaJBLs4_ni9cmy0Tfp56n99zW4xjGjstY', 'd773EcHLHPSKhsWlFnPyApgwXotF64SIuDOV8zFpEOc'],
-    ['paper', 'S0udaNO377wjsfmtleA9y1Xl_36rGqccmuJH42ZU_UU', 'X-OTn6xmCjtQr0d0ANiBPXlNXjCXyxNDNvNDc5XEzMc'],
-    ['pumpkin-patch', 'RJEONkudKsiVHwFK8OPoNzfZvW2xK2B1KqkCkkbbMHY', 'nCjhdA3fwAEBEh2VYckwUQ9YlGm9NqY9YIQYvFd3PJ4'],
-    ['rose-garden', 'C7aiDaUrUcqACwrNcX9cDK1LzkMMp6OG42Ty8bcYBdo', 'l8gGwYHSQv4kV6Caanets6Yl-SIyTgW-GI1lwpDEEsI'],
-    ['rose', '59Z9c1YLTr2_H9lgPtnsjdAlpL-FsVuLYxZFLLzTk1E', 'PGjh-2yBlyUXl9nPEHVMJ-L7ZUrSfoH5HWtNcOcFVTQ'],
-    ['synthwave', '6RhuBHjttjI9FIWEPwLlg9A1TroK-pPJkd9w-xqs5d4', 't8zCZQMIb8JnkKs0CkJhLquiLcwatST-BhE8y6Jn4go'],
-    ['terminal', 'PEC2sygHYwJ1SZabeuMhvxgUlgXN8hPuVx-ghvC166c', 'nKhRHkjNzXJECKOCaQSTzu-EdfW1-JWbZxofUMqbTR4'],
+    ['aurora-night', 'y4iDdkjNS9vyc3zpLY3zVmtjpCelf7I2NmKAoL6eZd4', 'W73IBMZt-NaTGXma-b98YdbQ116wfFOD43cFIiw7ubM'],
+    ['clear', 'KSShIu6nNYfmkLnTLmuXycE3wMEeI8cXMTXUTrNu4SU', 'UpMV5cyiOaIMKYg65cgqXKq7hWgQB6Zgl3cpjZD4VMY'],
+    ['ember', 'CqHKdthNSoz1Yx58pLBx6icqw908IcrvxwwtyjKvJ4g', 'gsoJzuRpfqc3Gr9To1inLv2mEUXwX6sJ6vBjc7HDxq8'],
+    ['forest', 'nsBszDjX1WPbykp1K2kf3zRpn-iraN3hIgCEMIbfPos', 'bL5CKYlSaVp393MGPMP3sv7obRHXhtEqpV2HUApgEi0'],
+    ['frost', 'a1u6VkSUHtCQlaM14b6d7CXTP2trJlXuV4goKaBZm04', '_Q2IFhtZThltnt0CH8s7N0OCerEBNoGIqrNbm1-Fy4o'],
+    ['graveyard', 'OohqTsStfm66oBQTuttV3nG94mY4LujImUgyuOhINYg', '4EP91Thz7-eE_tk1Eca6kolRN0cqp01qhEMApSBSaQo'],
+    ['lagoon', 'U4IqD9MZRdxadbD6Lk0ShtJpjyPtnwlxDspCU0maeYA', 'EKWYrNczHAGW4rOJ9uJaAd_N6lFzb5uRiUTlNsjUKt8'],
+    ['lava-lounge', '4tHyrt5BNUaqmgMGKIQVO-BxcrtS7ikRHntZnz_Ivv0', '7PrVVx2xs7V0rWtJyxzhFNTzZ4caq1PwRsT9_TV-z9E'],
+    ['library', 'CPnrGQEKa2OtjJfO1h19zIRppXi-e50IflpRAEK4jRw', '_v76yj7veAouDXB744-1xzWjEAfixJLNyMBYpCSKBS8'],
+    ['midnight', 'gQvAyY1WEuQaJBLs4_ni9cmy0Tfp56n99zW4xjGjstY', 'qj9Pd0CqUBUJOdibNEScBHAXmL9Sm6P3nMry62WKbFk'],
+    ['paper', 'S0udaNO377wjsfmtleA9y1Xl_36rGqccmuJH42ZU_UU', '3GBm3cJ_Gi78oOTMybkkWbCER9743JEDuA7tbhk52hM'],
+    ['pumpkin-patch', 'RJEONkudKsiVHwFK8OPoNzfZvW2xK2B1KqkCkkbbMHY', 'NYT739pXKlaXCCRvItTN7am8eBLhxL53vMeybQbzNuU'],
+    ['rose-garden', 'C7aiDaUrUcqACwrNcX9cDK1LzkMMp6OG42Ty8bcYBdo', '1fSWZdVBDqBoMKQf6O8VyWdzsvNSOuJQj5cgO_IaKik'],
+    ['rose', '59Z9c1YLTr2_H9lgPtnsjdAlpL-FsVuLYxZFLLzTk1E', 'V09vOVElEKUVatXwqO6BMiTIlhBJU_75qAtk21Fbh8g'],
+    ['synthwave', '6RhuBHjttjI9FIWEPwLlg9A1TroK-pPJkd9w-xqs5d4', '7cB1vcVBgl9J1nZzmQP_wLc1Wk8ZhusN-Mq5fsRdLAY'],
+    ['terminal', 'PEC2sygHYwJ1SZabeuMhvxgUlgXN8hPuVx-ghvC166c', '-2ct9LAIEJb3TzP5jGU5-FxMD54RynQdW8ZrNfd9XfY'],
   ];
   for (const [id, fingerprint, description] of baseline) {
     const r = await checkCode(JSON.parse(readFileSync(`src/data/looks/${id}.json`, 'utf8')).code);

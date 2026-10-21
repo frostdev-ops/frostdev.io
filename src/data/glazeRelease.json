@@ -1,6 +1,6 @@
 {
-  "version": "3.3.3",
-  "sourceCommit": "2655c2cc7606c9551c311501fb5e1ff670a8501e",
-  "updated": "2026-10-20",
-  "summary": "Layouts, pets and other saved changes work again after installing over a Dashboard layout kept from an earlier version. The new-install setup no longer stops on that layout and blocks every save."
+  "version": "3.3.4",
+  "sourceCommit": "b44116ac8a8d919a0625f0ac09f698bf451e3a8b",
+  "updated": "2026-10-21",
+  "summary": "Blackboard pages use consistent themed backgrounds, rounded headers and controls, and spacing across discussions, assignments, documents, announcements, Activity, Calendar and grades. Activity icons stay centered, and Course Content headings have proper insets. Keep scene backgrounds continuous behind navigation and keep full-page panels clear of the bar, including retained course tabs and smaller windows. Improve course-tab navigation, sidebar and widget layout recovery, grade and due-date handling, and Settings behavior across Blackboard and Canvas. Correct saved Look, note-sharing and session handling, and stabilize validation and packaging checks."
 }

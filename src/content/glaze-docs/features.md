@@ -1,7 +1,7 @@
 ---
 title: "Features"
 description: "Everything Glaze does on Blackboard Ultra, Canvas and Moodle, site by site."
-updated: "2026-10-20"
+updated: "2026-10-21"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Features"
 ---
 <!-- Mirrored from Glaze's docs/features.md by its scripts/docs-mirror.js: edit it there. -->
@@ -18,7 +18,7 @@ for Glaze's local stylesheets, with the existing one-second limit.
 If Glaze is reloaded while an LMS tab stays open, its old extension API work stops until that tab reloads too.
 Its animated scene also stops and releases its rendering resources.
 
-The settings editor has eight tabs: **Look, Blackboard, Canvas, Moodle, Study tools, Sharing and sync, Backup and privacy, and About**. Search works across tabs; section links such as `#blackboard/nav` and older editor links reveal the right tab. Section resets change their own preferences; resetting preferences keeps your palettes, pictures, local notes/tasks, bookmarks and share keys. The live preview uses fictional local pages at real desktop or phone CSS widths, with site/page/appearance controls. Focusing a Blackboard course's editor controls previews that course's appearance; Blackboard nicknames can be edited here as well as on its course cards. Sharing and sync includes the Relay origin and an explicit connection test; saving stays offline.
+The settings editor has ten tabs: **Look, Navigation, Blackboard, Canvas, Moodle, Study tools, Sharing and sync, Mods, Backup and privacy, and About**. Search works across tabs; section links such as `#blackboard/nav` and older editor links reveal the right tab. Section resets change their own preferences; resetting preferences keeps your palettes, pictures, local notes/tasks, bookmarks and share keys. The live preview uses fictional local pages at real desktop or phone CSS widths, with site/page/appearance controls. Focusing a Blackboard course's editor controls previews that course's appearance; Blackboard nicknames can be edited here as well as on its course cards. Sharing and sync includes the Relay origin and an explicit connection test; saving stays offline.
 
 ## Mods
 

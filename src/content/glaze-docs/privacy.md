@@ -1,7 +1,7 @@
 ---
 title: "Privacy summary"
 description: "What Glaze keeps on your device, and the few requests it makes and where they go."
-updated: "2026-10-20"
+updated: "2026-10-21"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Privacy-summary"
 ---
 <!-- Mirrored from Glaze's docs/privacy.md by its scripts/docs-mirror.js: edit it there. -->
@@ -44,7 +44,7 @@ identifiers locally for up to 14 days. With Back up what you type on, an unfinis
 date/time, notes and edited task identifiers/state) can also be backed up locally per school/account when hidden or
 left, until restored or cleaned up after 14 days; without backup it stays in document memory. Your Looks history (the last 20 themes) and favorites stay on your device too,
 as do your stickers, your own sticker and pointer pictures and Look rotation's list;
-the Looks gallery is a website you visit yourself, and Glaze sends it nothing. Canvas's own what-if scores and editor recovery remain with Canvas.
+the Looks gallery is a website you visit yourself; Glaze asks it only for the one background file or mod you choose there, when you click to use it (see [The Looks gallery](/glaze/privacy#the-looks-gallery)). Canvas's own what-if scores and editor recovery remain with Canvas.
 Better To Do's own tasks and plans stay on your device too, with a two-minute copy of your Canvas planner items or Blackboard due items.
 A calendar file you export (.ics) is made on your device and saved by your browser; it holds your course and assignment names, and Glaze keeps no copy.
 Google Calendar sync is unavailable in this build while Google verification is pending. In a future build that enables it, optional sync would send the same events to the Glaze calendar in your Google account and read changes there, directly between your browser and Google (`www.googleapis.com`, and `oauth2.googleapis.com` to revoke access on Disconnect); Chrome would keep the sign-in. Calendar file export remains available without connecting Google.
