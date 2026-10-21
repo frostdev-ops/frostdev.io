@@ -1,4 +1,4 @@
-# Harvest Table redesign
+# Harvest Gathering redesign
 
 - Taxonomy: `stylized-concept`
 - Mode: built-in `image_gen` generation
@@ -9,7 +9,7 @@
 
 ```text
 Use case: stylized-concept
-Asset type: polished 16:9 concept art for an animated LMS background named Harvest Table
+Asset type: polished 16:9 concept art for an animated LMS background named Harvest Gathering
 Primary request: an unmistakable Thanksgiving dinner table seen in a cozy dining room at autumn dusk, composed as a refined graphic scene with strong silhouettes and depth
 Scene/backdrop: a large mullioned window fills the upper two-thirds; outside is a layered autumn orchard with rounded tree canopies, distant hills, and two or three windblown leaves against an amber-to-plum sunset
 Subject: in the foreground, a deep walnut table with a rust-and-cream runner in perspective, two simple cream plates with dark rims, a small loaf of bread, a clearly readable pumpkin pie with one slice subtly lifted, three elegant taper candles, two small pumpkins, and a pair of wheat sprigs; delicate steam rises from the pie and bread
