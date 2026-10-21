@@ -1,0 +1,54 @@
+{
+  "name": "Koi Garden",
+  "category": "general",
+  "galleryOnly": true,
+  "backgroundKind": "shader",
+  "scale": 0.6,
+  "palette": {
+    "--gz-accent": "#df7867",
+    "--gz-accent-hi": "#f3ab99",
+    "--gz-accent-soft": "#15383a",
+    "--gz-accent-ink": "#21100d",
+    "--gz-surface": "#102f35",
+    "--gz-surface-2": "#041b23",
+    "--gz-ink": "#f3eee2",
+    "--gz-ink-muted": "#b2c5bd",
+    "--gz-ink-faint": "#78978f",
+    "--gz-line": "#1c4548",
+    "--gz-line-strong": "#35656a",
+    "--gz-ok": "#72c49a",
+    "--gz-warn": "#e5b866",
+    "--gz-err": "#ef8177"
+  },
+  "look": {
+    "font": "figtree",
+    "head": "lora",
+    "mono": "auto",
+    "scale": 1.02,
+    "leading": 1.6,
+    "density": "cozy",
+    "radius": 18,
+    "glass": 18,
+    "depth": 2,
+    "surfaceOpacity": 84,
+    "surfaceTint": 10,
+    "surfaceTintSource": "accent",
+    "shadowStrength": 32,
+    "surfaceFrost": 3,
+    "surfaceBorder": 70
+  },
+  "bg": {
+    "kind": "shader",
+    "intensity": 52,
+    "colors": [
+      "#2b766a",
+      "#dc7868",
+      "#f1dcae"
+    ],
+    "grain": false
+  },
+  "rationale": "Midnight teal and jade preserve a broad, quiet field for translucent course panels. Muted coral and warm cream identify the koi, blossom, lantern aperture, and tiny water highlights without turning the background into a bright illustration. Softly rounded, lightly frosted surfaces echo the pond while the six required text and accent contrast pairs remain comfortably readable.",
+  "motionNotes": "Three koi follow separate slow curved paths and articulate their forked tails. Water current bands, small glints, layered ring ripples, drifting fireflies, and lotus bob run at restrained independent rates. Roughly every twenty-two seconds the central koi surfaces, releases two droplets, and sends two expanding rings across the near water.",
+  "delightMoment": "The central coral-and-cream koi periodically rises toward the surface, briefly turns, sheds two pale droplets, and leaves a widening double wake.",
+  "critique": "The rejected top-down version lacked depth, recognizable subjects, and a focal event; its tiny fish and all-over caustics read as abstract blobs over noise. This version establishes a waterline, foreground and far-bank silhouettes, exactly three anatomically readable koi, and a slow story beat while keeping the UI-safe dark water dominant."
+}

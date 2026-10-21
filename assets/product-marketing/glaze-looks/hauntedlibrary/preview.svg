@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180" aria-hidden="true">
+  <defs>
+    <linearGradient id="room" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#171024"/>
+      <stop offset=".55" stop-color="#25152f"/>
+      <stop offset="1" stop-color="#08060e"/>
+    </linearGradient>
+    <linearGradient id="night" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#334873"/>
+      <stop offset="1" stop-color="#11162f"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#563248"/>
+      <stop offset=".55" stop-color="#321b31"/>
+      <stop offset="1" stop-color="#190e1c"/>
+    </linearGradient>
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#663a35"/>
+      <stop offset=".24" stop-color="#32191f"/>
+      <stop offset="1" stop-color="#10090f"/>
+    </linearGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff0bd"/>
+      <stop offset="1" stop-color="#b8f8df"/>
+    </linearGradient>
+    <linearGradient id="ghost" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d4ffea" stop-opacity=".96"/>
+      <stop offset="1" stop-color="#65dcb6" stop-opacity=".18"/>
+    </linearGradient>
+    <radialGradient id="warm" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ffd67e" stop-opacity=".75"/>
+      <stop offset=".4" stop-color="#efa64b" stop-opacity=".24"/>
+      <stop offset="1" stop-color="#efa64b" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <filter id="ghostGlow" x="-40%" y="-30%" width="180%" height="170%">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+    <clipPath id="windowClip">
+      <path d="M126 113V55c0-23 15-40 34-40s34 17 34 40v58z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="320" height="180" rx="12" fill="url(#room)"/>
+
+  <!-- Background window and stonework -->
+  <path d="M118 119V53c0-28 18-47 42-47s42 19 42 47v66" fill="#0b0915" stroke="#49304f" stroke-width="8"/>
+  <path d="M126 113V55c0-23 15-40 34-40s34 17 34 40v58z" fill="url(#night)" stroke="#6b5274" stroke-width="2"/>
+  <g clip-path="url(#windowClip)">
+    <circle cx="171" cy="40" r="12" fill="#b8f8df" opacity=".64"/>
+    <path d="M160 10v106M143 12v104M177 12v104M126 62h68M126 88h68" stroke="#111225" stroke-width="2" opacity=".9"/>
+    <path d="M112 27l94 94M120 7l94 94M208 27l-94 94M200 7l-94 94" stroke="#4f5779" stroke-width="1" opacity=".52"/>
+  </g>
+  <path d="M106 117V29h8v88M206 117V29h8v88" stroke="#402540" stroke-width="5"/>
+  <path d="M96 118h128" stroke="#17101d" stroke-width="8"/>
+
+  <!-- Ghost is behind the right shelf -->
+  <path d="M233 66c-11 0-18 8-18 20v26c0 6-4 10-7 14 6 1 9-2 12-5 3 4 7 6 11 2 3 3 7 4 12 1v-38c0-12-4-20-10-20z" fill="#77e4bd" opacity=".24" filter="url(#ghostGlow)"/>
+  <path d="M232 66c-10 0-17 8-17 20v27c0 6-3 10-6 13 5 1 9-1 12-5 3 4 7 6 11 2 3 3 7 4 11 1V86c0-12-4-20-11-20z" fill="url(#ghost)"/>
+  <ellipse cx="224" cy="83" rx="2.3" ry="3.2" fill="#16211f"/>
+  <ellipse cx="234" cy="83" rx="2.3" ry="3.2" fill="#16211f"/>
+  <path d="M226 91c3 3 6 3 9 0" fill="none" stroke="#31534a" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M216 101c-8-8-10-1-14-7" fill="none" stroke="#a9f5d5" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Side bookcases -->
+  <g>
+    <path d="M0 0h82v145H0zM238 0h82v145h-82z" fill="url(#wood)"/>
+    <path d="M8 8h66v129H8zM246 8h66v129h-66z" fill="none" stroke="#120a14" stroke-width="6"/>
+    <path d="M6 39h70M6 73h70M6 107h70M244 39h70M244 73h70M244 107h70" stroke="#120a14" stroke-width="5"/>
+    <path d="M76 0v145M244 0v145" stroke="#6a3b52" stroke-width="6"/>
+    <g fill="#75505d">
+      <path d="M12 13h7v22h-7zM22 9h8v26h-8zM33 17h6v18h-6zM42 11h9v24h-9zM54 14h6v21h-6zM63 8h8v27h-8z"/>
+      <path d="M12 48h8v21h-8zM23 43h6v26h-6zM32 50h9v19h-9zM44 46h6v23h-6zM53 41h8v28h-8zM64 49h7v20h-7z"/>
+      <path d="M12 80h6v23h-6zM21 77h9v26h-9zM33 84h7v19h-7zM43 79h8v24h-8zM54 86h6v17h-6zM63 76h8v27h-8z"/>
+      <path d="M12 116h8v17h-8zM23 111h7v22h-7zM33 114h9v19h-9zM45 109h6v24h-6zM54 115h7v18h-7zM64 108h7v25h-7z"/>
+      <path d="M249 11h8v24h-8zM260 16h6v19h-6zM269 8h9v27h-9zM281 13h7v22h-7zM291 10h6v25h-6zM300 17h9v18h-9z"/>
+      <path d="M249 45h6v24h-6zM258 50h9v19h-9zM270 42h7v27h-7zM280 47h8v22h-8zM291 52h6v17h-6zM300 43h9v26h-9z"/>
+      <path d="M249 80h8v23h-8zM260 76h6v27h-6zM269 83h9v20h-9zM281 78h7v25h-7zM291 85h6v18h-6zM300 77h9v26h-9z"/>
+      <path d="M249 112h7v21h-7zM259 117h8v16h-8zM270 109h6v24h-6zM279 113h9v20h-9zM291 108h7v25h-7zM301 116h8v17h-8z"/>
+    </g>
+    <g stroke="#d19a53" stroke-width="1" opacity=".45">
+      <path d="M23 18h7M44 22h7M54 27h6M21 57h8M43 91h8M63 121h8"/>
+      <path d="M249 27h8M269 19h9M291 24h6M258 59h9M280 91h8M301 124h8"/>
+    </g>
+  </g>
+
+  <!-- Flying pages -->
+  <g fill="url(#page)" stroke="#dfb268" stroke-width="1">
+    <path d="M104 61c9-3 17-2 24 3l-4 14c-7-5-14-6-23-3z"/>
+    <path d="M150 83c8-5 17-5 27-1l-2 15c-8-4-17-4-26 1z"/>
+    <path d="M194 54c7-4 14-3 22 1l-5 12c-6-4-13-4-20-1z"/>
+  </g>
+  <g fill="none" stroke="#76555f" stroke-width=".8" opacity=".5">
+    <path d="M108 66l14 3M106 70l13 3M155 87l15-1M154 92l16-1M198 58l12 3"/>
+  </g>
+
+  <!-- Candle glow and candelabra -->
+  <g filter="url(#blur)" opacity=".7">
+    <circle cx="98" cy="96" r="34" fill="url(#warm)"/>
+  </g>
+  <g fill="none" stroke="#d69a43" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M98 137V99M98 113C87 109 84 103 84 96M98 113c11-4 14-10 14-17M87 137h22"/>
+  </g>
+  <g fill="#e8c584">
+    <path d="M80 98h8l-1-17h-6zM94 101h8l-1-20h-6zM108 98h8l-1-17h-6z"/>
+  </g>
+  <g fill="#ffd36f">
+    <path d="M84 81c-5-5 1-9 1-14 5 6 5 10-1 14zM98 81c-5-6 1-11 1-16 6 7 6 12-1 16zM112 81c-5-5 1-9 1-14 5 6 5 10-1 14z"/>
+  </g>
+
+  <!-- Foreground desk, stacks and open book -->
+  <path d="M0 137l320-5v48H0z" fill="url(#desk)"/>
+  <path d="M0 137l320-5" stroke="#b16c45" stroke-width="4"/>
+  <path d="M19 151h282M28 161h264" stroke="#693844" stroke-width="2" opacity=".8"/>
+  <path d="M34 180l13-35h28l10 35M238 180l9-38h28l12 38" fill="#100910"/>
+  <g>
+    <path d="M36 131h69v9H36zM43 121h58v10H43zM50 112h63v9H50z" fill="#422132" stroke="#b07149" stroke-width="1.2"/>
+    <path d="M222 128h67v10h-67zM230 117h55v11h-55z" fill="#39213a" stroke="#b07149" stroke-width="1.2"/>
+    <path d="M160 126c-18-12-38-11-57-2l5 19c18-8 35-6 52 7 17-13 34-15 52-7l5-19c-19-9-39-10-57 2z" fill="url(#page)" stroke="#e1b36d" stroke-width="1.5"/>
+    <path d="M160 126v24M113 129c15-5 29-3 42 4M207 129c-15-5-29-3-42 4" fill="none" stroke="#775460" stroke-width="1.2" opacity=".65"/>
+    <path d="M113 136c15-4 29-2 42 5M207 136c-15-4-29-2-42 5" fill="none" stroke="#775460" stroke-width="1" opacity=".42"/>
+  </g>
+
+  <!-- Dust motes -->
+  <g fill="#f6c66d">
+    <circle cx="91" cy="58" r="1" opacity=".7"/><circle cx="116" cy="103" r=".8" opacity=".55"/>
+    <circle cx="137" cy="48" r=".7" opacity=".45"/><circle cx="183" cy="72" r=".9" opacity=".55"/>
+    <circle cx="203" cy="104" r=".7" opacity=".5"/><circle cx="228" cy="46" r=".8" opacity=".45"/>
+  </g>
+  <rect x=".75" y=".75" width="318.5" height="178.5" rx="11.25" fill="none" stroke="#74506f" stroke-width="1.5"/>
+</svg>

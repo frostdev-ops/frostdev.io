@@ -1,0 +1,62 @@
+{
+  "name": "Harvest Table",
+  "category": "thanksgiving",
+  "palette": {
+    "--gz-accent": "#c95a3a",
+    "--gz-accent-hi": "#f2b45f",
+    "--gz-accent-soft": "#3a1d26",
+    "--gz-accent-ink": "#12090d",
+    "--gz-surface": "#241820",
+    "--gz-surface-2": "#140e14",
+    "--gz-ink": "#fff0d2",
+    "--gz-ink-muted": "#d5b99a",
+    "--gz-ink-faint": "#9d7f72",
+    "--gz-line": "#49303a",
+    "--gz-line-strong": "#704553",
+    "--gz-ok": "#7faa73",
+    "--gz-warn": "#f2b45f",
+    "--gz-err": "#df6a62"
+  },
+  "look": {
+    "font": "system",
+    "head": "auto",
+    "mono": "auto",
+    "scale": 1,
+    "leading": 1.55,
+    "density": "cozy",
+    "radius": 16,
+    "glass": 12,
+    "depth": 2,
+    "surfaceOpacity": 88,
+    "surfaceCustom": false,
+    "surfaceColor": "#241820",
+    "surfaceTint": 7,
+    "surfaceTintSource": "accent",
+    "shadowStrength": 42,
+    "shadowCustom": false,
+    "shadowColor": "#000000",
+    "surfaceFrost": 3,
+    "surfaceBorder": 68,
+    "tooltips": true,
+    "hints": true
+  },
+  "bg": {
+    "kind": "shader",
+    "scene": "mist",
+    "intensity": 58,
+    "colors": [
+      "#c95a3a",
+      "#71374f",
+      "#f2b45f"
+    ],
+    "grain": false,
+    "dim": 60,
+    "blur": 0,
+    "style": "linear",
+    "angle": 180,
+    "blend": 100,
+    "spread": 100
+  },
+  "rationale": "A deep plum-walnut foundation separates cream tableware and golden candlelight from cranberry accents. The window, orchard, runner, place settings, bread, pie, candles, and pumpkins remain legible at gallery-card size while the upper middle stays calm behind course surfaces.",
+  "motionNotes": "Five leaves drift only behind the window, three flames flicker independently, three steam curls rise at low opacity, and a pie slice lifts gently for one occasional cozy reveal. No motion uses noise, flashing, or abrupt full-screen changes."
+}

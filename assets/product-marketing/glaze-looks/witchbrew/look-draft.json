@@ -1,0 +1,54 @@
+{
+  "name": "Witch's Brew",
+  "category": "halloween",
+  "palette": {
+    "--gz-accent": "#b7ef5a",
+    "--gz-accent-hi": "#deff9a",
+    "--gz-accent-soft": "#273714",
+    "--gz-accent-ink": "#111600",
+    "--gz-surface": "#24142d",
+    "--gz-surface-2": "#100a16",
+    "--gz-ink": "#f7eff8",
+    "--gz-ink-muted": "#c7b3c9",
+    "--gz-ink-faint": "#917b97",
+    "--gz-line": "#40284a",
+    "--gz-line-strong": "#62416c",
+    "--gz-ok": "#6ed9a2",
+    "--gz-warn": "#f6ad55",
+    "--gz-err": "#f17c87"
+  },
+  "look": {
+    "font": "nunito",
+    "head": "fraunces",
+    "mono": "auto",
+    "scale": 1,
+    "leading": 1.55,
+    "density": "cozy",
+    "radius": 18,
+    "glass": 16,
+    "depth": 2,
+    "surfaceOpacity": 84,
+    "surfaceCustom": true,
+    "surfaceColor": "#24142d",
+    "surfaceTint": 8,
+    "surfaceTintSource": "accent",
+    "shadowStrength": 54,
+    "shadowCustom": true,
+    "shadowColor": "#08050c",
+    "surfaceFrost": 6,
+    "surfaceBorder": 60,
+    "tooltips": true,
+    "hints": true
+  },
+  "bg": {
+    "kind": "shader",
+    "intensity": 72,
+    "colors": [
+      "#b7ef5a",
+      "#9b5fb3",
+      "#f59c45"
+    ]
+  },
+  "rationale": "The compact high-contrast cauldron occupies the unobscured lower-right band, where its rim, bowl, handles, feet and localized fire remain readable around the gallery's course cards. Strong lower shelves and bottle silhouettes fill the open lower-left band, while the bright arched moon window and watchful cat hold the far-right edge. Lime and amber remain tightly reserved against the plum foundation.",
+  "motionNotes": "Four fire tongues flicker independently; five bubbles rise on staggered slow loops; three shaped steam ribbons curl at separate rates; the cat's tail sways and its eyes blink; a five-node constellation appears briefly during each 20-second cycle. The workshop architecture and cauldron stay fixed, and the shader uses no procedural surface noise."
+}

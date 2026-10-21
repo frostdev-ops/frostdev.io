@@ -1,0 +1,56 @@
+{
+  "name": "Starlit Observatory",
+  "category": "general",
+  "sceneId": "observatory",
+  "scale": 0.5,
+  "palette": {
+    "--gz-accent": "#6ed9ee",
+    "--gz-accent-hi": "#c0f3ff",
+    "--gz-accent-soft": "#19384f",
+    "--gz-accent-ink": "#041419",
+    "--gz-surface": "#111827",
+    "--gz-surface-2": "#070b15",
+    "--gz-ink": "#f2f6fb",
+    "--gz-ink-muted": "#b3bfd2",
+    "--gz-ink-faint": "#8290a7",
+    "--gz-line": "#344159",
+    "--gz-line-strong": "#53647e",
+    "--gz-ok": "#59d3aa",
+    "--gz-warn": "#e8c26c",
+    "--gz-err": "#ef8b96"
+  },
+  "look": {
+    "font": "inter",
+    "head": "literata",
+    "mono": "auto",
+    "scale": 1,
+    "leading": 1.55,
+    "density": "cozy",
+    "radius": 16,
+    "glass": 18,
+    "depth": 1,
+    "surfaceOpacity": 84,
+    "surfaceCustom": true,
+    "surfaceColor": "#111827",
+    "surfaceTint": 8,
+    "surfaceTintSource": "accent",
+    "shadowStrength": 48,
+    "shadowCustom": true,
+    "shadowColor": "#02050d",
+    "surfaceFrost": 9,
+    "surfaceBorder": 64,
+    "tooltips": true,
+    "hints": true
+  },
+  "bg": {
+    "kind": "shader",
+    "intensity": 58,
+    "colors": [
+      "#6ed9ee",
+      "#263b6d",
+      "#d9ad61"
+    ]
+  },
+  "rationale": "A compact, crisp observatory occupies the lower-right edge so its gold slit, telescope, and cyan beam remain visible around LMS cards. Three distinctly colored landscape planes establish narrative depth while the sparse geometric constellation preserves a calm reading field.",
+  "motionNotes": "Four restrained systems stay independent: the constellation rocks by less than half a degree, the telescope and beam make a tiny slow sweep, two haze shelves drift in opposite directions, and warm slit and window light breathes gently. A shooting star appears for roughly two seconds in each 31-second cycle. One isolated star and six deliberate constellation nodes replace procedural star wallpaper."
+}

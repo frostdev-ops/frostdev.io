@@ -1,0 +1,51 @@
+{
+  "name": "Haunted Library",
+  "category": "halloween",
+  "galleryOnly": true,
+  "scale": 0.55,
+  "palette": {
+    "--gz-accent": "#72e3bd",
+    "--gz-accent-hi": "#b8f8df",
+    "--gz-accent-soft": "#153b33",
+    "--gz-accent-ink": "#06130f",
+    "--gz-surface": "#18101f",
+    "--gz-surface-2": "#08060e",
+    "--gz-ink": "#f7eff8",
+    "--gz-ink-muted": "#beaac6",
+    "--gz-ink-faint": "#88758f",
+    "--gz-line": "#382541",
+    "--gz-line-strong": "#60405d",
+    "--gz-ok": "#5ed79d",
+    "--gz-warn": "#f6b85f",
+    "--gz-err": "#ef7188"
+  },
+  "look": {
+    "font": "literata",
+    "head": "fraunces",
+    "mono": "auto",
+    "scale": 1,
+    "leading": 1.6,
+    "density": "roomy",
+    "radius": 12,
+    "glass": 12,
+    "depth": 2,
+    "surfaceOpacity": 92,
+    "surfaceTint": 6,
+    "surfaceTintSource": "accent",
+    "shadowStrength": 50,
+    "surfaceFrost": 6,
+    "surfaceBorder": 80
+  },
+  "bg": {
+    "kind": "shader",
+    "intensity": 58,
+    "colors": [
+      "#72e3bd",
+      "#68507c",
+      "#f6b85f"
+    ],
+    "grain": true
+  },
+  "rationale": "A pointed moonlit window establishes the background, deep wood bookcases and a peeking ghost occupy the midground, and a carved desk, open book, stacked volumes, and brass candelabra form a strong foreground. The staged interior reads immediately as a library and stays distinct from the outdoor Graveyard and Pumpkin Patch Looks. Near-black aubergine surfaces and restrained mint and amber highlights protect academic-page readability.",
+  "motionNotes": "Three flying pages turn on slow offset arcs. Three candle flames flicker independently while nine dust motes rise through their light. On a long cycle, the friendly ghost eases out from behind the right shelf, looks around, gives a small wave, and retreats. The open book breathes almost imperceptibly. All loops are fixed and bounded for the custom-shader budget."
+}

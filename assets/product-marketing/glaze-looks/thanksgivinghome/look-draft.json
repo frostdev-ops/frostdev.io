@@ -1,0 +1,54 @@
+{
+  "name": "Home for Thanksgiving",
+  "category": "thanksgiving",
+  "sceneId": "thanksgivinghome",
+  "scale": 0.56,
+  "palette": {
+    "--gz-accent": "#b84b50",
+    "--gz-accent-hi": "#e2a06b",
+    "--gz-accent-soft": "#3b2028",
+    "--gz-accent-ink": "#fff4df",
+    "--gz-surface": "#19261f",
+    "--gz-surface-2": "#0d1714",
+    "--gz-ink": "#f6ead5",
+    "--gz-ink-muted": "#c5ad91",
+    "--gz-ink-faint": "#8e7968",
+    "--gz-line": "#34443b",
+    "--gz-line-strong": "#59685c",
+    "--gz-ok": "#76aa83",
+    "--gz-warn": "#e3aa58",
+    "--gz-err": "#dc746e"
+  },
+  "look": {
+    "font": "system",
+    "head": "auto",
+    "mono": "auto",
+    "scale": 1,
+    "leading": 1.55,
+    "density": "cozy",
+    "tooltips": true,
+    "hints": true
+  },
+  "motion": {
+    "level": "subtle",
+    "followSystem": true,
+    "enter": true,
+    "hover": true,
+    "transitions": true
+  },
+  "bg": {
+    "kind": "shader",
+    "source": "shader.glsl",
+    "colors": [
+      "#a94a57",
+      "#e7d7b7",
+      "#c77b50"
+    ],
+    "intensity": 56,
+    "dim": 0,
+    "blur": 0,
+    "grain": true
+  },
+  "rationale": "A doorway homecoming and watchful cat make the holiday story immediate, while the cool window, warm hearth, and dark foreground furniture form three readable depth planes. Deep pine and aubergine keep the cranberry, cream, and copper accents from becoming a generic orange wash. The room remains modern and uncluttered, with no feast-table overlap with Harvest Table.",
+  "motionNotes": "Designed for Glaze's 30 fps background cap at 0.56 render scale. Seven leaves drift only inside the window, three fire lobes flicker with four bounded embers, three steam wisps curl above the mug, the doorway spill breathes slowly, and the cat tail and eyes move on long quiet cycles. All loops are fixed and the motion stays restrained for foreground readability."
+}

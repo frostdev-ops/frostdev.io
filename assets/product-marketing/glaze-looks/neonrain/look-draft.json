@@ -1,0 +1,56 @@
+{
+  "name": "Rainy Neon",
+  "category": "general",
+  "scale": 0.5,
+  "palette": {
+    "--gz-accent": "#45d7e6",
+    "--gz-accent-hi": "#88eef2",
+    "--gz-accent-soft": "#0b3644",
+    "--gz-accent-ink": "#041419",
+    "--gz-surface": "#111d31",
+    "--gz-surface-2": "#07111f",
+    "--gz-ink": "#e6f0f8",
+    "--gz-ink-muted": "#9baec0",
+    "--gz-ink-faint": "#667b91",
+    "--gz-line": "#1f3047",
+    "--gz-line-strong": "#334c68",
+    "--gz-ok": "#43c99e",
+    "--gz-warn": "#e8b96c",
+    "--gz-err": "#ec7b8c"
+  },
+  "look": {
+    "font": "outfit",
+    "head": "auto",
+    "mono": "auto",
+    "scale": 1,
+    "leading": 1.55,
+    "density": "cozy",
+    "radius": 14,
+    "glass": 18,
+    "depth": 2,
+    "surfaceOpacity": 88,
+    "surfaceCustom": true,
+    "surfaceColor": "#111d31",
+    "surfaceTint": 8,
+    "surfaceTintSource": "accent",
+    "shadowStrength": 42,
+    "shadowCustom": true,
+    "shadowColor": "#020815",
+    "surfaceFrost": 6,
+    "surfaceBorder": 66,
+    "tooltips": true,
+    "hints": true
+  },
+  "bg": {
+    "kind": "shader",
+    "intensity": 60,
+    "colors": [
+      "#62e5ef",
+      "#df6fbd",
+      "#b5ccdf"
+    ],
+    "grain": true
+  },
+  "rationale": "Large side-weighted landmarks now survive both preview dimming and LMS cards: a heavy window edge and sill, three building masses with broad lit windows, a blank framed magenta sign, and a hard wet-street horizon with reflections tied to those lights. The stronger cyan and magenta background accents remain behind 88%-opaque navy surfaces, preserving all six palette contrast pairs.",
+  "motionNotes": "Three thick foreground drops slide on separate 55-83 second paths, the distant and midground city layers drift by only a few pixels at different rates, and the blank sign breathes gently. A faint cloud-and-skyline reveal lasts under one second in each 29-second cycle. Architecture, the street horizon, window frame, and fixed glass beads remain stable anchors."
+}

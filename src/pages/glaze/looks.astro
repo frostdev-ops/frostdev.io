@@ -154,22 +154,27 @@ const used = new Set(looks.flatMap((l) => ['curated', l.kind, l.mode, ...(l.anim
     })
     .catch(() => {});
 
+  const copyCode = async (card: HTMLElement, code: string, control: HTMLElement, copied: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      const label = control.textContent;
+      control.textContent = copied;
+      setTimeout(() => { control.textContent = label; }, 2500);
+    } catch {
+      // No clipboard here: show the code, selected, for the student to copy.
+      const details = $<HTMLDetailsElement>('.look-code', card);
+      details.open = true;
+      getSelection()?.selectAllChildren($('code', details));
+    }
+  };
+
   grid.addEventListener('click', async (e) => {
     const b = (e.target as Element).closest<HTMLButtonElement>('button');
     if (!b || b.classList.contains('lp')) return;
     const card = b.closest<HTMLElement>('.look-card')!;
     const preview = $<HTMLElement>('.lp', card);
     if (b.dataset.copy) {
-      try {
-        await navigator.clipboard.writeText(b.dataset.copy);
-        b.textContent = 'Copied';
-        setTimeout(() => { b.textContent = 'Copy code'; }, 2000);
-      } catch {
-        // No clipboard here: show the code, selected, for the student to copy.
-        const details = $<HTMLDetailsElement>('.look-code', card);
-        details.open = true;
-        getSelection()?.selectAllChildren($('code', details));
-      }
+      await copyCode(card, b.dataset.copy, b, 'Copied');
     } else if (b.parentElement?.classList.contains('look-modes')) {
       // Live preview, or one of a curated Look's screenshots.
       const shot = $<HTMLImageElement>('.look-shot', card);
@@ -182,5 +187,18 @@ const used = new Set(looks.flatMap((l) => ['curated', l.kind, l.mode, ...(l.anim
       showImage(preview, b.dataset.image, card.dataset.name || '');
       b.replaceWith(Object.assign(document.createElement('span'), { textContent: 'Shown in the preview above.' }));
     }
+  });
+
+  // Glaze's content script handles this link on frostdev.io at document level. Window receives the click after that:
+  // when Glaze took it, defaultPrevented is true; in a local preview or a browser without Glaze, copy the exact code
+  // instead of silently following the #using fallback and looking broken.
+  window.addEventListener('click', async (e) => {
+    const a = (e.target as Element).closest<HTMLAnchorElement>('a[data-glaze-use]');
+    const local = location.hostname === '127.0.0.1' || location.hostname === 'localhost' || location.hostname === '[::1]';
+    if (!a || (!local && e.defaultPrevented) || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const card = a.closest<HTMLElement>('.look-card');
+    if (!card || !a.dataset.code) return;
+    e.preventDefault();
+    await copyCode(card, a.dataset.code, a, 'Code copied — paste in Glaze');
   });
 </script>

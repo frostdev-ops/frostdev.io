@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180" role="img" aria-label="Cozy autumn room with an open door, cat, window, fireplace, mug, and blanket">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#24342d"/>
+      <stop offset="1" stop-color="#171c19"/>
+    </linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3e2943"/>
+      <stop offset="1" stop-color="#9e5360"/>
+    </linearGradient>
+    <linearGradient id="doorGlow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff0ce"/>
+      <stop offset="1" stop-color="#d9945f"/>
+    </linearGradient>
+    <radialGradient id="fireGlow" cx="50%" cy="58%" r="58%">
+      <stop offset="0" stop-color="#fff0c6" stop-opacity=".9"/>
+      <stop offset=".45" stop-color="#cf704d" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#cf704d" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="windowClip"><rect x="79" y="26" width="119" height="85" rx="2"/></clipPath>
+  </defs>
+  <rect width="320" height="180" fill="url(#wall)"/>
+  <rect y="124" width="320" height="56" fill="#0e1512"/>
+  <path d="M0 144 320 131M0 157 320 143M0 171 320 155" stroke="#435147" stroke-width="1" opacity=".35"/>
+  <path d="M45 124 30 180M92 124 84 180M139 124 139 180M188 124 196 180M235 124 251 180" stroke="#29362f" opacity=".55"/>
+
+  <g clip-path="url(#windowClip)">
+    <rect x="79" y="26" width="119" height="85" fill="url(#sky)"/>
+    <path d="M79 97Q103 86 128 94T172 91Q187 88 202 96V112H79Z" fill="#18231e"/>
+    <path d="M91 114Q104 79 110 29M101 72 82 48M106 59 136 32M108 49 147 55M116 38 137 25" fill="none" stroke="#151715" stroke-width="6" stroke-linecap="round"/>
+    <g fill="#b84b50">
+      <path d="m148 49 8-4 7 3-7 5Z"/>
+      <path d="m173 62 7-5 8 2-6 6Z"/>
+      <path d="m132 41 6-5 7 2-5 6Z"/>
+      <path d="m185 84 6-4 7 3-6 5Z"/>
+    </g>
+    <g fill="#c77b50">
+      <path d="m122 66 7-4 6 4-7 4Z"/>
+      <path d="m158 76 6-5 7 2-5 6Z"/>
+      <path d="m94 52 6-4 6 3-5 5Z"/>
+    </g>
+  </g>
+  <rect x="75" y="22" width="127" height="93" rx="3" fill="none" stroke="#0d1714" stroke-width="8"/>
+  <path d="M139 25v87M78 68h121" stroke="#0d1714" stroke-width="4"/>
+
+  <path d="M6 119h53V17H6Z" fill="url(#doorGlow)"/>
+  <path d="M5 120V14h58v107" fill="none" stroke="#0d1714" stroke-width="8"/>
+  <path d="m47 20 23 8v91l-23 4Z" fill="#18231e" stroke="#0c1411" stroke-width="3"/>
+  <path d="M52 44h10v24H52ZM52 77h10v27H52Z" fill="none" stroke="#5a6b5d" stroke-width="2" opacity=".5"/>
+  <circle cx="55" cy="74" r="2.3" fill="#e2a06b"/>
+  <path d="M9 125 69 121 114 165 25 165Z" fill="#f3d39d" opacity=".28"/>
+
+  <ellipse cx="252" cy="100" rx="59" ry="48" fill="url(#fireGlow)"/>
+  <path d="M224 52h87v76h-87Z" fill="#39483f" stroke="#536359" stroke-width="5"/>
+  <path d="M236 75h63v48h-63Z" fill="#0b100e" stroke="#1b241f" stroke-width="4"/>
+  <path d="M224 71h88M224 96h12M299 96h12M246 52v20M274 52v20M252 97v26M282 96v27" stroke="#6d7468" stroke-width="1" opacity=".55"/>
+  <path d="M258 118c-9-12 2-18 0-29 11 8 9 15 14 20 3-8 8-12 7-20 13 12 9 24 3 31Z" fill="#c7664f"/>
+  <path d="M264 119c-4-8 2-13 3-20 7 8 5 14 9 19Z" fill="#ffe3ad"/>
+  <path d="M245 119h45" stroke="#38231e" stroke-width="5" stroke-linecap="round"/>
+  <g fill="#df9c67">
+    <circle cx="250" cy="88" r="1.5"/>
+    <circle cx="285" cy="82" r="1.2"/>
+    <circle cx="275" cy="72" r="1"/>
+  </g>
+
+  <path d="M276 121q16-10 34 1l10 58h-64Z" fill="#18231e"/>
+  <path d="M287 117q17 7 30 36l3 27h-42l3-31Z" fill="#8e3544"/>
+  <path d="M288 126q14 4 27 33M284 138q16 3 32 27M282 150q18 3 35 21" fill="none" stroke="#c7664f" stroke-width="2" opacity=".45"/>
+
+  <path d="M157 139h71l7 9h-86Z" fill="#4d3328"/>
+  <path d="M158 146h8l-5 34h-9ZM222 146h8l7 34h-9Z" fill="#241d18"/>
+  <path d="M183 124h18v19h-18Z" fill="#f0dfbf"/>
+  <path d="M200 128q12 0 9 8t-9 5" fill="none" stroke="#f0dfbf" stroke-width="4"/>
+  <path d="M184 124h16" stroke="#bd6b4e" stroke-width="3"/>
+  <path d="M187 119q-4-7 2-14M193 120q5-8-1-15M198 119q-3-7 2-12" fill="none" stroke="#f5ead5" stroke-width="1.5" opacity=".6"/>
+
+  <g fill="#080d0b">
+    <ellipse cx="99" cy="153" rx="18" ry="23"/>
+    <circle cx="96" cy="132" r="12"/>
+    <path d="m86 128 4-14 9 11 7-12 3 17Z"/>
+    <path d="M112 160q22-7 29 6-17 4-32 0Z"/>
+  </g>
+  <g fill="#e3aa58"><ellipse cx="92" cy="131" rx="1.4" ry="2"/><ellipse cx="100" cy="131" rx="1.4" ry="2"/></g>
+  <path d="M0 176q72-7 143 0t177-2v6H0Z" fill="#070b09" opacity=".8"/>
+</svg>
