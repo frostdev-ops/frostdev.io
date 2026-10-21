@@ -1,6 +1,6 @@
 {
-  "version": "3.3.2",
-  "sourceCommit": "97c052af872374444ba927e8da8c4b7b1dee06c9",
+  "version": "3.3.3",
+  "sourceCommit": "2655c2cc7606c9551c311501fb5e1ff670a8501e",
   "updated": "2026-10-20",
-  "summary": "Backgrounds stay continuous behind the navigation bar and sidebar on Blackboard course pages, including when you switch course tabs. Animated backgrounds recover after temporary startup failures."
+  "summary": "Layouts, pets and other saved changes work again after installing over a Dashboard layout kept from an earlier version. The new-install setup no longer stops on that layout and blocks every save."
 }
