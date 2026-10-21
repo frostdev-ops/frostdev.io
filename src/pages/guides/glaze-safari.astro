@@ -1,9 +1,11 @@
 ---
+import releaseInfo from '../../data/glazeRelease.json';
+const { version, summary, updated } = releaseInfo;
 import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
-const release = `${source}/releases/tag/v3.3.2`;
-const dmg = `${source}/releases/download/v3.3.2/glaze-3.3.2-safari-macos.dmg`;
+const release = `${source}/releases/tag/v${version}`;
+const dmg = `${source}/releases/download/v${version}/glaze-${version}-safari-macos.dmg`;
 const apple = 'https://support.apple.com/102343';
 const chapters = [
   { id: 'prepare', title: 'Check your Mac and school site' },
@@ -25,12 +27,12 @@ const chapters = [
 ---
 
 <GuideLayout
-  title="Glaze 3.3.2 on Blackboard, Canvas and Moodle in Safari"
+  title={`Glaze ${version} on Blackboard, Canvas and Moodle in Safari`}
   description="Install Glaze on your Mac, allow it on your school’s Blackboard Ultra, Canvas or Moodle site, and set up your palette, fonts, background and helpers."
   path="/guides/glaze-safari"
   project="Glaze"
   duration="15 min read"
-  updated="2026-10-20"
+  updated={updated}
   chapters={chapters}
 >
   <section class="guide-section" id="prepare">
@@ -49,12 +51,12 @@ const chapters = [
 
   <section class="guide-section" id="install">
     <h2>Install the Safari app</h2>
-    <p><a href={release}>Glaze 3.3.2</a> is a signed, Apple-notarized Mac app that installs itself.</p>
-    <p><strong>New in 3.3.2:</strong> Backgrounds stay continuous behind the navigation bar and sidebar on Blackboard course pages, including when you switch course tabs. Animated backgrounds recover after temporary startup failures.</p>
+    <p><a href={release}>Glaze {version}</a> is a signed, Apple-notarized Mac app that installs itself.</p>
+    <p><strong>New in {version}:</strong> {summary}</p>
     <p><strong>Since 3.3.1:</strong> the resizable setup guide shows your installed version, explains website access and Safari profiles, and includes support and update controls. Choose automatic checks and downloads, or check for an update yourself.</p>
     <p><strong>New in 3.3.0:</strong> Canvas and Blackboard Ultra share a resizable sidebar: <strong>This page</strong> keeps the page’s own tools above the <strong>My widgets</strong> dock. It makes room beside your work on wide screens and opens as a drawer on narrow ones. Better To Do follows the current course, with an <strong>All courses</strong> option. Move compatible widgets between the sidebar, Dashboard and floating.</p>
     <ol class="guide-steps">
-      <li><a href={dmg}>Download glaze-3.3.2-safari-macos.dmg</a> and open it.</li>
+      <li><a href={dmg}>Download glaze-{version}-safari-macos.dmg</a> and open it.</li>
       <li>Open <strong>Glaze</strong> and click <strong>Install Glaze</strong>. It copies itself into Applications (your own Applications folder if you aren’t an administrator) and reopens from there.</li>
       <li>Glaze opens Safari’s Extensions settings beside a two-step guide, covered next.</li>
     </ol>

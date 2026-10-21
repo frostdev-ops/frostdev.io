@@ -1,10 +1,12 @@
 ---
+import releaseInfo from '../../data/glazeRelease.json';
+const { version, summary, updated } = releaseInfo;
 import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
 const store = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 const firefoxStore = 'https://addons.mozilla.org/en-US/firefox/addon/glaze/';
-const release = `${source}/releases/tag/v3.3.2`;
+const release = `${source}/releases/tag/v${version}`;
 const chapters = [
   { id: 'install', title: 'Install Glaze' },
   { id: 'firefox', title: 'Install in Firefox' },
@@ -26,12 +28,12 @@ const chapters = [
 ---
 
 <GuideLayout
-  title="Glaze 3.3.2 in Chrome and Firefox"
+  title={`Glaze ${version} in Chrome and Firefox`}
   description="Set up Glaze on Blackboard Ultra, Canvas or Moodle: Chrome and Firefox installation, glass and frost controls, animated pets and study tools."
   path="/guides/glaze-chrome"
   project="Glaze"
   duration="15 min read"
-  updated="2026-10-20"
+  updated={updated}
   chapters={chapters}
 >
   <div slot="visual" class="guide-overview" aria-label="Glaze setup overview">
@@ -48,15 +50,15 @@ const chapters = [
     <h2>Install Glaze.</h2>
     <p><a href={store}>Open Glaze in the Chrome Web Store</a> and choose <strong>Add to Chrome</strong>. Then pin it from Chrome’s puzzle-piece menu. No Glaze account needed.</p>
     <aside class="guide-callout">
-      <strong>This guide follows Glaze 3.3.2.</strong>
-      <p>Store versions may differ. Check the version shown there; use the GitHub packages below to try the 3.3.2 fixes.</p>
+      <strong>This guide follows Glaze {version}.</strong>
+      <p>Store versions may differ. Check the version shown there; use the GitHub packages below to try the {version} fixes.</p>
     </aside>
     <p><strong>New in 3.3.0:</strong> Canvas and Blackboard Ultra share a resizable sidebar: <strong>This page</strong> keeps the page’s own tools above the <strong>My widgets</strong> dock. It makes room beside your work on wide screens and opens as a drawer on narrow ones. Better To Do follows the current course, with an <strong>All courses</strong> option. Move compatible widgets between the sidebar, Dashboard and floating.</p>
-    <p><strong>New in 3.3.2:</strong> Backgrounds stay continuous behind the navigation bar and sidebar on Blackboard course pages, including when you switch course tabs. Animated backgrounds recover after temporary startup failures.</p>
+    <p><strong>New in {version}:</strong> {summary}</p>
     <p><strong>Since 3.3.1:</strong> Blackboard assessment details share the sidebar with docked widgets, sidebar controls stay below page headers and course tabs, discussion participants load and scroll again, and pets remain visible on assessment overview pages.</p>
-    <p>For an unpacked copy of Glaze 3.3.2:</p>
+    <p>For an unpacked copy of Glaze {version}:</p>
     <ol class="guide-steps">
-      <li>Download <a href={`${source}/releases/download/v3.3.2/glaze-v3.3.2.zip`}>glaze-v3.3.2.zip</a> and extract it to a folder you’ll keep.</li>
+      <li>Download <a href={`${source}/releases/download/v${version}/glaze-v${version}.zip`}>glaze-v{version}.zip</a> and extract it to a folder you’ll keep.</li>
       <li>Open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong>, choose <strong>Load unpacked</strong> and select that folder.</li>
       <li>Disable any other Glaze copy, so only one runs.</li>
     </ol>
@@ -65,7 +67,7 @@ const chapters = [
 
   <section id="firefox" class="guide-section">
     <h2>Install in Firefox</h2>
-    <p>Glaze 3.3.2 is available on <a href={firefoxStore}>Firefox Add-ons</a> for <strong>desktop Firefox 140 or newer</strong> and <strong>Firefox for Android 142 or newer</strong>.</p>
+    <p>Install Glaze from <a href={firefoxStore}>Firefox Add-ons</a> for <strong>desktop Firefox 140 or newer</strong> and <strong>Firefox for Android 142 or newer</strong>.</p>
     <ol class="guide-steps">
       <li>Open <a href={firefoxStore}>Glaze on Firefox Add-ons</a> in Firefox and choose <strong>Add to Firefox</strong>.</li>
       <li>Review Firefox’s installation prompt and confirm. Open Glaze from Firefox’s Extensions menu.</li>
@@ -73,7 +75,7 @@ const chapters = [
     </ol>
     <p>The store installation stays installed when Firefox restarts and receives updates through Firefox. If you used a temporary development copy, first save <strong>Export settings</strong> and Notes <strong>Export all</strong>, then switch to the store copy and import both backups. Keep backups private: they include share keys.</p>
     <p>Google Calendar sign-in sync is not included; local <strong>Export calendar (.ics)</strong> is available. Firefox supports code-free mods, not code mods. The theme, surfaces, pets and school-specific sections below apply to Firefox too. Manage the desktop extension at <code>about:addons</code>; the <code>chrome://extensions</code> instructions elsewhere in this guide apply to Chrome.</p>
-    <p>For temporary testing, the <a href={`${source}/releases/download/v3.3.2/glaze-v3.3.2-firefox.zip`}>Firefox 3.3.2 ZIP</a> can be loaded through <code>about:debugging#/runtime/this-firefox</code> → <strong>Load Temporary Add-on…</strong>. That temporary copy is removed when Firefox quits.</p>
+    <p>For temporary testing, the <a href={`${source}/releases/download/v${version}/glaze-v${version}-firefox.zip`}>Firefox {version} ZIP</a> can be loaded through <code>about:debugging#/runtime/this-firefox</code> → <strong>Load Temporary Add-on…</strong>. That temporary copy is removed when Firefox quits.</p>
   </section>
 
   <section id="ultra" class="guide-section">
@@ -235,7 +237,7 @@ const chapters = [
   <section id="recovery" class="guide-section">
     <h2>Fix a problem.</h2>
     <ul class="guide-checklist">
-      <li><strong>Features from this guide missing:</strong> check the version on <code>chrome://extensions</code> in Chrome or <code>about:addons</code> in desktop Firefox. For Glaze 3.3.2, use the Chrome GitHub package or Firefox Add-ons; Chrome Web Store versions may differ.</li>
+      <li><strong>Features from this guide missing:</strong> check the version on <code>chrome://extensions</code> in Chrome or <code>about:addons</code> in desktop Firefox. For Glaze {version}, use the Chrome GitHub package or Firefox Add-ons; Chrome Web Store versions may differ.</li>
       <li><strong>Courses missing in the editor:</strong> open any Blackboard page with Glaze on, then reopen the editor.</li>
       <li><strong>Popup works, Blackboard doesn’t change:</strong> check the theme switch and the <code>/ultra/</code> address, then refresh the tab.</li>
       <li><strong>A Blackboard file preview is blank:</strong> Glaze 3.0.4 refreshes expired viewer tickets for the same document and retries previews while an uploaded file converts, for up to five minutes. Save any unsaved work before manually reloading the page. Glaze does not resubmit the file.</li>
