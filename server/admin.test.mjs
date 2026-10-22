@@ -322,7 +322,12 @@ test('private video review supports bounded byte ranges without bypassing authen
     const header = Buffer.alloc(8); header.writeUInt32BE(body.length + 8); header.write(type, 4);
     return Buffer.concat([header, body]);
   };
-  const video = Buffer.concat([box('ftyp', Buffer.from('isom\x00\x00\x00\x00isom')), box('moov', box('trak')), box('mdat', Buffer.from(HOSTILE))]);
+  // A drawing track with an empty sample table: Glaze 3.3.5 removes a track without a handler, and a movie left with none
+  // isn't a video any more.
+  const full = (type, body) => box(type, Buffer.concat([Buffer.alloc(4), body]));
+  const hdlr = full('hdlr', Buffer.concat([Buffer.alloc(4), Buffer.from('vide'), Buffer.alloc(13)]));
+  const trak = box('trak', box('mdia', Buffer.concat([hdlr, box('minf', box('stbl', full('stsd', Buffer.alloc(4))))])));
+  const video = Buffer.concat([box('ftyp', Buffer.from('isom\x00\x00\x00\x00isom')), box('moov', trak), box('mdat', Buffer.from(HOSTILE))]);
   const checked = MEDIA.check(new Uint8Array(video), 'bg'); assert.equal(checked?.mime, 'video/mp4');
   const hash = await MEDIA.sha(checked.bytes);
   writeFileSync(path.join(dir, 'media', hash), checked.bytes);
