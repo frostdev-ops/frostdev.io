@@ -1,7 +1,7 @@
 ---
 title: "Widgets made of blocks"
 description: "Widgets with no code: the blocks format Glaze draws itself on every browser."
-updated: "2026-10-17"
+updated: "2026-10-22"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Widgets-made-of-blocks"
 ---
 <!-- Mirrored from Glaze's docs/mods-widgets.md by its scripts/docs-mirror.js: edit it there. -->
@@ -12,6 +12,8 @@ A widget with no code is a mod whose `mod.json` lists **blocks**. Glaze draws it
 already has on the student's device, on Chrome, Firefox and Safari alike. Nothing the mod supplies ever runs, so it needs
 no sandbox and has no way to send anything anywhere. Students make these in the editor (Mods → Widget builder) and share
 them as signed `.glazemod` files like any mod; this page is the format underneath.
+A later version that adds code (`hooks` or a slot `file`) is no longer such a widget: Glaze asks again ("Runs its author's
+code"), and a followed channel waits for the student instead of installing it.
 
 ## In mod.json
 
