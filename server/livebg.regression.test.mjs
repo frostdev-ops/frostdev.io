@@ -71,6 +71,8 @@ function page({ loaded = true, hidden = false, reduced = false, gpuReady = true 
   let engine;
   const context = vm.createContext({
     exports: {}, document, performance: { now: () => now }, matchMedia: () => motion, queueMicrotask,
+    // Glaze 3.3.6's scene waits on timers (a lost context, a stalled load); here they never fire, as before it had any.
+    setTimeout: () => 0, clearTimeout() {},
     location: { protocol: 'https:' }, addEventListener() {}, removeEventListener() {},
     MessageChannel: class {
       constructor() {
