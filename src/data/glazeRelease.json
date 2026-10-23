@@ -1,6 +1,6 @@
 {
-  "version": "3.3.7",
-  "sourceCommit": "cec8fb505177d4659b66a3124896bc74eed40ed9",
-  "updated": "2026-10-22",
-  "summary": "Blackboard: opening an announcement in a course tab shows it in that tab, instead of a \"We can't find that page\" error. Includes everything in 3.3.6, which was not released to the stores."
+  "version": "3.3.8",
+  "sourceCommit": "ea95cb0f9bcc85075602219a9b5b45ea26072a89",
+  "updated": "2026-10-23",
+  "summary": "Frostdev, a new built-in Look: a living topography in cut-ice light that tilts with the pointer, the Frostdev pointer set, and contour effects with flake and shard marks. Glaze's own parts move: course tabs, widgets, to-dos, folders and reminders glide to their new places and fade out when removed, and changing a palette, a Look or the Sidebar's width crossfades. Nothing moves with motion off, transitions off or reduced motion. Blackboard: the course tab strip, the course header and the headers of items you open (documents, discussions, announcements) float as glass panels; counts and search get pill backgrounds. Canvas's breadcrumb row matches. Blackboard: tool pages such as Gradebook and Calendar run the tab strip and course header the full width, with the Sidebar under them, instead of leaving an empty corner. Entrances, tooltips and dialogs animate on the graphics card, so they stay smooth on busy pages; dialogs fade out as they close. Blackboard: a course tab shows one continuous background with the page around it, with no seam at its edge, also with an item open. Blackboard: closing an announcement opened in a course tab goes back to the course's Announcements, instead of taking the window to the Activity Stream. Blackboard and Canvas: course tabs can be switched or closed while one is still loading. Blackboard: no line down the Courses and Organizations pages, no band or bright line under Gradebook's header, and the open Announcements search is a pill. Blackboard: the What-if calculator in a course tab no longer stops at \"Glaze couldn't load this course's scores\", retries on its own, and shows category names such as Discussion."
 }
