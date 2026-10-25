@@ -1,7 +1,7 @@
 ---
 title: "Privacy summary"
 description: "What Glaze keeps on your device, and the few requests it makes and where they go."
-updated: "2026-10-23"
+updated: "2026-10-24"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Privacy-summary"
 ---
 <!-- Mirrored from Glaze's docs/privacy.md by its scripts/docs-mirror.js: edit it there. -->
@@ -32,7 +32,7 @@ site needs your yes first: on Chrome, Edge and Firefox the popup checks the page
 tab or Settings is checked through the site's APIs after access is granted. Browser-menu grants are checked too; a failed
 check leaves that access unused. With All sites, in Safari and on installs from before 3.4.0, Glaze asks on unapproved
 course sites (**Use Glaze on example.edu?**) before theming them, reading their APIs or keeping course data. **Settings →
-Backup and privacy → Sites** lists your sites, with Remove, which also forgets the courses and due dates Glaze read there.
+Privacy and data → Sites** lists your sites, with Remove, which also forgets the courses and due dates Glaze read there.
 See [Adding a school's own site](/glaze/privacy#adding-a-schools-own-site).
 
 The sidebar's title, style, page choices and other general settings sync too. Its width, open/fold state, To Do scope,

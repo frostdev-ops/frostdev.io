@@ -1,7 +1,7 @@
 ---
 title: "Development"
 description: "How Glaze is put together, and how to build, test, package and publish it."
-updated: "2026-10-23"
+updated: "2026-10-24"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Development"
 ---
 <!-- Mirrored from Glaze's docs/development.md by its scripts/docs-mirror.js: edit it there. -->
@@ -26,7 +26,7 @@ grade calculators, loads on demand from `features/` the first time a page needs 
 ## Activity Stream
 
 Blackboard's Stream notification settings contain a Glaze section, also available at
-Settings → Blackboard → Activity Stream. Timeline dates default to due dates for deadline
+Settings → Course pages → Blackboard Dashboard → More options → Activity Stream. Timeline dates default to due dates for deadline
 notifications and posted dates for other updates. Choose posted dates or both, relative due
 dates, compact cards, and whether encouragement appears. The exact deadline and time zone
 remain available on the date's accessible label and hover title. Relative dates fall back to
