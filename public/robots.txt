@@ -8,6 +8,14 @@ Allow: /rimewire$
 Allow: /rimewire/$
 Allow: /glaze$
 Allow: /glaze/$
+Allow: /glaze/looks$
+Allow: /glaze/looks/$
+Allow: /glaze/mods$
+Allow: /glaze/mods/$
+Allow: /glaze/privacy$
+Allow: /glaze/privacy/$
+Allow: /glaze/terms$
+Allow: /glaze/terms/$
 Allow: /guides$
 Allow: /guides/
 Allow: /privacy$
