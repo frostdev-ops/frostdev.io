@@ -17,6 +17,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Check crawler allowances and private route exclusions
+        run: node --test scripts/robots.test.mjs
       - name: Check the Glaze Looks gallery entries
         run: node scripts/looks.mjs
       - name: Test the Looks gallery server (mock OpenRouter and mail, nothing leaves the runner)
