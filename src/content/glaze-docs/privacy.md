@@ -1,7 +1,7 @@
 ---
 title: "Privacy summary"
 description: "What Glaze keeps on your device, and the few requests it makes and where they go."
-updated: "2026-10-24"
+updated: "2026-10-25"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Privacy-summary"
 ---
 <!-- Mirrored from Glaze's docs/privacy.md by its scripts/docs-mirror.js: edit it there. -->
@@ -22,7 +22,7 @@ or if the file is missing, its background becomes a gradient. Keep the original 
 storage key listing cannot reset unknown legacy media until it is discovered; current and discoverable media are removed,
 while stickers and other local data stay.
 
-Private backups of settings and notes ZIPs include share keys and creator delete tokens for all sessions, even paused ones. Keep these backups private: the keys grant access to shared content. Single-note exports do not contain session keys. See [sharing and backups](/glaze/privacy#optional-encrypted-share-sessions).
+Backups (**Back up…**, and older settings files and notes ZIPs) include share keys and creator delete tokens for all sessions, even paused ones. Keep these backups private: the keys grant access to shared content. Single-note exports do not contain session keys. See [sharing and backups](/glaze/privacy#optional-encrypted-share-sessions).
 
 Glaze stores your settings in `chrome.storage.sync`, including the course nicknames, colours, looks and tint
 you set in a course's menu. These follow Chrome sync (or Firefox Sync) when it's on; Safari keeps them on this device only.
