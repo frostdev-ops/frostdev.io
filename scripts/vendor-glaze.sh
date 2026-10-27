@@ -24,7 +24,7 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 # the Mods section, with zip.js, widgets.js (its tile names and sizes), modapi.js, modwidget.js with gradecalc.js (widget
 # blocks) and media.js (sticker and pet packs).
 DECODE="defaults.js lib/cards.js lib/color.js lib/fonts.js lib/share.js lib/surfaces.js lib/lookparts.js lib/glsl.js lib/motionx.js lib/navlayout.js lib/nav.js lib/nav-items.js lib/parts.js lib/modbundle.js lib/zip.js lib/widgets.js lib/modapi.js lib/modwidget.js lib/gradecalc.js lib/media.js LICENSE"
-SCENE="lib/scene.js lib/three.min.js lib/three.LICENSE"
+SCENE="lib/scene.js lib/three.js lib/three.LICENSE"
 if [ "$1" = --dev ]; then
     [ $# -eq 2 ] || usage
     src=$(cd "$2" && pwd) || usage

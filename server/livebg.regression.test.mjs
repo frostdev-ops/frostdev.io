@@ -89,8 +89,8 @@ function page({ loaded = true, hidden = false, reduced = false, gpuReady = true 
         if (!engine) {
           const exports = {};
           // Glaze 3.1.0 loads three.js with a dynamic import (a retry reloads it); here it is the stand-in, as a static one was.
-          const source = ts.transpile(readFileSync('vendor/glaze-scene/lib/scene.js', 'utf8').replace(/await import\(`\.\/three\.min\.js[^`]*`\)/, "require('./three.min.js')"), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS });
-          vm.runInContext(`(function(exports, require) { ${source}\n })`, context)(exports, (name) => { assert.equal(name, './three.min.js'); return three; });
+          const source = ts.transpile(readFileSync('vendor/glaze-scene/lib/scene.js', 'utf8').replace(/await import\(`\.\/(three(?:\.min)?\.js)[^`]*`\)/, "require('./$1')"), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS });
+          vm.runInContext(`(function(exports, require) { ${source}\n })`, context)(exports, (name) => { assert.match(name, /^\.\/three(\.min)?\.js$/); return three; });
           engine = { start(...args) { stats.engineStarts++; return exports.start(...args); } };
         }
         return engine;
