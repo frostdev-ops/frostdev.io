@@ -1,7 +1,7 @@
 ---
 title: "Privacy summary"
 description: "What Glaze keeps on your device, and the few requests it makes and where they go."
-updated: "2026-10-25"
+updated: "2026-10-26"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Privacy-summary"
 ---
 <!-- Mirrored from Glaze's docs/privacy.md by its scripts/docs-mirror.js: edit it there. -->
@@ -90,7 +90,7 @@ sharing and mods described above, the extension's other requests are read-only a
 (folder previews; a folder's files when you click Download all; your grades and submission status for due dates, new-grade badges, the calculator and
 your overall grade on course cards; on Canvas a course's assignment groups when you use its what-if calculator;
 on Blackboard each course's grading schemas for the GPA, a course's grade categories when its what-if needs their names, this term's
-gradebooks with your submission status for Insights, and a course's documents when you import a syllabus from one;
+gradebooks with your submission status for Insights, and a course's documents and the files they link when you import a syllabus from one;
 your course list and a course's items for the command palette and new-content badges; on Ultra, a fresh viewer address for a file preview that is still converting or whose ticket expired; on Canvas, what you type in the command palette, to search your courses' titles), to Google Fonts or jsDelivr for a web
 font you choose, and to a background image, course card picture or sidebar picture you choose. A video, animated picture or
 animation background is fetched by Glaze's background worker instead, with no cookies, referrer or redirects, within size limits
