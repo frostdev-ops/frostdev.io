@@ -4,6 +4,7 @@ const { version, summary, updated } = releaseInfo;
 import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
+const agentBundle = `${source}/releases/download/v${version}/glaze-mcp-${version}.mcpb`;
 const release = `${source}/releases/tag/v${version}`;
 const dmg = `${source}/releases/download/v${version}/glaze-${version}-safari-macos.dmg`;
 const apple = 'https://support.apple.com/102343';
@@ -19,6 +20,7 @@ const chapters = [
   { id: 'courses', title: 'Courses and extras' },
   { id: 'workspace', title: 'Your Ultra workspace' },
   { id: 'writer', title: 'Write with Glaze Writer' },
+  { id: 'agents', title: 'Connect an AI app' },
   { id: 'canvas', title: 'Use Glaze on Canvas' },
   { id: 'moodle', title: 'Use Glaze on Moodle' },
   { id: 'backup', title: 'Share and back up' },
@@ -193,6 +195,18 @@ const chapters = [
     <p>AI is off by default. In <strong>Settings → AI</strong>, choose a model and allow <strong>Tab completion</strong> or <strong>Feedback</strong>. Tab completion finishes only the sentence you’re writing. Feedback checks your draft against the rubric, instructions and attached files. It explains an estimated grade when the evidence supports one, or says why it cannot score it. Documents you start yourself have no Blackboard rubric or instructions. AI outline labels and AI source extraction start on when AI is enabled and a Feedback model is configured; each has its own switch in Settings → AI. Glaze never drafts your paper. <strong>Back up…</strong> includes your papers, documents, dictionary and saved sources. Every option is in the <a href="/guides/glaze-features#glaze-writer">features guide</a>.</p>
   </section>
 
+  <section id="agents" class="guide-section">
+    <h2>Connect an AI app</h2>
+    <p><strong>Agents</strong> lets AI apps on your Mac, such as Claude Desktop, use your courses, to-dos and grades through Glaze, with your OK for every app and every change. It is off by default. In Safari it needs the Glaze app from this guide’s <a href={dmg}>disk image</a>; the Mac App Store version says so and points here.</p>
+    <ol class="guide-steps">
+      <li>Keep Glaze.app from the disk image in Applications, as in <a href="#install">Install the Safari app</a>.</li>
+      <li>In Claude Desktop, add the Glaze extension from <a href={agentBundle}>glaze-mcp-{version}.mcpb</a>. For another app, <strong>Settings → AI → Agents</strong> shows the command to run; it needs Node.js 18 or later.</li>
+      <li>Turn on <strong>Settings → AI → Agents</strong>.</li>
+      <li>When an app first asks, Glaze opens a small window of its own: choose <strong>Allow</strong> or <strong>Don’t allow</strong>. It asks again for each group the app wants (courses, to-dos and schedule; grades; assignments and rubrics; Writer documents; a mod’s tools) and for every change, such as marking a to-do done.</li>
+    </ol>
+    <p>Each app has a card under <strong>Agents</strong> with a switch per group, <strong>Revoke</strong> and <strong>Forget</strong>; <strong>Activity</strong> lists recent requests. Glaze never submits work for an app and sends nothing to Frostdev; the app may send what it gets to its own AI service, under its own policy.</p>
+  </section>
+
   <section id="canvas" class="guide-section">
     <h2>Use Glaze on Canvas</h2>
     <p>Glaze recognizes Canvas on <code>instructure.com</code> and your school’s own domain. <a href="#permissions">Allow Glaze on that site</a> and reload. The same themes apply, with helpers where Canvas keeps your work:</p>
@@ -224,7 +238,7 @@ const chapters = [
 
   <section class="guide-section" id="privacy">
     <h2>Know what stays on your Mac</h2>
-    <p>Glaze has no analytics and needs no account or server for local tools. Notes, tasks, papers, what-if scores and course history stay in extension storage unless you explicitly share or export them. School reads use your existing session. Your clicks can also update Canvas planner ticks, card nicknames and colors, or Moodle’s Edit mode. Chosen web fonts and background images load from their source. Optional sharing sends encrypted content and connection metadata to your chosen relay; keep invitation links and backups private. AI, when you turn it on, sends what a feature needs to the provider you chose; Apple Intelligence on your Mac sends nothing. The downloaded Mac app also checks the Frostdev update feed and downloads updates from GitHub; system profiling is off.</p>
+    <p>Glaze has no analytics and needs no account or server for local tools. Notes, tasks, papers, what-if scores and course history stay in extension storage unless you explicitly share or export them. School reads use your existing session. Your clicks can also update Canvas planner ticks, card nicknames and colors, or Moodle’s Edit mode. Chosen web fonts and background images load from their source. Optional sharing sends encrypted content and connection metadata to your chosen relay; keep invitation links and backups private. AI, when you turn it on, sends what a feature needs to the provider you chose; Apple Intelligence on your Mac sends nothing. An app you connect through Agents gets only what you allow. The downloaded Mac app also checks the Frostdev update feed and downloads updates from GitHub; system profiling is off.</p>
     <aside class="guide-callout"><strong>Blackboard remains the record.</strong> Glaze never changes grades, and nothing is posted or submitted until you press Post, Reply, Send or Submit. Check due dates and scores against Blackboard before relying on them.</aside>
     <p>Details are in the <a href="/glaze/privacy">privacy policy</a> and <a href="/glaze/terms">terms</a>.</p>
   </section>
