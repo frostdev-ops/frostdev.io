@@ -21,7 +21,7 @@ const firefoxStore = 'https://addons.mozilla.org/en-US/firefox/addon/glaze/';
 const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}`));
 ---
 
-<MarketingLayout title={`Glaze ${version} — Blackboard, Canvas and Moodle, made yours`} description="Make your school site yours: themes, glass and frost controls, a writer for your papers, animated pets, live course tabs, notes and planning. Free for Chrome, Safari and Firefox." path="/glaze" image="/projects/glaze/cover.webp">
+<MarketingLayout title={`Glaze ${version} — Blackboard, Canvas and Moodle, made yours`} description="Make your school site yours: themes, glass and frost controls, papers, spreadsheets and PDFs, animated pets, live course tabs, notes and planning. Free for Chrome, Safari and Firefox." path="/glaze" image="/projects/glaze/cover.webp">
   <div class:list={["product-page glaze-page", { "is-halloween": halloween }]}>
     <section class="product-hero" aria-labelledby="glaze-title">
       {halloween && <div class="halloween-hero" aria-hidden="true">
@@ -40,7 +40,7 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
         <p class="product-eyebrow">Glaze · Blackboard Ultra · Canvas · Moodle</p>
         <img class="product-logo" src="/projects/glaze-logo.svg" width="420" height="120" alt="Glaze" />
         <h1 class="product-title" id="glaze-title">Your courses.<br /><span>Your space.</span></h1>
-        <p class="product-lead">Themes, animated backgrounds, study tools and a writer for your papers, on Blackboard Ultra, Canvas and Moodle. Build a Dashboard that works the way you do.</p>
+        <p class="product-lead">Themes, animated backgrounds, study tools, and your papers, spreadsheets, PDFs and decks, on Blackboard Ultra, Canvas and Moodle. Build a Dashboard that works the way you do.</p>
         <div class="product-actions" data-glaze-install="safari">
           <a class="product-button" href={safariDownload}>Download for Safari on Mac <span aria-hidden="true">↓</span></a>
           <a class="product-button secondary" href="/guides/glaze-safari">Safari guide <span aria-hidden="true">→</span></a>
@@ -88,13 +88,24 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
 
     <section class="product-section product-split" aria-labelledby="writer-heading">
       <div class="product-section-heading">
-        <p class="product-eyebrow">Glaze Writer</p>
-        <h2 id="writer-heading">Every paper,<br />in one place.</h2>
-        <p>Start a document in Blank, MLA, APA or Chicago, or import a Word file. Open it from Documents, or with Ctrl+K right inside Blackboard, Canvas or Moodle. It keeps its versions, proofing and AI help, wears your Look, and waits 30 days in Trash if you delete it.</p>
+        <p class="product-eyebrow">Documents</p>
+        <h2 id="writer-heading">Every document,<br />in one place.</h2>
+        <p>Write papers in Blank, MLA, APA or Chicago. Work in spreadsheets with more than 350 Excel functions and charts. Read PDFs and PowerPoint decks: find, zoom and fill a PDF’s form, or present a deck. Bring in Word, Excel, PDF and PowerPoint files, and open Documents with Ctrl+K inside Blackboard, Canvas or Moodle. Everything stays on your device, keeps its versions, wears your Look, and waits 30 days in Trash if you delete it.</p>
       </div>
       <figure class="product-panel editor-preview">
-        <a href="/projects/glaze/writer-documents.webp" aria-label="Open the full-size Documents capture"><img src="/projects/glaze/writer-documents.webp" width="1440" height="1000" loading="lazy" alt="Glaze’s Documents page in the Lagoon Look: New tiles for Blank, MLA 9, APA 7 and Chicago 17, search, a course filter and a grid of fictional papers and documents with first-page thumbnails, one marked Submitted" /></a>
+        <a href="/projects/glaze/writer-documents.webp" aria-label="Open the full-size Documents capture"><img src="/projects/glaze/writer-documents.webp" width="1440" height="1000" loading="lazy" alt="Glaze’s Documents page in the Lagoon Look: New tiles for Blank, MLA 9, APA 7, Chicago 17 and Spreadsheet, and a grid of fictional papers, a spreadsheet, a fillable PDF and a slide deck with first-page thumbnails" /></a>
       </figure>
+      <div class="writer-shots suite-shots">
+        <figure class="product-panel editor-preview">
+          <a href="/projects/glaze/writer-sheet.webp" aria-label="Open the full-size spreadsheet capture"><img src="/projects/glaze/writer-sheet.webp" width="1440" height="1000" loading="lazy" alt="A fictional plant-growth lab spreadsheet in Glaze: =AVERAGE(B2:B9) in the formula bar and a line chart of growth in sunlight and shade drawn on the grid" /></a>
+        </figure>
+        <figure class="product-panel editor-preview">
+          <a href="/projects/glaze/writer-pdf.webp" aria-label="Open the full-size PDF capture"><img src="/projects/glaze/writer-pdf.webp" width="1440" height="1000" loading="lazy" alt="A fictional field trip permission form open in Glaze’s PDF viewer, its fields part-filled" /></a>
+        </figure>
+        <figure class="product-panel editor-preview">
+          <a href="/projects/glaze/writer-slides.webp" aria-label="Open the full-size slides capture"><img src="/projects/glaze/writer-slides.webp" width="1440" height="1000" loading="lazy" alt="A fictional Cell Biology deck in Glaze’s slide reader, with the slide rail, Notes and Present, and the speaker notes under the slide" /></a>
+        </figure>
+      </div>
     </section>
 
     <section class="product-section" aria-labelledby="write-heading">
@@ -105,7 +116,7 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
       </div>
       <div class="product-grid">
         <article class="product-card"><h3>Discussions and messages</h3><p>A toolbar on selected text, the prompt’s word target and sources, and quotes from classmates’ posts. Blackboard’s own Post, Reply and Send still send it.</p></article>
-        <article class="product-card"><h3>Papers on real pages</h3><p>Assignments open in a compact box whose text goes into Blackboard’s. Turn on Full writer for pages, footnotes, versions and MLA 9, APA 7 or Chicago 17 checks, then hand in a .docx from the submit sheet, through Blackboard’s upload.</p></article>
+        <article class="product-card"><h3>Papers on real pages</h3><p>Assignments open in a compact box whose text goes into Blackboard’s. Turn on Full writer for pages, footnotes, versions and MLA 9, APA 7 or Chicago 17 checks, then hand in a .docx from the submit sheet, through Blackboard’s upload. An empty attempt offers a document or a spreadsheet, and a PDF, deck or spreadsheet you upload opens in Glaze and goes in as itself.</p></article>
         <article class="product-card"><h3>Your words, checked</h3><p>Spelling and grammar are checked on your device, and sure typos are fixed as you type, each with its own undo. AI is optional and off until you set it up: Tab finishes only the sentence you’re writing, and Feedback checks your draft against the rubric and instructions. Glaze never drafts for you. Tests get proofing only.</p></article>
       </div>
       <div class="writer-shots">
@@ -153,7 +164,7 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
           <li><strong>What-if grades:</strong> try scores against Canvas’s rules, with estimates labelled when totals don’t match.</li>
           <li><strong>Course tools:</strong> search, module previews, your place and folder downloads.</li>
           <li><strong>Local imports:</strong> review a class schedule, syllabus or past GPA terms before saving.</li>
-          <li><strong>Documents:</strong> your papers and documents, a Ctrl+K away.</li>
+          <li><strong>Documents:</strong> papers, spreadsheets, PDFs and decks, a Ctrl+K away.</li>
         </ul></article>
         <article class="product-card"><span class="glaze-feature" aria-hidden="true">03</span><h3>Moodle</h3><ul class="glaze-list">
           <li><strong>The same theme:</strong> Looks, palettes, fonts and backgrounds on Boost pages.</li>
@@ -161,7 +172,7 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
           <li><strong>Course totals:</strong> grades on cards, as Moodle makes them available.</li>
           <li><strong>Due this week:</strong> your Timeline in the popup and command palette.</li>
           <li><strong>A Look per course:</strong> tint, course menus and keyboard shortcuts.</li>
-          <li><strong>Documents:</strong> your papers and documents, a Ctrl+K away.</li>
+          <li><strong>Documents:</strong> papers, spreadsheets, PDFs and decks, a Ctrl+K away.</li>
         </ul></article>
       </div>
       <p class="product-caption"><strong>New in {version}:</strong> {summary} <a href={`${source}/releases/tag/v${version}`}>Read the release notes</a>.</p>
@@ -284,6 +295,7 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
   .glaze-list strong { color: var(--glaze-ink, #e8f2fa); font-weight: 600; }
   .glaze-inline-link { color: var(--glaze-accent-secondary, #9ce9fa); text-decoration: underline; text-underline-offset: .2em; }
   .writer-shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; margin-top: 1.25rem; }
+  .suite-shots { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 0; }
   .browser-guides { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
   .browser-guide { transition: border-color .2s, transform .2s; }
   .browser-guide:hover { border-color: var(--glaze-accent, #6fdcff); transform: translateY(-3px); }
