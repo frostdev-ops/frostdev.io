@@ -32,6 +32,23 @@ const create = async (options = {}) => {
   await g.ready;
   return g;
 };
+// Model calls held open until release(); a call made after release() is answered at once, so a failed check can't leave
+// a review waiting forever. until(n) waits by the clock for n held calls: a slow runner takes more event-loop turns.
+const holdReviews = () => {
+  const waiting = [];
+  let open = true;
+  mock.method(globalThis, 'fetch', async (url, options) => {
+    const reply = () => new Response(JSON.stringify(answer(options)));
+    return open ? new Promise((resolve) => waiting.push(() => resolve(reply()))) : reply();
+  });
+  return {
+    until: async (n, ms = 10e3) => {
+      for (const end = Date.now() + ms; waiting.length < n && Date.now() < end;) await new Promise((r) => setTimeout(r, 5));
+      assert.equal(waiting.length, n);
+    },
+    release: () => { open = false; for (const resolve of waiting.splice(0)) resolve(); },
+  };
+};
 const post = (g, body, { ip = '192.0.2.1', cookie = '', type = 'application/json', method = 'POST', route = '/submit', origin = 'https://frostdev.io', peer = '127.0.0.1', length } = {}) => new Promise((resolve, reject) => {
   const raw = typeof body === 'string' ? body : JSON.stringify(body);
   const req = Readable.from([Buffer.from(raw)]);
@@ -919,17 +936,15 @@ test('the body reservation lasts through model waits and releases after the hand
   const g = await create();
   const requests = [];
   g.server.on('request', (req) => requests.push(req));
-  const waiting = [];
-  mock.method(globalThis, 'fetch', async (url, options) => new Promise((resolve) => waiting.push(() => resolve(new Response(JSON.stringify(answer(options)))))));
+  const reviews = holdReviews();
   const a = post(g, look(), { ip: '192.0.2.11' });
   const b = post(g, look(), { ip: '192.0.2.12' });
   try {
-    for (let i = 0; i < 100 && waiting.length < 4; i++) await new Promise(setImmediate);
-    assert.equal(waiting.length, 4);
+    await reviews.until(4);
     requests[0].emit('aborted');
     assert.equal((await post(g, { code: 'invalid' })).status, 503, 'a post-upload disconnect must not release data still retained by review');
   } finally {
-    for (const resolve of waiting) resolve();
+    reviews.release();
     await Promise.all([a, b]);
   }
   assert.equal((await post(g, { code: 'invalid' })).status, 422);
@@ -958,17 +973,15 @@ test('the Look submit page refuses oversized files before reading them into base
 
 test('small known body lengths leave capacity for checks while reviews wait', async () => {
   const g = await create();
-  const waiting = [];
-  mock.method(globalThis, 'fetch', async (url, options) => new Promise((resolve) => waiting.push(() => resolve(new Response(JSON.stringify(answer(options)))))));
+  const reviews = holdReviews();
   const first = look(), second = look();
   const a = post(g, first, { ip: '192.0.2.21', length: Buffer.byteLength(JSON.stringify(first)) });
   const b = post(g, second, { ip: '192.0.2.22', length: Buffer.byteLength(JSON.stringify(second)) });
   try {
-    for (let i = 0; i < 100 && waiting.length < 4; i++) await new Promise(setImmediate);
-    assert.equal(waiting.length, 4);
+    await reviews.until(4);
     assert.equal((await post(g, { code: 'invalid' }, { route: '/check' })).status, 200);
   } finally {
-    for (const resolve of waiting) resolve();
+    reviews.release();
     await Promise.all([a, b]);
   }
 });
