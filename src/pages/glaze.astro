@@ -21,7 +21,7 @@ const firefoxStore = 'https://addons.mozilla.org/en-US/firefox/addon/glaze/';
 const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}`));
 ---
 
-<MarketingLayout title={`Glaze ${version} — Blackboard, Canvas and Moodle, made yours`} description="Make your school site yours: themes, glass and frost controls, papers, spreadsheets and PDFs, animated pets, live course tabs, notes and planning. Free for Chrome, Safari and Firefox." path="/glaze" image="/projects/glaze/cover.webp">
+<MarketingLayout title={`Glaze ${version} — Blackboard, Canvas and Moodle, made yours`} description="Make your school site yours: themes, glass and frost controls, papers, spreadsheets, PDFs and decks, animated pets, live course tabs, notes and planning. Free for Chrome, Safari and Firefox." path="/glaze" image="/projects/glaze/cover.webp">
   <div class:list={["product-page glaze-page", { "is-halloween": halloween }]}>
     <section class="product-hero" aria-labelledby="glaze-title">
       {halloween && <div class="halloween-hero" aria-hidden="true">
@@ -90,7 +90,7 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
       <div class="product-section-heading">
         <p class="product-eyebrow">Documents</p>
         <h2 id="writer-heading">Every document,<br />in one place.</h2>
-        <p>Write papers in Blank, MLA, APA or Chicago. Work in spreadsheets with more than 350 Excel functions and charts. Read PDFs and PowerPoint decks: find, zoom and fill a PDF’s form, or present a deck. Bring in Word, Excel, PDF and PowerPoint files, and open Documents with Ctrl+K inside Blackboard, Canvas or Moodle. Everything stays on your device, keeps its versions, wears your Look, and waits 30 days in Trash if you delete it.</p>
+        <p>Write papers in Blank, MLA, APA or Chicago. Use a spreadsheet grid with 350+ Excel functions and charts. Zoom, find and fill supported forms in PDFs, or read and present PowerPoint decks. Import .docx, .xlsx, .csv, .tsv, .pdf, .pptx or .ppsx files. Open Documents with Ctrl+K inside Blackboard, Canvas or Moodle. Everything stays on your device, keeps its versions, wears your Look, and waits 30 days in Trash if you delete it.</p>
       </div>
       <figure class="product-panel editor-preview">
         <a href="/projects/glaze/writer-documents.webp" aria-label="Open the full-size Documents capture"><img src="/projects/glaze/writer-documents.webp" width="1440" height="1000" loading="lazy" alt="Glaze’s Documents page in the Lagoon Look: New tiles for Blank, MLA 9, APA 7, Chicago 17 and Spreadsheet, and a grid of fictional papers, a spreadsheet, a fillable PDF and a slide deck with first-page thumbnails" /></a>
@@ -116,7 +116,7 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
       </div>
       <div class="product-grid">
         <article class="product-card"><h3>Discussions and messages</h3><p>A toolbar on selected text, the prompt’s word target and sources, and quotes from classmates’ posts. Blackboard’s own Post, Reply and Send still send it.</p></article>
-        <article class="product-card"><h3>Papers on real pages</h3><p>Assignments open in a compact box whose text goes into Blackboard’s. Turn on Full writer for pages, footnotes, versions and MLA 9, APA 7 or Chicago 17 checks, then hand in a .docx from the submit sheet, through Blackboard’s upload. An empty attempt offers a document or a spreadsheet, and a PDF, deck or spreadsheet you upload opens in Glaze and goes in as itself.</p></article>
+        <article class="product-card"><h3>Papers on real pages</h3><p>Assignments open in a compact box whose text goes into Blackboard’s. Turn on Full writer for pages, footnotes, versions and MLA 9, APA 7 or Chicago 17 checks, then hand in a .docx from the submit sheet, through Blackboard’s upload. With Spreadsheets on, an empty attempt offers Document or Spreadsheet. Upload a PDF, deck or spreadsheet and choose Open in Glaze or Submit as is. From Glaze, submit the saved PDF, original deck or .xlsx.</p></article>
         <article class="product-card"><h3>Your words, checked</h3><p>Spelling and grammar are checked on your device, and sure typos are fixed as you type, each with its own undo. AI is optional and off until you set it up: Tab finishes only the sentence you’re writing, and Feedback checks your draft against the rubric and instructions. Glaze never drafts for you. Tests get proofing only.</p></article>
       </div>
       <div class="writer-shots">
