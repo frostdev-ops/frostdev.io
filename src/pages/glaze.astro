@@ -126,10 +126,10 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
       </div>
       <div class="product-grid">
         <article class="product-card"><h3>Every app asks first</h3><p>An app sees nothing until you allow it in Glaze’s own window, one group at a time: courses, to-dos and schedule; grades; assignments and rubrics; Writer documents; a mod’s tools. Revoke it in Settings whenever you like.</p></article>
-        <article class="product-card"><h3>Every change waits for you</h3><p>Marking a to-do done, a Writer fix or a citation happens only after your OK. Glaze never submits work for an app.</p></article>
-        <article class="product-card"><h3>Stays on your computer</h3><p>Glaze talks only to the glaze-mcp helper on your own computer and sends nothing to Frostdev. The app you connect may send what it gets to its own AI service, under its own policy.</p></article>
+        <article class="product-card"><h3>Every change waits for you</h3><p>Marking a to-do done, a Writer fix or a citation happens only after your OK, shown in Glaze’s own words. Glaze’s own tools never submit work, post or send messages.</p></article>
+        <article class="product-card"><h3>Stays on your computer</h3><p>Apps reach Glaze through a helper on your own computer that opens no network connections, and Glaze sends nothing to Frostdev. The app you connect may send what it gets to its own AI service, under its own policy.</p></article>
       </div>
-      <p class="product-caption">Chrome and Firefox on desktop need Node.js 18 or later; Safari needs the <a class="glaze-inline-link" href={safariDownload}>Glaze Mac app from the disk image</a>. Add the <a class="glaze-inline-link" href={agentBundle}>Claude Desktop extension</a>, or run <code>npx glaze-mcp setup</code> for other apps, on macOS, Windows or Linux. Follow the <a class="glaze-inline-link" href="/guides/glaze-chrome#agents">Chrome and Firefox guide</a> or <a class="glaze-inline-link" href="/guides/glaze-safari#agents">Safari guide</a>.</p>
+      <p class="product-caption">On macOS, Windows and Linux with Chrome, Edge, Brave, Vivaldi, Chromium or Firefox and Node.js 18 or later, and in Safari with the <a class="glaze-inline-link" href={safariDownload}>Glaze Mac app from the disk image</a>, not the App Store one. Run <code>npx glaze-mcp setup</code> or open the <a class="glaze-inline-link" href={agentBundle}>app bundle</a> in Claude Desktop; the <a class="glaze-inline-link" href="/guides/glaze-agents">Agents guide</a> has the rest.</p>
     </section>
 
     <section class="product-section" aria-labelledby="features-heading">

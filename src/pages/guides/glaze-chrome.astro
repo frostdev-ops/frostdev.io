@@ -222,13 +222,8 @@ const chapters = [
 
   <section id="agents" class="guide-section">
     <h2>Connect an AI app</h2>
-    <p><strong>Agents</strong> lets AI apps on your computer, such as Claude Desktop, use your courses, to-dos and grades through Glaze, with your OK for every app and every change. It is off by default.</p>
-    <ol class="guide-steps">
-      <li>Install Node.js 18 or later. In Claude Desktop, add the Glaze extension from <a href={agentBundle}>glaze-mcp-{version}.mcpb</a>. For other apps, run <code>npx glaze-mcp setup</code> on macOS, Windows or Linux; it sets up Chrome, Edge, Brave, Vivaldi, Chromium and Firefox. For unpacked Glaze, run <code>npx glaze-mcp setup --extension-id &lt;id&gt;</code> with the ID from <code>chrome://extensions</code>.</li>
-      <li>Turn on the switch in <strong>Settings → AI → Agents</strong> and accept your browser’s permission prompt.</li>
-      <li>When an app first asks, Glaze opens a small window of its own: choose <strong>Allow</strong> or <strong>Don’t allow</strong>. It asks again for each group the app wants (courses, to-dos and schedule; grades; assignments and rubrics; Writer documents; a mod’s tools) and for every change, such as marking a to-do done.</li>
-    </ol>
-    <p>Under <strong>Agents</strong>, paired apps have group switches and <strong>Revoke</strong>; declined apps have <strong>Forget</strong>. <strong>Activity</strong> lists recent requests. If Glaze can’t reach the helper, <code>npx glaze-mcp doctor</code> says why. Glaze never submits work for an app and sends nothing to Frostdev; the app may send what it gets to its own AI service, under its own policy.</p>
+    <p><strong>Agents</strong> lets AI apps on your computer, such as Claude Desktop, use your courses, to-dos, grades, assignments and Writer documents through Glaze. It is off until you turn it on in <strong>Settings → AI → Agents</strong>. Chrome then asks to let Glaze start the helper; Firefox asks for that and for sharing website content, in one prompt. Each app, each kind of data and every change waits for your OK in a Glaze window, and Glaze’s own tools never submit work.</p>
+    <p>The helper runs on macOS, Windows and Linux with Node.js 18 or later: run <code>npx glaze-mcp setup</code>, or open the <a href={agentBundle}>app bundle</a> in Claude Desktop. The <a href="/guides/glaze-agents">Agents guide</a> covers connecting an app, the approval window, Revoke and Forget, and a helper that won’t start.</p>
   </section>
 
   <section id="canvas" class="guide-section">
