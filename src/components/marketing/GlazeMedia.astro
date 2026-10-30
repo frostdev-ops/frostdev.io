@@ -1,14 +1,13 @@
 ---
-import type { Film } from '../../data/glazeFilms';
+import { orderFilms, type Film } from '../../data/glazeFilms';
 interface Props { films: Film[]; halloween?: boolean; }
 const { films, halloween = false } = Astro.props;
-const orderedFilms = halloween
-  ? [...films].sort((a, b) => (a.halloweenPriority ?? Infinity) - (b.halloweenPriority ?? Infinity))
-  : films;
+const orderedFilms = orderFilms(films, halloween);
+const firstFilm = orderedFilms[0];
 const media = '/projects/glaze/';
 ---
 
-<section class="glaze-media product-section" id="films" aria-labelledby="films-heading" aria-roledescription="carousel">
+{firstFilm && <section class="glaze-media product-section" id="films" aria-labelledby="films-heading" aria-roledescription="carousel">
   <div class="media-heading">
     <div class="product-section-heading">
       <h2 id="films-heading">Glaze in action.</h2>
@@ -18,17 +17,17 @@ const media = '/projects/glaze/';
 
   <div class="media-stage">
     <div class="media-screen">
-      <video id="glaze-film" controls playsinline preload="none" poster={`${media}${orderedFilms[0].thumb}.webp`} width="1920" height="1080" aria-labelledby="film-title">
-        <source src={`${media}${orderedFilms[0].file}.mp4`} type="video/mp4" />
-        <track kind="captions" src={`${media}${orderedFilms[0].file}.vtt`} srclang="en" label="English" />
-        <p><a href={`${media}${orderedFilms[0].file}.mp4`}>Watch the Glaze film</a></p>
+      <video id="glaze-film" controls playsinline preload="none" poster={`${media}${firstFilm.thumb}.webp`} width="1920" height="1080" aria-labelledby="film-title">
+        <source src={`${media}${firstFilm.file}.mp4`} type="video/mp4" />
+        <track kind="captions" src={`${media}${firstFilm.file}.vtt`} srclang="en" label="English" />
+        <p><a href={`${media}${firstFilm.file}.mp4`}>Watch the Glaze film</a></p>
       </video>
-      <button class="media-start" type="button" aria-label={`Play ${orderedFilms[0].title}`} aria-controls="glaze-film" hidden><span aria-hidden="true">▶</span></button>
+      <button class="media-start" type="button" aria-label={`Play ${firstFilm.title}`} aria-controls="glaze-film" hidden><span aria-hidden="true">▶</span></button>
     </div>
     <div class="media-details">
       <div class="media-copy" aria-live="polite" aria-atomic="true">
-        <p class="media-category" id="film-category">{orderedFilms[0].category}</p>
-        <h3 id="film-title">{orderedFilms[0].title}</h3>
+        <p class="media-category" id="film-category">{firstFilm.category}</p>
+        <h3 id="film-title">{firstFilm.title}</h3>
       </div>
       <div class="media-controls" hidden>
         <span id="film-count" aria-label={`Film 1 of ${orderedFilms.length}`}>01 <span aria-hidden="true">/</span> {String(orderedFilms.length).padStart(2, '0')}</span>
@@ -51,81 +50,85 @@ const media = '/projects/glaze/';
       </a>
     ))}
   </div>
-</section>
+</section>}
 
 <script>
-  const player = document.querySelector<HTMLVideoElement>('#glaze-film')!;
-  const rail = document.querySelector<HTMLElement>('#film-choices')!;
-  const choices = Array.from(rail.querySelectorAll<HTMLAnchorElement>('.media-choice'));
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const start = document.querySelector<HTMLButtonElement>('.media-start')!;
-  let current = 0;
+  function initFilms() {
+    const player = document.querySelector<HTMLVideoElement>('#glaze-film');
+    const rail = document.querySelector<HTMLElement>('#film-choices');
+    const start = document.querySelector<HTMLButtonElement>('.media-start');
+    if (!player || !rail || !start) return;
+    const choices = Array.from(rail.querySelectorAll<HTMLAnchorElement>('.media-choice'));
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let current = 0;
 
-  function setFilmSource() {
-    const width = player.getBoundingClientRect().width * window.devicePixelRatio;
-    const suffix = width <= 1280 ? '-720p.mp4' : width <= 1920 || choices[current].dataset.has4k === 'false' ? '.mp4' : '-2160p.mp4';
-    const src = choices[current].href.replace(/\.mp4$/, suffix);
-    const source = player.querySelector('source')!;
-    if (source.src !== src) {
-      source.src = src;
-      player.load();
+    function setFilmSource() {
+      const width = player.getBoundingClientRect().width * window.devicePixelRatio;
+      const suffix = width <= 1280 ? '-720p.mp4' : width <= 1920 || choices[current].dataset.has4k === 'false' ? '.mp4' : '-2160p.mp4';
+      const src = choices[current].href.replace(/\.mp4$/, suffix);
+      const source = player.querySelector('source')!;
+      if (source.src !== src) {
+        source.src = src;
+        player.load();
+      }
     }
-  }
 
-  function playFilm() {
-    // Keep a paused film's position and quality; select resolution when a film starts.
-    if (player.currentTime === 0 || player.ended) setFilmSource();
-    player.controls = true;
-    void player.play().catch(() => { start.hidden = !player.paused; });
-  }
-
-  player.controls = false;
-  start.hidden = false;
-  start.addEventListener('click', playFilm);
-  player.addEventListener('play', () => { start.hidden = true; });
-  player.addEventListener('pause', () => { start.hidden = !player.paused; });
-  player.addEventListener('ended', () => { start.hidden = !player.paused; });
-
-  function selectFilm(index: number, play = false) {
-    const choice = choices[index];
-    if (index !== current) {
-      player.pause();
-      player.poster = choice.dataset.poster!;
-      choices[current].removeAttribute('aria-current');
-      current = index;
-      player.querySelector('track')!.src = choice.dataset.captions!;
-      setFilmSource();
-      choice.setAttribute('aria-current', 'true');
-      start.hidden = false;
-      start.setAttribute('aria-label', `Play ${choice.dataset.title}`);
-      document.querySelector('#film-category')!.textContent = choice.dataset.category!;
-      document.querySelector('#film-title')!.textContent = choice.dataset.title!;
-      const count = document.querySelector('#film-count')!;
-      count.textContent = `${String(index + 1).padStart(2, '0')} / ${String(choices.length).padStart(2, '0')}`;
-      count.setAttribute('aria-label', `Film ${index + 1} of ${choices.length}`);
+    function playFilm() {
+      // Keep a paused film's position and quality; select resolution when a film starts.
+      if (player.currentTime === 0 || player.ended) setFilmSource();
+      player.controls = true;
+      void player.play().catch(() => { start.hidden = !player.paused; });
     }
-    // Scroll only the rail, so choosing a film never moves the page away from the player.
-    rail.scrollTo({ left: choice.offsetLeft, behavior: reducedMotion.matches ? 'instant' : 'smooth' });
-    if (play) playFilm();
-  }
 
-  choices.forEach((choice, index) => choice.addEventListener('click', (event) => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    selectFilm(index, true);
-  }));
-  document.querySelector<HTMLElement>('.media-controls')!.hidden = false;
-  document.querySelector('#film-prev')!.addEventListener('click', () => selectFilm((current + choices.length - 1) % choices.length));
-  document.querySelector('#film-next')!.addEventListener('click', () => selectFilm((current + 1) % choices.length));
-  rail.addEventListener('keydown', (event) => {
-    const index = choices.indexOf(event.target as HTMLAnchorElement);
-    if (index < 0 || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-    event.preventDefault();
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? choices.length - 1
-      : (index + (event.key === 'ArrowRight' ? 1 : choices.length - 1)) % choices.length;
-    choices[next].focus({ preventScroll: true });
-    selectFilm(next);
-  });
+    player.controls = false;
+    start.hidden = false;
+    start.addEventListener('click', playFilm);
+    player.addEventListener('play', () => { start.hidden = true; });
+    player.addEventListener('pause', () => { start.hidden = !player.paused; });
+    player.addEventListener('ended', () => { start.hidden = !player.paused; });
+
+    function selectFilm(index: number, play = false) {
+      const choice = choices[index];
+      if (index !== current) {
+        player.pause();
+        player.poster = choice.dataset.poster!;
+        choices[current].removeAttribute('aria-current');
+        current = index;
+        player.querySelector('track')!.src = choice.dataset.captions!;
+        setFilmSource();
+        choice.setAttribute('aria-current', 'true');
+        start.hidden = false;
+        start.setAttribute('aria-label', `Play ${choice.dataset.title}`);
+        document.querySelector('#film-category')!.textContent = choice.dataset.category!;
+        document.querySelector('#film-title')!.textContent = choice.dataset.title!;
+        const count = document.querySelector('#film-count')!;
+        count.textContent = `${String(index + 1).padStart(2, '0')} / ${String(choices.length).padStart(2, '0')}`;
+        count.setAttribute('aria-label', `Film ${index + 1} of ${choices.length}`);
+      }
+      // Scroll only the rail, so choosing a film never moves the page away from the player.
+      rail.scrollTo({ left: choice.offsetLeft, behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+      if (play) playFilm();
+    }
+
+    choices.forEach((choice, index) => choice.addEventListener('click', (event) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      selectFilm(index, true);
+    }));
+    document.querySelector<HTMLElement>('.media-controls')!.hidden = false;
+    document.querySelector('#film-prev')!.addEventListener('click', () => selectFilm((current + choices.length - 1) % choices.length));
+    document.querySelector('#film-next')!.addEventListener('click', () => selectFilm((current + 1) % choices.length));
+    rail.addEventListener('keydown', (event) => {
+      const index = choices.indexOf(event.target as HTMLAnchorElement);
+      if (index < 0 || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? choices.length - 1
+        : (index + (event.key === 'ArrowRight' ? 1 : choices.length - 1)) % choices.length;
+      choices[next].focus({ preventScroll: true });
+      selectFilm(next);
+    });
+  }
+  initFilms();
 </script>
 
 <style>

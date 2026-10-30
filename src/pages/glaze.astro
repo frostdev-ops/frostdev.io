@@ -4,7 +4,7 @@ const { version, summary, updated } = releaseInfo;
 import MarketingLayout from '../layouts/MarketingLayout.astro';
 import { existsSync } from 'node:fs';
 import GlazeMedia from '../components/marketing/GlazeMedia.astro';
-import { films as allFilms, filmFiles } from '../data/glazeFilms';
+import { availableFilms } from '../data/glazeFilms';
 import '../styles/products.css';
 
 // Set false to remove the entire Halloween skin, decorations, and seasonal copy.
@@ -16,7 +16,7 @@ const chromeZip = `${source}/releases/download/v${version}/glaze-v${version}.zip
 const firefoxZip = `${source}/releases/download/v${version}/glaze-v${version}-firefox.zip`;
 const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 const firefoxStore = 'https://addons.mozilla.org/en-US/firefox/addon/glaze/';
-const films = allFilms.filter((film) => filmFiles(film).every((file) => existsSync(`public/projects/glaze/${file}`)));
+const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}`));
 ---
 
 <MarketingLayout title={`Glaze ${version} — Blackboard, Canvas and Moodle, made yours`} description="Make your school site yours: themes, glass and frost controls, a writer for your papers, animated pets, live course tabs, notes and planning. Free for Chrome, Safari and Firefox." path="/glaze" image="/projects/glaze/cover.webp">
@@ -66,11 +66,11 @@ const films = allFilms.filter((film) => filmFiles(film).every((file) => existsSy
         {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.<br />A little Halloween for your study space.</p>}
         <p class="product-meta">Free and open source<br />Chrome, Safari and Firefox packages {version}<br />No analytics. No account.</p>
         <p class="product-caption"><a href="#browser-heading">See all browser downloads →</a></p>
-        <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>
+        {films.length > 0 && <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>}
       </div>
       <figure class="glaze-preview">
-        <a href="#films" aria-label={`Explore all ${films.length} Glaze films`}><img src="/projects/glaze/cover.webp" width="1280" height="800" fetchpriority="high" alt="Glaze: Blackboard. Made yours. Cyan glaze flows around an illustrated course window with due-date and submitted badges." /></a>
-        <figcaption><span>Better looks. Less friction.</span><a href="#films">Explore the films <span aria-hidden="true">→</span></a></figcaption>
+        <a href={films.length > 0 ? '#films' : '/projects/glaze/cover.webp'} aria-label={films.length > 0 ? `Explore all ${films.length} Glaze films` : 'Open the Glaze artwork'}><img src="/projects/glaze/cover.webp" width="1280" height="800" fetchpriority="high" alt="Glaze: Blackboard. Made yours. Cyan glaze flows around an illustrated course window with due-date and submitted badges." /></a>
+        <figcaption><span>Better looks. Less friction.</span>{films.length > 0 && <a href="#films">Explore the films <span aria-hidden="true">→</span></a>}</figcaption>
       </figure>
     </section>
 
@@ -79,10 +79,10 @@ const films = allFilms.filter((film) => filmFiles(film).every((file) => existsSy
       <div class="promise-links"><a class="product-button" href="/glaze/privacy">Our privacy promise <span aria-hidden="true">→</span></a><a class="product-text-link" href="/glaze/terms">Read the terms</a></div>
     </section>
 
-    <div class="glaze-films">
+    {films.length > 0 && <div class="glaze-films">
       {halloween && <div class="halloween-ghost" aria-hidden="true"><img src="/projects/glaze/halloween/ghost.svg" width="200" height="220" alt="" /></div>}
       <GlazeMedia films={films} halloween={halloween} />
-    </div>
+    </div>}
 
     <section class="product-section product-split" aria-labelledby="writer-heading">
       <div class="product-section-heading">
@@ -103,8 +103,8 @@ const films = allFilms.filter((film) => filmFiles(film).every((file) => existsSy
       </div>
       <div class="product-grid">
         <article class="product-card"><h3>Discussions and messages</h3><p>A toolbar on selected text, the prompt’s word target and sources, and quotes from classmates’ posts. Blackboard’s own Post, Reply and Send still send it.</p></article>
-        <article class="product-card"><h3>Papers on real pages</h3><p>Assignments open in a lighter box that submits as text. Turn on Full writer for pages, footnotes, versions and MLA 9, APA 7 or Chicago 17 checks, then hand in a .docx through Blackboard’s upload.</p></article>
-        <article class="product-card"><h3>Your words, checked</h3><p>Spelling and grammar are checked on your device, and sure typos are fixed as you type, each with its own undo. AI is optional and off until you set it up: Tab finishes only the sentence you’re writing, and Feedback checks your draft against the rubric. Glaze never drafts for you. Tests get proofing only.</p></article>
+        <article class="product-card"><h3>Papers on real pages</h3><p>Assignments open in a compact box whose text goes into Blackboard’s. Turn on Full writer for pages, footnotes, versions and MLA 9, APA 7 or Chicago 17 checks, then hand in a .docx from the submit sheet, through Blackboard’s upload.</p></article>
+        <article class="product-card"><h3>Your words, checked</h3><p>Spelling and grammar are checked on your device, and sure typos are fixed as you type, each with its own undo. AI is optional and off until you set it up: Tab finishes only the sentence you’re writing, and Feedback checks your draft against the rubric and instructions. Glaze never drafts for you. Tests get proofing only.</p></article>
       </div>
       <div class="writer-shots">
         <figure class="product-panel editor-preview">
@@ -161,7 +161,7 @@ const films = allFilms.filter((film) => filmFiles(film).every((file) => existsSy
       </div>
       <div class="product-grid">
         <article class="product-card"><h3>Plan on your device</h3><p>Better To Do brings due work and your own tasks together. Add plans and focus sessions, import a timetable, or export a calendar file. Reminders, streaks and term Insights are there when you turn them on.</p></article>
-        <article class="product-card"><h3>Notes that stay with you</h3><p>Opt into rich-text notes with pictures, attachments and course folders. Search your notes, link school content, and export Markdown, HTML or a backup of everything.</p></article>
+        <article class="product-card"><h3>Notes that stay with you</h3><p>Use rich-text notes with pictures, attachments and course folders. Search your notes, link school content, and export Markdown, HTML or a backup of everything.</p></article>
         <article class="product-card"><h3>Share by invitation</h3><p>Optional end-to-end encrypted sessions share selected notes and tasks by link. Use your chosen relay or <a href={`${source}/blob/main/server/README.md`}>host your own</a>. Glaze works fully without sharing or a server.</p></article>
       </div>
     </section>
@@ -175,9 +175,9 @@ const films = allFilms.filter((film) => filmFiles(film).every((file) => existsSy
       <div class="product-grid">
         <article class="product-card"><h3>Glass, color and texture</h3><p>In <strong>Look → Shape and surfaces</strong>, adjust opacity, blur, tint, shadows, frost and borders across Blackboard Ultra, Canvas and Moodle. Match your accent or course color, with rounded corners that follow your Look.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#surfaces">Shape your surfaces →</a></article>
         <article class="product-card"><h3>Choose your study companion</h3><p>Meet Ember, Luna, Mochi, Sprout, Pebble, Rime and the Glaze droplet, or import a pet sprite sheet from your device. Choose once for the habitat, Study buddy, Blackboard navigation badge and course-card pet, including the original Cat and Bunny. Keep leveling across semesters, decorate four habitats, play with draggable toys and settle on calm favorite perches. Preferences learn locally from numeric interaction signals; typed text and page content are not training data. You can disable or reset learning. XP and decorations stay with your school account. No uploads, nags or missed-day penalties.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#pets">Meet the pets →</a></article>
-        <article class="product-card"><h3>Keep your place, keep moving</h3><p>Glaze 3.0.2 reduces Blackboard’s styling work during clicks, hovers and page changes. Keep up to four additional course pages live on every computer; hidden pages no longer close just because they have been idle.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#workspace">Set up your workspace →</a></article>
+        <article class="product-card"><h3>Live course tabs</h3><p>Keep up to four additional course pages live on every computer; hidden pages no longer close just because they have been idle.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#workspace">Set up your workspace →</a></article>
       </div>
-      <p class="product-caption"><strong>New in 3.0.4:</strong> mods. Add backgrounds (shaders, layered scenes, videos, animated pictures, Lottie), motion and event effects, nav layouts, page tweaks, and sticker and pet packs and widgets made by others, from a code, link, file or the gallery's new Mods section. Each mod shows what it may read, and why, before you add it. Code mods run sandboxed on Chrome; Firefox and Safari get mods without code. Updates are signed, with an opt-out signed blocklist, and a no-code widget builder makes your own. Looks can now have a looping video, animated WebP/AVIF or Lottie background, muted, still when motion is off and paused in hidden tabs. See the <a href="/guides/glaze-mods-api">mods guide</a>.</p>
+      <p class="product-caption"><strong>Mods:</strong> add backgrounds (shaders, layered scenes, videos, animated pictures, Lottie), motion and event effects, nav layouts, page tweaks, and sticker and pet packs and widgets made by others, from a code, link, file or the gallery's Mods section. Each mod shows what it may read, and why, before you add it. Code mods run sandboxed on Chrome; Firefox and Safari get mods without code. Updates are signed, with an opt-out signed blocklist, and a no-code widget builder makes your own. Looks can now have a looping video, animated WebP/AVIF or Lottie background, muted, still when motion is off and paused in hidden tabs. See the <a href="/guides/glaze-mods-api">mods guide</a>.</p>
     </section>
 
     <section class="product-section product-split" aria-labelledby="editor-heading">
