@@ -1,0 +1,25 @@
+<!doctype html>
+<!--
+  Glaze's Google Drive picker page. Deploy this folder as is, unchanged, to both:
+    https://frostdev.io/glaze/drive-picker/            (first)
+    https://frostdev-ops.github.io/glaze-drive-picker/ (fallback; GitHub Pages answers HEAD with CORS *, which Glaze's probe needs)
+  frostdev.io should also answer HEAD with Access-Control-Allow-Origin: * on this path: Firefox may not hold frostdev.io.
+
+  Contract (lib/google.js pickerUrl / picked):
+    in   #access_token=…&state=…&redirect_uri=…&key=<API key>&app_id=<project number>   (fragment only, never the query)
+    out  <redirect_uri>#state=…&action=picked&files=[{"id","name","mimeType"},…]  or  #state=…&action=cancel
+  The token is read once and taken off the address at once. Nothing is stored, logged or sent anywhere but Google's Picker.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Glaze · Google Drive</title>
+<link rel="stylesheet" href="picker.css">
+<script src="picker.js" defer></script>
+</head>
+<body>
+<p id="status" role="status"></p>
+</body>
+</html>
