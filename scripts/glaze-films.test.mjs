@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { availableFilms, filmFiles, films, orderFilms } from '../src/data/glazeFilms.ts';
 
-const pending = films.find((film) => film.file === 'full-moon-final-draft');
+const pending = films.find((film) => film.file === 'due-at-midnight');
 const delivered = new Set(films.filter((film) => film !== pending).flatMap(filmFiles));
 
 test('the pending film stays hidden until every player asset arrives', async (t) => {
@@ -21,7 +21,7 @@ test('a complete delivery appears once and leads the Halloween order', () => {
   const ordered = orderFilms(available, true);
   assert.equal(ordered.filter((film) => film === pending).length, 1);
   assert.deepEqual(ordered.slice(0, 3).map((film) => film.file), [
-    'full-moon-final-draft', 'night-of-the-living-deadlines', 'the-haunting-of-canvas',
+    'due-at-midnight', 'night-of-the-living-deadlines', 'the-haunting-of-canvas',
   ]);
   assert.deepEqual(orderFilms(available), available);
   assert.deepEqual(available, films);

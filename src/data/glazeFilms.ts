@@ -20,7 +20,7 @@ export const films: Film[] = [
   { file: 'glaze-now-on-canvas', thumb: '09-glaze-now-on-canvas', title: 'Glaze on Canvas.', category: 'Canvas', duration: '0:30', has4k: false },
   { file: 'the-haunting-of-canvas', thumb: '10-the-haunting-of-canvas', title: 'The Haunting of Canvas', category: 'Halloween Looks', duration: '0:20', has4k: false, halloweenPriority: 2 },
   { file: 'night-of-the-living-deadlines', thumb: '11-night-of-the-living-deadlines', title: 'Night of the Living Deadlines', category: 'A Glaze Halloween', duration: '0:30', has4k: false, halloweenPriority: 1 },
-  { file: 'full-moon-final-draft', thumb: '12-full-moon-final-draft', title: 'Full Moon, Final Draft', category: 'A Glaze Halloween', duration: '0:30', has4k: false, halloweenPriority: 0 },
+  { file: 'due-at-midnight', thumb: '12-due-at-midnight', title: 'Due at Midnight', category: 'A Glaze Halloween', duration: '0:30', has4k: false, halloweenPriority: 0 },
 ];
 
 // What the player and the rail load for a film, under public/projects/glaze/. The page lists a film only once all of
