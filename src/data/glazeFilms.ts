@@ -29,3 +29,11 @@ export const filmFiles = (film: Film): string[] => [
   `${film.thumb}.webp`, `${film.file}.mp4`, `${film.file}-720p.mp4`, `${film.file}.vtt`,
   ...(film.has4k === false ? [] : [`${film.file}-2160p.mp4`]),
 ];
+
+export const availableFilms = (fileExists: (file: string) => boolean): Film[] =>
+  films.filter((film) => filmFiles(film).every(fileExists));
+
+export const orderFilms = (films: readonly Film[], halloween = false): Film[] =>
+  halloween
+    ? [...films].sort((a, b) => (a.halloweenPriority ?? Infinity) - (b.halloweenPriority ?? Infinity))
+    : [...films];

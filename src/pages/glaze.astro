@@ -4,7 +4,7 @@ const { version, summary, updated } = releaseInfo;
 import MarketingLayout from '../layouts/MarketingLayout.astro';
 import { existsSync } from 'node:fs';
 import GlazeMedia from '../components/marketing/GlazeMedia.astro';
-import { films as allFilms, filmFiles } from '../data/glazeFilms';
+import { availableFilms } from '../data/glazeFilms';
 import '../styles/products.css';
 
 // Set false to remove the entire Halloween skin, decorations, and seasonal copy.
@@ -16,7 +16,7 @@ const chromeZip = `${source}/releases/download/v${version}/glaze-v${version}.zip
 const firefoxZip = `${source}/releases/download/v${version}/glaze-v${version}-firefox.zip`;
 const chromeStore = 'https://chromewebstore.google.com/detail/glaze-for-blackboard-ultra/jmmaeoajomodnbnlmdikjooalmcilooh';
 const firefoxStore = 'https://addons.mozilla.org/en-US/firefox/addon/glaze/';
-const films = allFilms.filter((film) => filmFiles(film).every((file) => existsSync(`public/projects/glaze/${file}`)));
+const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}`));
 ---
 
 <MarketingLayout title={`Glaze ${version} — Blackboard, Canvas and Moodle, made yours`} description="Make your school site yours: themes, glass and frost controls, a writer for your papers, animated pets, live course tabs, notes and planning. Free for Chrome, Safari and Firefox." path="/glaze" image="/projects/glaze/cover.webp">
@@ -66,11 +66,11 @@ const films = allFilms.filter((film) => filmFiles(film).every((file) => existsSy
         {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.<br />A little Halloween for your study space.</p>}
         <p class="product-meta">Free and open source<br />Chrome, Safari and Firefox packages {version}<br />No analytics. No account.</p>
         <p class="product-caption"><a href="#browser-heading">See all browser downloads →</a></p>
-        <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> See Glaze in motion <span aria-hidden="true">↗</span></a>
+        {films.length > 0 && <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> Watch the films <span aria-hidden="true">↗</span></a>}
       </div>
       <figure class="glaze-preview">
-        <a href="#films" aria-label={`Explore all ${films.length} Glaze films`}><img src="/projects/glaze/cover.webp" width="1280" height="800" fetchpriority="high" alt="Glaze: Blackboard. Made yours. Cyan glaze flows around an illustrated course window with due-date and submitted badges." /></a>
-        <figcaption><span>Better looks. Less friction.</span><a href="#films">Explore the films <span aria-hidden="true">→</span></a></figcaption>
+        <a href={films.length > 0 ? '#films' : '/projects/glaze/cover.webp'} aria-label={films.length > 0 ? `Explore all ${films.length} Glaze films` : 'Open the Glaze artwork'}><img src="/projects/glaze/cover.webp" width="1280" height="800" fetchpriority="high" alt="Glaze: Blackboard. Made yours. Cyan glaze flows around an illustrated course window with due-date and submitted badges." /></a>
+        {films.length > 0 && <figcaption><a href="#films">Explore the films <span aria-hidden="true">→</span></a></figcaption>}
       </figure>
     </section>
 
@@ -79,10 +79,10 @@ const films = allFilms.filter((film) => filmFiles(film).every((file) => existsSy
       <div class="promise-links"><a class="product-button" href="/glaze/privacy">Our privacy promise <span aria-hidden="true">→</span></a><a class="product-text-link" href="/glaze/terms">Read the terms</a></div>
     </section>
 
-    <div class="glaze-films">
+    {films.length > 0 && <div class="glaze-films">
       {halloween && <div class="halloween-ghost" aria-hidden="true"><img src="/projects/glaze/halloween/ghost.svg" width="200" height="220" alt="" /></div>}
       <GlazeMedia films={films} halloween={halloween} />
-    </div>
+    </div>}
 
     <section class="product-section product-split" aria-labelledby="writer-heading">
       <div class="product-section-heading">
