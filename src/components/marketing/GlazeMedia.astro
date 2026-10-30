@@ -1,7 +1,7 @@
 ---
-import { films } from '../../data/glazeFilms';
-interface Props { halloween?: boolean; }
-const { halloween = false } = Astro.props;
+import type { Film } from '../../data/glazeFilms';
+interface Props { films: Film[]; halloween?: boolean; }
+const { films, halloween = false } = Astro.props;
 const orderedFilms = halloween
   ? [...films].sort((a, b) => (a.halloweenPriority ?? Infinity) - (b.halloweenPriority ?? Infinity))
   : films;

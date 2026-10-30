@@ -1,4 +1,4 @@
-interface Film {
+export interface Film {
   file: string;
   thumb: string;
   title: string;
@@ -20,4 +20,12 @@ export const films: Film[] = [
   { file: 'glaze-now-on-canvas', thumb: '09-glaze-now-on-canvas', title: 'Glaze on Canvas.', category: 'Canvas', duration: '0:30', has4k: false },
   { file: 'the-haunting-of-canvas', thumb: '10-the-haunting-of-canvas', title: 'The Haunting of Canvas', category: 'Halloween Looks', duration: '0:20', has4k: false, halloweenPriority: 2 },
   { file: 'night-of-the-living-deadlines', thumb: '11-night-of-the-living-deadlines', title: 'Night of the Living Deadlines', category: 'A Glaze Halloween', duration: '0:30', has4k: false, halloweenPriority: 1 },
+  { file: 'full-moon-final-draft', thumb: '12-full-moon-final-draft', title: 'Full Moon, Final Draft', category: 'A Glaze Halloween', duration: '0:30', has4k: false, halloweenPriority: 0 },
+];
+
+// What the player and the rail load for a film, under public/projects/glaze/. The page lists a film only once all of
+// them are there, so an entry can land before its files.
+export const filmFiles = (film: Film): string[] => [
+  `${film.thumb}.webp`, `${film.file}.mp4`, `${film.file}-720p.mp4`, `${film.file}.vtt`,
+  ...(film.has4k === false ? [] : [`${film.file}-2160p.mp4`]),
 ];
