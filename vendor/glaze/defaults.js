@@ -34,10 +34,13 @@ const GZ_SIDEBAR_KINDS = [['dashboard', 'Dashboard'], ['course', 'Course home'],
 // Each LMS's own hosts, Glaze's from the start: the manifest's matches, on https with no port.
 const GZ_BUILT_IN = (kind, u) => u.protocol === 'https:' && !u.port && !!{ canvas: /(^|\.)instructure\.com$/, moodle: /(^|\.)moodlecloud\.com$/, ultra: /\.blackboard\.com$/ }[kind]?.test(u.hostname);
 
-// Everything else, as [default, rule]. A rule is an enum (array of strings), a [min, max] number
+// A setting of settings (writer.autocorrect): its defaults, and its spec as the rule.
+const GZ_GROUP = (spec) => [Object.fromEntries(Object.entries(spec).map(([k, [d]]) => [k, d])), spec];
+
+// Everything else, as [default, rule]. A rule is an enum (array of choices), a [min, max] number
 // range, 'bool', 'url' (https only, or empty), 'name' (a preset name), 'tabs' (GZ_TABS slugs),
 // 'hexes' (three #rrggbb colors, or none), 'font' (a lib/fonts.js id or a typed family name) or
-// 'font-auto' (the same, or 'auto') or 'time' (local "HH:MM"). GZ_SANITIZE walks this.
+// 'font-auto' (the same, or 'auto') or 'time' (local "HH:MM") or a group's own spec (GZ_GROUP). GZ_SANITIZE walks this.
 const GZ_SPEC = {
   auto: { on: [false, 'bool'], mode: ['device', ['device', 'schedule']], from: ['20:00', 'time'], to: ['08:00', 'time'], light: ['Paper', 'name'], dark: ['Frost', 'name'] },
   look: {
@@ -79,7 +82,7 @@ const GZ_SPEC = {
   navbar: { on: [true, 'bool'], place: ['rail', ['rail', 'top']], style: ['float', ['float', 'embed']], rail: ['auto', ['auto', 'open', 'icons']],
     course: ['same', ['same', 'icons', 'top', 'hide']], cmenu: [true, 'bool'], tabs: [true, 'bool'], peek: [true, 'bool'], badges: [true, 'bool'], brand: ['glaze', ['glaze', 'school', 'custom', 'none']] },
   motion: {
-    level: ['subtle', ['off', 'subtle', 'expressive']],
+    level: ['expressive', ['off', 'subtle', 'expressive']],
     followSystem: [true, 'bool'],
     enter: [true, 'bool'],
     hover: [true, 'bool'],
@@ -90,10 +93,10 @@ const GZ_SPEC = {
     inline: [true, 'bool'], overall: [true, 'bool'], previews: [true, 'bool'], hideFolders: [true, 'bool'], progress: [true, 'bool'], keys: [false, 'bool'],
     newgrades: [true, 'bool'], newcontent: [true, 'bool'], calc: [true, 'bool'], palette: [true, 'bool'], drafts: [true, 'bool'],
     download: [true, 'bool'], todo: [true, 'bool'], cardTasks: [false, 'bool'], gradescope: [false, 'bool'], search: [true, 'bool'],
-    notes: [false, 'bool'], widgets: [true, 'bool'], pet: [false, 'bool'], dashboard: [true, 'bool'],
+    notes: [false, 'bool'], widgets: [true, 'bool'], pet: [false, 'bool'], dashboard: [true, 'bool'], writer: [true, 'bool'], writerUploads: [true, 'bool'], bbPreviews: [true, 'bool'],
     // sidebar: the page's sidebar, widgets docked under it (lib/sidebar.js).
     sidebar: [true, 'bool'],
-    // place: reopen course content at its saved folders and scroll. coursemenu: each course card's button for its color,
+    // place: remember Canvas Modules position. Ultra retains live course pages. coursemenu: each course card's button for its color,
     // tint and look. tabs: Ultra's course tabs (lib/coursetabs.js).
     place: [true, 'bool'], coursemenu: [true, 'bool'], tabs: [true, 'bool'],
     // docPages: previews in a dark palette, plain, dimmed or inverted (the floating button too); toggles: the floating
@@ -106,6 +109,7 @@ const GZ_SPEC = {
     remind: [false, 'bool'], remindExam: [false, 'bool'], remindPlan: [false, 'bool'], remindClass: [false, 'bool'], streak: [false, 'bool'],
     // Syllabus import on a course's home and Syllabus page (features/syllabus.js).
     syllabus: [false, 'bool'],
+    fold: [true, 'bool'], titleScroll: [true, 'bool'],
   },
   docreview: { compact: [true, 'bool'], fullscreen: [true, 'bool'], focus: [true, 'bool'], hideBars: [true, 'bool'], remember: [false, 'bool'] },
   stream: { dates: ['smart', ['smart', 'posted', 'both']], relative: [false, 'bool'], compact: [false, 'bool'], encouragement: [true, 'bool'] },
@@ -119,6 +123,16 @@ const GZ_SPEC = {
   announce: { open: ['popup', ['popup', 'site']], ...Object.fromEntries(['glaze', 'ultra', 'canvas', 'moodle'].flatMap((k) => [[k, ['default', ['default', 'popup', 'site']]], [k + 'Preview', [true, 'bool']]])), preview: [true, 'bool'], delay: [600, [200, 2000]], lines: [3, [1, 8]] },
   popup: { anim: ['genie', ['genie', 'fade', 'none']] },
   rubric: { show: ['auto', ['auto', 'popup', 'site']], inline: [true, 'bool'] },
+  // Glaze Writer's (lib/writer-settings.js). zoom: 'fit' or a percent; full: assignments paged, not compact; sheets, pdf,
+  // slides: Documents takes spreadsheets, PDFs, slide decks (sheet-kind.js, pdf-kind.js, slides-kind.js); submit.text: the
+  // submit sheet's paste switch as left.
+  writer: {
+    format: ['mla9', ['mla9', 'apa7', 'chicago17', 'plain']], zoom: ['fit', ['fit', 75, 100, 125, 150]], ruler: [true, 'bool'], lightPage: [false, 'bool'], full: [false, 'bool'], sheets: [true, 'bool'], pdf: [true, 'bool'], slides: [true, 'bool'], pasteAsk: [true, 'bool'],
+    versions: [40, [10, 25, 40, 50, 100]], proofing: [true, 'bool'], dialect: ['en-US', ['en-US', 'en-GB', 'en-CA', 'en-AU']],
+    autocorrect: GZ_GROUP({ typos: [true, 'bool'], capitalI: [true, 'bool'], doubles: [true, 'bool'], smart: [true, 'bool'] }),
+    compose: GZ_GROUP({ markdown: [true, 'bool'], target: [true, 'bool'], quote: [true, 'bool'] }),
+    submit: GZ_GROUP({ rememberText: [true, 'bool'], text: [false, 'bool'] }),
+  },
 };
 
 const GZ_DEFAULTS = {
@@ -129,9 +143,11 @@ const GZ_DEFAULTS = {
   ...Object.fromEntries(Object.entries(GZ_SPEC).map(([g, keys]) => [g, Object.fromEntries(Object.entries(keys).map(([k, [d]]) => [k, d]))])),
   // colors: picked by course id (a slot number is a pick from before 2.1.3). tint: inside a course
   // listed in `tinted` (course ids, or slots likewise), its color tints the palette, `strength` %.
-  // looks: a look's name by course id, worn on that course's pages instead of the student's theme.
+  // looks: a built-in Look's name by course id, worn on that course's pages instead of the student's theme.
   // names: a nickname by course id, shown in place of the course's name (the course menu, Ultra only).
   courses: { harmonize: true, colors: {}, tint: false, tinted: [], strength: 60, looks: {}, names: {} },
+  // A saved or gallery Look's id (lib/looks.js) by course id: 3.x keeps only built-in names in courses.looks, never this.
+  courseLooks: {},
   footer: true,
   presets: [],
 };
@@ -224,6 +240,7 @@ const COURSE_SLOT = /^([1-9]|10)$/;
 // Canvas and Moodle keys include the site (Moodle's can be in a folder): two schools can both have a course 25.
 const COURSE_ID = /^(?:_\d+_\d+|canvas:https?:\/\/[a-z\d.-]+(?::\d+)?\/\d+|moodle:https?:\/\/[a-z\d.-]+(?::\d+)?(?:\/[\w.~-]+)*\/\d+)$/i;
 const isObj = (o) => !!o && typeof o === 'object' && !Array.isArray(o);
+const LOOK_KEPT = /^c:[0-9a-z]{14}$/;
 const cleanName = (n) => (typeof n === 'string' ? n.trim().slice(0, 40) : '');
 // A course's nickname: one line, 60 characters at most (counted as people count them, not as UTF-16 units).
 const GZ_NICK_MAX = 60;
@@ -246,8 +263,21 @@ const cleanNicks = (raw, room) => {
   }
   return out;
 };
+// First come first kept, 200 at most, in one sync item.
+const cleanCourseLooks = (raw) => {
+  const out = {};
+  let bytes = GZ_SYNC_BYTES('courseLooks', {}), n = 0;
+  for (const [id, v] of isObj(raw) ? Object.entries(raw) : []) {
+    if (!COURSE_ID.test(id) || typeof v !== 'string' || !LOOK_KEPT.test(v)) continue;
+    bytes += new TextEncoder().encode(`${JSON.stringify(id)}:${JSON.stringify(v)}`).length + (n ? 1 : 0);
+    if (bytes > GZ_SYNC_ITEM_MAX || n >= 200) break;
+    out[id] = v; n++;
+  }
+  return out;
+};
 
 const cleanValue = (v, d, rule) => {
+  if (isObj(rule)) return Object.fromEntries(Object.entries(rule).map(([k, [dd, r]]) => [k, cleanValue(isObj(v) ? v[k] : undefined, dd, r)]));
   if (rule === 'bool') return typeof v === 'boolean' ? v : d;
   if (rule === 'hex') return typeof v === 'string' && HEX.test(v) ? v.toLowerCase() : d;
   if (rule === 'picture') return typeof v === 'string' && /^[a-z0-9]{12}$/.test(v) ? v : d;
@@ -268,7 +298,7 @@ const cleanValue = (v, d, rule) => {
     // the CSS url("…") content.js builds.
     try { const u = typeof v === 'string' && v.length <= 2048 && new URL(v); return u && u.protocol === 'https:' && !/["\\]/.test(u.href) ? u.href : d; } catch { return d; }
   }
-  if (typeof rule[0] === 'number') return typeof v === 'number' && v >= rule[0] && v <= rule[1] ? v : d;
+  if (rule.length === 2 && typeof rule[0] === 'number' && typeof rule[1] === 'number') return typeof v === 'number' && v >= rule[0] && v <= rule[1] ? v : d;
   return rule.includes(v) ? v : d;
 };
 
@@ -335,10 +365,16 @@ const GZ_LOOK_ON = (s, L) => {
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   return !s.auto.on && same(s.colors, want.colors) && Object.keys(want.look).every((k) => same(s.look[k], want.look[k])) && Object.keys(want.bg).every((k) => same(s.bg[k], want.bg[k]));
 };
-// The settings to paint on course `cid`'s pages: its own look (courses.looks) over `s`, or `s` itself.
-const GZ_COURSE_LOOK = (s, cid) => {
-  const L = cid && GZ_LOOKS.find((l) => l.name === s.courses.looks[cid]);
-  return L ? { ...s, ...GZ_LOOK_APPLY(s, L) } : s;
+// Course `cid`'s Look id, or '' for the theme: its built-in, else its kept one (courseLooks, or courses.looks before the worker
+// moves it) where `saved` has it. Only 3.x leaves both, its pick the newer.
+const GZ_COURSE_LOOK_ID = (s, cid, saved) => {
+  const own = cid ? s.courses.looks[cid] : undefined, has = (id) => typeof id === 'string' && LOOK_KEPT.test(id) && !!saved?.some((e) => e.id === id);
+  return (typeof own === 'string' && GZ_LOOKS.some((L) => L.name === own)) ? own : (cid && [s.courseLooks?.[cid], own].find(has)) || '';
+};
+// The settings to paint on course `cid`'s pages: its own Look over `s`, or `s` itself; a kept Look from `saved` as its code wears it.
+const GZ_COURSE_LOOK = (s, cid, saved) => {
+  const id = GZ_COURSE_LOOK_ID(s, cid, saved), L = id && GZ_LOOKS.find((l) => l.name === id), E = id && !L && saved.find((e) => e.id === id);
+  return L ? { ...s, ...GZ_LOOK_APPLY(s, L) } : E ? { ...s, colors: { ...E.colors }, preset: GZ_MATCH_PRESET(E.colors, s.presets), auto: { ...s.auto, on: false }, look: { ...s.look, ...E.look }, bg: { ...s.bg, ...E.bg } } : s;
 };
 const GZ_PRESET = (name, custom) => GZ_ALL_PRESETS(custom).find(([n]) => n === name)?.[1] || null;
 const GZ_MATCH_PRESET = (colors, custom) => GZ_ALL_PRESETS(custom).find(([, c]) => sameColors(c, colors))?.[0] || null;
@@ -358,9 +394,8 @@ const GZ_SANITIZE = (raw, fresh = false) => {
   // 3.4's System pointer, also from an older device.
   if (raw.extras?.pointer === 'off') out.extras.pointerOn = false;
   // 1.0 had only the three motion switches: all off meant "no motion".
-  if (!raw.version && isObj(raw.motion) && raw.motion.level === undefined) {
-    out.motion.level = out.motion.enter || out.motion.hover || out.motion.transitions ? 'subtle' : 'off';
-  }
+  if (!raw.version && isObj(raw.motion) && raw.motion.level === undefined
+    && ['enter', 'hover', 'transitions'].every((k) => raw.motion[k] === false)) out.motion.level = 'off';
   const rc = isObj(raw.courses) ? raw.courses : {};
   const cc = isObj(rc.colors) ? Object.entries(rc.colors).filter(([k, c]) => (COURSE_SLOT.test(k) || COURSE_ID.test(k)) && HEX.test(c)).slice(0, 200) : [];
   out.courses = {
@@ -369,10 +404,11 @@ const GZ_SANITIZE = (raw, fresh = false) => {
     tint: cleanValue(rc.tint, false, 'bool'),
     tinted: Array.isArray(rc.tinted) ? [...new Set(rc.tinted.filter((n) => typeof n === 'string' && (COURSE_ID.test(n) || COURSE_SLOT.test(n))))].slice(0, 200) : [],
     strength: cleanValue(rc.strength, 60, [10, 100]),
-    looks: Object.fromEntries(isObj(rc.looks) ? Object.entries(rc.looks).filter(([id, n]) => COURSE_ID.test(id) && GZ_LOOKS.some((L) => L.name === n)).slice(0, 200) : []),
+    looks: Object.fromEntries(isObj(rc.looks) ? Object.entries(rc.looks).filter(([id, n]) => COURSE_ID.test(id) && (GZ_LOOKS.some((L) => L.name === n) || LOOK_KEPT.test(n))).slice(0, 200) : []),
     names: {},
   };
   out.courses.names = cleanNicks(rc.names, GZ_SYNC_ITEM_MAX - GZ_SYNC_BYTES('courses', out.courses));
+  out.courseLooks = cleanCourseLooks(raw.courseLooks);
   out.footer = typeof raw.footer === 'boolean' ? raw.footer : GZ_DEFAULTS.footer;
   out.presets = GZ_SANITIZE_PRESETS(raw.presets);
   // 1.0 stored no preset name: recover it from the palette, so the popup can mark it.
@@ -500,8 +536,8 @@ const GZ_COURSE_EDIT = {
     if (slot && c.tinted.includes(slot)) c.tinted.push(...Object.keys(list).filter((n) => n !== id && list[n].slot === slot && !c.tinted.includes(n)));
     c.tinted = c.tinted.filter((n) => n !== id && n !== slot);
   },
-  // A look's name, or '' for the student's theme.
-  look: (c, id, name) => { if (name) c.looks[id] = name; else delete c.looks[id]; },
+  // A Look's id, or '' for the student's theme; a kept one's in courseLooks (`kept`).
+  look: (c, id, name, kept) => { delete c.looks[id]; if (kept) delete kept[id]; if (LOOK_KEPT.test(name)) kept[id] = name; else if (name) c.looks[id] = name; },
   // A nickname, or '' (or only spaces) to let it go.
   name: (c, id, nick) => { const n = cleanNick(nick); if (n) c.names[id] = n; else delete c.names[id]; },
 };
@@ -588,5 +624,5 @@ const GZ_TINT = (colors, course, t) => {
 };
 
 if (typeof module !== 'undefined') {
-  module.exports = { GZ_SURFACE_VARS, GZ_COLORS, GZ_TABS, GZ_SIDEBAR_KINDS, GZ_BUILT_IN, GZ_SPEC, GZ_DEFAULTS, GZ_PALETTE, GZ_PRESETS, GZ_MAX_PRESETS, GZ_BG_SETS, GZ_BG_COLORS, GZ_GRADIENT, GZ_SCENE_LOOK, GZ_SANITIZE, GZ_SANITIZE_PRESETS, GZ_ALL_PRESETS, GZ_LOOKS, GZ_LOOK_APPLY, GZ_LOOK_ON, GZ_COURSE_LOOK, GZ_PRESET, GZ_MATCH_PRESET, GZ_ACTIVE_COLORS, GZ_SCHEDULE_DARK, GZ_SCHEDULE_NEXT, GZ_CONTRAST, GZ_COURSES, GZ_SLOT_COLORS, GZ_COURSE_COLORS, GZ_COURSE_VARS, GZ_COURSE_EDIT, GZ_COURSE_COLOR, GZ_TABS_AUTO, GZ_COURSE_TINTED, GZ_NICK_MAX, GZ_SYNC_ITEM_MAX, GZ_SYNC_BYTES, GZ_CAL_COURSE, GZ_DUE_WEEK, GZ_CANVAS_DUE_WEEK, GZ_TINT };
+  module.exports = { GZ_SURFACE_VARS, GZ_COLORS, GZ_TABS, GZ_SIDEBAR_KINDS, GZ_BUILT_IN, GZ_SPEC, GZ_DEFAULTS, GZ_PALETTE, GZ_PRESETS, GZ_MAX_PRESETS, GZ_BG_SETS, GZ_BG_COLORS, GZ_GRADIENT, GZ_SCENE_LOOK, GZ_SANITIZE, GZ_SANITIZE_PRESETS, GZ_ALL_PRESETS, GZ_LOOKS, GZ_LOOK_APPLY, GZ_LOOK_ON, GZ_COURSE_LOOK_ID, GZ_COURSE_LOOK, GZ_PRESET, GZ_MATCH_PRESET, GZ_ACTIVE_COLORS, GZ_SCHEDULE_DARK, GZ_SCHEDULE_NEXT, GZ_CONTRAST, GZ_COURSES, GZ_SLOT_COLORS, GZ_COURSE_COLORS, GZ_COURSE_VARS, GZ_COURSE_EDIT, GZ_COURSE_COLOR, GZ_TABS_AUTO, GZ_COURSE_TINTED, GZ_NICK_MAX, GZ_SYNC_ITEM_MAX, GZ_SYNC_BYTES, GZ_CAL_COURSE, GZ_DUE_WEEK, GZ_CANVAS_DUE_WEEK, GZ_TINT };
 }
