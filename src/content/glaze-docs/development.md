@@ -1,7 +1,7 @@
 ---
 title: "Development"
 description: "How Glaze is put together, and how to build, test, package and publish it."
-updated: "2026-10-26"
+updated: "2026-10-30"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Development"
 ---
 <!-- Mirrored from Glaze's docs/development.md by its scripts/docs-mirror.js: edit it there. -->
@@ -214,4 +214,4 @@ create them. It never uploads unless `APPSTORE_UPLOAD=1` is set. To try it in th
 
 ## Bundled libraries
 
-Glaze is MIT licensed ([LICENSE](https://github.com/frostdev-ops/glaze/blob/main/LICENSE)). Bundled with it, each under its own license beside it: three.js (MIT, `lib/three.LICENSE`), lottie-web's light canvas player (MIT, `lib/lottie/LICENSE`), pdf.js and its JBIG2 and JPEG 2000 decoders (Apache-2.0 and BSD, `lib/pdfjs/`), and the Tesseract OCR engine and its tessdata_fast models (Apache-2.0, `lib/tesseract/`), each rebuilt by its `scripts/vendor-*.sh`. The scripts check what they download against pinned hashes; `vendor-three.sh`, which uses npm, installs with install scripts off and checks the installed packages against pinned integrity values (`scripts/npm-integrity.js`).
+Glaze is MIT licensed ([LICENSE](https://github.com/frostdev-ops/glaze/blob/main/LICENSE)). Bundled with it, each under its own license beside it: three.js (MIT, `lib/three.LICENSE`), lottie-web's light canvas player (MIT, `lib/lottie/LICENSE`), pdf.js 6.4.299 with its JBIG2 and JPEG 2000 decoders, the core-js it bundles, Brotli's dictionary and one of Firefox's viewer images (Apache-2.0, BSD, MIT and MPL-2.0, `lib/pdfjs/`), the Tesseract OCR engine and its tessdata_fast models (Apache-2.0, `lib/tesseract/`), ProseMirror, Writer's editor engine, as one readable esbuild bundle (MIT, `lib/pm.js`, `lib/pm.css`, `lib/pm.LICENSE`), harper.js, Writer's spelling and grammar checker, as published with its slim wasm and two unused paths cut (Apache-2.0, `lib/harper/`), and Writer's paper fonts Tinos, Arimo, Carlito and Cousine from @fontsource (SIL OFL 1.1, `lib/fonts/`), each rebuilt by its `scripts/vendor-*.sh` (`vendor-pdfjs.sh`, `vendor-prosemirror.sh`, `vendor-harper.sh`, `vendor-paper-fonts.sh`). Inter and Atkinson Hyperlegible (SIL OFL 1.1, `fonts/`) have no vendor script. The scripts check what they download against pinned hashes; `vendor-three.sh` and `vendor-prosemirror.sh`, which use npm, install with install scripts off and checks the installed packages against pinned integrity values (`scripts/npm-integrity.js`).
