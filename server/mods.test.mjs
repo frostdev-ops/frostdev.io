@@ -1414,9 +1414,16 @@ test('requeue: CLI resets attempts, audits email, hides a published bundle and l
 test('requeue during a review invalidates the old result and drains a fresh review', async () => {
   await start(); let release; const wait = new Promise(r => { release = r; });
   plan.chat = [{ ...review('decline'), wait }, review('accept')];
-  const m = await make(); await submit(m.bytes); await waitFor(() => calls.chat.length === 1);
-  assert.equal(await g.decideMod(m.id, m.hash, 'queued', '', 'owner@example.edu'), true);
-  assert.equal(row(m.hash).tries, 0); release(); await g.drain();
+  const m = await make();
+  try {
+    await submit(m.bytes);
+    await waitFor(() => calls.chat.length === 1);
+    assert.equal(await g.decideMod(m.id, m.hash, 'queued', '', 'owner@example.edu'), true);
+    assert.equal(row(m.hash).tries, 0);
+  } finally {
+    release();
+    await g.drain();
+  }
   assert.equal(calls.chat.length, 2); assert.equal(row(m.hash).status, 'published'); assert.equal(row(m.hash).tries, 1);
 });
 
