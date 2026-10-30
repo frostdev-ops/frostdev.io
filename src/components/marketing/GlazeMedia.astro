@@ -10,7 +10,7 @@ const media = '/projects/glaze/';
 {firstFilm && <section class="glaze-media product-section" id="films" aria-labelledby="films-heading" aria-roledescription="carousel">
   <div class="media-heading">
     <div class="product-section-heading">
-      <h2 id="films-heading">Glaze in action.</h2>
+      <h2 id="films-heading">Films</h2>
     </div>
     <a class="media-jump" href="#film-choices">Explore all {orderedFilms.length} <span aria-hidden="true">↓</span></a>
   </div>
@@ -26,7 +26,6 @@ const media = '/projects/glaze/';
     </div>
     <div class="media-details">
       <div class="media-copy" aria-live="polite" aria-atomic="true">
-        <p class="media-category" id="film-category">{firstFilm.category}</p>
         <h3 id="film-title">{firstFilm.title}</h3>
       </div>
       <div class="media-controls" hidden>
@@ -39,13 +38,12 @@ const media = '/projects/glaze/';
 
   <div class="media-rail" id="film-choices" role="group" aria-label="Choose a Glaze film">
     {orderedFilms.map((film, index) => (
-      <a class="media-choice" href={`${media}${film.file}.mp4`} aria-current={index === 0 ? 'true' : undefined} aria-controls="glaze-film" data-poster={`${media}${film.thumb}.webp`} data-captions={`${media}${film.file}.vtt`} data-title={film.title} data-category={film.category} data-has4k={film.has4k === false ? 'false' : undefined}>
+      <a class="media-choice" href={`${media}${film.file}.mp4`} aria-current={index === 0 ? 'true' : undefined} aria-controls="glaze-film" data-poster={`${media}${film.thumb}.webp`} data-captions={`${media}${film.file}.vtt`} data-title={film.title} data-has4k={film.has4k === false ? 'false' : undefined}>
         <div class="media-thumb">
           <img src={`${media}${film.thumb}.webp`} alt="" width="1280" height="720" loading="lazy" />
           <span class="media-play" aria-hidden="true">▶</span>
           <span class="media-duration">{film.duration}</span>
         </div>
-        <span class="media-choice-category">{String(index + 1).padStart(2, '0')} <span aria-hidden="true">/</span> {film.category}</span>
         <span class="media-choice-title">{film.title}</span>
       </a>
     ))}
@@ -99,7 +97,6 @@ const media = '/projects/glaze/';
         choice.setAttribute('aria-current', 'true');
         start.hidden = false;
         start.setAttribute('aria-label', `Play ${choice.dataset.title}`);
-        document.querySelector('#film-category')!.textContent = choice.dataset.category!;
         document.querySelector('#film-title')!.textContent = choice.dataset.title!;
         const count = document.querySelector('#film-count')!;
         count.textContent = `${String(index + 1).padStart(2, '0')} / ${String(choices.length).padStart(2, '0')}`;
@@ -146,7 +143,6 @@ const media = '/projects/glaze/';
   .media-start:focus-visible { outline: 2px solid var(--glaze-accent, #6fdcff); outline-offset: -5px; }
   video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--glaze-ground, #020910); }
   .media-details { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 1.6rem 2rem; background: linear-gradient(115deg, var(--glaze-soft, rgb(53 126 148 / .12)), transparent); }
-  .media-category, .media-choice-category { color: var(--glaze-accent-secondary, #89c9dc); font-size: .65rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
   .media-copy h3 { margin: .45rem 0; font-size: clamp(1.25rem, 2.5vw, 1.7rem); letter-spacing: -.035em; font-weight: 500; color: var(--glaze-ink, #eefaff); }
   .media-controls { display: flex; align-items: center; gap: .65rem; flex-shrink: 0; }
   .media-controls[hidden] { display: none; }
@@ -162,8 +158,7 @@ const media = '/projects/glaze/';
   .media-choice:hover .media-thumb { border-color: var(--glaze-accent-secondary, #a4e5f5); }
   .media-play { position: absolute; left: .65rem; bottom: .65rem; display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; font-size: .6rem; color: white; background: var(--glaze-ground, rgb(3 15 25 / .85)); border: 1px solid var(--glaze-line, rgb(188 234 248 / .4)); }
   .media-duration { position: absolute; right: .65rem; bottom: .65rem; padding: .2rem .35rem; border-radius: .25rem; color: var(--glaze-ink, #e9f6ff); background: var(--glaze-ground, rgb(3 15 25 / .9)); font-size: .65rem; font-variant-numeric: tabular-nums; }
-  .media-choice-category, .media-choice-title { display: block; padding-inline: .25rem; }
-  .media-choice-category { margin-top: .8rem; font-size: .6rem; }
+  .media-choice-title { display: block; padding-inline: .25rem; }
   .media-choice-title { margin-top: .4rem; color: var(--glaze-ink, #e0edf6); font-size: .9rem; line-height: 1.5; }
   @media (max-width: 700px) {
     .media-heading { align-items: start; }

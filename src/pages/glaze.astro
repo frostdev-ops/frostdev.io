@@ -35,10 +35,9 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
         </div>
       </div>}
       <div class="product-intro">
-        <p class="product-eyebrow">Glaze · Blackboard Ultra · Canvas · Moodle</p>
         <img class="product-logo" src="/projects/glaze-logo.svg" width="420" height="120" alt="Glaze" />
-        <h1 class="product-title" id="glaze-title">Your courses.<br /><span>Your space.</span></h1>
-        <p class="product-lead">Themes, animated backgrounds, study tools and a writer for your papers, on Blackboard Ultra, Canvas and Moodle. Build a Dashboard that works the way you do.</p>
+        <h1 class="product-title" id="glaze-title">Glaze <span>{version}</span></h1>
+        <p class="product-lead">Themes, animated backgrounds, study tools and a writer for your papers, on Blackboard Ultra, Canvas and Moodle.</p>
         <div class="product-actions" data-glaze-install="safari">
           <a class="product-button" href={safariDownload}>Download for Safari on Mac <span aria-hidden="true">↓</span></a>
           <a class="product-button secondary" href="/guides/glaze-safari">Safari guide <span aria-hidden="true">→</span></a>
@@ -54,17 +53,17 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
         <nav class="hero-galleries" aria-label="Glaze galleries">
           <a class="hero-gallery" href="/glaze/looks">
             <span class="gallery-icon gallery-swatches" aria-hidden="true"><span></span><span></span><span></span></span>
-            <span class="gallery-copy"><strong>Looks gallery</strong><span>Themes, palettes and backgrounds.</span></span>
+            <span class="gallery-copy"><strong>Looks gallery</strong></span>
             <span class="gallery-arrow" aria-hidden="true">→</span>
           </a>
           <a class="hero-gallery" href="/glaze/mods">
             <span class="gallery-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><path d="M17.5 13v9M13 17.5h9" /></svg></span>
-            <span class="gallery-copy"><strong>Mods gallery</strong><span>Widgets, effects and page tweaks.</span></span>
+            <span class="gallery-copy"><strong>Mods gallery</strong></span>
             <span class="gallery-arrow" aria-hidden="true">→</span>
           </a>
         </nav>
-        {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.<br />A little Halloween for your study space.</p>}
-        <p class="product-meta">Free and open source<br />Chrome, Safari and Firefox packages {version}<br />No analytics. No account.</p>
+        {halloween && <p class="halloween-note">Halloween Looks Graveyard and Pumpkin Patch each have their own animated scene.</p>}
+        <p class="product-meta">Free and open source · Chrome, Safari and Firefox</p>
         <p class="product-caption"><a href="#browser-heading">See all browser downloads →</a></p>
         {films.length > 0 && <a class="hero-film-link" href="#films"><span aria-hidden="true">▶</span> Watch the films <span aria-hidden="true">↗</span></a>}
       </div>
@@ -74,11 +73,6 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
       </figure>
     </section>
 
-    <section class="glaze-promise" aria-labelledby="promise-heading">
-      <div><p class="product-eyebrow">No Pro. No telemetry. No data sales.</p><h2 id="promise-heading">Free isn't a trial.<br />Privacy isn't an upsell.</h2><p>Glaze will stay free, with no paid feature gates. Your coursework stays out of our analytics—because we don't have any. Optional encrypted sharing is your choice.</p></div>
-      <div class="promise-links"><a class="product-button" href="/glaze/privacy">Our privacy promise <span aria-hidden="true">→</span></a><a class="product-text-link" href="/glaze/terms">Read the terms</a></div>
-    </section>
-
     {films.length > 0 && <div class="glaze-films">
       {halloween && <div class="halloween-ghost" aria-hidden="true"><img src="/projects/glaze/halloween/ghost.svg" width="200" height="220" alt="" /></div>}
       <GlazeMedia films={films} halloween={halloween} />
@@ -86,40 +80,37 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
 
     <section class="product-section product-split" aria-labelledby="writer-heading">
       <div class="product-section-heading">
-        <p class="product-eyebrow">Glaze Writer</p>
-        <h2 id="writer-heading">Every paper,<br />in one place.</h2>
-        <p>Start a document in Blank, MLA, APA or Chicago, or import a Word file. Open it from Documents, or with Ctrl+K right inside Blackboard, Canvas or Moodle. It keeps its versions, proofing and AI help, wears your Look, and waits 30 days in Trash if you delete it.</p>
+        <h2 id="writer-heading">Documents</h2>
+        <p>Start a document in Blank, MLA 9, APA 7 or Chicago 17, or import a Word file. Open Documents with Ctrl+K (⌘K on Mac) inside Blackboard, Canvas or Moodle. Papers, versions and proofing stay on your device. Deleted documents stay in Trash for 30 days. AI help is optional and off by default.</p>
       </div>
       <figure class="product-panel editor-preview">
-        <a href="/projects/glaze/writer-documents.webp" aria-label="Open the full-size Documents capture"><img src="/projects/glaze/writer-documents.webp" width="1440" height="1000" loading="lazy" alt="Glaze’s Documents page in the Lagoon Look: New tiles for Blank, MLA 9, APA 7 and Chicago 17, search, a course filter and a grid of fictional papers and documents with first-page thumbnails, one marked Submitted" /></a>
+        <a href="/projects/glaze/writer-documents.webp" aria-label="Open the full-size Documents capture"><img src="/projects/glaze/writer-documents.webp" width="1440" height="1000" loading="lazy" alt="Documents with Blank, MLA 9, APA 7 and Chicago 17 templates and fictional papers shown as first-page thumbnails" /></a>
       </figure>
     </section>
 
     <section class="product-section" aria-labelledby="write-heading">
       <div class="product-section-heading">
-        <p class="product-eyebrow">In Blackboard Ultra</p>
-        <h2 id="write-heading">Write where you<br />hand it in.</h2>
+        <h2 id="write-heading">Glaze Writer in Blackboard Ultra</h2>
         <p>Writer takes the place of Ultra’s editor in discussions, journals, messages, assignments and tests. Blackboard’s own editor is one click away in its ⋯ menu.</p>
       </div>
       <div class="product-grid">
         <article class="product-card"><h3>Discussions and messages</h3><p>A toolbar on selected text, the prompt’s word target and sources, and quotes from classmates’ posts. Blackboard’s own Post, Reply and Send still send it.</p></article>
-        <article class="product-card"><h3>Papers on real pages</h3><p>Assignments open in a lighter box that submits as text. Turn on Full writer for pages, footnotes, versions and MLA 9, APA 7 or Chicago 17 checks, then hand in a .docx through Blackboard’s upload.</p></article>
-        <article class="product-card"><h3>Your words, checked</h3><p>Spelling and grammar are checked on your device, and sure typos are fixed as you type, each with its own undo. AI is optional and off until you set it up: Tab finishes only the sentence you’re writing, and Feedback checks your draft against the rubric. Glaze never drafts for you. Tests get proofing only.</p></article>
+        <article class="product-card"><h3>Papers on real pages</h3><p>Assignments open in a compact box whose text goes into Blackboard’s text box. Turn on Full writer for pages, footnotes, versions and MLA 9, APA 7 or Chicago 17 checks, then review the .docx in the submit sheet and choose Submit to hand it in through Blackboard’s upload.</p></article>
+        <article class="product-card"><h3>Proofing and optional AI</h3><p>Spelling and grammar are checked on your device, and sure typos are fixed as you type, each with its own undo. AI is off by default: Tab finishes only the sentence you’re writing, and Feedback checks your draft against the rubric and instructions. Glaze never drafts for you. Tests get proofing only.</p></article>
       </div>
       <div class="writer-shots">
         <figure class="product-panel editor-preview">
-          <a href="/projects/glaze/writer-paper.webp" aria-label="Open the full-size Full writer capture"><img src="/projects/glaze/writer-paper.webp" width="1440" height="1000" loading="lazy" alt="Glaze Writer in Full writer on a fictional Blackboard Ultra assignment: an MLA 9 paper on a white page, with a spelling card offering receive for recieve, beside Glaze’s navigation" /></a>
+          <a href="/projects/glaze/writer-paper.webp" aria-label="Open the full-size Full writer capture"><img src="/projects/glaze/writer-paper.webp" width="1440" height="1000" loading="lazy" alt="Full writer on a fictional Ultra assignment, with an MLA 9 paper and a spelling suggestion for “recieve”" /></a>
         </figure>
         <figure class="product-panel editor-preview">
-          <a href="/projects/glaze/writer-compose.webp" aria-label="Open the full-size discussion reply capture"><img src="/projects/glaze/writer-compose.webp" width="1440" height="1000" loading="lazy" alt="Glaze Writer in place of Blackboard Ultra’s editor in a fictional discussion: a selection toolbar over the draft and a word ring at 92 of 250, above Blackboard’s own Save Draft, Cancel and Post" /></a>
+          <a href="/projects/glaze/writer-compose.webp" aria-label="Open the full-size discussion reply capture"><img src="/projects/glaze/writer-compose.webp" width="1440" height="1000" loading="lazy" alt="Writer in a fictional Ultra discussion, with selected-text tools, a 92-of-250 word count and Blackboard’s Post button" /></a>
         </figure>
       </div>
     </section>
 
     <section class="product-section" aria-labelledby="features-heading">
       <div class="product-section-heading">
-        <p class="product-eyebrow">What it does</p>
-        <h2 id="features-heading">Better looking.<br />Easier to use.</h2>
+        <h2 id="features-heading">School tools</h2>
         <p>Every helper can be switched off. Free Looks to try are in the <a class="glaze-inline-link" href="/glaze/looks">Looks gallery</a>, and add-ons in the <a class="glaze-inline-link" href="/glaze/mods">Mods gallery</a>.</p>
       </div>
       <div class="product-grid">
@@ -155,35 +146,30 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
 
     <section class="product-section" aria-labelledby="study-heading">
       <div class="product-section-heading">
-        <p class="product-eyebrow">More room to study</p>
-        <h2 id="study-heading">Keep the tools you need.</h2>
-        <p>On Canvas and Ultra, make room for your work without adding another account.</p>
+        <h2 id="study-heading">Study tools for Canvas and Ultra</h2>
       </div>
       <div class="product-grid">
-        <article class="product-card"><h3>Plan on your device</h3><p>Better To Do brings due work and your own tasks together. Add plans and focus sessions, import a timetable, or export a calendar file. Reminders, streaks and term Insights are there when you turn them on.</p></article>
-        <article class="product-card"><h3>Notes that stay with you</h3><p>Opt into rich-text notes with pictures, attachments and course folders. Search your notes, link school content, and export Markdown, HTML or a backup of everything.</p></article>
+        <article class="product-card"><h3>Plan on your device</h3><p>Better To Do brings due work and your own tasks together. Add plans and focus sessions, import a timetable, or export a calendar file. Term Insights is optional.</p></article>
+        <article class="product-card"><h3>Notes that stay with you</h3><p>Use rich-text notes with pictures, attachments and course folders. Search your notes, link school content, and export Markdown, HTML or a backup of everything.</p></article>
         <article class="product-card"><h3>Share by invitation</h3><p>Optional end-to-end encrypted sessions share selected notes and tasks by link. Use your chosen relay or <a href={`${source}/blob/main/server/README.md`}>host your own</a>. Glaze works fully without sharing or a server.</p></article>
       </div>
     </section>
 
     <section class="product-section" aria-labelledby="personal-heading">
       <div class="product-section-heading">
-        <p class="product-eyebrow">A space that feels like you</p>
-        <h2 id="personal-heading">A little frost.<br />A little company.</h2>
-        <p>Shape the panels around your work and pick a companion for your study space.</p>
+        <h2 id="personal-heading">Surfaces and pets</h2>
       </div>
       <div class="product-grid">
         <article class="product-card"><h3>Glass, color and texture</h3><p>In <strong>Look → Shape and surfaces</strong>, adjust opacity, blur, tint, shadows, frost and borders across Blackboard Ultra, Canvas and Moodle. Match your accent or course color, with rounded corners that follow your Look.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#surfaces">Shape your surfaces →</a></article>
-        <article class="product-card"><h3>Choose your study companion</h3><p>Meet Ember, Luna, Mochi, Sprout, Pebble, Rime and the Glaze droplet, or import a pet sprite sheet from your device. Choose once for the habitat, Study buddy, Blackboard navigation badge and course-card pet, including the original Cat and Bunny. Keep leveling across semesters, decorate four habitats, play with draggable toys and settle on calm favorite perches. Preferences learn locally from numeric interaction signals; typed text and page content are not training data. You can disable or reset learning. XP and decorations stay with your school account. No uploads, nags or missed-day penalties.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#pets">Meet the pets →</a></article>
-        <article class="product-card"><h3>Keep your place, keep moving</h3><p>Glaze 3.0.2 reduces Blackboard’s styling work during clicks, hovers and page changes. Keep up to four additional course pages live on every computer; hidden pages no longer close just because they have been idle.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#workspace">Set up your workspace →</a></article>
+        <article class="product-card"><h3>Choose your study companion</h3><p>Meet Ember, Luna, Mochi, Sprout, Pebble, Rime and the Glaze droplet, or import a pet sprite sheet from your device. Choose once for the habitat, Study buddy, Blackboard navigation badge and course-card pet, including the original Cat and Bunny. Keep leveling across semesters, decorate four habitats, play with draggable toys and settle on calm favorite perches. Preferences learn locally from numeric interaction signals; typed text and page content are not training data. You can disable or reset learning. XP and decorations stay with your school account.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#pets">Meet the pets →</a></article>
+        <article class="product-card"><h3>Live course tabs</h3><p>Keep up to four additional course pages live on every computer; hidden pages no longer close just because they have been idle.</p><a class="glaze-inline-link" href="/guides/glaze-chrome#workspace">Set up your workspace →</a></article>
       </div>
-      <p class="product-caption"><strong>New in 3.0.4:</strong> mods. Add backgrounds (shaders, layered scenes, videos, animated pictures, Lottie), motion and event effects, nav layouts, page tweaks, and sticker and pet packs and widgets made by others, from a code, link, file or the gallery's new Mods section. Each mod shows what it may read, and why, before you add it. Code mods run sandboxed on Chrome; Firefox and Safari get mods without code. Updates are signed, with an opt-out signed blocklist, and a no-code widget builder makes your own. Looks can now have a looping video, animated WebP/AVIF or Lottie background, muted, still when motion is off and paused in hidden tabs. See the <a href="/guides/glaze-mods-api">mods guide</a>.</p>
+      <p class="product-caption"><strong>Mods:</strong> Add backgrounds (shaders, layered scenes, videos, animated pictures, Lottie), motion and event effects, nav layouts, page tweaks, and sticker and pet packs and widgets made by others, from a code, link, file or the gallery’s Mods section. Each mod shows what it may read, and why, before you add it. Code mods run sandboxed on Chrome; Firefox and Safari get mods without code. Updates are signed, with an opt-out signed blocklist, and a no-code widget builder makes your own. Looks can have a looping video, animated WebP/AVIF or Lottie background, muted, still when motion is off and paused in hidden tabs. See the <a href="/guides/glaze-mods-api">mods guide</a>.</p>
     </section>
 
     <section class="product-section product-split" aria-labelledby="editor-heading">
       <div class="product-section-heading">
-        <p class="product-eyebrow">The editor</p>
-        <h2 id="editor-heading">See it as you shape it.</h2>
+        <h2 id="editor-heading">Settings</h2>
         <p>Quick switches in the popup. Eleven settings categories, search across every setting and a live preview for each school site. Shape your surfaces, check the result, and reset any control without starting over.</p>
       </div>
       <figure class="product-panel editor-preview">
@@ -193,22 +179,20 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
 
     <section class="product-section" aria-labelledby="browser-heading">
       <div class="product-section-heading">
-        <p class="product-eyebrow">Install</p>
         <h2 id="browser-heading">Choose your browser.</h2>
       </div>
       <div class="browser-guides">
-        <a class="product-panel browser-guide" href="/guides/glaze-safari"><span class="product-eyebrow">Safari on Mac</span><h3>Signed, notarized Mac app.</h3><p>Install Glaze {version}, enable the extension, allow your Blackboard, Canvas or Moodle site.</p><span class="product-text-link">Safari guide →</span></a>
-        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><span class="product-eyebrow">Chrome</span><h3>Store or GitHub package.</h3><p>The store version may differ. Load the GitHub package unpacked for Glaze {version}, as this guide explains.</p><span class="product-text-link">Chrome guide →</span></a>
-        <a class="product-panel browser-guide" href={firefoxStore}><span class="product-eyebrow">Firefox</span><h3>Install from Firefox Add-ons.</h3><p>Firefox Add-ons shows the currently approved version for Firefox 140 or newer on desktop and Firefox 142 or newer on Android. Install once and receive updates through Firefox.</p><span class="product-text-link">Get Glaze for Firefox ↗</span></a>
+        <a class="product-panel browser-guide" href="/guides/glaze-safari"><h3>Safari on Mac</h3><p>Install Glaze {version}, enable the extension, allow your Blackboard, Canvas or Moodle site.</p><span class="product-text-link">Safari guide →</span></a>
+        <a class="product-panel browser-guide" href="/guides/glaze-chrome"><h3>Chrome</h3><p>The store version may differ. Load the GitHub package unpacked for Glaze {version}, as this guide explains.</p><span class="product-text-link">Chrome guide →</span></a>
+        <a class="product-panel browser-guide" href={firefoxStore}><h3>Firefox</h3><p>Firefox Add-ons shows the currently approved version for Firefox 140 or newer on desktop and Firefox 142 or newer on Android. Install once and receive updates through Firefox.</p><span class="product-text-link">Get Glaze for Firefox ↗</span></a>
       </div>
       <p class="product-caption"><a href="/guides/glaze-chrome#firefox">Firefox installation guide</a>. GitHub downloads: <a href={safariZip}>Safari Mac ZIP ({version})</a> · <a href={chromeZip}>Chrome extension ZIP ({version})</a> · <a href={firefoxZip}>Firefox development ZIP ({version})</a> · <a href={`${source}/releases/tag/v${version}`}>{version} release notes</a>. Chrome Web Store versions may differ; Firefox Add-ons shows the currently approved version.</p>
     </section>
 
     <section class="product-cta">
       {halloween && <div class="halloween-skeleton" aria-hidden="true"><img src="/projects/glaze/halloween/skeleton.svg" width="200" height="260" alt="" /></div>}
-      <p class="product-eyebrow">Glaze by Frostdev</p>
-      <h2>Your theme. Your data.</h2>
-      <p>No analytics. No account. Your work stays on your device until you post it, submit it, share it or send it to an AI you set up. Encrypted sharing uses an optional relay.</p>
+      <h2>Source and privacy</h2>
+      <p>Read the source code, storage details and terms. Encrypted sharing and AI connections are optional.</p>
       <div class="product-actions"><a class="product-button" href={source}>View source <span aria-hidden="true">↗</span></a><a class="product-button secondary" href="/glaze/privacy">Privacy policy <span aria-hidden="true">→</span></a><a class="product-button secondary" href="/glaze/terms">Terms <span aria-hidden="true">→</span></a></div>
       <p class="product-caption">Blackboard is a trademark of Anthology Inc. Canvas is a trademark of Instructure, Inc. Glaze is an independent project and is not affiliated with or endorsed by Blackboard, Canvas or Moodle.</p>
     </section>
@@ -231,12 +215,6 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
 </script>
 
 <style>
-  .glaze-promise { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2rem; padding: 2.5rem; margin-bottom: 3rem; border: 1px solid var(--glaze-line, #2b4b61); border-radius: 1rem; background: linear-gradient(120deg, #17413b55, #171127aa); }
-  .glaze-promise > div:first-child { max-width: 36rem; }
-  .glaze-promise h2 { font-size: clamp(1.7rem, 3vw, 2.5rem); letter-spacing: -.04em; line-height: 1.15; margin-bottom: 1rem; }
-  .glaze-promise p:not(.product-eyebrow) { color: var(--glaze-muted, #b3c8dc); font-size: .92rem; line-height: 1.8; }
-  .promise-links { display: grid; justify-items: start; }
-  @media (max-width: 700px) { .glaze-promise { padding: 1.5rem; } }
   .glaze-page { --product-accent: #6fdcff; }
   .product-hero { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 2.5rem; }
   .product-title span { color: var(--glaze-accent, #83e6f4); }
