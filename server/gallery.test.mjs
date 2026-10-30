@@ -1250,7 +1250,10 @@ test('media: filling storage during review refunds quota and preserves existing 
     await waitFor(() => calls.decisions.length === 3);
     writeFileSync(held, '');
     truncateSync(held, 1024 ** 3 - readFileSync(path.join(dir, h)).length);
-  } finally { resume(); }
+  } finally {
+    resume();
+    await pending;
+  }
   const full = await pending;
   assert.equal(full.status, 503);
   assert.equal(quotaUsed(), before);
