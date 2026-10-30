@@ -15,6 +15,7 @@ body:has(.glaze-policy) .marketing { background: radial-gradient(ellipse 40rem 2
 .policy-nav a { color: var(--policy-muted); font-size: .82rem; }
 .policy-nav [aria-current] { color: var(--policy-accent); text-decoration: underline; text-underline-offset: .5rem; }
 .policy-hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .8fr); align-items: center; gap: 2rem; padding: 6.5rem 0 5rem; }
+.policy-hero-simple { grid-template-columns: minmax(0, 1fr); }
 .policy-kicker { display: flex; align-items: center; gap: .6rem; margin: 0 0 1.5rem; color: var(--policy-accent); font-size: .7rem; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; }
 .policy-dot { width: .45rem; height: .45rem; border-radius: 50%; background: var(--policy-accent); box-shadow: 0 0 20px #70e4d499; }
 .policy-hero h1 { margin: 0 0 1.75rem; font-size: clamp(2.8rem, 5.1vw, 4.8rem); font-weight: 550; line-height: 1.08; letter-spacing: -.06em; }

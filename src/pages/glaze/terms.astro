@@ -3,51 +3,47 @@ import GlazePolicyLayout from '../../layouts/GlazePolicyLayout.astro';
 const source = 'https://github.com/frostdev-ops/glaze';
 ---
 
-<GlazePolicyLayout title="Glaze Terms — Free means free. No catch." description="Glaze will always be free: no subscriptions, paid tiers or gated features. Plain-language terms, your ownership, open-source rights and optional sharing." page="terms">
-  <header class="policy-hero terms-hero"><div class="policy-hero-copy">
-    <p class="policy-kicker"><span class="policy-dot" aria-hidden="true"></span> Terms without a trapdoor</p>
-    <h1>Free means free.<br /><em>No catch.</em></h1>
-    <p class="policy-lead">No billing cycle. No premium badge. No card required to find out you liked the free trial. Just software that makes your school day a little better.</p>
-    <div class="policy-pills"><span>Always $0 from us</span><span>All features</span><span>Your content stays yours</span></div>
-    <p class="policy-date">Terms of use · Effective <time datetime="2026-10-29">October 29, 2026</time></p>
-  </div><div class="terms-stamp" aria-hidden="true"><span>NOT A TRIAL</span><strong>$0</strong><span>NO EXPIRY DATE</span></div></header>
+<GlazePolicyLayout title="Glaze Terms" description="Terms for using Glaze, your content, open-source rights and optional services." page="terms">
+  <header class="policy-hero policy-hero-simple"><div class="policy-hero-copy">
+    <h1>Glaze terms</h1>
+    <p class="policy-lead">Keep your content, follow your school’s rules and back up your work. Sharing and AI connections are optional.</p>
+    <p class="policy-date">Effective <time datetime="2026-10-29">October 29, 2026</time></p>
+  </div></header>
 
-  <aside class="policy-plain"><strong>The short version</strong><p>Use Glaze for free. Keep your content. Respect other people and your school's rules. Back up your work. Optional sharing is your choice. The open-source license and your legal rights still apply.</p></aside>
   <div class="policy-body">
-    <nav class="policy-contents" aria-label="Terms contents"><span>THE AGREEMENT</span><a href="#free">Always free</a><a href="#rights">Open-source rights</a><a href="#content">Your content</a><a href="#responsibility">Using Glaze</a><a href="#shared">Optional services</a><a href="#limits">Reliability and rights</a><a href="#changes">Changes and contact</a></nav>
+    <nav class="policy-contents" aria-label="Terms contents"><a href="#free">Scope</a><a href="#rights">Open-source rights</a><a href="#content">Your content</a><a href="#responsibility">Using Glaze</a><a href="#shared">Optional services</a><a href="#limits">Reliability and rights</a><a href="#changes">Changes and contact</a></nav>
     <div class="policy-reading">
-      <section id="free"><p class="policy-kicker">01 / Our side of the deal</p><h2>No Pro. No paywalls.<br />No moving the goalposts.</h2>
+      <section id="free"><h2>Scope</h2>
         <p>These terms cover the official Glaze extension, these Glaze pages and any sharing relay operated by Frostdev. By using an optional hosted service, you agree to its applicable terms. Using or distributing Glaze's source code remains governed by its open-source license.</p>
-        <p><strong>Glaze is and will remain free to use.</strong> We will not introduce a Pro or Premium tier, a subscription, a trial that starts billing, paid feature unlocks or a payment requirement for future official Glaze features. We do not sell your personal data or fund Glaze through advertising profiles. Our <a href="/glaze/privacy">privacy commitments</a> apply here too.</p>
-        <p>Browser storage, file sizes, security limits, platform compatibility and service capacity are real constraints. They are not an invitation to pay us to bypass them. Your internet access, a third-party provider or a server you choose to host can have its own costs; those are not Glaze feature gates. There is no promise of unlimited storage or unlimited hosting.</p>
+        <p>Glaze is free to use. Browser storage, file sizes, platform compatibility and service capacity limit what it can do. External services have their own terms and costs.</p>
       </section>
-      <section id="rights"><p class="policy-kicker">02 / Open means open</p><h2>The license isn't a leash.</h2>
+      <section id="rights"><h2>Open-source rights</h2>
         <p>Glaze's software is released under the <a href={`${source}/blob/main/LICENSE`}>MIT license</a>. It permits using, copying, modifying and distributing the software, including commercial redistribution, subject to its notice requirements. These website terms do not take those rights away, add a use restriction to the license or retroactively revoke an existing release.</p>
-        <p>Our promise that official Glaze stays free is our commitment. Independently operated forks, marketplaces, hosting and other third-party services have their own operators and terms. Included third-party software and artwork retain their published licenses and notices.</p>
+        <p>Independently operated forks, marketplaces, hosting and other third-party services have their own operators and terms. Included third-party software and artwork retain their published licenses and notices.</p>
       </section>
-      <section id="content"><p class="policy-kicker">03 / No ownership grab</p><h2>Your notes. Your work. Yours.</h2>
+      <section id="content"><h2>Your content</h2>
         <p>You keep your rights in your notes, files, themes and other content. Using Glaze does not transfer ownership to Frostdev or grant us permission to sell it, advertise with it or train AI on it.</p>
         <p>When you deliberately use sharing, you authorize only the processing needed to encrypt, transmit, store and deliver the content you select and operate that session. Recipients can keep copies. A published theme or other public contribution has the license disclosed at that contribution's submission flow; private content does not become public just because you use Glaze.</p>
         <p>You are responsible for having permission to use and share what you choose. Keep invitation keys, private backups and creator delete tokens secure. Don't put sensitive content in a public issue or support screenshot.</p>
       </section>
-      <section id="responsibility"><p class="policy-kicker">04 / Your school is still your school</p><h2>Helpful tools. Your judgement.</h2>
+      <section id="responsibility"><h2>Using Glaze</h2>
         <p>Glaze is an independent browser enhancement. It is not affiliated with or endorsed by Blackboard, Canvas, Moodle or your school. Their names and marks belong to their owners. Your school's own policies, including any on AI, and each service's terms still apply.</p>
         <p>Use Glaze only with accounts and content you are authorized to access. Do not use hosted services to distribute unlawful content, abuse others, bypass access controls, probe other people's sessions or disrupt the service. We may refuse or restrict abusive hosted-service traffic to protect users; this does not revoke the MIT rights in software you already have.</p>
-        <p>Glaze never changes real grades, and it posts or submits nothing until you press Post, Reply, Send or Submit. A planner done mark is not a submission. Grades, predictions, AI feedback and grade estimates, imported text and schedules can be incomplete or wrong; your school's records remain authoritative. Review imports and verify important deadlines yourself.</p>
+        <p>Glaze never changes real grades. Posting and submission require your action, including keyboard shortcuts. In Full writer, review the submit sheet and choose Submit to upload the .docx and submit it through Blackboard. A planner done mark is not a submission. Grades, predictions, AI feedback and grade estimates, imported text and schedules can be incomplete or wrong; your school's records remain authoritative. Review imports and verify important deadlines yourself.</p>
       </section>
-      <section id="shared"><p class="policy-kicker">05 / Optional stays optional</p><h2>Use the app.<br />Skip the server if you like.</h2>
+      <section id="shared"><h2>Optional services</h2>
         <p>Glaze's local tools work without a Glaze account or sharing server. If you enable sharing, content is encrypted on your device and sent to the relay you select. The <a href="/glaze/privacy#sharing">privacy policy</a> describes metadata, keys, retention, deletion and recipient copies. We cannot recover a lost invitation key or recreate local bytes that no device retains.</p>
         <p>A self-hosted relay is run by its operator, not automatically by Frostdev. A custom relay, school, AI provider, font provider, music service, browser store or other external service has its own policies, availability and costs. We do not guarantee its conduct. <a href={`${source}/blob/main/server/README.md`}>Self-hosting documentation</a> explains the public relay interface and operator responsibilities.</p>
       </section>
-      <section id="limits"><p class="policy-kicker">06 / The honest limitations</p><h2>Keep a backup.<br />Keep your legal rights.</h2>
+      <section id="limits"><h2>Reliability and rights</h2>
         <p>Glaze is provided “as is” under the MIT license's warranty and liability provisions, to the extent applicable law permits. We do not promise uninterrupted service, compatibility with every school page, error-free calculations or permanent storage. These terms do not exclude rights or remedies that the law does not allow us to exclude.</p>
         <p>Save work in your school platform before closing or reloading course tabs. Live-page retention cannot detect every native operation. Use <strong>Back up…</strong> in Settings → Privacy and data before uninstalling or clearing storage. Browser storage can be removed, and encrypted recipients can keep copies even after a session is deleted.</p>
         <p>No policy can make a compromised device, an unsafe invitation recipient or a school's own scripts harmless. Please report a suspected security problem privately to <a href="mailto:admin@frostdev.io">admin@frostdev.io</a>.</p>
       </section>
-      <section id="changes"><p class="policy-kicker">07 / No fine-print reversal</p><h2>We'll put changes in writing.</h2>
-        <p>Updates to these terms will be dated and published here. They will not introduce paid gates into official Glaze, convert local work into an advertising product or take away the license already granted for released software. Material new data processing will be explained before it is enabled; these terms are not blanket consent to unrelated uses.</p>
+      <section id="changes"><h2>Changes and contact</h2>
+        <p>Updates to these terms will be dated and published here. They will not take away the license already granted for released software. Material new data processing will be explained before it is enabled; these terms are not blanket consent to unrelated uses.</p>
         <p>Questions about these terms or our commitments can go to <a href="mailto:admin@frostdev.io">admin@frostdev.io</a>. The <a href="/privacy">general Frostdev website policy</a> covers other Frostdev services separately.</p>
-        <a class="policy-text-link" href="/glaze/privacy">Read the privacy promise <span aria-hidden="true">→</span></a>
+        <a class="policy-text-link" href="/glaze/privacy">Read the privacy policy <span aria-hidden="true">→</span></a>
       </section>
     </div>
   </div>
