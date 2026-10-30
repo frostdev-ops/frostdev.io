@@ -356,10 +356,13 @@ test('submit result survives an older live check response', async () => {
   ui.get('f-license').checked = true;
   ui.get('f-code').events.input();
   const checking = ui.check();
-  await ui.get('submit-form').events.submit({ preventDefault() {} });
-  assert.equal(ui.get('submit-status').hidden, false);
-  resolveCheck(new Response(JSON.stringify({ look: null, problems: [], nearest: [] })));
-  await checking;
+  try {
+    await ui.get('submit-form').events.submit({ preventDefault() {} });
+    assert.equal(ui.get('submit-status').hidden, false);
+  } finally {
+    resolveCheck(new Response(JSON.stringify({ look: null, problems: [], nearest: [] })));
+    await checking;
+  }
   assert.equal(ui.get('submit-status').hidden, false, 'older preview hides the published result and status link');
 });
 
@@ -377,10 +380,13 @@ test('live-check errors announce themselves and credit errors focus credit', asy
 });
 
 test('the mod submit page keeps the latest file when older checks finish later', async () => {
-  const checks = [];
+  let answerOld, answerLatest, checks = 0;
+  // Create both replies before starting work, so cleanup also answers a check that arrives late.
+  const oldCheck = new Promise((resolve) => { answerOld = resolve; });
+  const latestCheck = new Promise((resolve) => { answerLatest = resolve; });
   let uploaded;
   const ui = submitPage((url, options) => {
-    if (url.endsWith('/check')) return new Promise((resolve) => checks.push(resolve));
+    if (url.endsWith('/check')) return ++checks === 1 ? oldCheck : latestCheck;
     uploaded = options.body;
     return Promise.resolve(new Response(JSON.stringify({ problems: ['test refusal'] }), { status: 422 }));
   }, 'mods');
@@ -390,41 +396,61 @@ test('the mod submit page keeps the latest file when older checks finish later',
   };
   const a = new Uint8Array([1]).buffer, b = new Uint8Array([2]).buffer;
   const old = choose(a);
-  await new Promise(setImmediate);
-  const latest = choose(b);
-  await new Promise(setImmediate);
+  let latest;
   const checked = (name) => new Response(JSON.stringify({ problems: [], mod: { name, id: 'a'.repeat(16), hash: 'b'.repeat(43) } }));
-  checks[1](checked('Latest file'));
-  await latest;
-  checks[0](checked('Old file'));
-  await old;
-  assert.equal(ui.get('m-name').textContent, 'Latest file');
-  ui.get('f-code').checked = ui.get('f-art').checked = true;
-  await ui.get('submit-form').events.submit({ preventDefault() {} });
-  assert.equal(uploaded, b, 'the selected file must be the file submitted');
+  try {
+    await new Promise(setImmediate);
+    latest = choose(b);
+    await new Promise(setImmediate);
+    assert.equal(checks, 2);
+    answerLatest(checked('Latest file'));
+    await latest;
+    answerOld(checked('Old file'));
+    await old;
+    assert.equal(ui.get('m-name').textContent, 'Latest file');
+    ui.get('f-code').checked = ui.get('f-art').checked = true;
+    await ui.get('submit-form').events.submit({ preventDefault() {} });
+    assert.equal(uploaded, b, 'the selected file must be the file submitted');
+  } finally {
+    answerOld(checked('Old file'));
+    answerLatest(checked('Latest file'));
+    await Promise.all([old, latest]);
+  }
 });
 
 test('a mod upload locks its file and prevents duplicate submits until its response body finishes', async () => {
   let answerUpload, answerBody;
-  let uploads = 0;
+  const uploadReply = new Promise((resolve) => { answerUpload = resolve; });
+  const bodyReply = new Promise((resolve) => { answerBody = resolve; });
+  let uploads = 0, readingBody = false;
+  const response = { status: 422, json: () => { readingBody = true; return bodyReply; } };
   const ui = submitPage((url) => {
     if (url.endsWith('/check')) return Promise.resolve(new Response(JSON.stringify({ problems: [], mod: null })));
     uploads++;
-    return new Promise((resolve) => { answerUpload = resolve; });
+    // A broken duplicate-submit guard must fail the count assertion, rather than hang on a second held upload.
+    return uploads === 1 ? uploadReply : Promise.resolve(new Response(JSON.stringify({ problems: ['test refusal'] }), { status: 422 }));
   }, 'mods');
   ui.get('f-file').files = [{ size: 1, arrayBuffer: async () => new ArrayBuffer(1) }];
   await ui.get('f-file').events.change();
   ui.get('f-code').checked = ui.get('f-art').checked = true;
   const pending = ui.get('submit-form').events.submit({ preventDefault() {} });
-  assert.equal(ui.get('f-file').disabled, true, 'changing files during an upload would let its result erase a newer selection');
-  assert.equal(ui.get('f-submit').disabled, true);
-  await ui.get('submit-form').events.submit({ preventDefault() {} });
-  assert.equal(uploads, 1);
-  answerUpload({ status: 422, json: () => new Promise((resolve) => { answerBody = resolve; }) });
-  await new Promise(setImmediate);
-  assert.equal(ui.get('f-file').disabled, true, 'headers alone do not finish an upload');
-  answerBody({ problems: ['test refusal'] });
-  await pending;
+  try {
+    assert.equal(ui.get('f-file').disabled, true, 'changing files during an upload would let its result erase a newer selection');
+    assert.equal(ui.get('f-submit').disabled, true);
+    await ui.get('submit-form').events.submit({ preventDefault() {} });
+    assert.equal(uploads, 1);
+    answerUpload(response);
+    await new Promise(setImmediate);
+    assert.equal(readingBody, true);
+    assert.equal(ui.get('f-file').disabled, true, 'headers alone do not finish an upload');
+    assert.equal(ui.get('f-submit').disabled, true);
+    await ui.get('submit-form').events.submit({ preventDefault() {} });
+    assert.equal(uploads, 1, 'the response body is still pending');
+  } finally {
+    answerUpload(response);
+    answerBody({ problems: ['test refusal'] });
+    await pending;
+  }
   assert.equal(ui.get('f-file').disabled, false);
   assert.equal(ui.get('f-submit').disabled, false, 'a failed upload can be corrected and retried');
   assert.equal(ui.get('f-submit').textContent, 'Submit for review');
@@ -432,14 +458,18 @@ test('a mod upload locks its file and prevents duplicate submits until its respo
 
 test('clearing the mod file invalidates an outstanding check', async () => {
   let answer;
-  const ui = submitPage(() => new Promise((resolve) => { answer = resolve; }), 'mods');
+  const checkReply = new Promise((resolve) => { answer = resolve; });
+  const ui = submitPage(() => checkReply, 'mods');
   ui.get('f-file').files = [{ size: 1, arrayBuffer: async () => new ArrayBuffer(1) }];
   const pending = ui.get('f-file').events.change();
-  await new Promise(setImmediate);
-  ui.get('f-file').files = [];
-  await ui.get('f-file').events.change();
-  answer(new Response(JSON.stringify({ problems: [], mod: null })));
-  await pending;
+  try {
+    await new Promise(setImmediate);
+    ui.get('f-file').files = [];
+    await ui.get('f-file').events.change();
+  } finally {
+    answer(new Response(JSON.stringify({ problems: [], mod: null })));
+    await pending;
+  }
   assert.equal(ui.get('f-submit').disabled, true);
 });
 
