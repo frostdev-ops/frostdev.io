@@ -6,15 +6,15 @@ import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, truncateSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
-import { createRequire } from 'node:module';
 import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { after, afterEach, before, test } from 'node:test';
 import { GLAZE_KEY, MOD_BODY_MAX, MOD_IMAGE_MAX, MOD_IMAGES, MOD_IMAGE_TOTAL, modImageType, MOD_POLICY, MOD_REVIEW_TIMEOUT, MOD_ROUNDS, MOD_SHELL_TIMEOUT, MOD_SHELL_TOTAL, MOD_TEXT_MAX, canon, fitOutput, gallery, modFacts, modReviewInput, modShell } from './gallery.mjs';
+import { glaze } from '../scripts/looks.mjs';
 
-const MB = createRequire(path.join(process.cwd(), 'vendor/glaze/'))('./lib/modbundle.js');
+const MB = glaze('modbundle.js');
 const ORIGIN = 'https://frostdev.io';
 const te = new TextEncoder();
 const tmp = mkdtempSync(path.join(os.tmpdir(), 'glaze-mods-test-'));

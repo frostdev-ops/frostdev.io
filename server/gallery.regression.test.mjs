@@ -66,11 +66,12 @@ process.on('exit', () => rmSync(tmp, { recursive: true, force: true }));
 // its `?url` import of lib/glsl.js is the file's name here.
 const loadTs = (file, requires = {}) => {
   const exports = {};
-  const source = ts.transpile(readFileSync(file, 'utf8'), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true });
-  vm.runInNewContext(source, { exports, require: (m) => { if (!(m in requires)) throw new Error(`unexpected import ${m}`); return requires[m]; } });
+  const need = (m) => { if (!(m in requires)) throw new Error(`unexpected import ${m}`); return requires[m]; };
+  const source = ts.transpile(readFileSync(file, 'utf8'), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true }).replaceAll('import.meta.glob', 'glob');
+  vm.runInNewContext(source, { exports, require: need, glob: (m, o) => ({ [m]: o?.eager ? need(m) : () => Promise.resolve().then(() => need(m)) }) });
   return exports;
 };
-const loadLive = () => loadTs('src/components/livebg.ts', { '../../vendor/glaze/lib/glsl.js?url': '/glsl.js' });
+const loadLive = () => loadTs('src/components/livebg.ts', { '../../vendor/glaze/*/glsl.js': '/glsl.js' });
 const loadPreview = () => loadTs('src/components/looks.ts', { './livebg': loadLive() });
 
 // Each group is run against the immutable baseline before its fix is committed.
@@ -807,7 +808,7 @@ test('the gallery page and the submit page take glaze2 codes and draw background
     assert.doesNotMatch(source, /innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function\(|\.srcdoc/, file);
   }
   const live = readFileSync('src/components/livebg.ts', 'utf8');
-  assert.equal([...live.matchAll(/\bsrc: glslUrl\b/g)].length, 1, 'the only script it adds is the vendored lib/glsl.js');
+  assert.equal([...live.matchAll(/\bsrc: glslUrl\b/g)].length, 1, 'the only script it adds is the vendored glsl.js');
   assert.doesNotMatch(live, /https?:\/\//);
 });
 

@@ -1,13 +1,12 @@
 // Preview lifecycle checks use the real shader checker and mocked DOM/WebGL; no browser or network is started.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { glaze, glazeFile } from '../scripts/looks.mjs';
 
-const require = createRequire(import.meta.url);
-const GLSL = require('../vendor/glaze/lib/glsl.js');
+const GLSL = glaze('glsl.js');
 const SHADER = 'vec4 scene(vec2 uv) { return vec4(uv, sin(uTime), 1.); }';
 const BASE = { ground: '#001122', colors: ['#112233', '#445566', '#778899'], dim: 0.5, amount: 0.5, pace: 1 };
 const shader = (src = SHADER) => ({ kind: 'shader', src, ...BASE });
@@ -84,12 +83,14 @@ function page({ loaded = true, hidden = false, reduced = false, gpuReady = true 
     ResizeObserver: class { constructor(callback) { this.callback = callback; resizes.push(this); } observe() {} disconnect() { this.stopped = true; } },
     requestAnimationFrame: (fn) => { frames.set(++frame, fn); return frame; }, cancelAnimationFrame: (id) => frames.delete(id),
     require: (name) => {
-      if (name === '../../vendor/glaze/lib/glsl.js?url') return '/glsl.js';
-      if (name === '../../vendor/glaze-scene/lib/scene.js') {
+      if (name === '../../vendor/glaze/*/glsl.js') return '/glsl.js';
+      if (name === '../../vendor/glaze-scene/*/scene.js') {
         if (!engine) {
           const exports = {};
-          // Glaze 3.1.0 loads three.js with a dynamic import (a retry reloads it); here it is the stand-in, as a static one was.
-          const source = ts.transpile(readFileSync('vendor/glaze-scene/lib/scene.js', 'utf8').replace(/await import\(`\.\/(three(?:\.min)?\.js)[^`]*`\)/, "require('./$1')"), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS });
+          // Glaze 3.1.0 loads three.js with a dynamic import (a retry reloads it; v4.0.1 from ../vendor/three.js); here it is the
+          // stand-in, as a static one was.
+          const threeImport = /await (?:import\(`\.\/(three(?:\.min)?\.js)[^`]*`\)|\(globalThis\.chrome\b.*?: import\('\.\.\/vendor\/(three\.js)'\)\))/;
+          const source = ts.transpile(readFileSync(glazeFile('scene.js', 'glaze-scene'), 'utf8').replace(threeImport, (_, a, b) => `require('./${a ?? b}')`), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS });
           vm.runInContext(`(function(exports, require) { ${source}\n })`, context)(exports, (name) => { assert.match(name, /^\.\/three(\.min)?\.js$/); return three; });
           engine = { start(...args) { stats.engineStarts++; return exports.start(...args); } };
         }
@@ -97,9 +98,10 @@ function page({ loaded = true, hidden = false, reduced = false, gpuReady = true 
       }
       throw new Error(`Unexpected import ${name}`);
     },
+    glob: (name, o) => ({ [name]: o?.eager ? context.require(name) : () => Promise.resolve().then(() => context.require(name)) }),
     ...(loaded && { GZ_GLSL: GLSL }),
   });
-  const source = ts.transpile(readFileSync('src/components/livebg.ts', 'utf8'), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true });
+  const source = ts.transpile(readFileSync('src/components/livebg.ts', 'utf8'), { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true }).replaceAll('import.meta.glob', 'glob');
   vm.runInContext(source, context);
   const preview = () => ({ dataset: {}, querySelector: (selector) => selector === '.lp-bg' ? { append(canvas) { canvas.host = this; } } : null });
   return {

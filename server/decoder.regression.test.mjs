@@ -2,16 +2,14 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { test } from 'node:test';
 import zlib from 'node:zlib';
-import { checkCode, describe } from '../scripts/looks.mjs';
+import { checkCode, describe, glaze } from '../scripts/looks.mjs';
 
-const require = createRequire(import.meta.url);
-const SHARE = require('../vendor/glaze/lib/share.js');
-const X = require('../vendor/glaze/lib/lookparts.js');
-const { GZ_DEFAULTS } = require('../vendor/glaze/defaults.js');
-const MX = require('../vendor/glaze/lib/motionx.js');
+const SHARE = glaze('share.js');
+const X = glaze('lookparts.js');
+const { GZ_DEFAULTS } = glaze('defaults.js');
+const MX = glaze('motionx.js');
 const palette = '2a7fd46fb6ff0a244004121f101a24070c12e9eef39aa7b466727f1b27332b3a4a34d399fbbf24f87171';
 const encode = (raw, version = 2, padding = '') => `glaze${version}:${zlib.deflateRawSync(Buffer.from(JSON.stringify(raw) + padding)).toString('base64url')}`;
 const code = (x, b) => encode({ c: palette, ...(b && { b }), x });

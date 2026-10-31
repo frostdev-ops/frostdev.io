@@ -567,15 +567,18 @@ server runs the code and field checks on every submission.
   pixels wide and 240 to 1600 tall and matches the palette's mode, and no screenshot is left unused.
 
 Glaze's files are pinned in `vendor/glaze/` by `scripts/vendor-glaze.sh <tag>`, which copies them from
-that public Glaze release tag: `defaults.js` and the `lib/` files it and `lib/share.js` require
+that public Glaze release tag: `defaults.js` and the files it and `share.js` require
 (`cards.js`, `color.js`, `fonts.js`, `surfaces.js`, and for Look parts `lookparts.js`, `glsl.js`, `motionx.js`,
-`navlayout.js`, `nav.js`, `nav-items.js`, `parts.js`). A pinned, committed copy keeps the build offline and
+`navlayout.js`, `nav.js`, `nav-items.js`, `parts.js`). Each keeps its release's folder: `lib/` (and `defaults.js` at the
+top) to v4.0.0, `extension/<area>/` minus `extension/` from v4.0.1 (`content/defaults.js`, `sharing/share.js`). The site
+finds a file by its name in either (`glaze()` and `glazeFile()` in `scripts/looks.mjs`, `import.meta.glob('*/glsl.js')` in
+`src/components/livebg.ts`); that needs each name to be unique in the copy. A pinned, committed copy keeps the build offline and
 repeatable, puts any change to the checker in review, and checks codes against the Glaze students run,
-not unreleased code. `vendor/glaze-scene/` holds Glaze's animated-background engine (`lib/scene.js`) and its
+not unreleased code. `vendor/glaze-scene/` holds Glaze's animated-background engine (`scene.js`) and its
 three.js build, which only the gallery pages load, so it stays out of the server's image (`server/Dockerfile`
-copies `vendor/glaze` alone). Raise the tag after a Glaze release that changes its settings or Look parts
-(check the new `share.js`'s requires against the script's file list), then run the checks and the
-gallery tests, and redeploy the server.
+copies `vendor/glaze` alone). Glaze's release tool runs `scripts/prepare-glaze-release.mjs`, which raises the tag; by hand,
+raise it after a Glaze release that changes its settings or Look parts (check the new `share.js`'s requires against the
+script's file list), then run the checks and the gallery tests, and redeploy the server.
 
 **Development mode.** Until a Glaze release has glaze2, `scripts/vendor-glaze.sh --dev /path/to/glaze` copies the
 same files from a local checkout (refusing uncommitted changes in them) and writes `local <sha>` as the VERSION.

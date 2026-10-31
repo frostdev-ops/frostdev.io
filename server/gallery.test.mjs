@@ -4,7 +4,6 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, truncateSync, utimesSync, writeFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import http from 'node:http';
 import net from 'node:net';
 import os from 'node:os';
@@ -1041,7 +1040,7 @@ test('blocklist: nginx passes GET alone to the gallery, with a tiny body cap and
 });
 
 // ---- Looks with a background file (file:<hash>) ----------------------------------------------------------------------
-const M = createRequire(import.meta.url)('../vendor/glaze/lib/media.js');
+const M = L.glaze('media.js');
 // A small Lottie animation (Glaze's own test fixture), and one more with its own name, so each makes another file.
 const lottie = (nm = 'slide') => Buffer.from(JSON.stringify({ v: '5.7.0', fr: 30, ip: 0, op: 60, w: 200, h: 120, nm, ddd: 0, assets: [], markers: [], layers: [{ ddd: 0, ind: 1, ty: 4, nm: 'box', sr: 1, ao: 0, ip: 0, op: 60, st: 0, bm: 0, ks: { o: { a: 0, k: 100 }, r: { a: 0, k: 0 }, p: { a: 1, k: [{ t: 0, s: [40, 60, 0], i: { x: 0.5, y: 1 }, o: { x: 0.5, y: 0 } }, { t: 60, s: [160, 60, 0] }] }, a: { a: 0, k: [0, 0, 0] }, s: { a: 0, k: [100, 100, 100] } }, shapes: [{ ty: 'gr', nm: 'g', it: [{ ty: 'rc', d: 1, s: { a: 0, k: [40, 40] }, p: { a: 0, k: [0, 0] }, r: { a: 0, k: 6 } }, { ty: 'fl', c: { a: 0, k: [1, 0, 0, 1] }, o: { a: 0, k: 100 }, r: 1 }, { ty: 'tr', p: { a: 0, k: [0, 0] }, a: { a: 0, k: [0, 0] }, s: { a: 0, k: [100, 100] }, r: { a: 0, k: 0 }, o: { a: 0, k: 100 } }] }] }] }));
 const hashOf = async (b) => M.sha(M.check(new Uint8Array(b), 'bg').bytes);

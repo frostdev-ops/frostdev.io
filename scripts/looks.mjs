@@ -16,18 +16,24 @@ import { pathToFileURL } from 'node:url';
 
 // Paths are from the repository root: npm scripts, the Astro build, CI and the server's image all run there.
 const root = process.cwd();
-const glaze = createRequire(path.join(root, 'vendor/glaze/'));
-const SHARE = glaze('./lib/share.js');
-const { GZ_COLORS, GZ_SPEC, GZ_CONTRAST, GZ_BG_COLORS, GZ_SCENE_LOOK } = glaze('./defaults.js');
-const COLOR = glaze('./lib/color.js');
-const FONTS = glaze('./lib/fonts.js');
-const XPARTS = glaze('./lib/lookparts.js');
-const GLSL = glaze('./lib/glsl.js');
-const MX = glaze('./lib/motionx.js');
-// lib/lookparts.js looks for the shader checker and the parts registry by their global names, as Glaze loads them on a
+// A vendored Glaze file by its name, in whichever folder its release keeps it (lib/share.js to v4.0.0, sharing/share.js after).
+export const glazeFile = (name, vendor = 'glaze') => {
+  const dir = path.join(root, 'vendor', vendor);
+  return [dir, ...readdirSync(dir).map((d) => path.join(dir, d))].map((d) => path.join(d, name)).find((f) => existsSync(f)) ?? path.join(dir, name);
+};
+const require = createRequire(import.meta.url);
+export const glaze = (name) => require(glazeFile(name));
+const SHARE = glaze('share.js');
+const { GZ_COLORS, GZ_SPEC, GZ_CONTRAST, GZ_BG_COLORS, GZ_SCENE_LOOK } = glaze('defaults.js');
+const COLOR = glaze('color.js');
+const FONTS = glaze('fonts.js');
+const XPARTS = glaze('lookparts.js');
+const GLSL = glaze('glsl.js');
+const MX = glaze('motionx.js');
+// lookparts.js looks for the shader checker and the parts registry by their global names, as Glaze loads them on a
 // page; without them a shader would not be checked and rules would only be checked for their shape.
 globalThis.GZ_GLSL ??= GLSL;
-globalThis.GZ_PARTS ??= glaze('./lib/parts.js');
+globalThis.GZ_PARTS ??= glaze('parts.js');
 // [CSS variable, what it's for] for the 14 palette roles, in Glaze's order.
 export const ROLES = GZ_COLORS.map(([v, label]) => [v, label]);
 export const GLAZE_VERSION = readFileSync(path.join(root, 'vendor/glaze/VERSION'), 'utf8').trim();

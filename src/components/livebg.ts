@@ -9,10 +9,13 @@
 // the few on screen. Nothing here puts a Look's text in the page: the only values that reach the DOM are canvas drawing
 // and the data-live attribute.
 //
-// Shaders and layers use Glaze's scene engine (vendor/glaze-scene: lib/scene.js and its three.js build), imported the first
+// Shaders and layers use Glaze's scene engine (vendor/glaze-scene: scene.js and its three.js build), imported the first
 // time either is on screen (about 150 KB gzipped). Its GPU fence guard probes untrusted shaders before a visible frame and
 // waits for each sampled draw before submitting another. The shader checker loads first, before any graphics context.
-import glslUrl from '../../vendor/glaze/lib/glsl.js?url';
+// Each vendored Glaze file is found by name in whichever folder its release keeps it (lib/ to v4.0.0, looks/ after).
+const [glslUrl] = Object.values(import.meta.glob<string>('../../vendor/glaze/*/glsl.js', { query: '?url', import: 'default', eager: true }));
+type Engine = { start(canvas: HTMLCanvasElement, live: () => boolean, onFail: () => void): { update(o: unknown): void; stop(): void } };
+const [loadEngine] = Object.values(import.meta.glob<Engine>('../../vendor/glaze-scene/*/scene.js'));
 
 export type Layer = {
   k: 'scene' | 'noise' | 'gradient' | 'particles'; blend: string; amount: number; speed: number;
@@ -63,7 +66,7 @@ export function liveSpec(raw: unknown): Live | null {
 type Glsl = { VERT: string; wrap(src: string): string; check(src: string): { ok: boolean } };
 declare global { var GZ_GLSL: Glsl | undefined; }
 let glsl: Promise<Glsl | null> | null = null;
-// lib/glsl.js is a classic script that defines GZ_GLSL; it is added to the page once, the first time a shader needs it.
+// glsl.js is a classic script that defines GZ_GLSL; it is added to the page once, the first time a shader needs it.
 const loadGlsl = () => (glsl ||= new Promise((resolve) => {
   if (globalThis.GZ_GLSL) return resolve(globalThis.GZ_GLSL);
   const s = Object.assign(document.createElement('script'), { src: glslUrl, async: true });
@@ -91,7 +94,7 @@ async function run(el: HTMLElement, spec: Live, { still, current, fail }: Ctx): 
     if (!current()) return () => {};
     if (!G || !G.check(spec.src).ok) throw new Error('refused');
   }
-  const engine = await import('../../vendor/glaze-scene/lib/scene.js');
+  const engine = await loadEngine();
   if (!current()) return () => {};
   const canvas = canvasIn(el);
   let scene: { update(o: unknown): void; stop(): void } | null = null;

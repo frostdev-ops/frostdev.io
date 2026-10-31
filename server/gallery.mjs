@@ -41,7 +41,6 @@
 import crypto from 'node:crypto';
 import { createReadStream, mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
-import { createRequire } from 'node:module';
 import net from 'node:net';
 import path from 'node:path';
 import tls from 'node:tls';
@@ -62,7 +61,7 @@ export const BODY_MAX = 22 * 1024;
 // A submission whose Look has a background file carries it as base64 in the JSON: the largest is a 12 MiB video (Glaze's
 // bg limit), 16 MiB as base64, on top of BODY_MAX: 16,799,744 bytes = 16406 KiB. Only /submit takes it; nginx's
 // client_max_body_size for /glaze/looks/api/submit says the same.
-const MEDIA = createRequire(path.join(process.cwd(), 'vendor/glaze/'))('./lib/media.js');
+const MEDIA = L.glaze('media.js');
 export const SUBMIT_MAX = BODY_MAX + Math.ceil(MEDIA.LIMIT.bg.video / 3) * 4;
 // Pending files can wait indefinitely: daily submission quotas alone do not bound retained disk use.
 const STORED_MAX = 1024 ** 3;
@@ -193,9 +192,8 @@ const ESCALATION_SCHEMA = {
 // ---- the Mods section ---------------------------------------------------------------------------------------------
 // Mods are signed .glazemod bundles (Glaze's lib/modbundle.js, vendored, reads and verifies them exactly as the extension
 // does). There is no decision model: every mod goes to the full LLM, asynchronously, in a queue kept in the database.
-const glaze = createRequire(path.join(process.cwd(), 'vendor/glaze/'));
-const MB = glaze('./lib/modbundle.js');
-const XP = glaze('./lib/lookparts.js');
+const MB = L.glaze('modbundle.js');
+const XP = L.glaze('lookparts.js');
 // The upload is the .glazemod file itself, so the body cap is the bundle reader's own cap on a zip (2 MiB of files plus
 // room for headers: 2,359,296 bytes = 2304 KiB); nginx's client_max_body_size for the mods API says the same.
 export const MOD_BODY_MAX = MB.CAP.archive;
