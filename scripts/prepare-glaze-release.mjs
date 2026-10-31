@@ -12,7 +12,7 @@ if (!/^\d+\.\d+\.\d+$/.test(version || '') || !sourceArg || !feedArg) throw new 
 const source = path.resolve(sourceArg), feed = path.resolve(feedArg);
 const exec = (bin, args, cwd = root) => execFileSync(bin, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }).trim();
 const metadata = path.join(root, 'src/data/glazeRelease.json');
-if (JSON.parse(fs.readFileSync(path.join(source, 'manifest.json'))).version !== version) throw new Error('Glaze source version differs from the release.');
+if (JSON.parse(fs.readFileSync(path.join(source, 'extension/manifest.json'))).version !== version) throw new Error('Glaze source version differs from the release.');
 const commit = exec('git', ['rev-parse', 'HEAD'], source);
 const remote = exec('git', ['ls-remote', 'https://github.com/frostdev-ops/glaze.git', `refs/tags/v${version}`, `refs/tags/v${version}^{}`]).split('\n').filter(Boolean).map(line => line.split(/\s+/));
 if ((remote.find(row => row[1].endsWith('^{}')) || remote[0])?.[0] !== commit) throw new Error('Website source must be the pushed, immutable Glaze release tag.');
@@ -35,11 +35,11 @@ if (!verifyOnly) {
   if (!summary) throw new Error('The release needs nonempty notes.');
   exec('sh', ['scripts/vendor-glaze.sh', `v${version}`]);
   const wiki = fs.mkdtempSync(path.join(os.tmpdir(), 'glaze-wiki-mirror-'));
-  try { exec('node', [path.join(source, 'scripts/docs-mirror.js'), wiki, root], source); }
+  try { exec('node', [path.join(source, 'tools/dev/docs-mirror.js'), wiki, root], source); }
   finally { fs.rmSync(wiki, { recursive: true, force: true }); }
   fs.copyFileSync(feed, path.join(root, 'public/projects/glaze/appcast.xml'));
   fs.writeFileSync(metadata, JSON.stringify({ version, sourceCommit: commit, updated: exec('git', ['show', '-s', '--format=%cs', 'HEAD'], source), summary }, null, 2) + '\n');
-  console.log(`Prepared Glaze ${version} website metadata, both vendors, eight mirrored docs and exact signed feed.`);
+  console.log(`Prepared Glaze ${version} website metadata, both vendors, mirrored docs and exact signed feed.`);
 } else {
   if (JSON.parse(fs.readFileSync(metadata)).version !== version) throw new Error('Website release metadata is stale.');
   for (const vendor of ['glaze', 'glaze-scene']) {
