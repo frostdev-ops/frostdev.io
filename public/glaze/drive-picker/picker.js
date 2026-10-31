@@ -3,8 +3,9 @@
 (() => {
   'use strict';
   const status = (text) => { document.getElementById('status').textContent = text; };
-  // Only a browser extension's own redirect: Chromium's (chromiumapp.org) or Firefox's (extensions.allizom.org).
-  const BACK = /^https:\/\/(?:[a-p]{32}\.chromiumapp\.org|[0-9a-f]{40}\.extensions\.allizom\.org)\/$/;
+  // Only a browser extension's own redirect: Chromium's (chromiumapp.org), Firefox's (extensions.allizom.org), or Safari's
+  // return page (Glaze's documents/picked.html under the extension's per-install UUID; Safari has no launchWebAuthFlow).
+  const BACK = /^(?:https:\/\/(?:[a-p]{32}\.chromiumapp\.org|[0-9a-f]{40}\.extensions\.allizom\.org)\/|safari-web-extension:\/\/[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\/documents\/picked\.html)$/;
 
   const raw = location.hash.slice(1);
   history.replaceState(null, '', location.pathname); // the token leaves the address bar and history at once
