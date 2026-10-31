@@ -5,8 +5,10 @@
     https://frostdev-ops.github.io/glaze-drive-picker/ (fallback; GitHub Pages answers HEAD with CORS *, which Glaze's probe needs)
   frostdev.io should also answer HEAD with Access-Control-Allow-Origin: * on this path: Firefox may not hold frostdev.io.
 
-  Contract (lib/google.js pickerUrl / picked):
+  Contract (Glaze's background/google.js pickerUrl / picked):
     in   #access_token=…&state=…&redirect_uri=…&key=<API key>&app_id=<project number>   (fragment only, never the query)
+         redirect_uri: https://<id>.chromiumapp.org/, https://<id>.extensions.allizom.org/, or Safari's
+         safari-web-extension://<UUID>/documents/picked.html
     out  <redirect_uri>#state=…&action=picked&files=[{"id","name","mimeType"},…]  or  #state=…&action=cancel
   The token is read once and taken off the address at once. Nothing is stored, logged or sent anywhere but Google's Picker.
 -->
