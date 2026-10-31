@@ -19,35 +19,69 @@ usage() { echo "usage: scripts/vendor-glaze.sh <glaze release tag, like v3.1.0>
        scripts/vendor-glaze.sh --dev <path to a local Glaze checkout>  (development only: VERSION becomes 'local <sha>')" >&2; exit 1; }
 [ $# -ge 1 ] || usage
 root=$(cd "$(dirname "$0")/.." && pwd)
-# defaults.js and lib/*: share.js and lookparts.js read the rest (cards, color, fonts, surfaces; glsl, motionx,
-# navlayout, nav, nav-items, parts) for the parts a glaze2 code can carry. modbundle.js reads and verifies a mod bundle for
-# the Mods section, with zip.js, widgets.js (its tile names and sizes), modapi.js, modwidget.js with gradecalc.js (widget
-# blocks) and media.js (sticker and pet packs).
-DECODE="defaults.js lib/cards.js lib/color.js lib/fonts.js lib/share.js lib/surfaces.js lib/lookparts.js lib/glsl.js lib/motionx.js lib/navlayout.js lib/nav.js lib/nav-items.js lib/parts.js lib/modbundle.js lib/zip.js lib/widgets.js lib/modapi.js lib/modwidget.js lib/gradecalc.js lib/media.js LICENSE"
-SCENE="lib/scene.js lib/three.js lib/three.LICENSE"
+# What is copied, as `source:destination` pairs, by the Glaze checkout's layout. share.js and lookparts.js read the rest
+# (cards, color, fonts, surfaces; glsl, motionx, navlayout, nav, nav-items, parts) for the parts a glaze2 code can carry.
+# modbundle.js reads and verifies a mod bundle for the Mods section, with zip.js, widgets.js (its tile names and sizes),
+# modapi.js, modwidget.js with gradecalc.js (widget blocks) and media.js (sticker and pet packs).
+#   extension  v4.0.1 and later (Glaze d26c1097 moved the extension into extension/<area>/). The files require each other
+#              by those folders, so each keeps its folder under vendor/glaze and vendor/glaze-scene, minus extension/.
+#   three      v3.4.6 to v4.0.0: defaults.js and lib/*, with three.js under that name.
+#   three.min  before v3.4.6: the same, with lib/three.min.js.
+layout_of_tag() {
+    newest=$(printf '%s\n%s\n' "$1" "$2" | sed 's/^v//' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n 1)
+    [ "v$newest" = "$1" ]
+}
+pairs() {
+    case $layout in
+        extension)
+            [ "$1" = decode ] && for f in content/defaults.js courses/cards.js core/color.js looks/fonts.js sharing/share.js \
+                looks/surfaces.js looks/lookparts.js looks/glsl.js looks/motionx.js navigation/navlayout.js navigation/nav.js \
+                navigation/nav-items.js looks/parts.js mods/modbundle.js core/zip.js core/widgets.js mods/modapi.js \
+                mods/modwidget.js planner/gradecalc.js looks/media.js; do echo "extension/$f:$f"; done
+            [ "$1" = decode ] && echo LICENSE:LICENSE
+            [ "$1" = scene ] && for f in looks/scene.js vendor/three.js vendor/three.LICENSE; do echo "extension/$f:$f"; done ;;
+        three|three.min)
+            [ "$1" = decode ] && for f in defaults.js lib/cards.js lib/color.js lib/fonts.js lib/share.js lib/surfaces.js \
+                lib/lookparts.js lib/glsl.js lib/motionx.js lib/navlayout.js lib/nav.js lib/nav-items.js lib/parts.js \
+                lib/modbundle.js lib/zip.js lib/widgets.js lib/modapi.js lib/modwidget.js lib/gradecalc.js lib/media.js LICENSE; do echo "$f:$f"; done
+            [ "$1" = scene ] && for f in lib/scene.js "lib/$layout.js" lib/three.LICENSE; do echo "$f:$f"; done ;;
+    esac
+    return 0
+}
 if [ "$1" = --dev ]; then
     [ $# -eq 2 ] || usage
     src=$(cd "$2" && pwd) || usage
     git -C "$src" rev-parse --git-dir >/dev/null 2>&1 || { echo "Not a git checkout: $src" >&2; exit 1; }
+    if [ -f "$src/extension/content/defaults.js" ]; then layout=extension
+    elif [ -f "$src/lib/three.js" ]; then layout=three
+    else layout=three.min; fi
     # The sha is the proof of what was copied, so uncommitted changes in these files would make it a lie.
-    [ -z "$(cd "$src" && git status --porcelain -- $DECODE $SCENE)" ] || { echo "Commit or stash the changes to the Glaze files first; VERSION would not describe the copy." >&2; exit 1; }
+    [ -z "$(cd "$src" && git status --porcelain -- $( { pairs decode; pairs scene; } | cut -d: -f1))" ] || { echo "Commit or stash the changes to the Glaze files first; VERSION would not describe the copy." >&2; exit 1; }
     version="local $(git -C "$src" rev-parse --short=12 HEAD)"
     fetch() { cp "$src/$1" "$2"; }
 else
     tag=$1
     case $tag in v[0-9]*.[0-9]*.[0-9]*) ;; *) echo "Not a release tag: $tag (use --dev for a local checkout)" >&2; usage ;; esac
+    if layout_of_tag "$tag" v4.0.1; then layout=extension
+    elif layout_of_tag "$tag" v3.4.6; then layout=three
+    else layout=three.min; fi
     base=https://raw.githubusercontent.com/frostdev-ops/glaze/$tag
     version=$tag
-    fetch() { curl -fsSL "$base/$1" -o "$2"; }
+    fetch() { curl -fsSL "$base/$1" -o "$2" || { echo "Couldn't fetch $1 from Glaze $tag" >&2; return 1; }; }
 fi
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-mkdir -p "$tmp/glaze/lib" "$tmp/glaze-scene/lib"
-for f in $DECODE; do fetch "$f" "$tmp/glaze/$f"; done
-for f in $SCENE; do fetch "$f" "$tmp/glaze-scene/$f"; done
+copy() { # copy <decode|scene> <into>
+    for p in $(pairs "$1"); do
+        mkdir -p "$(dirname "$2/${p#*:}")"
+        fetch "${p%%:*}" "$2/${p#*:}"
+    done
+}
+copy decode "$tmp/glaze"
+copy scene "$tmp/glaze-scene"
 for d in glaze glaze-scene; do
     echo "$version" > "$tmp/$d/VERSION"
-    chmod 755 "$tmp/$d" "$tmp/$d/lib"
+    find "$tmp/$d" -type d -exec chmod 755 {} +
 done
 # Glaze's decoding files are classic scripts with a CommonJS export; this site's package.json says ES modules.
 # The scene engine and its three.js build are real ES modules.
