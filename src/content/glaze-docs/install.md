@@ -1,10 +1,10 @@
 ---
 title: "Install"
 description: "Install Glaze in Chrome, Edge or Brave, Firefox, Safari on a Mac, or on iPhone and iPad."
-updated: "2026-10-25"
+updated: "2026-10-30"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Install"
 ---
-<!-- Mirrored from Glaze's docs/install.md by its scripts/docs-mirror.js: edit it there. -->
+<!-- Mirrored from Glaze's docs/install.md by its tools/dev/docs-mirror.js: edit it there. -->
 
 ## Chrome
 
@@ -15,7 +15,7 @@ Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/jmm
 1. Clone or download this repository.
 2. Open `chrome://extensions`.
 3. Enable **Developer mode** (top right).
-4. Click **Load unpacked** and select the repository folder.
+4. Click **Load unpacked** and select the repository's `extension` folder.
 5. Open your Blackboard Ultra, Canvas or Moodle site and click the Glaze icon.
 
 ## Firefox
@@ -35,7 +35,7 @@ Firefox supports declarative mod parts and does not run code mods.
 
 ### Temporary installation (development)
 
-From the Firefox compatibility branch, run `sh scripts/package-firefox.sh`, open
+From the Firefox compatibility branch, run `sh tools/build/package-firefox.sh`, open
 `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on…** and pick
 `dist/glaze-v<version>-firefox.zip`. A temporary add-on is removed when Firefox quits.
 

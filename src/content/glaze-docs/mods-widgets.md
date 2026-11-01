@@ -4,7 +4,7 @@ description: "Widgets with no code: the blocks format Glaze draws itself on ever
 updated: "2026-10-22"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Widgets-made-of-blocks"
 ---
-<!-- Mirrored from Glaze's docs/mods-widgets.md by its scripts/docs-mirror.js: edit it there. -->
+<!-- Mirrored from Glaze's docs/mods-widgets.md by its tools/dev/docs-mirror.js: edit it there. -->
 
 Widgets made of blocks need Glaze 3.0.4 or newer.
 
