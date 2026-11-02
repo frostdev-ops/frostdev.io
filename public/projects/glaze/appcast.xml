@@ -2,6 +2,11 @@
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
   <channel>
     <item>
+      <title>Glaze 4.0.2</title>
+      <pubDate>Mon, 02 Nov 2026 00:17:50 +0000</pubDate>
+      <enclosure url="https://github.com/frostdev-ops/glaze/releases/download/v4.0.2/glaze-4.0.2-safari-macos.dmg" sparkle:version="4.0.2" sparkle:shortVersionString="4.0.2" sparkle:edSignature="RAdUaE/US1QxoQ3QUjR3OZNYY6L3tbFSKO6QMgg6hpcbDfYJXoMaZVt1VLKarwdzqwvHGu9QhOvwV7/B884VAQ==" length="45128824" type="application/octet-stream" />
+    </item>
+    <item>
       <title>Glaze 4.0.1</title>
       <pubDate>Sun, 01 Nov 2026 03:38:30 +0000</pubDate>
       <enclosure url="https://github.com/frostdev-ops/glaze/releases/download/v4.0.1/glaze-4.0.1-safari-macos.dmg" sparkle:version="4.0.1" sparkle:shortVersionString="4.0.1" sparkle:edSignature="0FzDv2KMP/yBCpMF6NZovA2VvequauGbENDz53IOvScbzl38A6q7qLeRDomJAaEamQRLDeGWNa/tMNcH2KELDA==" length="45121609" type="application/octet-stream" />
