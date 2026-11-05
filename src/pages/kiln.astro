@@ -1,0 +1,154 @@
+---
+import KilnLayout from '../layouts/KilnLayout.astro';
+import { kilnSource } from '../data/kiln';
+
+// Kiln is not released: no downloads until it is. Its source is public. Facts follow Kiln's docs; the wiki carries the detail.
+// Screenshot slots: search for "shot:" here and in src/content/kiln-wiki/ (docs/public-pages.md).
+const features = [
+  { title: 'C# mods', text: 'Events, configs, commands, saved data. Hot reload on a running server.' },
+  { title: 'Data packs', text: 'Change items, recipes, loot, spells and creatures with JSON. It comes off with the mod.' },
+  { title: 'New content', text: 'New items and recipes, with your own icons, textures and weapon models.' },
+  { title: 'World edits', text: 'Terrain, props and schematics, saved by the game. Players without Kiln see them too.' },
+  { title: 'Creatures and abilities', text: 'Variants, AI tweaks, guards, key-bound abilities, new gameplay logic.' },
+  { title: 'Quests and NPCs', text: 'In the game’s own journal, NPC menu, map markers and voice. New NPCs join its roster.' },
+  { title: 'Talents', text: 'New nodes in the game’s tree, or a tree of your own. They follow the character.' },
+  { title: 'Sounds and voice', text: 'New sounds, music and voice-over per language, from your own audio files.' },
+  { title: 'Launcher and servers', text: 'Mod profiles, save backups, dedicated servers, live admin tools.' },
+];
+// The hero's code panel: real Kiln API.
+const k = (text: string) => `<span class="t-k">${text}</span>`;
+const t = (text: string) => `<span class="t-t">${text}</span>`;
+const q = (text: string) => `<span class="t-s">${text}</span>`;
+const snippets = [
+  { name: 'Welcome.cs', kind: 'cs', html: [
+    `${k('public sealed class')} ${t('Welcome')} : ${t('Mod')}`,
+    '{',
+    `    [${t('Subscribe')}]`,
+    `    ${k('void')} OnJoin(${t('PlayerJoinedEvent')} e) =&gt;`,
+    `        Log.Info(${q('$"{e.Player.Name} joined"')});`,
+    '}',
+  ].join('\n') },
+  { name: 'content/stacks.json', kind: 'json', html: [
+    `{ ${q('"format"')}: 1,`,
+    `  ${q('"items"')}: { ${q('"Material_T1_Wood_Logs"')}:`,
+    `             { ${q('"maxStackSize"')}: 1000 } } }`,
+  ].join('\n') },
+  { name: 'terminal', kind: 'shell', html: '<span class="t-c">$</span> kiln deploy --reload' },
+];
+const pending = ['Windows PCs (tested under Wine)', 'Join rules for players without Kiln or a required mod (test servers so far)', 'Quest, NPC and talent fixes awaiting a retest'];
+const building = ['Building blocks: typed Blocks.Define for spells, items and effects; Body, Animation, AI and Behaviour blocks for custom NPCs', 'A glTF animation converter', 'Skinned bodies', 'VFX, particles, materials and custom shaders'];
+const notBuilt = ['Worn armour', 'An online mod catalog'];
+---
+
+<KilnLayout
+  title="Kiln — Mods for Enshrouded"
+  description="Kiln is an open-source mod framework and launcher for Enshrouded: C# mods with hot reload, data packs, new items, quests, NPCs, talents, servers and admin tools. Coming soon."
+  path="/kiln"
+>
+  <div class="product-page kiln-page">
+    <section class="product-hero" aria-labelledby="kiln-title">
+      <div class="product-intro">
+        <p class="product-eyebrow">Kiln · Enshrouded</p>
+        <img class="product-logo" src="/projects/kiln/kiln-lockup.svg" width="320" height="96" alt="Kiln" />
+        <h1 class="product-title" id="kiln-title">Mods for Enshrouded.<br /><span>Server and client.</span></h1>
+        <p class="product-lead">A mod framework and launcher. C# mods, data packs and modded servers, from one app.</p>
+        <div class="product-actions">
+          <a class="product-button" href="/kiln/wiki">Read the wiki <span aria-hidden="true">→</span></a>
+          <a class="product-button secondary" href="/kiln/agents">Agent skill <span aria-hidden="true">→</span></a>
+          <a class="product-button secondary" href={kilnSource}>View on GitHub <span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="product-meta">Coming soon · Linux and Windows · Open source (MIT)</p>
+      </div>
+      <figure class="kiln-code-panel" aria-label="A small Kiln mod: a C# event handler, a data pack and the hot reload command">
+        {snippets.map((snippet) => (
+          <div class="kiln-code-file">
+            <div class:list={['kiln-code-name', snippet.kind]}>{snippet.name}</div>
+            <pre><code set:html={snippet.html} /></pre>
+          </div>
+        ))}
+      </figure>
+    </section>
+
+    <section class="product-section" aria-labelledby="works-title">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">Works today</p>
+        <h2 id="works-title">The whole game, moddable.</h2>
+        <p>Tested on dedicated servers and in the game.</p>
+      </div>
+      {/* shot: product-launcher | The launcher's Play page, or a modded scene in game */}
+      <div class="product-grid">
+        {features.map((feature, i) => (
+          <article class="product-card">
+            <span class="kiln-card-number" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{feature.title}</h3>
+            <p>{feature.text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="product-section product-split" aria-labelledby="safe-title">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">Safe by default</p>
+        <h2 id="safe-title">Mods come and go.<br />The world stays.</h2>
+        <p>A mod’s changes are its own layer. Unload it and the game’s values come back.</p>
+      </div>
+      <div class="product-panel">
+        <ul class="kiln-safe">
+          <li><strong>Unknown game builds are left alone</strong><span>After a game update, Kiln’s hooks and C# mods stay off until Kiln supports the build.</span></li>
+          <li><strong>A failing mod is switched off</strong><span>Not the server. A crash report names the mod.</span></li>
+          <li><strong>Plays well with others</strong><span>EMF mods and plain DLL mods load next to Kiln mods.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="product-section" aria-labelledby="start-title">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">Start here</p>
+        <h2 id="start-title">Pick your path.</h2>
+      </div>
+      <div class="product-grid">
+        <a class="product-card kiln-card-link" href="/kiln/wiki/install">
+          <span class="kiln-card-number" aria-hidden="true">Players</span>
+          <h3>Play with mods</h3>
+          <p>Install Kiln, keep mod profiles, join modded servers.</p>
+          <span class="product-text-link">Install Kiln <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="product-card kiln-card-link" href="/kiln/wiki/servers">
+          <span class="kiln-card-number" aria-hidden="true">Server admins</span>
+          <h3>Run a server</h3>
+          <p>Install, update and run servers. Manage them live.</p>
+          <span class="product-text-link">Run a server <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="product-card kiln-card-link" href="/kiln/wiki/first-mod">
+          <span class="kiln-card-number" aria-hidden="true">Modders</span>
+          <h3>Write a mod</h3>
+          <p>Templates, one command, hot reload, in-server tests, a linter and VS Code.</p>
+          <span class="product-text-link">Your first mod <span aria-hidden="true">→</span></span>
+        </a>
+      </div>
+    </section>
+
+    <section class="product-section" aria-labelledby="progress-title">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">Not finished</p>
+        <h2 id="progress-title">What’s still open.</h2>
+      </div>
+      <h3 class="kiln-progress-label">Built, game test pending</h3>
+      <ul class="kiln-progress">{pending.map((item) => <li>{item}</li>)}</ul>
+      <h3 class="kiln-progress-label">Being built, not available yet</h3>
+      <ul class="kiln-progress">{building.map((item) => <li>{item}</li>)}</ul>
+      <h3 class="kiln-progress-label">Not built yet</h3>
+      <ul class="kiln-progress">{notBuilt.map((item) => <li>{item}</li>)}</ul>
+    </section>
+
+    <section class="product-cta" aria-labelledby="soon-title">
+      <p class="product-eyebrow">Coming soon</p>
+      <h2 id="soon-title">Kiln isn’t released yet.</h2>
+      <div class="product-actions">
+        <a class="product-button" href="/kiln/wiki">Read the wiki <span aria-hidden="true">→</span></a>
+        <a class="product-button secondary" href="/kiln/wiki/status">What works today <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+  </div>
+</KilnLayout>

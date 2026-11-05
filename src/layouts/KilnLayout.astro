@@ -1,0 +1,23 @@
+---
+// Kiln's pages: the site's frame (MarketingLayout) in Kiln's own look (src/styles/kiln.css, from Kiln's
+// branding/palette.json). The frost background animation is off here; the page carries Kiln's charcoal and ember.
+import MarketingLayout from './MarketingLayout.astro';
+import '../styles/products.css';
+import '../styles/kiln.css';
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  image?: string;
+}
+
+const { title, description, path, image = '/projects/kiln/kiln-og.webp' } = Astro.props;
+---
+
+<MarketingLayout title={title} description={description} path={path} image={image} ambient={false}>
+  <div class="kiln-root">
+    <slot />
+    <p class="kiln-trademark">Enshrouded is a trademark of Keen Games GmbH. Kiln is unofficial.</p>
+  </div>
+</MarketingLayout>

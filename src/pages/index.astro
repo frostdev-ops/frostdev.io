@@ -3,7 +3,7 @@ import MarketingLayout from '../layouts/MarketingLayout.astro';
 import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
 ---
 
-<MarketingLayout title="Frostdev" description="Rimeward, Frostsim, Loothing, Crosspane, and Rimewire. Projects by Frostdev.">
+<MarketingLayout title="Frostdev" description="Rimeward, Frostsim, Loothing, Crosspane, Rimewire, Kiln and Glaze. Projects by Frostdev.">
   <section class="hub-hero splash-overlay">
     <h1>
       <picture>
@@ -68,6 +68,16 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
             <span class="project-destination">Explore Rimewire</span>
           </div>
         </a>
+        <a class="project kiln" href="/kiln">
+          <div class="project-art">
+            <img class="project-logo kiln-logo" src="/projects/kiln/kiln-lockup.svg" width="320" height="96" alt="" />
+          </div>
+          <div class="project-copy">
+            <h2>Kiln <span aria-hidden="true">↗</span></h2>
+            <p>Mods for Enshrouded.</p>
+            <span class="project-destination">Explore Kiln</span>
+          </div>
+        </a>
         <a class="project glaze" href="/glaze">
           <div class="project-art">
             <img class="project-logo" src="/projects/glaze-logo.svg" width="420" height="120" alt="" />
@@ -85,7 +95,7 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
 
   <section class="hub-summary" aria-labelledby="about-title">
     <h2 id="about-title">Tools you can make your own.</h2>
-    <p>Frostdev builds open-source software for everyday work and play. Rimeward brings projects, notes, browsers and AI into one workspace. Crosspane connects the computers on your desk. Rimewire keeps an agent team's plans and progress in view. Frostsim and Loothing help World of Warcraft players compare their characters and organize their guilds. Glaze makes Blackboard Ultra, Canvas and Moodle feel like yours.</p>
+    <p>Frostdev builds open-source software for everyday work and play. Rimeward brings projects, notes, browsers and AI into one workspace. Crosspane connects the computers on your desk. Rimewire keeps an agent team's plans and progress in view. Frostsim and Loothing help World of Warcraft players compare their characters and organize their guilds. Kiln brings mods to Enshrouded, on servers and in game. Glaze makes Blackboard Ultra, Canvas and Moodle feel like yours.</p>
     <p>Explore each project for its current features, platform requirements and source. Our guides walk through real workflows, explain the choices involved, and show how to check that your setup works.</p>
     <a href="/guides">Find your first workflow <span aria-hidden="true">→</span></a>
   </section>
@@ -187,6 +197,11 @@ import { RimewardLockup, RimewardMark } from '../lib/brand.ts';
   .project-logo { position: relative; width: 100%; height: auto; max-width: 17rem; }
   .crystal { position: absolute; width: 14rem; height: 14rem; right: -3rem; top: -3rem; opacity: 0.1; transform: rotate(15deg); }
   .loothing { --project-color: #a78bfa; }
+  .kiln { --project-color: #ff6a1a; }
+  .kiln .project-art { background: radial-gradient(ellipse at 50% 90%, rgb(255 106 26 / 0.16), transparent 75%); }
+  .kiln-logo { max-width: 12.5rem; }
+  /* Static grid (reduced motion, no JavaScript): a lone last card sits in the middle column. */
+  .project-ring > .project:nth-last-child(1 of :not(.project-duplicate)):nth-child(3n + 1) { grid-column: 2; }
   .loothing-mascot { width: 8.5rem; height: auto; }
   .project-copy { padding: 1.5rem; border-top: 1px solid rgb(143 168 192 / 0.12); }
   h2 { display: flex; justify-content: space-between; align-items: center; font-size: 1.3rem; font-weight: 600; letter-spacing: -0.03em; }

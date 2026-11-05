@@ -55,6 +55,10 @@ The site was extracted from public-only source in Rimeward commit
 package, lockfile, static build, CI and deployment. Shared runtime imports were
 replaced with public icons, brand assets and static product metadata.
 
+Kiln (a mod framework and launcher for Enshrouded, not released yet) has a product page, a wiki at `/kiln/wiki`
+from `src/content/kiln-wiki/`, and an agent skill at `/kiln/agents` mirrored from Kiln's repository by
+`scripts/mirror-kiln-skill.sh`; see [public routes](docs/public-pages.md).
+
 Guides cover Rimeward, Crosspane, Rimewire, Frostsim, Loothing and Glaze. Glaze has
 separate Safari and Chrome walkthroughs. Their source is
 in `src/pages/guides/`, shared presentation in `GuideLayout.astro` and `guides.css`.

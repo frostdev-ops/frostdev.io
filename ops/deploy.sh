@@ -36,11 +36,13 @@ const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'glaze/privacy'
   'guides/rimeward-first-workspace', 'guides/crosspane-two-computers',
   'guides/rimewire-agent-handoffs', 'guides/frostsim-first-simulation',
   'guides/loothing-raid-loot', 'guides/glaze-safari', 'guides/glaze-chrome',
+  'kiln', 'kiln/wiki', 'kiln/wiki/install', 'kiln/wiki/first-mod', 'kiln/wiki/status', 'kiln/agents',
   ...['install', 'features', 'privacy', 'agents', 'mods-api', 'mods-widgets', 'relay', 'development', 'firefox-android'].map((doc) => `guides/glaze-${doc}`)];
 for (const page of pages) assert(statSync(`dist/${page ? page + '/' : ''}index.html`).size > 0);
 for (const file of ['robots.txt', 'sitemap.xml', 'ads.txt']) assert(statSync(`dist/${file}`).size > 0);
+for (const file of ['kiln/agents/kiln-modding.zip', 'kiln/agents/kiln-modding/SKILL.md']) assert(statSync(`dist/${file}`).size > 0);
 assert(statSync('dist/_site').isDirectory());
-const allowed = new Set(['index.html', '404.html', 'rimeward', 'rimewire', 'crosspane', 'glaze',
+const allowed = new Set(['index.html', '404.html', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'kiln',
   'privacy', 'guides', '_site', 'projects', 'robots.txt', 'sitemap.xml', 'ads.txt']);
 for (const name of readdirSync('dist')) assert(allowed.has(name), `Unexpected static output: ${name}`);
 function inspect(path) {
@@ -137,10 +139,12 @@ for origin in origin public; do
         /guides/rimeward-first-workspace /guides/crosspane-two-computers \
         /guides/rimewire-agent-handoffs /guides/frostsim-first-simulation \
         /guides/loothing-raid-loot /guides/glaze-safari /guides/glaze-chrome /guides/glaze-agents \
+        /kiln /kiln/wiki /kiln/wiki/install /kiln/wiki/first-mod /kiln/agents \
+        /kiln/agents/kiln-modding.zip /kiln/agents/kiln-modding/SKILL.md \
         /robots.txt /sitemap.xml /ads.txt; do
         case "$route" in
             /) file=index.html ;;
-            *.txt|*.xml) file=${route#/} ;;
+            *.txt|*.xml|*.zip|*.md) file=${route#/} ;;
             *) file=${route#/}/index.html ;;
         esac
         expected=$(sha256sum "$file")

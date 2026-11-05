@@ -10,6 +10,7 @@ interface Props {
 }
 const { title, description, path = '/', image = '/projects/frostdev-wordmark-crystal.webp', ambient = true } = Astro.props;
 const glaze = path === '/glaze' || path.startsWith('/glaze/') || path.startsWith('/guides/glaze-');
+const kiln = path === '/kiln' || path.startsWith('/kiln/');
 ---
 
 <BaseLayout title={title} description={description}>
@@ -36,6 +37,8 @@ const glaze = path === '/glaze' || path.startsWith('/glaze/') || path.startsWith
         <a href="/guides">Guides</a>
         {glaze && <a href="/glaze/looks" aria-current={path === '/glaze/looks' ? 'page' : undefined}>Looks</a>}
         {glaze && <a href="/glaze/mods" aria-current={path === '/glaze/mods' ? 'page' : undefined}>Mods</a>}
+        {kiln && <a href="/kiln/wiki" aria-current={path === '/kiln/wiki' || path.startsWith('/kiln/wiki/') ? 'page' : undefined}>Wiki</a>}
+        {kiln && <a href="/kiln/agents" aria-current={path === '/kiln/agents' ? 'page' : undefined}>Agent skill</a>}
         <a href={glaze ? "/glaze" : "/login"}>{glaze ? "Get Glaze" : "Sign in"} <span aria-hidden="true">↗</span></a>
       </nav>
     </header>

@@ -77,3 +77,8 @@ they are not part of Git or the static build.
 The inline UI icons retain their Lucide/Feather attribution in
 [`public/_site/lucide-license.txt`](../public/_site/lucide-license.txt). Project
 code and Frostdev assets are covered by the root MIT license.
+- Kiln's mark and lockup (`public/projects/kiln/kiln-mark.svg`, `kiln-lockup.svg`) are copied unchanged from Kiln's
+  `branding/logo/` (`mark.svg`, `lockup-dark.svg`). `kiln-og.webp` is that lockup rendered on a charcoal-to-ember
+  gradient (rsvg-convert + ImageMagick, 1200 × 630). The Fraunces variable font (`src/assets/kiln/`) comes from Kiln's
+  launcher (`launcher/src/assets/fonts/`), under the SIL Open Font License served beside it as
+  `public/projects/kiln/Fraunces-OFL.txt`. Kiln's colours follow its `branding/palette.json`.

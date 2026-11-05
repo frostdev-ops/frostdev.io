@@ -13,6 +13,7 @@
 [data-project="frostsim"] { --guide-accent: #9dcfff; }
 [data-project="loothing"] { --guide-accent: #edc28c; }
 [data-project="glaze"] { --guide-accent: #6fdcff; }
+[data-project="kiln"] { --guide-accent: #ff8540; }
 .guide-figure { margin-block: 1.5rem; }
 .guide-figure-compact { max-width: 20rem; }
 .guide-figure img { display: block; width: 100%; height: auto; border: 1px solid #24394c; border-radius: .8rem; }

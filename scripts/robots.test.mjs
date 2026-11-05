@@ -46,6 +46,16 @@ test('every sitemap URL is crawlable, including all four Glaze pages', () => {
   for (const path of paths) assert(crawlable(path), `Sitemap URL blocked: ${path}`);
 });
 
+test('the Kiln product page, wiki and agent skill are crawlable and in the sitemap', () => {
+  const paths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+  for (const path of ['/kiln', '/kiln/wiki', '/kiln/wiki/install', '/kiln/agents']) {
+    assert(paths.includes(path), `Missing sitemap page: ${path}`);
+    assert(crawlable(path), path);
+  }
+  assert(crawlable('/kiln/agents/kiln-modding.zip'));
+  assert.equal(crawlable('/kilnx'), false);
+});
+
 test('admin, APIs, submission pages and application routes remain blocked', () => {
   const blocked = ['/glaze/admin', '/glaze/admin/api', '/glaze/admin/oauth/callback',
     '/glaze/looks/submit', '/glaze/mods/submit', '/glaze/looks/api', '/glaze/looks/api/submit',

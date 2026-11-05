@@ -18,10 +18,14 @@ const docs = Object.entries(import.meta.glob<MarkdownInstance<{ title: string; d
   .map(([file, doc]) => ({ slug: file.replace(/^.*\/|\.md$/g, ''), ...doc.frontmatter }))
   .sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.slug));
 const projects = [...new Set(guides.map((guide) => guide.project))];
+// Kiln's wiki lives under /kiln/wiki (src/pages/kiln/wiki/); its first pages for each kind of reader are listed here.
+const kilnWiki = Object.entries(import.meta.glob<MarkdownInstance<{ title: string; nav?: string; description: string }>>('../../content/kiln-wiki/*.md', { eager: true }))
+  .map(([file, doc]) => ({ slug: file.replace(/^.*\/|\.md$/g, ''), ...doc.frontmatter }));
+const kilnStart = ['install', 'servers', 'first-mod', 'data-packs', 'code-mods', 'status'].map((slug) => kilnWiki.find((page) => page.slug === slug)!);
 const isLogo = (project: string) => project === 'Frostsim' || project === 'Loothing';
 ---
 
-<MarketingLayout title="Practical project guides — Frostdev" description="Step-by-step guides for Rimeward, Crosspane, Rimewire, Frostsim, Loothing and Glaze for Safari, Chrome and Firefox. Get set up, understand the choices, and check the result." path="/guides">
+<MarketingLayout title="Practical project guides — Frostdev" description="Step-by-step guides for Rimeward, Crosspane, Rimewire, Frostsim, Loothing and Glaze for Safari, Chrome and Firefox, and the Kiln wiki. Get set up, understand the choices, and check the result." path="/guides">
   <div class="guides-hub">
     <header class="guides-hub-hero">
       <p class="guide-eyebrow">Frostdev field guides</p>
@@ -51,6 +55,10 @@ const isLogo = (project: string) => project === 'Frostsim' || project === 'Looth
     <section id="glaze-docs" class="guides-docs">
       <div class="guides-collection-heading"><h2>Glaze reference</h2><span>Also on <a href="https://github.com/frostdev-ops/glaze/wiki">GitHub's wiki</a></span></div>
       <ul>{docs.map((doc) => <li><a href={`/guides/glaze-${doc.slug}`}>{doc.title}</a><span>{doc.description}</span></li>)}</ul>
+    </section>
+    <section id="kiln-wiki" class="guides-docs" data-project="kiln">
+      <div class="guides-collection-heading"><h2>Kiln wiki</h2><span>{kilnWiki.length} pages at <a href="/kiln/wiki">/kiln/wiki</a></span></div>
+      <ul>{kilnStart.map((page) => <li><a href={`/kiln/wiki/${page.slug}`}>{page.nav ?? page.title}</a><span>{page.description}</span></li>)}</ul>
     </section>
     <section class="guides-hub-help"><div><p class="guide-eyebrow">A good guide keeps growing</p><h2>Something unclear?</h2><p>These guides follow the projects’ documentation. Check the linked references if your installed version looks different, or tell us which step needs a closer look.</p></div><a href="mailto:admin@frostdev.io">Help improve a guide <span aria-hidden="true">↗</span></a></section>
   </div>

@@ -1,0 +1,79 @@
+---
+title: "The manifest"
+description: "kiln.mod.json: id and version, where the mod runs, what players need, dependencies and load order."
+status: "works"
+updated: "2026-11-05"
+---
+
+Every mod folder has a `kiln.mod.json`. Kiln.Sdk writes it from your project file, or add your own. The build checks it
+with the code that loads it, so a manifest that builds is one Kiln accepts.
+
+```jsonc
+{
+  "id": "my-mod",                 // lower case, digits, . _ -
+  "name": "My Mod",
+  "version": "1.4.0",
+  "apiVersion": "0.2",
+  "side": "server",               // server | client | both
+  "clients": "none",              // none | kiln | mod
+  "dependencies": {
+    "sample-lib": "^1.2",
+    "extras": { "version": "*", "optional": true }
+  },
+  "loadAfter": ["some-mod"],
+  "incompatible": { "rival": "<3" },
+  "entryAssembly": "MyMod.dll",
+  "tests": { "autoRun": true }
+}
+```
+
+Comments and trailing commas are allowed.
+
+## Where it runs: `side`
+
+| `side` | Loads on |
+|---|---|
+| `server` (default) | dedicated servers, and the hosted world when a player hosts |
+| `client` | the game client only |
+| `both` | both |
+
+## What players need: `clients`
+
+| `clients` | A joining player needs | For |
+|---|---|---|
+| `none` | nothing | server rules, world edits, `"journal": "chat"` quests |
+| `kiln` | Kiln: the server sends your definitions | new items from the game's own models |
+| `mod` | your mod, from the server's modpack | quests, NPCs, talents, your own files (icons, models, sounds), client code |
+
+Without the key, server mods mean `none`; client and both mods mean `mod`.
+
+If you **state** `kiln` or `mod`, the server refuses players without Kiln, unless its `modSync` is `off`. The default
+doesn't, since many `both` mods work for everyone. A Kiln player missing a stated `mod` mod is refused by default and told
+which mods; `modSync` set to `warn` or `off` lets them in. Needs `side: both`. These rules pass on test servers, not yet in
+the real game. See [Who can join](/kiln/wiki/multiplayer#who-can-join).
+
+## Versions
+
+`apiVersion` is the mod API you built against (0.2 today). Older APIs of the same major version load.
+
+| Range | Means |
+|---|---|
+| `^1.2` or `1.2` | up to, not including, 2.0.0 (for 0.x, `^0.2` stops before 0.3) |
+| `~1.2` | 1.2.x |
+| `=1.2.3` | exactly that |
+| `>=1.0 <2` | both conditions |
+| `[1.0,2.0)` | Forge-style interval |
+| `*` | any |
+
+## Load order
+
+Dependencies first, then `loadAfter` and `loadBefore`, then by id. A mod that can't load never stops the others, and
+`kiln.log` says why:
+
+```
+mod x 1.0.0 not loaded: missing dependency y ^1.0
+mod x 1.0.0 not loaded: dependency cycle: x -> y -> x
+mod x 1.0.0 skipped: side 'client': not loaded on a server
+```
+
+A misspelt key only warns (`unknown key 'dependecies' (ignored)`). `kiln lint` catches it before you build.

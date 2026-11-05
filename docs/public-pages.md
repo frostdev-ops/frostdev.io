@@ -1,6 +1,6 @@
 # Public pages
 
-The hub `/` links six projects and the guide index. `/rimeward`, `/crosspane`,
+The hub `/` links seven projects and the guide index. `/rimeward`, `/crosspane`,
 `/rimewire` and `/glaze` contain public product descriptions and demonstrations. `/privacy`
 describes current website storage, provider connections and local versus shared data.
 Glaze has dedicated `/glaze/privacy` and `/glaze/terms` pages with its permanent
@@ -32,8 +32,8 @@ byte-range support for seeking.
 
 The desktop project carousel animates and supports dragging, arrow keys and
 pause/resume. Phones use native horizontal scrolling with snap points, so vertical
-swipes scroll the page normally. All six project links remain available without
-JavaScript and with reduced motion. Phone rotation preserves the horizontal layout.
+swipes scroll the page normally. All seven project links remain available without
+JavaScript and with reduced motion; in that static grid a lone last card sits in the middle column. Phone rotation preserves the horizontal layout.
 
 The background redraws immediately after drawing-buffer changes and blends quality
 reductions. A controlled 260-frame WebGL replay reproduced a blank frame and an
@@ -47,6 +47,26 @@ JavaScript; without it every curated Look and its code are still listed. The pag
 other sites. See [docs/looks-gallery.md](looks-gallery.md). Production nginx needs the `/glaze/looks`,
 `/glaze/looks/submit` and `/glaze/looks/api/` locations from `ops/public-site.nginx.conf`, and the
 gallery server (`ops/deploy-gallery.sh`).
+
+`/kiln` is Kiln's product page: a mod framework and launcher for Enshrouded, not released yet, so it has no
+download ("Coming soon"). It and the wiki hub link Kiln's public repository, never a file in it. Kiln's pages wear
+Kiln's own brand (charcoal, ember and gold from Kiln's
+`branding/palette.json`, the Fraunces display face) inside the site's header and footer, without the frost background
+animation; `src/layouts/KilnLayout.astro` and `src/styles/kiln.css`. `/kiln/wiki` and `/kiln/wiki/<page>` are its
+wiki: 35 Markdown pages in `src/content/kiln-wiki/`, ordered by `src/data/kiln.ts` (the build fails when the two
+disagree), written for people from Kiln's own docs, with no reverse-engineering details and no paths into Kiln's
+repository. Pages built but not fully tried in a real game carry a "Game test pending" badge. `/kiln/agents` shows
+Kiln's agent skill (a SKILL.md and nine reference files) and offers `/kiln/agents/kiln-modding.zip` (a stored zip built
+at build time, byte-for-byte reproducible) and each file as `text/markdown` under `/kiln/agents/kiln-modding/`. The
+skill's canonical copy is in Kiln's repository (`agent/skills/kiln-modding/`); `scripts/mirror-kiln-skill.sh <kiln
+checkout>` copies it into `src/content/kiln-skill/`. Production nginx needs the `/kiln/` location and the `kiln` entry
+of the product-page location from `ops/public-site.nginx.conf`. Every Kiln page ends with "Enshrouded is a trademark of
+Keen Games GmbH. Kiln is unofficial."
+
+Kiln's pages have screenshot slots, invisible to readers: `<!-- shot: name | what it shows -->` in the wiki and
+`{/* shot: ... */}` on the product page. `grep -rn "shot:" src/content/kiln-wiki src/pages/kiln.astro` lists them. To
+fill one, add `public/projects/kiln/shots/<name>.webp` and replace the comment with
+`![what it shows](/projects/kiln/shots/<name>.webp)`.
 
 `/guides` links seven comprehensive project guides:
 

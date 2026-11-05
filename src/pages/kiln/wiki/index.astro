@@ -1,0 +1,64 @@
+---
+import type { MarkdownInstance } from 'astro';
+import KilnLayout from '../../../layouts/KilnLayout.astro';
+import { kilnSource, kilnWikiSections, kilnStatusLabel, type KilnWikiFrontmatter } from '../../../data/kiln';
+
+const docs = import.meta.glob<MarkdownInstance<KilnWikiFrontmatter>>('../../../content/kiln-wiki/*.md', { eager: true });
+const bySlug = new Map(Object.entries(docs).map(([file, doc]) => [file.replace(/^.*\/|\.md$/g, ''), doc.frontmatter]));
+const pageCount = kilnWikiSections.reduce((n, section) => n + section.pages.length, 0);
+const start = [
+  { who: 'Players', title: 'Play with mods', text: 'Install Kiln, keep profiles, join modded servers.', href: '/kiln/wiki/install', go: 'Install Kiln' },
+  { who: 'Server admins', title: 'Run a server', text: 'Install, update and run servers. Manage them live.', href: '/kiln/wiki/servers', go: 'Run a server' },
+  { who: 'Modders', title: 'Write a mod', text: 'Template, build, hot reload, tests in the server.', href: '/kiln/wiki/first-mod', go: 'Your first mod' },
+];
+---
+
+<KilnLayout title="Kiln wiki — Mods for Enshrouded" description="The Kiln wiki: install Kiln, run modded Enshrouded servers, and write mods with C#, data packs, new items, talents, quests, sounds and the dev kit." path="/kiln/wiki">
+  <div class="kiln-hub">
+    <header class="kiln-hub-hero">
+      <div>
+        <p class="product-eyebrow"><a href="/kiln">Kiln</a> · Wiki</p>
+        <h1>Everything Kiln,<br /><span>in plain words.</span></h1>
+        <p class="lead">Play with mods, run a modded server, build your own. Short pages, real commands.</p>
+      </div>
+      <p class="kiln-hub-note"><strong>Kiln isn’t released yet.</strong> These pages describe the current build. See <a href="/kiln/wiki/status">what works today</a>. It’s open source (MIT): <a href={kilnSource}>GitHub</a>.</p>
+    </header>
+
+    <div class="kiln-hub-start">
+      {start.map((card) => (
+        <a href={card.href}>
+          <span class="who">{card.who}</span>
+          <h2>{card.title}</h2>
+          <p>{card.text}</p>
+          <span class="go">{card.go} <span aria-hidden="true">→</span></span>
+        </a>
+      ))}
+    </div>
+
+    {kilnWikiSections.map((section) => (
+      <section class="kiln-hub-section" aria-labelledby={`wiki-${section.id}`}>
+        <h2 id={`wiki-${section.id}`}>{section.title}<span>{section.pages.length} pages</span></h2>
+        <ul class="kiln-hub-list">
+          {section.pages.map((slug) => {
+            const page = bySlug.get(slug)!;
+            return (
+              <li>
+                <a href={`/kiln/wiki/${slug}`}>
+                  <strong>{page.nav ?? page.title}{page.status === 'pending' && <span class="kiln-badge" data-status="pending">{kilnStatusLabel.pending}</span>}</strong>
+                  <span class="d">{page.description}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    ))}
+
+    <section class="kiln-hub-section" aria-labelledby="wiki-agents">
+      <h2 id="wiki-agents">For AI agents<span>{pageCount} wiki pages, one skill</span></h2>
+      <ul class="kiln-hub-list">
+        <li><a href="/kiln/agents"><strong>Agent skill</strong><span class="d">Teach an AI agent to build Kiln mods.</span></a></li>
+      </ul>
+    </section>
+  </div>
+</KilnLayout>

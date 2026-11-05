@@ -6,6 +6,8 @@ Allow: /crosspane$
 Allow: /crosspane/$
 Allow: /rimewire$
 Allow: /rimewire/$
+Allow: /kiln$
+Allow: /kiln/
 Allow: /glaze$
 Allow: /glaze/$
 Allow: /glaze/looks$

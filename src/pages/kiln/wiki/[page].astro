@@ -1,0 +1,101 @@
+---
+import type { MarkdownInstance } from 'astro';
+import KilnLayout from '../../../layouts/KilnLayout.astro';
+import { kilnWikiOrder, kilnWikiSections, kilnStatusLabel, type KilnWikiFrontmatter } from '../../../data/kiln';
+
+// The Kiln wiki: one page per Markdown file in src/content/kiln-wiki/, written for people from Kiln's own docs.
+type Doc = MarkdownInstance<KilnWikiFrontmatter>;
+
+export function getStaticPaths() {
+  const docs = import.meta.glob<MarkdownInstance<KilnWikiFrontmatter>>('../../../content/kiln-wiki/*.md', { eager: true });
+  return Object.entries(docs).map(([file, doc]) => ({ params: { page: file.replace(/^.*\/|\.md$/g, '') }, props: { doc } }));
+}
+
+const docs = import.meta.glob<Doc>('../../../content/kiln-wiki/*.md', { eager: true });
+const bySlug = new Map(Object.entries(docs).map(([file, doc]) => [file.replace(/^.*\/|\.md$/g, ''), doc]));
+for (const { slug } of kilnWikiOrder) if (!bySlug.has(slug)) throw new Error(`Kiln wiki: no src/content/kiln-wiki/${slug}.md`);
+for (const slug of bySlug.keys()) if (!kilnWikiOrder.some((entry) => entry.slug === slug)) throw new Error(`Kiln wiki: ${slug}.md is in no section (src/data/kiln.ts)`);
+
+const slug = Astro.params.page as string;
+const { doc } = Astro.props as { doc: Doc };
+const { Content, frontmatter } = doc;
+const index = kilnWikiOrder.findIndex((entry) => entry.slug === slug);
+const section = kilnWikiOrder[index].section;
+const previous = kilnWikiOrder[index - 1];
+const next = kilnWikiOrder[index + 1];
+const label = (page: string) => bySlug.get(page)!.frontmatter.nav ?? bySlug.get(page)!.frontmatter.title;
+const headings = doc.getHeadings().filter((heading) => heading.depth === 2);
+const updated = new Date(`${frontmatter.updated}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+const minutes = Math.max(1, Math.round(doc.rawContent().split(/\s+/).length / 220));
+---
+
+<KilnLayout title={`${frontmatter.title} — Kiln wiki`} description={frontmatter.description} path={`/kiln/wiki/${slug}`}>
+  <div class="kiln-wiki">
+    <aside class="kiln-wiki-nav" aria-label="Kiln wiki">
+      <details open data-kiln-nav>
+        <summary>Wiki pages <span aria-hidden="true">↕</span></summary>
+        <nav aria-label="Wiki pages">
+          <a class="kiln-wiki-home" href="/kiln/wiki"><img src="/projects/kiln/kiln-mark.svg" width="64" height="64" alt="" />Kiln wiki</a>
+          {kilnWikiSections.map((group) => (
+            <>
+              <h2>{group.title}</h2>
+              <ul>
+                {group.pages.map((page) => {
+                  const status = bySlug.get(page)!.frontmatter.status;
+                  return (
+                    <li>
+                      <a href={`/kiln/wiki/${page}`} aria-current={page === slug ? 'page' : undefined}>
+                        <span>{label(page)}</span>
+                        {status === 'pending' && <span class="kiln-nav-dot" title={kilnStatusLabel.pending}><span class="sr-only">({kilnStatusLabel.pending})</span></span>}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          ))}
+          <h2>For AI agents</h2>
+          <ul><li><a href="/kiln/agents"><span>Agent skill</span></a></li></ul>
+        </nav>
+      </details>
+    </aside>
+
+    <article class="kiln-doc">
+      <header class="kiln-doc-head">
+        <p class="kiln-crumbs"><a href="/kiln">Kiln</a><span aria-hidden="true">/</span><a href="/kiln/wiki">Wiki</a><span aria-hidden="true">/</span><span>{section.title}</span></p>
+        <h1>{frontmatter.title}</h1>
+        <p class="kiln-doc-lead">{frontmatter.description}</p>
+        <p class="kiln-doc-meta">
+          {frontmatter.status && <span class="kiln-badge" data-status={frontmatter.status}>{kilnStatusLabel[frontmatter.status]}</span>}
+          <span>{minutes} min read</span>
+          <span>Updated <time datetime={frontmatter.updated}>{updated}</time></span>
+        </p>
+      </header>
+      <div class="kiln-prose"><Content /></div>
+      <nav class="kiln-pager" aria-label="Previous and next page">
+        {previous && <a href={`/kiln/wiki/${previous.slug}`}><span>← Previous</span><strong>{label(previous.slug)}</strong></a>}
+        {next && <a class="next" href={`/kiln/wiki/${next.slug}`}><span>Next →</span><strong>{label(next.slug)}</strong></a>}
+      </nav>
+    </article>
+
+    {headings.length > 1 && (
+      <aside class="kiln-toc" aria-label="On this page">
+        <h2>On this page</h2>
+        <ol>{headings.map((heading) => <li><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ol>
+      </aside>
+    )}
+  </div>
+</KilnLayout>
+
+<script>
+  // Phones start with the page list folded; wider screens always show it (its summary is hidden there).
+  const nav = document.querySelector<HTMLDetailsElement>('[data-kiln-nav]');
+  const phone = matchMedia('(max-width: 760px)');
+  const fit = () => { if (nav) nav.open = !phone.matches; };
+  fit();
+  phone.addEventListener('change', fit);
+  // The list is taller than most screens: show the current page in it.
+  const box = document.querySelector<HTMLElement>('.kiln-wiki-nav');
+  const current = box?.querySelector<HTMLElement>('a[aria-current="page"]');
+  if (box && current) box.scrollTop = current.offsetTop - box.clientHeight / 2;
+</script>

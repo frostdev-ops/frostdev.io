@@ -1,0 +1,48 @@
+---
+import KilnLayout from '../../layouts/KilnLayout.astro';
+import { skillFiles, skillName } from '../../lib/kilnSkill';
+import { kilnSkillUpdated } from '../../data/kiln';
+
+const updated = new Date(`${kilnSkillUpdated}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+const bytes = skillFiles.reduce((n, file) => n + new TextEncoder().encode(file.text).length, 0);
+---
+
+<KilnLayout title="Kiln agent skill — Teach an AI agent to build Kiln mods" description="A skill that teaches Claude Code and other Agent Skills tools to build, test and debug Kiln mods for Enshrouded." path="/kiln/agents">
+  <div class="kiln-agents">
+    <header class="kiln-agents-hero">
+      <p class="product-eyebrow"><a href="/kiln">Kiln</a> · For AI agents</p>
+      <h1>Teach your agent<br /><span>to build Kiln mods.</span></h1>
+      <p class="lead">A skill for Claude Code and other Agent Skills tools: setup, the mod API and its thread rules, data packs, talents, quests, sounds, the dev kit, and the mistakes to avoid.</p>
+      <div class="product-actions">
+        <a class="product-button" href={`/kiln/agents/${skillName}.zip`} download>Download the skill <span aria-hidden="true">↓</span></a>
+        <a class="product-button secondary" href={`/kiln/agents/${skillName}/SKILL.md`}>View SKILL.md <span aria-hidden="true">→</span></a>
+      </div>
+      <p class="product-meta">{skillFiles.length} files · {Math.round(bytes / 1024)} KB of Markdown · updated {updated}</p>
+    </header>
+
+    <div class="kiln-install">
+      <div>
+        <h2>Claude Code</h2>
+        <p>Unzip it into <code>~/.claude/skills/</code> for all your projects, or <code>.claude/skills/</code> in your mod’s repository.</p>
+      </div>
+      <div>
+        <h2>Claude apps</h2>
+        <p>Upload the zip where you add skills.</p>
+      </div>
+      <div>
+        <h2>Other agents</h2>
+        <p>Put the <code>{skillName}</code> folder where your tool looks for skills. It’s plain Markdown.</p>
+      </div>
+    </div>
+
+    <section class="kiln-files" aria-labelledby="files-title">
+      <h2 id="files-title">What’s inside</h2>
+      {skillFiles.map((file, i) => (
+        <details class="kiln-file" open={i === 0}>
+          <summary><code>{skillName}/{file.path}</code><span class="about">{file.about}</span><a href={`/kiln/agents/${skillName}/${file.path}`}>Raw</a></summary>
+          <pre>{file.text}</pre>
+        </details>
+      ))}
+    </section>
+  </div>
+</KilnLayout>
