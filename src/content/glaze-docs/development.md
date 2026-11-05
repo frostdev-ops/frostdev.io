@@ -1,7 +1,7 @@
 ---
 title: "Development"
 description: "How Glaze is put together, and how to build, test, package and publish it."
-updated: "2026-10-31"
+updated: "2026-11-04"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Development"
 ---
 <!-- Mirrored from Glaze's docs/development.md by its tools/dev/docs-mirror.js: edit it there. -->
@@ -22,6 +22,64 @@ Each LMS loads only what it needs at first paint: the shared `content.js` (with 
 plus that site's own part, `content-ultra.js` on Blackboard Ultra and `content-canvas.js` on Canvas. Moodle
 has no part; it is themed by `content.js` and `moodle.css`. Everything else, from the command palette to the
 grade calculators, loads on demand from its area's `page/` folder the first time a page needs it.
+
+Pearson MyLab homework uses a separate appearance adapter, `content/pearson.js` and `content/pearson.css`.
+Pearson's hosts are a grant, not manifest hosts: an update that adds a host warning makes Chrome disable Glaze until the
+student accepts it. The three `enhance.pearson*` switches start off; turning one on asks for `GZ_PEARSON_EMBED_LIB.hosts`,
+and the worker registers `gz-pearson` and `gz-pearson-launch` (background.js `PEARSON`) while one is on and all three are
+held. The last one off hands them back. `enhance.pearsonEmbed` opens its native LTI launch inside Blackboard. The routed
+`courses/page/pearson-embed.js` module owns sizing and controls, while `pearson/launch.js` checks the exact socket
+opener and asks the worker for a document-pinned MAIN-world `pearson/launch-main.js` hook. It prepares a named child
+frame before invoking the original Open Pearson click handler, changing only the launch destination. Authentication
+callbacks and native launch models stay inside Pearson. The worker validates the current approved Ultra tab and
+returns its origin for the parent handshake; Pearson redirects can leave an interop referrer.
+`pearson/embedded.js` forwards a bounded, URL-free list of resolved appearance variables through the verified frame
+chain, including the current course Look, while transparent native documents share Blackboard's existing background.
+Native question frames keep their MyLab `Service/PlayerLaunch.ashx` source after redirecting; the bridge recognizes
+that exact route as a tdx destination and still checks the sending frame and final origin. Only the top-level page
+owns a background renderer. Embedded MyLab and tdx documents never start one, including before their context arrives;
+standalone MyLab keeps one renderer in its top-level shell, visible through transparent child canvases.
+Only the canonical homework URL and selected question ordinal travel back for Open in tab; other query parameters
+are dropped. During authentication, pop-out rebuilds a fresh same-course Blackboard LTI launch, never a consumed
+Pearson callback. Close invokes Blackboard's original Exit. Turning the switch off affects later launches and keeps
+an existing session mounted so unsent work survives. No frame/security headers or cookie settings are changed.
+`checks/pearson/embed-check.js` uses invented native launcher and homework fixtures; cold sign-in, grading submission
+and native Safari/Firefox require separate live validation.
+The manifest matches MyLab's homework player/overview and the assignment/player frames on
+`tdx.acs.pearson.com`. The latter activate only when Pearson marks the viewer `playmode-homework`.
+Each frame reads the saved Look's palette, typography, surfaces, depth, navigation styling, pointer and motion
+settings, and follows automatic light/dark changes. The question player and overview reuse the existing Look
+background renderer (`preview.html?site=canvas&backdrop&saved`), including scenes, shaders, layers and kept media.
+That frame reads appearance keys itself and rejects settings messages from its Pearson parent.
+The overview keeps Pearson's tables, question links and action handlers, with CSS for the assignment title,
+detail cards, summary strip and responsive question grid. A question tile expands its original anchor's hit area;
+the adapter does not copy or calculate any score or status. Hidden native actions and reminders stay hidden.
+The problem viewer lays out the original prompt and answer nodes as one worksheet, with a collapsible question
+list. Its page switch restores Pearson's layout; the persistent switch is under Course pages → Documents and quizzes.
+Glaze off restores native appearance and removes the renderer, controls and icon filters. Diagrams and native answer
+handling stay with Pearson. Common symbol templates use scalable Glaze artwork on the original buttons;
+unrecognized controls retain Pearson's artwork. Names and shortcuts come from native button metadata. The question list
+owns its scroll area even when Dijit writes a zero-pixel inner height. Shared motion knobs and saved Look animations
+drive problem, panel and symbol transitions, with reduced motion and the entrance switch honored. Background frames
+stay hidden over the palette fallback until their own renderer confirms its first theme paint.
+The optional modern-math setting loads the packaged, readable MathLive 0.111.4 runtime on demand. `pearson/adapter.js`
+renders exact LaTeX exported by the native label widget, preserving its original accessible label and DOM. A bounded
+sanitizer rejects active markup and leaves unsupported expressions native. `pearson-math.html` is an extension-owned
+composer with a source/origin-checked MessagePort, the saved palette, surfaces, text fonts, scale and motion preferences.
+Opening, editing and preparing an expression do not modify the answer. Use equation explicitly applies it through
+`background/pearson.js`, pinned to the requesting player document. `pearson/native.js` parses into a detached native
+editor, while the frame compares mathematical structure before enabling transfer. Infinity imports use Pearson's
+native `&inf;` token and must survive native reparsing; its grouped `{\infty_}` export is normalized for MathLive
+without changing genuine subscripts. Apply retains native undo and emits
+the native change event once; changed answers, replaced widgets, unsupported constructs and test mode are refused.
+Glaze does not persist math values, send them to a service, or invoke Check answer, Save or submission actions;
+Pearson continues its normal native handling of the explicit edit.
+The runtime, math fonts and license are reproducible with `tools/vendor/vendor-mathlive.sh`; optional appearance fonts
+use the existing font loader. The synthetic `checks/pearson/math-check.js` exercises the unpacked extension and invented
+native API fixtures; real parser interoperability was probed separately in detached editors in the owner's Chrome.
+The synthetic
+`checks/pearson/homework-check.js` exercises the unpacked extension across the nested frames;
+it does not establish support for Pearson tests, other products, or native Safari runtime.
 
 ## Activity Stream
 
@@ -133,6 +191,12 @@ tools/dev/dev-gcal.sh <key file>
 
 Then load `dist/glaze-dev-gcal` unpacked, in a Chrome profile without the store's Glaze. The key never goes in `manifest.json` or the package.
 
+This applies to Google Drive too: the source checkout's extension ID is not registered with either Google client. A
+client-ID or redirect mismatch now reports a setup error instead of looking like a cancelled sign-in. When moving an
+existing development install to the keyed build, use **Back up…** first, disable the old copy, load the keyed build and
+use **Restore…** there. Keep the old copy installed until its documents and settings have been checked in the new one;
+Chrome stores each extension ID's data separately.
+
 ### Google in Safari
 
 Safari has no identity API, so Drive and Calendar sync sign in through the Glaze app: the extension's handler (`safari/Glaze/Glaze Extension/GlazeGoogle.swift`) starts an authorization-code sign-in with PKCE for Google's "iOS" client, the app (`GlazeGoogleSignIn.swift`) shows Google's page and leaves the redirect in the app group's container, and the handler exchanges the code and keeps the refresh token in the extension's own Keychain items. Drive and Calendar are separate grants (`feature: 'drive' | 'calendar'` in each `google.*` message), each with its own Connect, refresh token and Disconnect, which forgets only that grant on this device. The handler holds a sign-in under way, so one finishes after Safari unloads the worker (Settings asks `finish` until it has). The worker keeps access tokens in memory only, until their last minute. A Calendar run in Safari stops starting writes after 20 s and resumes on the page's next request, and large Drive transfers resume across workers from the session saved in storage, so neither needs a background helper. Safari has no `launchWebAuthFlow`, so its Picker opens the picker page in a tab of the worker's, which comes back to `documents/picked.html` (web-accessible to the two picker origins only, through `tools/build/safari-manifest.sh`). That page hands its address to the worker, which checks the state and tab and then closes the tab. The pick under way waits in `storage.session`, and Documents and Writer ask `picked` every second until it answers. The app group is `group.io.frostdev.Glaze` on iOS and `22AAZFMTV8.io.frostdev.Glaze` on the Mac (both Mac builds; Team ID-prefixed groups need no provisioning profile on macOS). The whole path is off until `native: true` in `background/google-config.js`. `test/safari/google-native.test.js` runs the handler in Swift's interpreter (Mac only), and `test/platform/google.test.js` and `test/planner/gcal.test.js` cover the worker and Settings.
@@ -226,4 +290,4 @@ create them. It never uploads unless `APPSTORE_UPLOAD=1` is set. To try it in th
 
 ## Bundled libraries
 
-Glaze is MIT licensed ([LICENSE](https://github.com/frostdev-ops/glaze/blob/main/LICENSE)). Bundled with it, each under its own license beside it: three.js (MIT, `vendor/three.LICENSE`), lottie-web's light canvas player (MIT, `vendor/lottie/LICENSE`), pdf.js 6.4.299 with its JBIG2 and JPEG 2000 decoders, the core-js it bundles, Brotli's dictionary and one of Firefox's viewer images (Apache-2.0, BSD, MIT and MPL-2.0, `vendor/pdfjs/`), the Tesseract OCR engine and its tessdata_fast models (Apache-2.0, `vendor/tesseract/`), ProseMirror, Writer's editor engine, as one readable esbuild bundle (MIT, `vendor/pm.js`, `vendor/pm.css`, `vendor/pm.LICENSE`), harper.js, Writer's spelling and grammar checker, as published with its slim wasm and two unused paths cut (Apache-2.0, `vendor/harper/`), and Writer's paper fonts Tinos, Arimo, Carlito and Cousine from @fontsource (SIL OFL 1.1, `vendor/fonts/`), each rebuilt by its `tools/vendor/vendor-*.sh` (`vendor-pdfjs.sh`, `vendor-prosemirror.sh`, `vendor-harper.sh`, `vendor-paper-fonts.sh`). Inter and Atkinson Hyperlegible (SIL OFL 1.1, `fonts/`) have no vendor script. The scripts check what they download against pinned hashes; `vendor-three.sh` and `vendor-prosemirror.sh`, which use npm, install with install scripts off and checks the installed packages against pinned integrity values (`tools/vendor/npm-integrity.js`).
+Glaze is MIT licensed ([LICENSE](https://github.com/frostdev-ops/glaze/blob/main/LICENSE)). Bundled with it, each under its own license beside it: three.js (MIT, `vendor/three.LICENSE`), lottie-web's light canvas player (MIT, `vendor/lottie/LICENSE`), pdf.js 6.4.299 with its JBIG2 and JPEG 2000 decoders, the core-js it bundles, Brotli's dictionary and one of Firefox's viewer images (Apache-2.0, BSD, MIT and MPL-2.0, `vendor/pdfjs/`), the Tesseract OCR engine and its tessdata_fast models (Apache-2.0, `vendor/tesseract/`), ProseMirror, Writer's editor engine, as one readable esbuild bundle (MIT, `vendor/pm.js`, `vendor/pm.css`, `vendor/pm.LICENSE`), harper.js, Writer's spelling and grammar checker, as published with its slim wasm and two unused paths cut (Apache-2.0, `vendor/harper/`), and Writer's paper fonts Tinos, Arimo, Carlito and Cousine from @fontsource (SIL OFL 1.1, `vendor/fonts/`), each rebuilt by its `tools/vendor/vendor-*.sh` (`vendor-pdfjs.sh`, `vendor-prosemirror.sh`, `vendor-harper.sh`, `vendor-paper-fonts.sh`). MathLive 0.111.4 (MIT, `vendor/mathlive/`) ships its readable ESM distribution and math fonts, reproduced from an integrity-pinned tarball by `tools/vendor/vendor-mathlive.sh`. Inter and Atkinson Hyperlegible (SIL OFL 1.1, `fonts/`) have no vendor script. The scripts check what they download against pinned hashes; `vendor-three.sh` and `vendor-prosemirror.sh`, which use npm, install with install scripts off and checks the installed packages against pinned integrity values (`tools/vendor/npm-integrity.js`).

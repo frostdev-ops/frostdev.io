@@ -1,12 +1,12 @@
 ---
 title: "Privacy summary"
 description: "What Glaze keeps on your device, and the few requests it makes and where they go."
-updated: "2026-10-31"
+updated: "2026-11-04"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Privacy-summary"
 ---
 <!-- Mirrored from Glaze's docs/privacy.md by its tools/dev/docs-mirror.js: edit it there. -->
 
-_Last updated: 2026-10-31_
+_Last updated: 2026-11-01_
 
 A plain-language summary. The full policy is [PRIVACY.md](/glaze/privacy).
 
@@ -41,6 +41,28 @@ Settings → AI, to the model you chose for it: Tab completion sends the text ar
 or assignment, and in a discussion your classmates' posts with their names; Feedback sends your draft with the
 assignment's instructions and rubric. Nothing goes to AI from a test.
 
+[Rime](/glaze/privacy#network-requests), Glaze's own model (Frostdev's, built on LFM3-1.7B; Chrome and
+Firefox), downloads from `huggingface.co` and its CDN only when you click Download in Settings → AI, and nothing about
+you goes with it. It then runs on this device, so what you give it stays there. Glaze comes without Rime: until a Rime
+model is offered, opening Rime's card in Settings → AI asks `huggingface.co` for the signed list of Rime models, at most
+once a day and never with Data Saver on; nothing about you is sent. While it is downloaded, Glaze checks
+`huggingface.co` for a signed list of Rime models about once a day and downloads updates from there and its CDN; nothing
+about you is sent. **Update automatically** in the card's Advanced section turns that off.
+
+[Ask Rime](/glaze/privacy#ask-rime) (Settings → AI → Ask Rime, off by default) sends your question, and your work when
+you add it, to the model you chose for it. For a question about your own courses it also sends what Glaze reads to
+answer it: your to-dos, schedule, grades, assignments or Writer documents, as Glaze already keeps them on this device,
+and a course's announcements, content, syllabus and discussions. From a discussion it sends the prompt and your own
+replies, and only the number of your classmates' replies, never their names or posts.
+Marking a to-do done waits for your OK in Glaze's window. The conversation itself is temporary. With Memory on, Ask Rime
+can keep useful preferences and facts from your messages as editable Markdown records and retain excerpts from course
+material it has read. Relevant records can be sent with later questions to your chosen model. **Settings → AI → Memory**
+lets you turn this off, view, edit, delete, clear and export records, even while AI is off. Turning it off keeps existing
+records. Saved memories join Glaze backups and existing Google Drive sync when enabled; the course cache and search
+index stay on this device. Records are separated by school account and have no timed expiry. Deletion removes active
+content and keeps a small marker against restoration; earlier exported/backed-up copies and an open conversation remain
+separate. A reminder or watch you approve is kept on this device until shown or cancelled.
+
 [Agent access](/glaze/privacy#agent-access) (Settings → AI → Agents) is off by default. Apps on this computer connect
 through a local helper: `glaze-mcp`, or the downloaded Glaze Mac app on Safari. Glaze asks you to allow each app
 identity and data group: Courses, to-dos and schedule; Grades; Assignments and rubrics; Writer documents; each mod's
@@ -69,6 +91,26 @@ check leaves that access unused. With All sites, in Safari and on installs from 
 course sites (**Use Glaze on example.edu?**) before theming them, reading their APIs or keeping course data. **Settings →
 Privacy and data → Sites** lists your sites, with Remove, which also forgets the courses and due dates Glaze read there.
 See [Adding a school's own site](/glaze/privacy#adding-a-schools-own-site).
+
+Pearson's switches under Course pages → Documents and quizzes start off. On browsers with optional hosts, turning one on
+asks for `mylab.pearson.com`, `tdx.acs.pearson.com` and `socket.pearsoned.com`. Turning the last one off returns grants for
+these exact hosts; a shared All sites grant stays. Safari already holds every host in its manifest, so these switches need
+no optional host grant there. Browser-menu Pearson grants skip the school-site probe; the switches still start off.
+Pearson MyLab homework is themed on `mylab.pearson.com` and its player frames on `tdx.acs.pearson.com`.
+The exact `socket.pearsoned.com/uiservice/opener` launcher opens Pearson's own content in a child frame. Glaze forwards
+only resolved appearance variables into that frame and its known homework children. The canonical homework address
+and selected question number stay in memory to support Open in tab; launch tokens and unrelated URL parameters are
+excluded. During sign-in, Open in tab starts a fresh native Blackboard launch. Glaze does not store these locations,
+copy authentication credentials, change browser security policies, or send homework information to a new service.
+The problem viewer keeps the native question and answer nodes and changes their layout. Its Settings switch syncs;
+the page's layout switch is temporary. A Glaze frame draws the saved Look's background through the existing media
+and file checks. Modern equations read each native formula's LaTeX locally. When you open the optional equation editor,
+it reads that field's current answer into an extension-owned frame; typing and validation leave the original answer intact.
+Use equation transfers a supported expression back through Pearson's native editor. These math values stay in memory
+in your browser; they are not stored or sent to a math service or AI provider. Glaze does not invoke Check answer, Save
+or submission actions, read scores or course data, or make Pearson API requests. Pearson handles the edit normally.
+Other Pearson pages and test mode
+keep their native appearance.
 
 The sidebar's title, style, page choices and other general settings sync too. Its width, open/fold state, To Do scope,
 dock order/heights, widget destinations and migration markers stay in local records keyed by LMS, school origin and
