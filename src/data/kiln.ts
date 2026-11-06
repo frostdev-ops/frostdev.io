@@ -47,9 +47,10 @@ export const kilnSkillFiles = [
   { path: 'references/quests-talents-sounds.md', about: 'Talents, progression, quests, friendly NPCs, sounds and voice.' },
   { path: 'references/devkit.md', about: 'The kiln command, lint, analyzers, catalogs, VS Code, the debugger.' },
   { path: 'references/testing.md', about: 'A local test server, hot reload, in-server tests, logs.' },
+  { path: 'references/vfx.md', about: 'Particles, lights and the game\'s VFX: files, budget, checks.' },
   { path: 'references/pitfalls.md', about: 'Common mistakes and what to do instead.' },
   { path: 'references/docs-map.md', about: 'Which wiki page answers which question.' },
 ] as const;
 
 /** Fixed timestamp for the skill zip, so the same files build the same bytes. Update with the mirror. */
-export const kilnSkillUpdated = '2026-11-05';
+export const kilnSkillUpdated = '2026-11-06';

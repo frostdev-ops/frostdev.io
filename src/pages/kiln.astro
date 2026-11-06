@@ -1,8 +1,10 @@
 ---
 import KilnLayout from '../layouts/KilnLayout.astro';
 import { kilnSource } from '../data/kiln';
+import release from '../data/kilnRelease.json';
 
-// Kiln is not released: no downloads until it is. Its source is public. Facts follow Kiln's docs; the wiki carries the detail.
+// Kiln is in early access: the launcher downloads come from /kiln/downloads/<version>/ (src/data/kilnRelease.json, written
+// with each release), also on GitHub and Nexus Mods. Facts follow Kiln's docs; the wiki carries the detail.
 // Screenshot slots: search for "shot:" here and in src/content/kiln-wiki/ (docs/public-pages.md).
 const features = [
   { title: 'C# mods', text: 'Events, configs, commands, saved data. Hot reload on a running server.' },
@@ -38,11 +40,12 @@ const snippets = [
 const pending = ['Windows PCs (tested under Wine)', 'Join rules for players without Kiln or a required mod (test servers so far)', 'Quest, NPC and talent fixes awaiting a retest'];
 const building = ['Building blocks: typed Blocks.Define for spells, items and effects; Body, Animation, AI and Behaviour blocks for custom NPCs', 'A glTF animation converter', 'Skinned bodies', 'VFX, particles, materials and custom shaders'];
 const notBuilt = ['Worn armour', 'An online mod catalog'];
+const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
 ---
 
 <KilnLayout
   title="Kiln — Mods for Enshrouded"
-  description="Kiln is an open-source mod framework and launcher for Enshrouded: C# mods with hot reload, data packs, new items, quests, NPCs, talents, servers and admin tools. Coming soon."
+  description="Kiln is an open-source mod framework and launcher for Enshrouded: C# mods with hot reload, data packs, new items, quests, NPCs, talents, servers and admin tools. Early access."
   path="/kiln"
 >
   <div class="product-page kiln-page">
@@ -53,11 +56,11 @@ const notBuilt = ['Worn armour', 'An online mod catalog'];
         <h1 class="product-title" id="kiln-title">Mods for Enshrouded.<br /><span>Server and client.</span></h1>
         <p class="product-lead">A mod framework and launcher. C# mods, data packs and modded servers, from one app.</p>
         <div class="product-actions">
-          <a class="product-button" href="/kiln/wiki">Read the wiki <span aria-hidden="true">→</span></a>
-          <a class="product-button secondary" href="/kiln/agents">Agent skill <span aria-hidden="true">→</span></a>
+          <a class="product-button" href="#download">Download <span aria-hidden="true">↓</span></a>
+          <a class="product-button secondary" href="/kiln/wiki">Read the wiki <span aria-hidden="true">→</span></a>
           <a class="product-button secondary" href={kilnSource}>View on GitHub <span aria-hidden="true">↗</span></a>
         </div>
-        <p class="product-meta">Coming soon · Linux and Windows · Open source (MIT)</p>
+        <p class="product-meta">Early access {release.version} · Linux and Windows · Open source (MIT)</p>
       </div>
       <figure class="kiln-code-panel" aria-label="A small Kiln mod: a C# event handler, a data pack and the hot reload command">
         {snippets.map((snippet) => (
@@ -142,13 +145,17 @@ const notBuilt = ['Worn armour', 'An online mod catalog'];
       <ul class="kiln-progress">{notBuilt.map((item) => <li>{item}</li>)}</ul>
     </section>
 
-    <section class="product-cta" aria-labelledby="soon-title">
-      <p class="product-eyebrow">Coming soon</p>
-      <h2 id="soon-title">Kiln isn’t released yet.</h2>
+    <section class="product-cta" id="download" aria-labelledby="download-title">
+      <p class="product-eyebrow">Early access · {release.version}</p>
+      <h2 id="download-title">Download Kiln.</h2>
       <div class="product-actions">
-        <a class="product-button" href="/kiln/wiki">Read the wiki <span aria-hidden="true">→</span></a>
-        <a class="product-button secondary" href="/kiln/wiki/status">What works today <span aria-hidden="true">→</span></a>
+        <a class="product-button" href={download(release.files.windows)}>Windows <span aria-hidden="true">↓</span></a>
+        <a class="product-button secondary" href={download(release.files.appimage)}>Linux AppImage <span aria-hidden="true">↓</span></a>
+        <a class="product-button secondary" href={download(release.files.deb)}>.deb <span aria-hidden="true">↓</span></a>
       </div>
+      <p class="product-meta">
+        <a href={release.github}>GitHub</a> · <a href={release.nexus}>Nexus Mods</a> · <a href={download(release.files.sums)}>Checksums</a> · <a href="/kiln/wiki/install">Install</a>
+      </p>
     </section>
   </div>
 </KilnLayout>

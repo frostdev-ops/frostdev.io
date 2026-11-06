@@ -2,10 +2,11 @@
 title: "Install Kiln"
 description: "Add Kiln to Enshrouded with the launcher. Play with mods, or without them."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-06"
 ---
 
-> **Coming soon.** Nothing to download yet. This page describes the current build.
+> **Early access.** [Download the launcher](/kiln#download): Windows installer, Linux AppImage or .deb. Also on
+> [GitHub](https://github.com/frostdev-ops/kiln/releases) and [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301).
 
 ## What you need
 
@@ -29,8 +30,11 @@ Already have another tool's `dinput8.dll`? Kiln keeps it and loads it. For EMF's
 
 ## Updates
 
-The **Runtime** page updates, rolls back and uninstalls Kiln. A launcher update with a newer runtime shows **Update** there. Nothing
-installs by itself. A dropped zip on Runtime is only for rollback or test builds.
+The launcher updates itself (AppImage and Windows installs): **Update** shows in its header when a new version is out.
+After the restart, **Update game** puts the new Kiln runtime into the game. Nothing installs without a click. A .deb install
+gets a download link instead.
+
+The **Runtime** page also updates, rolls back and uninstalls Kiln. A dropped zip there is only for rollback or test builds.
 
 ## On Linux (Proton)
 

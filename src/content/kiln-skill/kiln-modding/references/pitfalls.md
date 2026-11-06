@@ -27,6 +27,8 @@
 | Shipping cooked models, Impact listings or other game-derived files | redistributes game data | ship sources and a `cook.json` recipe; `assets/cooked/` is gitignored |
 | Replacing a registered Impact program in place | refused: running instances read program code live | clone it to a new GUID |
 | A Kiln impact without damage configs | it hits for 0 (no used item) | pass `Damage1` (e.g. `DamageSetup.FireOnly(10f)`) in the configs |
+| `Abilities.PlaySequence` on a sequence that consumes the used item (every potion and food) | it has no used item, and the game reads one with no check: the server dies | Kiln refuses it and logs why: play a copy with the event's `consume` off, or let the player use the item |
+| An Impact native's argument left unconnected | a native that reads it with no check kills the server (`hasAttackCategory`'s `matchAll`) | the linter says `E_UNCONNECTED`, and kiln.abilities refuses the program |
 | An Impact loop without an exit | hangs the server's simulation step | the linter warns (`W_LOOP`): add an exit |
 | Many hits on one target in one step | the engine applies at most 4 impacts per target per step | Kiln defers the rest; don't rely on them landing in the same step |
 | Two mods detouring the same very hot function (advanced tier) | under Wine a hot reload of one can stall | one mod per hot function |
