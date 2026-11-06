@@ -1,13 +1,13 @@
 {
-  "version": "0.2.0-dev.12",
+  "version": "0.2.0-dev.13",
   "channel": "dev",
   "released": "2026-11-06",
   "files": {
-    "windows": "windows/kiln-launcher_0.2.0-dev.12_x64-setup.exe",
-    "appimage": "linux/kiln-launcher_0.2.0-dev.12_amd64.AppImage",
-    "deb": "linux/kiln-launcher_0.2.0-dev.12_amd64.deb",
+    "windows": "windows/kiln-launcher_0.2.0-dev.13_x64-setup.exe",
+    "appimage": "linux/kiln-launcher_0.2.0-dev.13_amd64.AppImage",
+    "deb": "linux/kiln-launcher_0.2.0-dev.13_amd64.deb",
     "sums": "SHA256SUMS"
   },
-  "github": "https://github.com/frostdev-ops/kiln/releases/tag/v0.2.0-dev.12",
+  "github": "https://github.com/frostdev-ops/kiln/releases/tag/v0.2.0-dev.13",
   "nexus": "https://www.nexusmods.com/enshrouded/mods/301"
 }
