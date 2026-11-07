@@ -53,7 +53,7 @@ download ("Coming soon"). It and the wiki hub link Kiln's public repository, nev
 Kiln's own brand (charcoal, ember and gold from Kiln's
 `branding/palette.json`, the Fraunces display face) inside the site's header and footer, without the frost background
 animation; `src/layouts/KilnLayout.astro` and `src/styles/kiln.css`. `/kiln/wiki` and `/kiln/wiki/<page>` are its
-wiki: 35 Markdown pages in `src/content/kiln-wiki/`, ordered by `src/data/kiln.ts` (the build fails when the two
+wiki: 43 Markdown pages in `src/content/kiln-wiki/`, ordered by `src/data/kiln.ts` (the build fails when the two
 disagree), written for people from Kiln's own docs, with no reverse-engineering details and no paths into Kiln's
 repository. Pages built but not fully tried in a real game carry a "Game test pending" badge. `/kiln/agents` shows
 Kiln's agent skill (a SKILL.md and nine reference files) and offers `/kiln/agents/kiln-modding.zip` (a stored zip built

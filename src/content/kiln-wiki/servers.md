@@ -6,6 +6,9 @@ status: "works"
 updated: "2026-11-05"
 ---
 
+> Rented server with only FTP, or a server without the launcher? See
+> [Kiln on a dedicated server](/kiln/wiki/dedicated-servers).
+
 ## Kinds of server
 
 The launcher's **Servers** page runs four kinds:
