@@ -8,8 +8,6 @@ updated: "2026-11-07"
 Kiln has one event bus, `Events`, like Forge's `EVENT_BUS`. Kiln's services post about 110 event types on it: players,
 combat, chat, crafting, building, quests, world progress and more. Mods post their own on the same bus.
 
-Render events (drawing from a mod) aren't there yet: see [What works today](/kiln/wiki/status).
-
 ## Subscribe
 
 ```csharp
@@ -76,7 +74,7 @@ The main types. Each service's page or the API reference has the rest.
 | Creatures | `CreatureStateEvent`, `CreatureTargetEvent`, `CreatureVariantAppliedEvent`, `VillagerStateEvent` | |
 | Rules, time, settings | `PlayerRulesChangedEvent`, `TimeSetEvent`, `DayStartedEvent`, `NightStartedEvent`, `SettingChangedEvent`, `PermissionsChangedEvent` | |
 | Network and content | `NetPeerReadyEvent`, `NetPeerLeftEvent`, `NetVanillaClientEvent`, `NetClientHandshakeEvent`, `ContentReadyEvent`, `ContentSyncedEvent`, `ConfigSyncedEvent` | a handshake |
-| Client UI | `ScreenChangedEvent` | |
+| Client UI | `ScreenChangedEvent`, `RenderFrameEvent` (every frame, on the render thread: [Drawing](/kiln/wiki/drawing)) | |
 
 Many events cost nothing until someone subscribes: Kiln starts watching the game for them only then. Subscribe to what
 you need, not to `KilnEvent`.

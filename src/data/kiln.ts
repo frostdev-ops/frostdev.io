@@ -14,6 +14,7 @@ export const kilnWikiSections = [
       'blocks',
       'new-items',
       'creatures',
+      'creature-ai',
       'abilities',
       'impact',
       'progression',
@@ -25,7 +26,7 @@ export const kilnWikiSections = [
       'world-progress',
     ],
   },
-  { id: 'looks', title: 'Looks and sound', pages: ['game-ui', 'assets', 'models', 'sounds'] },
+  { id: 'looks', title: 'Looks and sound', pages: ['game-ui', 'drawing', 'assets', 'models', 'shaders', 'sounds'] },
   { id: 'devkit', title: 'Dev kit', pages: ['dev-kit', 'cli', 'lint', 'vscode', 'catalogs', 'testing', 'hot-reload', 'debugging'] },
   { id: 'reference', title: 'Reference', pages: ['forge', 'status'] },
 ] as const;

@@ -2,7 +2,7 @@
 title: "Game UI"
 description: "Menu entries, your own screens, crafting tabs and panels, HUD lines, toasts and key bindings."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-07"
 ---
 
 All client side. On a dedicated server `Ui.Available` is false and calls do nothing, so a `side: both` mod can call them freely.
@@ -63,4 +63,4 @@ chat doesn't trigger them.
 ## Also
 
 Every mod with a config gets a generated settings page in the Kiln menu. `Ui.Screens.Current` and `ScreenChangedEvent` tell you
-which screen is open.
+which screen is open. To draw shapes, text and markers over the game every frame, see [Drawing](/kiln/wiki/drawing).

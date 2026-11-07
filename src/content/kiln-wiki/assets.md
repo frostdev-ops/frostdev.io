@@ -2,7 +2,7 @@
 title: "Icons and textures"
 description: "Your own PNG icons, retextures of the game's images, and new or overridden resources, with no game file changed."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-07"
 ---
 
 Kiln serves your files to the game from memory, like a resource pack. No game file changes.
@@ -29,6 +29,7 @@ Mods with icons or textures need `"clients": "mod"`. A server skips those entrie
 
 That's `assets/assets.json`, with paths relative to `assets/`. Files load when the game starts.
 
+A status or a perk block takes a PNG `Icon` the same way: see [Building blocks](/kiln/wiki/blocks#statuses).
 For a new item, its own `"icon": "icons/glacier.png"` is simpler. See [New items](/kiln/wiki/new-items). Kiln's `render-icon.py`
 renders a matching icon from a glTF.
 

@@ -5,12 +5,33 @@ updated: "2026-11-07"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes 0.2.0-dev.15.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes 0.2.0-dev.16.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026. Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
+
+## New in 0.2.0-dev.16
+
+Nothing below has been seen in the game yet. The new features are listed under
+[Built, game test pending](#built-game-test-pending) with what they were tested on.
+
+- **Mods from Nexus Mods** in the launcher: a Catalog to browse, add and update mods, and optional Mod Manager Download
+  links. [Install](/kiln/wiki/install#mods-from-nexus-mods)
+- **"No Kiln"** in the launcher when Steam starts the game without Kiln, with what to do, instead of "Starting" forever.
+  Some recent Valve Proton builds load Kiln without the launch option. [Install](/kiln/wiki/install#no-kiln-kiln-is-not-loading)
+- **Steam Deck mode:** focus no longer gets lost after dialogs or on disabled buttons, B always closes a dialog, holding
+  to uninstall stops when you let go, and long text scrolls.
+- **Safer drops:** dropped mods and archives are checked more carefully (no files outside the mod, size and depth
+  limits), and every modpack you drop asks before it installs.
+- **Fixes from a full code review:** creative mode presets you edited are no longer overwritten, the Shroud floor drain
+  can't kill in slow frames, gliding respects its speed cap, and many smaller fixes.
+- **For mod authors:** [drawing on screen and in the world](/kiln/wiki/drawing);
+  [creature AI and behaviour](/kiln/wiki/creature-ai); [retargeted animations](/kiln/wiki/models#animations-from-another-rig);
+  [particle shaders and material reskins](/kiln/wiki/shaders), working again, now checked and linked by Kiln;
+  [blocks](/kiln/wiki/blocks): PNG icons for statuses and perks, every kind of tool, piercing projectiles, props with
+  your own model, sound blocks, a VFX on an item or a placed thing, spawn shapes, streaks and play parameters for VFX.
 
 ## Works
 
@@ -27,7 +48,7 @@ listed under [Open in the game](#open-in-the-game); some have had fixes since th
 | [World blocks](/kiln/wiki/blocks#world-blocks): props, stations with their own recipes, furniture, building materials and shapes | seen in the game: a station placed as its own object, a bench's "Pray" prompt |
 | [VFX and particles](/kiln/wiki/blocks#vfx) | seen in the game: Kiln-built particle bursts with a light, the game's VFX by name, a flame that stays on the hand, many plays without a hitch |
 | Screen effects | seen in the game: flash, fade to black, a cold tint under the menu, a status's screen effect, eight at once |
-| Materials | load in the game and stay after a restart. How they look: open |
+| Materials | load in the game and stay after a restart. How they look: open. Reskins: see below |
 | Creature variants, AI tweaks, orders, guards | seen in the game: an elite Vukah, a Vukah on your side, a guard that follows and defends you |
 | Key-bound abilities, per-cast spell changes | |
 | Icons, retextures, weapon models | |
@@ -81,6 +102,15 @@ These pass offline or on a test server. What's missing is a player looking at th
 
 | Area | Not yet |
 |---|---|
+| [Drawing on screen and in the world](/kiln/wiki/drawing) | new. Passes its tests (projection, budget, dispatch); not yet seen in the game |
+| [Creature AI and behaviour](/kiln/wiki/creature-ai) | new. Tested on a lab server: creatures find, ignore and hunt each other, rules summon, cast and heal. Not yet watched in the game |
+| [Retargeted animations](/kiln/wiki/models#animations-from-another-rig) | new. Tested offline and on a lab server; not yet seen drawn in the game |
+| [Particle shaders](/kiln/wiki/shaders) | new. Tested on the CPU and a real GPU with hostile hooks, and on a lab server; not yet seen in the game |
+| [Material reskins](/kiln/wiki/shaders#reskinning-a-game-material) | new. Tested on a lab server: served, taken off at unload, handed to the next mod; not yet seen in the game |
+| [New blocks](/kiln/wiki/blocks): status and perk icons, tools, piercing, props with your own model, sound blocks, a VFX on a look | new. Tested on a lab server; not yet seen in the game |
+| [VFX](/kiln/wiki/blocks#vfx) spawn shapes, streaks and play parameters | new. Tested in Kiln's VFX tests and on a real GPU; not yet seen in the game |
+| [The Nexus Mods catalog](/kiln/wiki/install#mods-from-nexus-mods) | new. The mod list read from the real Nexus Mods without an account; adding and updating tested against a stand-in, not with a real account |
+| ["No Kiln"](/kiln/wiki/install#no-kiln-kiln-is-not-loading) in the launcher | new. Checked in the launcher's tests; not yet on a real Steam Deck |
 | Some blocks in play | a Frostbolt's area damage, a wand's attacks, armour's worn look, frost VFX on hits |
 | Cosmetics with models of their own | not seen in the game |
 | [Skinned models and animations](/kiln/wiki/models#skinned-models-and-animations) cooked from glTF | a test server's animation engine plays them on their curves; a creature with its own body not yet confirmed in the game |
@@ -91,12 +121,10 @@ These pass offline or on a test server. What's missing is a player looking at th
 
 Work in progress now. Not in a release yet.
 
-- **Gaps in building blocks**, such as a look that carries a VFX.
-- **Animations and skinned models in the game**: creatures and worn armour of your own.
-- **NPC AI and behaviour blocks**: your own targeting and a creature mind written in C#.
-- **VFX, materials and custom shaders** beyond what's above.
-- **Render events** for mods.
-- **An online mod catalog** in the launcher. Today mods come from files and server modpacks.
+- **Animations and skinned models in the game**: creatures and worn armour of your own, seen drawn by a player. Foot IK
+  after a retarget.
+- **A creature mind written in C#**, opt-in per creature, beyond the AI fields and rules above.
+- **Surface shaders** for models: transparent ones next, then opaque.
 
 ## Partly built
 

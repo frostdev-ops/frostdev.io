@@ -3,7 +3,7 @@ title: "Sounds, music and voice"
 nav: "Sounds and voice"
 description: "New and replaced sounds, music, voice-over and narration from your own audio files."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-07"
 ---
 
 > **Not yet tried in a real game:** server code's sounds relayed to a joined player.
@@ -82,6 +82,21 @@ other mods and game data use the GUIDs made from them.
 - **Levels:** `"normalize": -28` sets loudness, `"gain": -6` a fixed change. The game's voice-over sits near −28 dBFS, UI −30, enemy
   effects −23.
 - **Loops:** the game loops whole sounds. Cut the source to loop cleanly.
+
+## Sound blocks
+
+New in 0.2.0-dev.16, not yet heard in the game. A mod can declare its sounds as [blocks](/kiln/wiki/blocks) instead of
+writing the steps, in `blocks/*.json`:
+
+```jsonc
+"sounds": { "frost-hum": { "clips": ["audio/frost_hum.wav"], "volume": 0.6, "range": [3, 40], "loop": true } }
+```
+
+`clips` are audio files in the mod's folder (with more than one, each play picks one). `range` is `[min, max]` metres;
+without it the sound is heard alike everywhere. `loop`, `scene`, `pitchRandomness` and `normalize` work as in the steps
+above. `kiln cook` writes the steps into `cook.json` and cooks them; your own steps stay. An effect
+(`"sound": "frost-hum"`), a station's running sound and code (`SoundId.Named`) play a block by its name. A sound block
+defined in C# needs its steps in `cook.json` by hand. Needs `clients: mod`.
 
 ## Playing them
 

@@ -2,7 +2,7 @@
 title: "The dev kit"
 description: "Kiln.Sdk, project templates, the kiln command, a linter, analyzers, a VS Code extension, a debugger and game-id constants."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-07"
 ---
 
 | Part | For |
@@ -63,6 +63,7 @@ The `kiln` command drives the targets, which also work alone: `dotnet build -t:K
 | `ability` | an ability; `impact=true` adds a program | both, none |
 | `ui` | a game UI overlay | client, mod |
 | `model` | a glTF model and its recipe | both, mod |
+| `body` | a creature with its own skinned body, animations, AI and attack | both, mod |
 | `sound` | sounds, cues and their recipe | both, mod |
 | `talents` | a talent tree | both, mod |
 | `native` | a C++ mod | both |

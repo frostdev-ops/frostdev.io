@@ -3,7 +3,7 @@ title: "EMF and DLL mods"
 nav: "EMF and DLL mods"
 description: "Kiln loads EMF mods and plain DLL mods next to Kiln mods, from a profile or the drop-in folders."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-07"
 ---
 
 ## EMF mods
@@ -37,6 +37,9 @@ One or more DLLs, with a small `native.json` naming them and when they load:
 
 Add them to a profile (the **Native** tab), or drop them into `kiln/native/<folder>/`. One that crashes while loading is
 marked failed with a crash report, and the game carries on. DLL mods never unload, so changes need a restart.
+
+The launcher's [Nexus Mods catalog](/kiln/wiki/install#mods-from-nexus-mods) marks EMF, native and DLL mods under
+**All Enshrouded**, and adds them the same way as Kiln mods.
 
 ## Other dinput8 tools
 

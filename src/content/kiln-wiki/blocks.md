@@ -6,7 +6,8 @@ updated: "2026-11-07"
 ---
 
 > **Works** since 0.2.0-dev.14: on test servers, and much of it seen in the game (spells, abilities, items, creature rules,
-> VFX). A few things are open in the game; see [What works today](/kiln/wiki/status).
+> VFX). A few things are open in the game; see [What works today](/kiln/wiki/status). What 0.2.0-dev.16 added (marked
+> **New** below) is tested on a lab server or in Kiln's VFX tests, and not yet seen in the game.
 
 A block is one thing your mod adds, said in its own terms: a spell with a mana cost and a projectile, a sword with a level
 and an on-hit effect, a status that ticks. Kiln chooses which game entry to start from, derives the ids from your mod id and
@@ -74,22 +75,24 @@ hand-made GUIDs and a dozen game field paths.
 | `StatusBlock` | A buff or debuff: time, look, effects on apply, every tick and on expiry, stats it changes while it runs | below |
 | `SpellBlock` | A staff spell: an ammo item with a cast, a delivery and a recipe | [Abilities](/kiln/wiki/abilities) |
 | `WandBlock` | A wand whose primary, heavy and special attacks are spells, with no ammo | |
-| Deliveries | How it gets there: projectile (with homing), self, around, cone, beam, zone, chain, summon | |
+| Deliveries | How it gets there: projectile (with homing and piercing), self, around, cone, beam, zone, chain, summon | |
 | `AbilityBlock` | Cast on a key, a chat command, an item, or from code; costs and cooldown | [Abilities](/kiln/wiki/abilities) |
 | `PerkBlock` | An enhancement on an item: stat changes, on-hit, on-kill, on-hit-taken | |
 | `TalentBlock`, `TalentTreeBlock` | A node in the game's skill tree, or a tree of your own | [Talents](/kiln/wiki/talents) |
 | `TriggerBlock` | Effects when a player enters a state or does something: sits, glides, eats; can stop the action | |
-| `ItemBlock` | Material, potion, food, arrow, axe or pickaxe, watering can or water pouch | [New items](/kiln/wiki/new-items) |
+| `ItemBlock` | Material, potion, food, arrow, any of the game's tools, watering can or water pouch | [New items](/kiln/wiki/new-items) |
 | `WeaponBlock` | A weapon of one of 11 classes, with exact tooltip numbers | |
 | `ArmorBlock`, `CosmeticBlock` | Armour by slot and set; a vanity piece | [3D models](/kiln/wiki/models) |
 | `RecipeBlock`, `LootBlock` | Where it's made and from what; where it drops | |
 | `StationBlock`, props, furniture | Things players place: a station with its own recipes, a rack, a chair | |
 | Building materials, shapes, terrain | New building blocks and shapes for the hammer | |
-| `CreatureBlock` | A creature: body, animation, AI, behaviour, stats, spawns | [Creatures](/kiln/wiki/creatures) |
+| `CreatureBlock` | A creature: body, animation, AI, behaviour, stats, spawns | [Creature AI](/kiln/wiki/creature-ai) |
 | `NpcBlock` | A friendly NPC: body, talk, wares, roster place | [Friendly NPCs](/kiln/wiki/npcs) |
 | `VfxBlock` | Particles and a light, from nothing | below |
+| `MaterialBlock` | A surface for a model, from PNGs and numbers | below |
+| `SoundBlock` | A sound from your audio files | [Sounds](/kiln/wiki/sounds#sound-blocks) |
 
-Sounds a block plays are your cues from [Sounds and voice](/kiln/wiki/sounds), named in an effect's `Sound`.
+An effect's `Sound` plays a sound block by its name, or a cue from [Sounds and voice](/kiln/wiki/sounds).
 
 ## Effects
 
@@ -114,7 +117,7 @@ Where an effect runs and what its target is:
 | Trigger | Target |
 |---|---|
 | a projectile's `OnImpact` | none, a place: use an `Area` |
-| a projectile's `OnHit` | what it struck |
+| a projectile's `OnHit` | what it struck; with `Pierce`, each creature it flies through |
 | a spell's `OnCast` | the caster |
 | a status's `OnApply`, `OnTick`, `OnExpire` | who has it |
 | a weapon's `OnHit`, `OnKill`; armour's `OnHitTaken` | what was hit or killed; who hit |
@@ -122,6 +125,9 @@ Where an effect runs and what its target is:
 | an ability's `OnCast`, an item's `OnUse` or `OnEat`, a trigger's `Do` | the caster, the user, the player |
 
 A hit an effect deals doesn't trigger these again, so an effect can't loop on itself.
+
+**New:** `ProjectileBlock.Pierce = 3` flies through three creatures, running `OnHit` on each once, and stops at the
+fourth or at anything that isn't a creature, where `OnImpact` runs.
 
 ## Statuses
 
@@ -133,6 +139,9 @@ A hit an effect deals doesn't trigger these again, so an effect can't loop on it
   armour and max health; shares for speed, damage and resistances (0.1 is 10%).
 - `While = PlayerStateId.Gliding` keeps it on a player for as long as they're in that state, with no timer.
 - `Vfx` shows on whoever has it.
+- **New:** `Icon = "icons/chill.png"` gives it a PNG icon of its own: square, 256x256 like the game's, at most
+  1024x1024, and the mod then needs `clients: mod`. Until a player's game has the picture ready, the buff bar shows the
+  look's icon, never a missing one. A game status's icon (`GameBuffs`) works too. A perk takes `Icon` the same way.
 
 ```csharp
 Blocks.Define("weakened", new StatusBlock
@@ -176,6 +185,13 @@ Blocks.Define("ember-sword", new WeaponBlock
 ```
 
 - **Weapon classes:** sword, axe, mace, greatsword, greataxe, hammer, daggers, bow, staff, shield, wand.
+- **Tools (new: every kind):** `Tool = new ToolBlock { Harvests = ToolClass.Rake, Power = 750, Range = 5 }`. Axe,
+  pickaxe, rake, mining sieve, glider, grappling hook, fishing rod and torch, each with the numbers it has: a rake's
+  `Power` and `Range`, a hook's `Range`, a rod's `Fishing { Strength, Endurance }`, a torch's `Durability` (seconds it
+  burns), and `BreaksInto` (what it becomes when worn out, like the game's burnt torch). A field a tool has no number
+  for is an error that says why.
+- **A VFX on it (new):** `Visual = new VisualBlock { Vfx = ... }` shows a VFX on the item in the hand, at the grip;
+  `Offset` moves it up the blade.
 - **Armour:** `Slot`, `Set`, `Physical`, `Magical`, `Bonus`; its look is a game item's or a model of your own.
 - **Water containers:** `Kind = ItemKind.WateringCan` or `WaterPouch`, with `Holds` (charges, up to 1,023) and `Flow`
   (how fast it fills and pours).
@@ -225,8 +241,13 @@ Blocks.Define("vengeful-vukah", new CreatureBlock
 });
 ```
 
-A game body with a new mind needs nothing on the players' side. A body and clips of your own are cooked from glTF and need
-every player to have the mod; they run on test servers but aren't yet confirmed in the game. `Is.Custom` and
+A game body with a new mind needs nothing on the players' side. **New:** who it fights (`Relations`, a `SenseFilter`, the
+world's faction table), more AI fields (night sight, hearing, roaming, fleeing, calling for help) and rules that summon,
+cast, heal and apply statuses: see [Creature AI and behaviour](/kiln/wiki/creature-ai).
+
+A body and clips of your own are cooked from glTF and need every player to have the mod; they run on test servers but
+aren't yet confirmed in the game. `kiln new body MyGolem` starts one, and clips from another rig can be
+[retargeted](/kiln/wiki/models#animations-from-another-rig). `Is.Custom` and
 `Act.Custom` take your C#, and run on the tick thread. An `NpcBlock` uses a game NPC's body and adds talk, a vendor and a
 roster place: see [Friendly NPCs](/kiln/wiki/npcs) and [Creatures](/kiln/wiki/creatures).
 
@@ -237,6 +258,15 @@ inventory over time, like the drying rack or the forge; props; furniture (contai
 spawn point, seats, things to use with an effect); changes to how hard a game material is to dig; new building materials,
 shapes and terrain materials. A world block in `blocks/*.json` is there from the first start. One defined in
 C# is there from the next start, because the game reads these tables once.
+
+A station that works on its own and lists `Recipes` has a workshop of its own: it runs only its recipes, and its menu
+lists only them, titled with its name. Its menu's title and list are still
+[open in the game](/kiln/wiki/status#open-in-the-game).
+
+**New:** a prop can have a model of your own, `Visual = new VisualBlock { Model = "models/lantern.glb" }`. In
+`blocks/*.json`, `kiln cook` cooks the glTF by itself; from C#, add a model step to `assets/cook.json`. Its collision is
+the box around the model, or `Collider = new BoxCollider { Size = ... }`. `OnInteract` works as for furniture. A
+`Visual.Vfx` on a placed thing stays on it while it stands, like a lamp's light.
 
 ## VFX
 
@@ -254,6 +284,31 @@ var sparks = Blocks.Define("frost_sparks", new VfxBlock
 Attach it with a `Vfx` field on a cast, a projectile, an effect, an area or a status, or name one of the game's with
 `"game:<name>"`. A VFX in a data file is there from the first start; one from code from the next. Kiln-built bursts
 and the game's VFX by name have been seen in the game; frost VFX on hits haven't yet.
+
+New, not yet seen in the game:
+
+- **Spawn shapes.** Particles can start anywhere on a shape: `"shape": {"ring": 1.5}`, or `sphere` (with `inner` for a
+  hollow one), `shell`, `hemisphere`, `box`, `disc`, `line`. `"spread": "outward"` sends them away from the shape's
+  centre: a shockwave ring, a burst out of a sphere. The shape follows the effect's scale and rotation.
+- **Streaks.** `"align": "velocity"` points each particle the way it moves, and `"stretch": 0.05` lengthens it with
+  its speed: sparks, rain, trails.
+- **One effect, many looks.** Every Kiln VFX takes five parameters when it plays: `color`, `size`, `speed`,
+  `brightness` and `count`. They multiply what the block says, so one ember burst can be blue on a frost spell and
+  twice as big on a boss. On a cast, a status or an effect:
+  `"vfx": { "name": "warm_glow", "parameters": { "color": "#80c0ff" } }`. From code:
+  `Vfx.PlayAt(burst, at, parameters: new VfxParams().Set("color", new Color(64, 160, 255)))`. A projectile's or a
+  prop's VFX can't take them yet.
+- **Your own particle code**, for the advanced: [Particle shaders](/kiln/wiki/shaders).
+
+Not yet: an effect's own sound, decals, fog, custom meshes, and particles that draw a model.
+
+## Materials
+
+`MaterialBlock` makes a surface for a model: its colour, how metal and rough it is, what glows, from PNGs and numbers.
+It draws with the game's own shaders. A model step in `assets/cook.json` names it like a game material, and a glTF's own
+materials can become blocks by themselves. Use `blocks/*.json` for materials, since the game lists them once at start.
+Players need the mod (`clients: mod`). With `"replaces"`, a material takes the place of one of the game's: see
+[Material reskins](/kiln/wiki/shaders#reskinning-a-game-material).
 
 ## What players' games need
 

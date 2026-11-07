@@ -6,7 +6,8 @@ updated: "2026-11-07"
 ---
 
 > **Partly built.** Rigid weapon models work in game. Skinned models, worn looks and animations cook from glTF and run on a
-> test server, but aren't yet confirmed in the game.
+> test server, but aren't yet confirmed in the game. Retargeted animations (new in 0.2.0-dev.16) are tested offline and on
+> a lab server, and not yet seen drawn in the game.
 
 Model in Blender (or anything that writes glTF 2.0). A recipe, `assets/cook.json`, turns it into the game's format on the player's
 machine. Start with `kiln new model MyWeapons`.
@@ -65,4 +66,38 @@ Built, game test pending. The same `cook.json` cooks:
 A test server's animation engine plays cooked clips on their authored curves, and skinned vertices land within a few
 millimetres of Blender's. Drawing in the game isn't confirmed yet. [Building blocks](/kiln/wiki/blocks#creatures-and-npcs)
 use them for creatures with bodies of their own, and for armour and cosmetics.
+
+## Your own creature
+
+`kiln new body MyGolem` makes a creature from your own files: a skinned glTF (`models/creature.glb`; replace it with your
+Blender export) as its body and animations, and blocks that give it an AI and an attack. `kiln build` cooks the
+skeleton, clips, state machine and model on your machine. In game, `/my-golem` (admins) spawns one next to you. Players
+need the mod (`clients: mod`).
+
+From Blender: File > Export > glTF 2.0, +Y up, the armature at rest, each animation an action. Name the actions as the
+blocks name the clips.
+
+## Animations from another rig
+
+New in 0.2.0-dev.16. Animation packs and other tools rarely use your skeleton's joint names or proportions. A clips step
+(or an animation block) with `retarget` plays them anyway: name the skeleton they should play on, and pair the joints.
+
+```json
+"animations": { "golem-moves": { "clips": "models/anim-pack.glb", "skeleton": "golem",
+    "retarget": { "map": { "mixamorig:Hips": "pelvis", "mixamorig:Spine": "spine", "mixamorig:Head": "head" } },
+    "idle": "Idle", "walk": "Walking" } }
+```
+
+- Joints with the same name pair by themselves; `"retarget": {}` pairs by name alone. Joints with no pair keep their
+  rest pose.
+- Bone lengths and rest orientations may differ. The two rest poses must show the same posture (T-pose for T-pose), or
+  `reference` names a frame of the pack that does.
+- The hips' travel is scaled by the rigs' heights.
+- It works onto a skeleton of your own and onto one of the game's (joints named `j<index>`). Without `retarget`, a clips
+  file must use the skeleton's own joint names and rest pose.
+
+Tested offline (the sample's clips on rigs with other names, turned rest frames and other sizes; 55 of the game's clips
+moved to another rig and back) and on a lab server, where a creature plays retargeted clips as authored. Not yet seen
+drawn in the game. Not done: foot IK after a retarget (feet can slide when leg lengths differ), and mirroring left onto
+right.
 

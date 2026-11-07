@@ -2,10 +2,12 @@
 title: "Creatures"
 description: "Change one creature, make variants like an Elite Vukah, swap them into natural spawns, and give orders."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-07"
 ---
 
-This runs on the server, so players without Kiln see the results.
+This runs on the server, so players without Kiln see the results. For a creature of your own with its AI and rules,
+use a [`CreatureBlock`](/kiln/wiki/blocks#creatures-and-npcs); for who it fights and what it does in a fight, see
+[Creature AI and behaviour](/kiln/wiki/creature-ai).
 
 <!-- shot: elite-vukah | An Elite Vukah next to a normal one -->
 
