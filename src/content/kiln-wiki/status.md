@@ -5,12 +5,18 @@ updated: "2026-11-07"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes 0.2.0-dev.16.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes 0.2.0-dev.17.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026. Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
+
+## New in 0.2.0-dev.17
+
+- **Steam Deck:** the game no longer hangs on a white window when it starts with Kiln. Kiln's in-game overlay hooked
+  the graphics a second time over its own hooks, and the game never got its window. Checked on a desktop PC (the Kiln
+  menu opens as before); not yet on a Steam Deck. If you set `KILN_UI_DISABLE=1` as a workaround, take it out again.
 
 ## New in 0.2.0-dev.16
 
