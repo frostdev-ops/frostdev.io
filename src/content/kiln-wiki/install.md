@@ -40,7 +40,9 @@ Valve's Proton needs the launch option below; Deck mode's **Help** shows the ste
 
 ## Updates
 
-The launcher updates itself (AppImage and Windows installs): **Update** shows in its header when a new version is out.
+The launcher from this site or GitHub updates itself (AppImage and Windows installs): **Update** shows in its header when
+a new version is out. The launcher from Nexus Mods doesn't update itself (Nexus Mods doesn't allow it): get new versions
+from its Nexus page.
 After the restart, **Update game** puts the new Kiln runtime into the game. Nothing installs without a click. A .deb install
 gets a download link instead.
 
