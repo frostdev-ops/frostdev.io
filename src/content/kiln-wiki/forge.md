@@ -1,7 +1,7 @@
 ---
 title: "Coming from Forge"
 description: "Minecraft Forge concepts and their Kiln equivalents."
-updated: "2026-11-05"
+updated: "2026-11-07"
 ---
 
 | Forge | Kiln |
@@ -17,7 +17,7 @@ updated: "2026-11-05"
 | Brigadier commands | `[Command]` or `Commands.Literal/Argument`, `@p @a @e` |
 | PermissionAPI | `Permissions.Register / Has` |
 | SavedData, capabilities | `WorldData`, `PlayerData`, `EntityData` |
-| registries, DeferredRegister | `Content.Items`, `Content.Recipes`, `.Register(...)` |
+| registries, DeferredRegister | [`Blocks.Define`](/kiln/wiki/blocks), or `Content.Items`, `Content.Recipes`, `.Register(...)` |
 | data packs, loot modifiers, `/reload` | `content/*.json`; reapplied when a file changes |
 | missing registry entries | placeholders that keep saved items |
 | resource packs | `assets/assets.json` |
@@ -43,4 +43,5 @@ updated: "2026-11-05"
 
 ## Not there yet
 
-An update checker and render events. Particles and shaders are being built. See [What works today](/kiln/wiki/status).
+An update checker for mods. Render events, custom shaders and an online mod catalog are being built. Particles
+(`VfxBlock`) are there. See [What works today](/kiln/wiki/status).

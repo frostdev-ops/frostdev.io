@@ -49,7 +49,7 @@ private void OnJoin(PlayerJoinedEvent e) => Log.Info($"{e.Player.Name} joined");
 private void OnChat(ChatMessageEvent e) { if (e.Text.Contains("spoiler")) e.Cancel(); }
 ```
 
-Or `Events.On<T>(handler)`. Some events cancel; a few let you change values (a hit's damage, a chat line).
+Or `Events.On<T>(handler)`. Some events cancel; a few let you change values (a hit's damage, a chat line). Every family of events, results, your own events and threads: [Events](/kiln/wiki/events).
 
 | Lifecycle event | When |
 |---|---|
