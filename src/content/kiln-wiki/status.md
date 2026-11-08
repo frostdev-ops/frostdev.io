@@ -5,12 +5,20 @@ updated: "2026-11-07"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes 0.2.0-dev.18.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes 0.2.0-dev.19.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026. Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
+
+## New in 0.2.0-dev.19
+
+- **Frame rate fixed.** 0.2.0-dev.18 could drop the game to about 10 fps whenever a profile was active. The SET
+  support checked every loaded game file on every frame; now only when a new file loads.
+- **Updates install new parts.** Updating skipped parts that are new or became default, such as the EMF, EML,
+  ShroudForge and Enshwick support. Only parts you turned off stay off. After a dev.18 update, the launcher's Runtime
+  page shows missing parts and lets you add them.
 
 ## New in 0.2.0-dev.18
 
