@@ -1,6 +1,6 @@
 {
-  "version": "4.0.4",
-  "sourceCommit": "665702cdbe5bcc8cd3e8fce4563655baa2c3b92b",
-  "updated": "2026-11-05",
-  "summary": "Ask Rime no longer stops with an error on a right answer: your name, a reminder it just set, a fact in your own words, a time or number written your way, a course named by its code, or a plain \"nothing came back\" from your school. When an answer breaks one of Ask Rime's rules, Rime gets one more try with the reason instead of an error. Ask Rime's study help answers greetings and questions about you, and takes a question as asked instead of refusing it as the wrong kind."
+  "version": "4.0.5",
+  "sourceCommit": "aa0cbee6c18b9d7007edbf6e40753e3364324e57",
+  "updated": "2026-11-07",
+  "summary": "Chrome, Edge and Firefox: a new install opens a setup guide. Choose a theme (Frost or one of the eleven Looks) and motion, place Glaze's navigation at the side or the top with your shortcuts in it, turn each feature on or off beside a short animated picture of it, pick an AI (Rime on this computer, your browser's own model or your own key) or leave it off, then add your school. Every choice saves as you make it. Ask Rime's study help answers from your school's records: ask about your next test and it names the test, its course and its due date. Ask Rime reads each list once and keeps what it read, instead of reading the same list again or losing it in a long chat. Pearson inside Blackboard no longer fills your browser's error list for Glaze while a Pearson page is still loading."
 }
