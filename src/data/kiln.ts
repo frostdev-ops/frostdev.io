@@ -4,7 +4,7 @@ export const kilnSource = 'https://github.com/frostdev-ops/kiln';
 // The Kiln wiki's sections and page order. Each slug is a Markdown file in src/content/kiln-wiki/; the wiki pages
 // fail the build when a file is missing here or a slug has no file, so the two lists cannot drift.
 export const kilnWikiSections = [
-  { id: 'players', title: 'Players', pages: ['install', 'profiles', 'modpacks', 'other-mods'] },
+  { id: 'players', title: 'Players', pages: ['install', 'profiles', 'modpacks', 'other-mods', 'eml-shroudforge', 'emf-mods', 'more-frameworks'] },
   { id: 'servers', title: 'Server admins', pages: ['dedicated-servers', 'servers', 'admin-pages'] },
   { id: 'modding', title: 'Modding', pages: ['first-mod', 'code-mods', 'events', 'manifest', 'multiplayer', 'data-packs', 'game-data'] },
   {

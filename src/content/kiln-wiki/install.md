@@ -27,8 +27,9 @@ updated: "2026-11-07"
 
 Steam's Play button also starts Kiln, with the profile you last activated.
 
-Already have another tool's `dinput8.dll`? Kiln keeps it and loads it. For EMF's loader, see
-[EMF and DLL mods](/kiln/wiki/other-mods).
+Mods made for other frameworks (EML, ShroudForge, EMF, Enshwick, Greeneye and more) work too: drop them on the window
+like Kiln mods. You don't need to install those frameworks. Already have another tool's `dinput8.dll`, or another
+framework installed? Kiln keeps it. See [Mods for other frameworks](/kiln/wiki/other-mods).
 
 ## Steam Deck
 
@@ -86,7 +87,7 @@ The **Catalog** (desktop: in the top bar; Deck mode: the Catalog tab) lists Ensh
    The launcher checks it with Nexus first, keeps it in your system keyring (or, without one, in its own folder,
    readable only by you), and never shows it again.
 2. Open the **Catalog**. **Kiln mods** shows mods made for Kiln. **All Enshrouded** shows every mod, and marks the EMF,
-   native and DLL mods Kiln can load too. **Installed** shows what you added from here. Search by name or author, and
+   native and DLL mods. Kiln imports mods for the [other frameworks](/kiln/wiki/other-mods) from there too. **Installed** shows what you added from here. Search by name or author, and
    sort.
 3. Pick a mod for its pictures, description, author, version, requirements and files.
    - **Premium accounts:** **Add** downloads it, checks it against Nexus's file list and puts it in your active profile.
@@ -132,4 +133,5 @@ editor changes a save only when you use it.
 
 ## After a game update
 
-On a build Kiln doesn't know yet, its hooks and C# mods stay off and the game runs as normal.
+On a build Kiln doesn't know yet, its hooks and C# mods stay off and the game runs as normal. EML data mods, which need
+no hooks, still apply.

@@ -18,12 +18,10 @@ mods, and take Kiln off again. You don't need to build anything.
 | Your own Linux machine, no desktop | `kilnctl` and the Kiln runtime zip | a few `kilnctl` commands |
 
 Downloads: every [Kiln release on GitHub](https://github.com/frostdev-ops/kiln/releases), and the optional files on
-[Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301?tab=files).
+[Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301?tab=files). On Nexus the server pack is the optional file
+**Kiln server pack**; kilnctl is in **Kiln runtime (manual install)**.
 
-> **0.2.0-dev.17 and older have no server pack yet.** It arrives with the next release. Until then, use
-> `kiln-runtime-0.2.0-dev.17.zip` (GitHub, or the Nexus optional file **Kiln runtime (manual install)**): unzip it the
-> same way. It also holds a few files a server doesn't use (the game client's symbol files, EMF support, a sample mod).
-> They do no harm; you can delete `kiln/mods/hello` and `kiln/plugins/kiln-native-hello.dll`.
+0.2.0-dev.17 and older have no server pack: unzip `kiln-runtime-<version>.zip` the same way instead.
 
 ## The server pack
 
@@ -32,17 +30,18 @@ Downloads: every [Kiln release on GitHub](https://github.com/frostdev-ops/kiln/r
 | In the zip | What it is |
 |---|---|
 | `dinput8.dll` | loads Kiln when the server starts |
-| `kiln/` | Kiln: its core, services, its own .NET runtime, the server's symbol files, the admin module |
+| `kiln/` | Kiln: its core, services, its own .NET runtime, the server's symbol files, the admin module, and the server parts for [other frameworks' mods](/kiln/wiki/other-mods): EML, ShroudForge, EMF and the rest |
 | `KILN-SERVER-README.txt` | the short version of this page |
 
 Unzipped into the folder with `enshrouded_server.exe`, it's a complete install: the same files `kilnctl` installs on a
-Linux server. Nothing else needs installing; Kiln brings its own .NET.
+Linux server. Nothing else needs installing; Kiln brings its own .NET. The server pack ships from 0.2.0-dev.18.
 
 Before you start, every route:
 - Stop the server.
 - Back up the savegame folder.
 - Look for a `dinput8.dll` already in the server folder. That's another mod loader. Unzipping replaces it, and that
-  loader stops working, so keep a copy. `kilnctl` can keep the other loader running next to Kiln; a plain unzip can't.
+  loader stops working, so keep a copy. `kilnctl` and the launcher keep the other loader running next to Kiln; a plain
+  unzip can't. Often you don't need it anyway: Kiln runs EMF and ShroudForge mods by itself.
 
 ## Rented server
 
@@ -102,7 +101,7 @@ kilnctl stop myserver                                                 # saves, t
 ```
 
 To keep it running and start it at boot, use the systemd units (`kiln@.service`, `kiln-backup@.service`,
-`kiln-backup@.timer`; from the next release they come with each release, as `kiln-systemd-units-<version>.tar.gz` on
+`kiln-backup@.timer`; from 0.2.0-dev.18 they come with each release, as `kiln-systemd-units-<version>.tar.gz` on
 GitHub):
 
 ```sh
@@ -124,7 +123,7 @@ Open `kiln/logs/kiln.log` after the server has started.
 | Line in kiln.log | Meaning |
 |---|---|
 | `build <long number>: verified` and `boot complete; handing control to the game` | Kiln runs, mods load |
-| `safe idle: build ... is not verified ... the game runs vanilla` | the game was updated and this Kiln doesn't know the new build yet: the server runs without Kiln and its mods (see [Game updates](#game-updates)) |
+| `safe idle: build ... is not verified ... the game runs vanilla` | the game was updated and this Kiln doesn't know the new build yet: Kiln's hooks and C# mods stay off (see [Game updates](#game-updates)) |
 | no kiln.log | `dinput8.dll` wasn't loaded: wrong folder, or Wine without the setting |
 
 On Linux, `kilnctl status myserver` shows the same build line.
@@ -150,15 +149,29 @@ Within a few seconds Kiln runs it, deletes the `.cmd` file and writes `<name>.re
 output. The lines run as the server console, with full rights. Over FTP, upload the file as `test.txt` and then rename
 it to `test.cmd`, so Kiln never reads a half-uploaded file.
 
+- At most 64 command lines per file (blank lines and comments don't count). Later lines are skipped: split a longer
+  batch into several files.
+- Some commands take a while: their results can take up to 10 seconds. While one still runs, the result file says
+  `"running": true`.
+
 ## Mods on the server
 
 | Mod type | Where it goes |
 |---|---|
 | Kiln mod | `kiln/mods/<mod>/` (the folder with its `kiln.mod.json`) |
 | Native Kiln mod | `kiln/native/<mod>/` |
-| Other loaders' mods (EML, ShroudForge, EMF, ...) | need Kiln's part for that loader; see [EMF and DLL mods](/kiln/wiki/other-mods). The server pack's README lists the parts it has |
+| EML or ShroudForge mod | `mods/<mod>/` ([EML and ShroudForge](/kiln/wiki/eml-shroudforge)) |
+| EMF mod | `emf/mods/<mod>/`, then `enabled=1` in `kiln/config/emf/<mod>.ini` ([EMF mods](/kiln/wiki/emf-mods)) |
+| Enshwick, Shroudtopia or Creative Mode mod | `mods/` ([More frameworks](/kiln/wiki/more-frameworks)) |
+| SET mod | `shrouded_engine_tweaks/mods/<mod>/` |
+| shroudlink mod | `shroudlink_mods/<name>.dll` |
+| Ember mod | `ember/mods/<mod>/`: found, but not run until Ember publishes its loader |
 
-Restart the server after adding or removing mods.
+The server pack has Kiln's part for every framework above; the README lists them. Restart the server after adding or
+removing mods.
+
+Players need some of these mods too, EML data mods above all. Kiln's join check doesn't compare other frameworks' mods
+yet, so tell your players or put them in your modpack. See [Servers and players](/kiln/wiki/other-mods#servers-and-players).
 
 What players need depends on the mod. Its `kiln.mod.json` says it in `clients`:
 
@@ -182,8 +195,9 @@ yet. See [Modpacks](/kiln/wiki/modpacks).
 Every Enshrouded update changes the server program. Kiln checks the build at every start:
 
 - **Kiln knows the build:** nothing to do.
-- **Kiln doesn't know it yet:** the server runs normally, but vanilla: no Kiln, no mods. Your save stays fine. A Kiln
-  update with the new build usually follows; then update Kiln (below).
+- **Kiln doesn't know it yet:** the server runs normally, without Kiln's hooks and C# mods. Your save stays fine. Parts
+  that start before the game and need no hooks can still run, such as EML data mods. A Kiln update with the new build
+  usually follows; then update Kiln (below).
 
 Players' games are separate: their Kiln needs to know their game build too. Players with the launcher get that from
 Kiln updates in the launcher.
@@ -225,4 +239,4 @@ settings, data and logs; delete it if you don't need them.
 - A modpack built for a rented server from a local copy of its folder.
 
 Tested: a headless Linux server set up from the 0.2.0-dev.17 release files with `kilnctl`, start to stop, Kiln running on
-a verified build.
+a verified build. The server pack holds the same files `kilnctl` installs.

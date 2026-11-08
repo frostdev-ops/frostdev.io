@@ -3,7 +3,7 @@ title: "Run a server"
 nav: "Run a server"
 description: "Install, update and run dedicated servers with Kiln, from the launcher or kilnctl on Linux."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-07"
 ---
 
 > Rented server with only FTP, or a server without the launcher? See
@@ -35,7 +35,7 @@ from **Overview**. **Import** adds a server folder you already have.
 |---|---|
 | Overview | state, players, uptime; update the game, install or update Kiln |
 | Settings | name, slots, port, difficulty, user groups, passwords, bans (while stopped) |
-| Mods | see state, sync from your library, on or off |
+| Mods | see state, sync from your library, on or off. Mods for [other frameworks](/kiln/wiki/other-mods) go into the folders they're read from |
 | Configs | mod settings, edited offline |
 | Backups | make and restore; a running server restores at its next start |
 | Console | live output, Kiln commands, log files |
@@ -46,7 +46,8 @@ Stopping saves first. A Steam server won't stop from the launcher while players 
 
 ## Modpacks for your players
 
-On **Modpack**, build a zip of the mods players need (same mods, same file). Upload it anywhere reachable over https and
+On **Modpack**, build a zip of the mods players need (same mods, same file). It includes the other frameworks' mods
+players need too, such as EML data mods. Upload it anywhere reachable over https and
 enter the address. Joining players' launchers then offer it. See [Join a modded server](/kiln/wiki/modpacks).
 
 ## Who may join
@@ -62,7 +63,8 @@ enter the address. Joining players' launchers then offer it. See [Join a modded 
 | `off` | no check |
 | `refuse` | players missing anything required are refused, with a list |
 
-A player let in without a mod doesn't get that mod's entities.
+A player let in without a mod doesn't get that mod's entities. The check covers Kiln mods; mods for other frameworks
+aren't compared yet.
 
 A player without Kiln is held before any world data, at most `vanillaHoldSeconds` (default 5), until the server decides. They're
 refused when:

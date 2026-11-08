@@ -5,12 +5,38 @@ updated: "2026-11-07"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes 0.2.0-dev.17.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes 0.2.0-dev.18.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026. Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
+
+## New in 0.2.0-dev.18
+
+- **Mods for other frameworks.** Kiln runs mods made for EML, ShroudForge, EMF (up to 0.5.1), SET, Greeneye Loader,
+  Creative Mode's Flame, Shroudtopia, Enshwick and shroudlink, unchanged, without installing those frameworks. EML,
+  ShroudForge and EMF support are installed by default, and Kiln ships Enshwick's own loader. The launcher's Library
+  imports mods of every framework. Ember mods are found and listed, but don't run until Ember publishes its loader.
+  [Mods for other frameworks](/kiln/wiki/other-mods)
+- **Server pack:** `kiln-server-<version>.zip`, one zip for rented servers and Windows PCs, now with the server parts
+  for EML, ShroudForge and EMF. [Dedicated servers](/kiln/wiki/dedicated-servers)
+
+## Mods for other frameworks
+
+| Framework | Status |
+|---|---|
+| [EML](/kiln/wiki/eml-shroudforge#eml-mods) | game test pending. Mods patch the game data on test servers; a broken mod is switched off instead of stopping the game |
+| [ShroudForge](/kiln/wiki/eml-shroudforge#shroudforge-mods) | game test pending. Kiln's bundled copy and a player's own copy both run mods on test servers, with live settings |
+| [EMF](/kiln/wiki/emf-mods) | partly built: EMF 0.5.1's API with gaps (no radial wheels; programs and events in the server's world only; no stamina or mana). EMF 0.3.3's mods load on a test server; the clock mod seen in the game |
+| [SET](/kiln/wiki/more-frameworks#set) | partly built: game options, a few admin functions and most overlay windows missing. Also runs on dedicated servers |
+| [Greeneye Loader](/kiln/wiki/more-frameworks#greeneye-loader) | game test pending. The whole API, tested on Linux under Wine |
+| [Creative Mode (Flame)](/kiln/wiki/more-frameworks#creative-mode-flame) | game test pending. Started on a test server |
+| [Shroudtopia](/kiln/wiki/more-frameworks#shroudtopia) | game test pending. The whole API; Shroudweave's mods untried |
+| [Enshwick](/kiln/wiki/more-frameworks#enshwick) | game test pending. Enshwick's own loader, shipped with Kiln; its mods ran on a test server |
+| [shroudlink](/kiln/wiki/more-frameworks#shroudlink) | works on a test server (shroudlink's self-test). With players joined: pending |
+| [Ember](/kiln/wiki/more-frameworks#ember) | not running: waiting for Ember's loader |
+| Stand-alone `dinput8.dll` mods | works: loaded next to Kiln |
 
 ## New in 0.2.0-dev.17
 
@@ -71,7 +97,8 @@ Nothing below has been seen in the game yet. The new features are listed under
 | [Per-character progress](/kiln/wiki/multiplayer#per-character-progress) | talents follow the character; quests stay with the world |
 | Game UI: menus, screens, crafting tabs, HUD, keys, gamepad | |
 | Content and config sync to Kiln players | |
-| EMF mods and DLL mods | |
+| Kiln DLL mods and stand-alone `dinput8.dll` mods | |
+| [EMF mods](/kiln/wiki/emf-mods) | EMF 0.3.3's mods on test servers; the clock mod in the game. EMF 0.5 and the gaps: [above](#mods-for-other-frameworks) |
 | The launcher: install, profiles, library, saves, save editor | Linux and Windows. Windows: checked on a Windows PC by a tester |
 | Simpler first run | finds the game, installs Kiln, makes a "My mods" profile; drop a mod on the window to add it |
 | Linux builds | glibc 2.35 or newer: Steam Deck (SteamOS), Ubuntu 22.04 and later |
@@ -122,6 +149,8 @@ These pass offline or on a test server. What's missing is a player looking at th
 | [Skinned models and animations](/kiln/wiki/models#skinned-models-and-animations) cooked from glTF | a test server's animation engine plays them on their curves; a creature with its own body not yet confirmed in the game |
 | Steam Deck mode in the launcher | tested in emulation; not on a Deck yet |
 | A remote server with server mods | local test servers so far |
+| [Mods for other frameworks](/kiln/wiki/other-mods) | new. EML, ShroudForge, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink: tested on test servers and in Kiln's own tests; not yet seen in a player's game |
+| [The server pack](/kiln/wiki/dedicated-servers#the-server-pack) | new. Holds the same files `kilnctl` installs; not yet tried on a rented host |
 
 ## Being built
 

@@ -2,7 +2,7 @@
 title: "Multiplayer"
 description: "What players need, who can join, per-character progress, synced configs, your own network messages and client code."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-07"
 ---
 
 ## Decide what players need
@@ -28,6 +28,9 @@ Set `clients` in your [manifest](/kiln/wiki/manifest):
 | Kiln, missing that mod | `modSync` is `warn` or `off` | joins without that mod's entities |
 
 The check on a Kiln client needs `side: both`. `optionalMods` exempts a mod. See [Run a server](/kiln/wiki/servers).
+
+The check covers Kiln mods. Mods made for [other frameworks](/kiln/wiki/other-mods) aren't compared yet, except by their
+own framework (Enshwick has its own join check). A server's modpack can carry them.
 
 **Known limit:** only entities are withheld. A vanilla client carrying Kiln items can crash on a server that lets it in, and may lose
 those items elsewhere. A mod that adds items should state `clients`.

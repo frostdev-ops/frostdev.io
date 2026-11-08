@@ -3,7 +3,7 @@ title: "Join a modded server"
 nav: "Join a modded server"
 description: "What a modded server needs from your game, and how the launcher installs its modpack with your consent."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-07"
 ---
 
 ## What a server needs from you
@@ -15,6 +15,10 @@ updated: "2026-11-05"
 | the mod | the mod itself | quests, NPCs, talents, new icons, models, sounds, keys and screens |
 
 With Kiln you also get the server's item and recipe changes as you join, with nothing to install.
+
+Mods made for [other frameworks](/kiln/wiki/other-mods) count too. EML data mods (stacks, recipes, new items) must match
+the server, or items can go missing. Kiln doesn't check those mods when you join yet, so ask the server which ones it
+runs, or install its modpack.
 
 ## Who gets in
 
@@ -45,7 +49,8 @@ Tick the box and install. The launcher:
 
 1. downloads the pack (https only, unless you allow http in Settings);
 2. checks its checksum, and each mod's against what the server asked for;
-3. adds the mods to your library and makes a profile named **Server: &lt;name&gt;**;
+3. adds the mods to your library and makes a profile named **Server: &lt;name&gt;**. A pack can hold mods for other
+   frameworks too, such as EML data mods;
 4. backs up your saves and activates the profile.
 
 Press **Launch** and join again. Nothing downloads until you agree. Dismiss the banner and that server's pack won't be

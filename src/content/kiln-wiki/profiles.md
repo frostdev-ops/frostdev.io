@@ -3,7 +3,7 @@ title: "Profiles and mods"
 nav: "Profiles and mods"
 description: "Keep sets of mods as profiles, build a mod library, and change mod settings in the launcher or in game."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-07"
 ---
 
 ## Profiles
@@ -18,6 +18,7 @@ page. Every game start uses the active one, Steam's included.
 | Mods | Kiln mods: on or off, version, add from the library, with a load-order preview |
 | Native | DLL mods by load time; drag to reorder within a group |
 | EMF | EMF mods |
+| Engines | mods for the [other frameworks](/kiln/wiki/other-mods): EML, ShroudForge, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick, shroudlink, Ember |
 | Configs | mod settings |
 | Saves | backups made while playing this profile |
 
@@ -25,12 +26,13 @@ A broken profile file means **no mods at all**, with the reason in the log. Kiln
 
 ## The library
 
-Drop a mod's zip, folder or DLL on the **Library** page. The launcher identifies it (Kiln, DLL or EMF), keeps every
+Drop a mod's zip, folder or DLL on the **Library** page. The launcher identifies it (Kiln, DLL, EMF or [another framework](/kiln/wiki/other-mods)), keeps every
 version, and can clean up versions no profile uses.
 
 ## Without a profile
 
-Kiln loads the drop-in folders `kiln/mods`, `kiln/native`, `kiln/plugins` and `emf/mods`. A profile can include them too.
+Kiln loads the drop-in folders `kiln/mods`, `kiln/native`, `kiln/plugins` and `emf/mods`, and the other frameworks'
+own folders ([where they are](/kiln/wiki/other-mods#where-the-mods-go)). A profile can include them too.
 An empty `.disabled` file in a mod's folder switches it off.
 
 ## Mod settings
