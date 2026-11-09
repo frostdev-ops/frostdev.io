@@ -3,7 +3,7 @@ title: "Greeneye, Enshwick, SET and more"
 nav: "More frameworks"
 description: "How Kiln runs mods for SET, Greeneye Loader, Creative Mode's Flame, Shroudtopia, Enshwick, shroudlink and Ember."
 status: "pending"
-updated: "2026-11-07"
+updated: "2026-11-08"
 ---
 
 Kiln has a part for each of these frameworks. All of them come with Kiln, so you don't install the framework. Each
@@ -24,14 +24,22 @@ Lua mods for Shrouded Engine Tweaks (SET 0.1.1).
 - **Console:** SET's console is part of its overlay. On Kiln, write Lua lines into a file
   `kiln/control/set/<name>.lua`. Kiln runs them at the next game step, writes the output to `kiln.log`, and deletes
   the file.
-- **Missing:** SET's game options, its text lookups, a few admin functions (`send`, `setLevel`, `setFlameLevel`), and
-  its overlay windows except the Systems view. Only two game systems can be switched off (sprint stamina and fall
-  damage).
-- **Limits:** Kiln runs SET mods with time limits and keeps each mod to its own folder.
+- **Limits:** Kiln runs SET mods with time limits and keeps each mod to its own folder. Only sprint-stamina and
+  fall-damage systems can be switched off.
 - **SET installed too:** if any other tool's `powrprof.dll` is loaded (SET's own, Enshwick's, Shared XP), Kiln's SET
   part stays off.
 
-Status: partial. Tested on a test server and in Kiln's own tests; windows and drawing not yet seen in the game.
+**In dev.20:** `Admin.setLevel`, `Admin.setFlameLevel`, English item names and `Res.text` lookups are available.
+General English localization tags need a locally generated client text catalog; a server without it returns nil.
+Kiln.DevTools supplies Bindings, Resources, Hooks, Game Log, Status and Console views. These are Kiln views: Bindings shows
+Kiln key bindings, Hooks shows Kiln hook statistics; SET's private Lua binding registry and full capture diagnostics are
+not reproduced. Drawing/input still needs a client. `GameOptions.*`, `Admin.send`, ImGui Debug and SET's `settings.ini`
+editor remain unavailable.
+
+The final assembled dev.20 dedicated-server probe passed **39 checks, no failures**: names/texts, hooks, a registered
+`DebugEnemyProjectileEvent` posted and observed with its payload, and flame levels changed 3 → 4 → 20 → 3 with restoration.
+This supersedes the earlier 37/2 record from before the integrated event fixes. It does not establish client windows,
+physical input, fog or placement limits. Status: partial for the remaining API differences and client checks above.
 
 ## Greeneye Loader
 

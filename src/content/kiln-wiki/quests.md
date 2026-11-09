@@ -3,7 +3,7 @@ title: "Quests and dialogue"
 nav: "Quests and dialogue"
 description: "Quest chains in JSON, shown by the game itself: its journal, NPC menu, map markers, notifications and voice."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-08"
 ---
 
 > **Two fixes await a client retest:** an NPC placed in a second hosted world of one session, and done quests notifying again
@@ -58,6 +58,40 @@ every loaded mod, on the server and on every client.
 
 `kiln lint` checks the schema, the game names, and every step, node, NPC and quest the file names. An NPC with no `dialogue`
 offers the quests it gives and takes the deliveries it's owed, each as a topic.
+
+## Quest and dialogue blocks (dev.20+)
+
+**Available in 0.2.0-dev.20 and newer.** Put `quests` and `dialogues` beside NPC, item and status blocks in
+`blocks/*.json`, or define `QuestBlock` and `DialogueBlock` in C#. `kiln new quest MyQuest` starts a project.
+
+```jsonc
+{ "format": 1,
+  "quests": { "errand": { "name": "Wood for Ilse", "giver": "ilse",
+    "steps": [ { "id": "wood", "text": "Bring three logs to Ilse",
+      "objective": { "deliver": { "item": "Material_T1_Wood_Logs", "count": 3, "to": "ilse" } } } ],
+    "rewards": { "xp": 100 } } },
+  "dialogues": { "ilse-talk": { "start": "hello", "nodes": { "hello": { "options": [
+    { "text": "Do you need wood?", "if": { "quest": "errand", "is": "available" },
+      "do": [ { "start": "errand" } ], "reply": "Three logs, please." } ] } } } },
+  "npcs": { "ilse": { "name": "Ilse", "body": "villager", "talk": "ilse-talk" } } }
+```
+
+Block names resolve the NPC, quest, item, status and loot-table references in this mod. `NpcBlock.Talk` points to a
+dialogue block. C# uses `StepBlock`, `Goal.Kill(...)`, `Req.Level(8)`, `Do.Start("errand")` and `RewardBlock`.
+`Blocks.Define` returns a `QuestHandle`; `.FullId` goes to `Quests.Start` and `Quests.StatusOf`.
+
+A reward is one bundle (`xp`, `items`, `status`, `knowledge`, `lootTable`); step rewards run before `onDone`. Overflow items
+land at the player's feet. A world quest pays every player present using one loot-table roll.
+
+The block form uses the game's UI: `side: both`, `clients: mod`. JSON blocks enter journal data on the first start. C#
+definitions enter the generated native sidecar for the next start; ship `quests/generated/<mod>.json` for first-start UI.
+Restart server and clients after changes. For a mod vanilla clients join, keep the existing chat/non-native `quests/*.json`
+form. Blocks have no top-level `knowledge`, option `set`, `toast` or `waypoint` actions; unknown fields fail.
+
+Keep quest/block names, step ids, dialogue node names and option order stable after release. Unloading removes runtime
+quest/dialogue registrations; reloading creates a fresh owning lifetime. The native journal is still boot data, so reload
+does not replace a restart or prove the new form's appearance. Journal, dialogue, rewards and party behaviour need the
+[client checks](/kiln/wiki/status#new-in-020-dev20).
 
 ## What players need
 

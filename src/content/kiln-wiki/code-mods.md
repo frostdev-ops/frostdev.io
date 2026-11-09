@@ -2,7 +2,7 @@
 title: "Code mods"
 description: "The Mod class, the tick thread, events, configs, commands, permissions, saved data and other mods."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-08"
 ---
 
 ## The mod
@@ -23,7 +23,9 @@ public sealed class MyMod : Mod
 ```
 
 What you register through Kiln (ticks, events, commands, channels, game data changes) is removed at unload. Release only
-what you made: threads, timers, files, sockets.
+what you made: threads, timers, files, sockets. Do not reuse callbacks or handles from an old load.
+dev.20+ [world programs](/kiln/wiki/world-programs) keep inert scheduler declarations until restart while their callbacks
+are drained on unload.
 
 `Context` has `Info`, `Log`, `Tick`, `GameLog`, `Scheduler`, `Messages` and `DataDirectory`.
 
@@ -79,6 +81,12 @@ var homes = _config.Value.MaxHomes;        // always current
 
 Kiln writes a commented file, keeps the player's values, fixes bad ones and reloads on change. `[RequiresRestart]` applies
 at the next load. `[Synced]` sends the server's value to players.
+
+**New in 0.2.0-dev.20:** `Config.RegisterWorld<MyConfig>()` keeps one config beside each world's sidecar. Values switch
+before `WorldLoadedEvent`; with no world, they are defaults. `[RequiresRestart]` changes apply when that world next opens.
+`Context.Locale.Get(key, args)` reads this mod's `locales/<language>.json`, falling back to English and then the key.
+`StatusLines.Set("state", "waiting for the world")` or `Add(() => cachedText)` reports status in mod lists. A status source
+may run on a worker, so read snapshots produced on the tick thread rather than live game state.
 
 ## Commands and permissions
 

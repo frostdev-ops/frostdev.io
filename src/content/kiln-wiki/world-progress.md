@@ -2,11 +2,12 @@
 title: "World progress"
 description: "Read how far a world and each character are: flame level, difficulty, spires, shrines, Shroud Roots, bosses, chests, quests. With events."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-08"
 ---
 
 `WorldProgress` answers "how far is this world, and this character?" in typed values, read from the game's own data and
-rules. It's read only: to change progress, grant knowledge or move [quests](/kiln/wiki/quests).
+rules. In 0.2.0-dev.20, the flame level can also be changed with the verified-result API below. Other progress
+changes still use knowledge grants or [quests](/kiln/wiki/quests).
 
 It's part of the Quests service: `<KilnServices>Quests</KilnServices>` in the project.
 
@@ -76,3 +77,21 @@ On the tick thread, never cancelable: they report what already happened.
 ```
 
 More on events: [Events](/kiln/wiki/events).
+
+## Changing the flame level (dev.20+)
+
+**Available in 0.2.0-dev.20 and newer.** On the tick thread after the world starts:
+
+```csharp
+FlameChange result = await WorldProgress.SetFlameLevel(4);
+if (!result.Ok) Log.Warn(result.Reason ?? result.Status);
+var limits = WorldProgress.LimitsAt(4);
+```
+
+The write follows the game's Mother Flame level attribute and mirrored progress value. Await the result: a request being
+queued does not mean it succeeded. `FlameChange` reports before/after levels, clamping and a failure reason; a failed
+rollback can leave changed state and is reported explicitly. Values must fit the game's supported range. `LimitsAt`
+reads the altar/water-source allowances and fog resistance derived from a level.
+
+Save/restart readback and result handling do not prove the game's altar menu, fog removal, player resistance or placement
+limits. Those still need a player check, including after rejoining.

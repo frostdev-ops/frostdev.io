@@ -2,7 +2,7 @@
 title: "The dev kit"
 description: "Kiln.Sdk, project templates, the kiln command, a linter, analyzers, a VS Code extension, a debugger and game-id constants."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-09"
 ---
 
 | Part | For |
@@ -16,12 +16,15 @@ updated: "2026-11-07"
 | [**Testing**](/kiln/wiki/testing) | tests that run inside the server |
 | [**Debugging**](/kiln/wiki/debugging) | breakpoints in a running server, logs, crash reports |
 
-Before release, these are built from Kiln's source, and the packages go into a local folder (a "feed").
+Use the SDK/MDK download matching your Kiln runtime, or build it from source. The folder holding its `.nupkg` files
+is the local package "feed"; pass it to `kiln new` with `--feed <folder>` or set `$KILN_FEED`.
 
 ## Kiln.Sdk
 
+Use the full version from your MDK pack (`0.2.0-dev.20` for this release); local packs have their own version.
+
 ```xml
-<Project Sdk="Kiln.Sdk/0.2.0">
+<Project Sdk="Kiln.Sdk/0.2.0-dev.20">
   <PropertyGroup>
     <KilnModId>my-mod</KilnModId>
     <Version>1.0.0</Version>
@@ -43,7 +46,7 @@ mod. Without a `kiln.mod.json`, the build writes one from the properties; with o
 | `KilnServices` | the services you use, and `Testing` |
 | `KilnServer` | your test server's folder |
 | `KilnTestsAutoRun` | run tests at server start and after reloads |
-| `KilnModFolders` | data folders to ship; default `content;assets;skills;quests;icons;impact;audio` |
+| `KilnModFolders` | data folders to ship; default `content;assets;skills;quests;blocks;icons;impact;audio;vfx;models` |
 | `KilnAnalyzers`, `KilnGameIds` | [analyzers](/kiln/wiki/lint), [game-id constants](/kiln/wiki/catalogs) |
 
 Items: `KilnDependency`, `KilnLoadBefore`, `KilnLoadAfter`, `KilnIncompatible`.
@@ -52,7 +55,7 @@ The `kiln` command drives the targets, which also work alone: `dotnet build -t:K
 
 ## Templates
 
-`kiln new <template> <Name>`, or `dotnet new kiln-<template>`.
+`kiln new <template> <Name>`, or `dotnet new kiln-<template>`. The dev.20 CLI lists 23 templates with `kiln new --list`.
 
 | Template | Gives you | Side, clients |
 |---|---|---|
@@ -69,6 +72,12 @@ The `kiln` command drives the targets, which also work alone: `dotnet build -t:K
 | `native` | a C++ mod | both |
 | `test` | a separate test mod; `target=<mod>` depends on it | server, none |
 | `service` | a native + managed service, inside Kiln's source | |
+
+**New in 0.2.0-dev.20:** block-first templates `item-blocks`, `world-blocks`, `creature-blocks`, `npc`, `cosmetic`,
+`building-material`, `ability-blocks`, `quest`; UI blocks with `kiln new ui MyUi --set blocks=true`. They supply typed blocks
+and/or `blocks/*.json`, so keep the form you need. The `items` and `creature` templates remain available for clone-based
+changes no block expresses. Confirm options with `kiln new --list` from the installed MDK; older dev.19 installations lack these
+additions. [Building blocks](/kiln/wiki/blocks)
 
 Run `kiln cook` before the first build of `model`, `sound` and `ability` with Impact. `kiln build` does it when a recipe is out of
 date.

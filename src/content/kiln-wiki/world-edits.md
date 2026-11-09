@@ -2,13 +2,16 @@
 title: "World edits"
 description: "Dig, build, flatten and paint terrain, place props, paste schematics. Players without Kiln see it all."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-08"
 ---
 
 Kiln uses the game's own building and terraforming, so every player sees the edits. It adds the areas it edits to the save, so
 they're kept like a base.
 
 <!-- shot: world-edit | A Kiln crater and a pasted schematic -->
+
+To author new placeable definitions, see [World blocks](/kiln/wiki/world-blocks). For declared worker-thread ECS updates,
+see [World programs](/kiln/wiki/world-programs) (both have dev.20+ additions).
 
 ## Shapes
 
