@@ -1,7 +1,7 @@
 ---
 title: "Features"
 description: "Everything Glaze does on Blackboard Ultra, Canvas and Moodle, site by site."
-updated: "2026-11-04"
+updated: "2026-11-08"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Features"
 ---
 <!-- Mirrored from Glaze's docs/features.md by its tools/dev/docs-mirror.js: edit it there. -->
@@ -21,6 +21,14 @@ Its animated scene also stops and releases its rendering resources.
 The settings editor has eleven categories: **Look, Navigation, Courses, Study, Course pages, Writer, Sharing, Mods, AI, Privacy and data, and About**. **All settings** opens More options and reveals advanced sections; search covers every control. Search works across tabs; section links such as `#blackboard/nav` and older editor links reveal the right tab. Section resets change their own preferences; resetting preferences keeps your palettes, pictures, local notes/tasks, bookmarks and share keys. The live preview uses fictional local pages at real desktop or phone CSS widths, with site/page/appearance controls. Focusing a Blackboard course's editor controls previews that course's appearance; Blackboard nicknames can be edited here as well as on its course cards. Sharing includes the Relay origin under All settings and an explicit connection test; saving stays offline.
 
 - **[Agents](/guides/glaze-agents)** (Settings → AI → Agents, off by default): connect apps on this computer over MCP to courses, to-dos, grades, assignments and Writer documents. Allow each app identity and data group in Glaze; built-in changes and every mod code-tool call wait for your approval.
+
+## Settings
+
+Settings shares setup’s theme thumbnails and motion choices. **Frost** in the theme picker restores Glaze’s default theme; **Reset palette** changes colors only, keeping fonts, background and Look extras. Both preserve notes, tasks, documents and other unrelated data.
+
+**Settings → Course pages → Speed** groups instant pages, course-data prefetch and loading feedback. **Score bars** is under **Settings → Study → Grades and GPA**. Existing section links still work. On narrow screens, **Show preview** stays at the bottom of the window and opens the full preview; Escape closes it. Writer’s paper sample follows its format, zoom, ruler and Light page choices. The paper sample uses invented content. AI settings opens directly to its controls, without decorative illustrations.
+
+**School** in the header opens **Settings → Privacy and data → School**, with links to Google Drive, Google Calendar and AI settings. **Setup** reopens the first-install guide in its own tab on Chrome, Edge and Firefox. Safari uses its app’s setup flow. Every advanced control, per-section reset and search remains available.
 
 ## Mods
 
@@ -115,14 +123,14 @@ Notes **Back up or restore** opens **Settings → Privacy and data → Backup an
 - **Sites** — Canvas on `*.instructure.com`, Blackboard Ultra on `*.blackboard.com` and Moodle on `*.moodlecloud.com` work without configuration. On Chrome, Edge and Firefox, you can add your school's own address in four ways. The browser asks for access Glaze does not already hold:
   - **Use Glaze on** the site, in Glaze's toolbar popup on one of its pages. On Chrome and Edge, Glaze's icon gets a dot on pages that look like Canvas, Moodle or Blackboard Ultra, and once the popup has opened there, Chrome 133 and later also keep an Allow entry for the tab in the extensions menu.
   - The school address field on the tab Glaze opens once when it's installed.
-  - Settings → Privacy and data → Sites → the school address field.
+  - Settings → Privacy and data → School → the school address field.
   - The browser's own extension menu or settings.
 
   The popup recognizes Canvas by its stylesheet, Moodle by its head keywords and body attributes, and Ultra by its `/ultra/` base address on an `/ultra` page. An address typed in the first tab or Settings is checked through the site's APIs after access is granted. If no LMS answers, Glaze returns access granted by that attempt; access held beforehand stays. Glaze shows "No course site at {host}" or "Can't reach {host}" and offers up to two nearby course sites, found through homepage links and common course-site names on the same domain. Sites granted through the browser's menu are checked too; a failed check leaves that access unused.
 
   **All sites** on the first tab grants every HTTPS site. Glaze then asks on unapproved course sites, as on Safari and installs from before 3.4.0: **Use Glaze on example.edu?** **Yes** turns it on there; **Not now** stops asking there for a week. Until Yes, Glaze does not theme the site, read its API or keep course data there. It never asks while Glaze is off.
 
-  Settings → Privacy and data → Sites lists the sites you added, with each one's LMS. **Remove** stops Glaze there, returns any browser grant for that exact site and forgets the courses and due dates it read there; your notes and tasks stay. Broader grants such as All sites stay. Reset everything clears the list. Sites Glaze ran on before it asked stay on the list.
+  Settings → Privacy and data → School lists the sites you added, with each one's LMS. **Remove** stops Glaze there, returns any browser grant for that exact site and forgets the courses and due dates it read there; your notes and tasks stay. Broader grants such as All sites stay. Reset everything clears the list. Sites Glaze ran on before it asked stay on the list.
 
 ## Glaze Writer
 
