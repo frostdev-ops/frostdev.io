@@ -1,13 +1,13 @@
 ---
 title: "EMF mods"
 nav: "EMF mods"
-description: "Kiln runs EMF mods made for EMF 0.3.3 up to 0.5.1, DLL and Lua, without EMF's loader."
+description: "Install EMF DLL and Lua mods; released support and the staged EMF 0.6.0 / API v27 additions."
 status: "partial"
-updated: "2026-11-07"
+updated: "2026-11-08"
 ---
 
-Kiln runs mods made for EMF (the Enshrouded Modding Framework), from 0.3.3 up to 0.5.1. It gives them the same API EMF
-0.5.1 gives them, built on Kiln. DLL mods and EMF's Lua mods both work. You don't need EMF's `dinput8.dll` or its core.
+Released 0.2.0-dev.19 runs mods made for EMF (the Enshrouded Modding Framework), from 0.3.3 up to 0.5.1. It gives them the EMF
+0.5.1 API with the gaps below, built on Kiln. DLL mods and EMF's Lua mods both work. You don't need EMF's `dinput8.dll` or its core.
 
 Kiln's EMF part is installed by default from 0.2.0-dev.18. Most of EMF's API works; the gaps are listed
 [below](#what-doesnt-work-yet).
@@ -51,7 +51,30 @@ EMF 0.5 runs on current game builds. EMF 0.3.3 doesn't: it goes idle, and Kiln's
 Put `;` in front of EMF's line in `kiln/chain.ini`, then restart. EMF's files can stay in `emf/`; only its loader must
 not run.
 
+## dev.20 support in preparation
+
+**Staged, absent from released dev.19.** The adapter is being updated to EMF 0.6.0 / API v27, including the five mod-message
+functions (`net_channel`, `net_to_server`, `net_to_player`, `net_to_players`, `net_peer`). It uses EMF's upstream hidden-chat
+wire protocol; it is not a Kiln-only channel or a claim that a joined upstream client has already been tested. Hosted/offline
+messages travel in process. Remote delivery needs a peer handshake and the same mod/channel version on both sides. A send
+refusal can mean no welcomed peer, a direction/version mismatch, a size limit or a rate limit.
+
+This work also adds radial-wheel support, right-click window events, stamina/mana attributes and the newer program/spawn
+paths. Client-world ECS programs remain unsupported. Windows still need a game client and retain Kiln's overlay look.
+The full API slot count and final integration results are still being checked.
+
+**Beastmaster and ShroudForge together:** two dedicated-server dev.20 runs loaded EMF Lua 1.19 and Beastmaster 1.13 beside
+ShroudForge, each once per run. Each network probe finished with 11 passes and no failures. The optionalbear/beasts
+asset-pack run failed at startup under Wine with **Access denied**; pack startup and portrait-manifest handling remain
+unresolved. These checks do not verify portraits, player UI or gameplay. API v27 support is needed by that Lua/Beastmaster path. Install
+the matching Lua host and mod dependencies on the sides the mod requires. A successful load, a network fixture or an
+unchanged ShroudForge setting does not verify capture, stable offers/portraits, wheel choices, commands or joined-player
+synchronization. That pairing still needs hosted and joined game checks. See also
+[ShroudForge](/kiln/wiki/eml-shroudforge#dev20-pairing-with-emf).
+
 ## What doesn't work yet
+
+These are the gaps in released dev.19; the staged changes above do not make it a newer build.
 
 | What | On Kiln |
 |---|---|

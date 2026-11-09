@@ -2,7 +2,7 @@
 title: "Building blocks"
 description: "Say what you mean: a spell, a sword, a potion, a status, a creature. Kiln picks the game data, the ids and the programs."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-08"
 ---
 
 > **Works** since 0.2.0-dev.14: on test servers, and much of it seen in the game (spells, abilities, items, creature rules,
@@ -16,6 +16,10 @@ need. There's no `base` to name and no GUID to write.
 
 The older ways still work and stay there for what blocks don't cover yet: [new items](/kiln/wiki/new-items) by clone,
 [game data](/kiln/wiki/game-data) and string paths.
+
+**Staged for dev.20+:** standalone loot tables/recipes, [quest and dialogue blocks](/kiln/wiki/quests#quest-and-dialogue-blocks-dev20),
+[world-block fields](/kiln/wiki/world-blocks), and [UI blocks](/kiln/wiki/ui-blocks). These are absent from released dev.19;
+see the [release and test boundary](/kiln/wiki/status#in-preparation-for-020-dev20).
 
 ## Setup
 
@@ -83,8 +87,10 @@ hand-made GUIDs and a dozen game field paths.
 | `ItemBlock` | Material, potion, food, arrow, any of the game's tools, watering can or water pouch | [New items](/kiln/wiki/new-items) |
 | `WeaponBlock` | A weapon of one of 11 classes, with exact tooltip numbers | |
 | `ArmorBlock`, `CosmeticBlock` | Armour by slot and set; a vanity piece | [3D models](/kiln/wiki/models) |
-| `RecipeBlock`, `LootBlock` | Where it's made and from what; where it drops | |
-| `StationBlock`, props, furniture | Things players place: a station with its own recipes, a rack, a chair | |
+| `RecipeBlock`, `LootBlock`; dev.20+: `LootTableBlock` | Where it's made and from what; where it drops; reusable loot tables | |
+| `StationBlock`, props, furniture | Things players place: a station with its own recipes, a rack, a chair | [World blocks](/kiln/wiki/world-blocks) |
+| dev.20+: `QuestBlock`, `DialogueBlock` | Quest chains and NPC conversations | [Quests](/kiln/wiki/quests#quest-and-dialogue-blocks-dev20) |
+| dev.20+: `WindowBlock`, `HudLineBlock`, `KeyBindingBlock` | UI from data, bound to config and safe game values | [UI blocks](/kiln/wiki/ui-blocks) |
 | Building materials, shapes, terrain | New building blocks and shapes for the hammer | |
 | `CreatureBlock` | A creature: body, animation, AI, behaviour, stats, spawns | [Creature AI](/kiln/wiki/creature-ai) |
 | `NpcBlock` | A friendly NPC: body, talk, wares, roster place | [Friendly NPCs](/kiln/wiki/npcs) |
@@ -93,6 +99,10 @@ hand-made GUIDs and a dozen game field paths.
 | `SoundBlock` | A sound from your audio files | [Sounds](/kiln/wiki/sounds#sound-blocks) |
 
 An effect's `Sound` plays a sound block by its name, or a cue from [Sounds and voice](/kiln/wiki/sounds).
+
+**Updating C# from dev.19 to dev.20+:** an item's `Loot.Tables` entries use `DropPlace` now, for example
+`new DropPlace { DropsLike = GameItems.Material_T1_Twigs }`. The old `LootTableBlock` name now describes a standalone
+table with `Entries`; old placement initializers fail to build. JSON `loot.tables` keeps its existing shape.
 
 ## Effects
 

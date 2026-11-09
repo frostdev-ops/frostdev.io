@@ -2,7 +2,7 @@
 title: "The dev kit"
 description: "Kiln.Sdk, project templates, the kiln command, a linter, analyzers, a VS Code extension, a debugger and game-id constants."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-08"
 ---
 
 | Part | For |
@@ -69,6 +69,12 @@ The `kiln` command drives the targets, which also work alone: `dotnet build -t:K
 | `native` | a C++ mod | both |
 | `test` | a separate test mod; `target=<mod>` depends on it | server, none |
 | `service` | a native + managed service, inside Kiln's source | |
+
+**Staged for dev.20+:** block-first templates `item-blocks`, `world-blocks`, `creature-blocks`, `npc`, `cosmetic`,
+`building-material`, `ability-blocks`, `quest`; UI blocks with `kiln new ui MyUi --set blocks=true`. They supply typed blocks
+and/or `blocks/*.json`, so keep the form you need. The `items` and `creature` templates remain available for clone-based
+changes no block expresses. Confirm options with `kiln new --list` from the installed MDK; dev.19 does not have these
+additions. [Building blocks](/kiln/wiki/blocks)
 
 Run `kiln cook` before the first build of `model`, `sound` and `ability` with Impact. `kiln build` does it when a recipe is out of
 date.

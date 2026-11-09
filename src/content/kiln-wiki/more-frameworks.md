@@ -3,7 +3,7 @@ title: "Greeneye, Enshwick, SET and more"
 nav: "More frameworks"
 description: "How Kiln runs mods for SET, Greeneye Loader, Creative Mode's Flame, Shroudtopia, Enshwick, shroudlink and Ember."
 status: "pending"
-updated: "2026-11-07"
+updated: "2026-11-08"
 ---
 
 Kiln has a part for each of these frameworks. All of them come with Kiln, so you don't install the framework. Each
@@ -31,7 +31,14 @@ Lua mods for Shrouded Engine Tweaks (SET 0.1.1).
 - **SET installed too:** if any other tool's `powrprof.dll` is loaded (SET's own, Enshwick's, Shared XP), Kiln's SET
   part stays off.
 
-Status: partial. Tested on a test server and in Kiln's own tests; windows and drawing not yet seen in the game.
+**Staged for dev.20+:** `Admin.setLevel`, `Admin.setFlameLevel`, English item names and `Res.text` lookups are added.
+General English localization tags need a locally generated client text catalog; a server without it returns nil.
+Kiln.DevTools adds Bindings, Resources, Hooks, Game Log, Status and Console views. These are Kiln views: Bindings shows
+Kiln key bindings, Hooks shows Kiln hook statistics; SET's private Lua binding registry and full capture diagnostics are
+not reproduced. Drawing/input still needs a client. `GameOptions.*`, `Admin.send`, ImGui Debug and SET's `settings.ini`
+editor remain unavailable.
+
+Status: partial. Released dev.19 has the gaps above; dev.20+ changes are staged, with final integration and client checks pending.
 
 ## Greeneye Loader
 

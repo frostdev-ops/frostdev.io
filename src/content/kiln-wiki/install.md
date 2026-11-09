@@ -2,7 +2,7 @@
 title: "Install Kiln"
 description: "Add Kiln to Enshrouded with the launcher, get mods from Nexus Mods, and play with them or without."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-08"
 ---
 
 > **Early access.** [Download the launcher](/kiln#download): Windows installer, Linux AppImage or .deb. Also on
@@ -78,14 +78,17 @@ shows **Vanilla**. On a Steam Deck, Home shows a **Kiln is not loading** button 
 
 ## Mods from Nexus Mods
 
-> **New in 0.2.0-dev.16.** The mod list has been read from the real Nexus Mods, without an account. Adding and updating
-> mods was tested against a stand-in for Nexus, not yet with a real account.
+> **dev.20 sign-in is staged.** It replaces personal API keys with browser authorization (OAuth 2.0 + PKCE).
+> The app-registration request has been sent; Nexus approval, the public client ID, approved redirect and real-account
+> sign-in/download checks are pending, so a build without an approved registration
+> shows **Nexus Mods sign-in is not available in this build**. Released dev.19 used the older key flow.
 
 The **Catalog** (desktop: in the top bar; Deck mode: the Catalog tab) lists Enshrouded's mods on Nexus Mods.
 
-1. In **Settings > Nexus Mods**, paste your personal API key (on nexusmods.com: Settings, API Keys) and press **Save**.
-   The launcher checks it with Nexus first, keeps it in your system keyring (or, without one, in its own folder,
-   readable only by you), and never shows it again.
+1. In a configured dev.20+ build, open **Settings > Nexus Mods** and choose **Sign in to Nexus Mods**. Your browser
+   opens Nexus's authorization page; return to Kiln after approving it. Kiln keeps authorization in your system keyring
+   (or private local storage when no backend exists). **Sign out** removes that stored authorization. No personal API key
+   is requested or used; the old saved key is retired, and you must sign in again.
 2. Open the **Catalog**. **Kiln mods** shows mods made for Kiln. **All Enshrouded** shows every mod, and marks the EMF,
    native and DLL mods. Kiln imports mods for the [other frameworks](/kiln/wiki/other-mods) from there too. **Installed** shows what you added from here. Search by name or author, and
    sort.
@@ -101,7 +104,7 @@ The **Catalog** (desktop: in the top bar; Deck mode: the Catalog tab) lists Ensh
 5. **Updates:** when a mod you added has a newer file, its card says **Update** and a banner lists it. Nothing updates
    by itself.
 
-Without a key the Catalog still lists every Enshrouded mod, but can't tell which are Kiln mods or download them. The
+Without sign-in the Catalog still lists every Enshrouded mod, but can't tell which are Kiln mods or download them. The
 launcher from Nexus Mods has the Catalog too: it downloads only the mods you pick, never itself. Only zip files are
 taken; for a 7z or RAR, download it by hand and unpack it.
 

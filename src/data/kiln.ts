@@ -6,13 +6,14 @@ export const kilnSource = 'https://github.com/frostdev-ops/kiln';
 export const kilnWikiSections = [
   { id: 'players', title: 'Players', pages: ['install', 'profiles', 'modpacks', 'other-mods', 'eml-shroudforge', 'emf-mods', 'more-frameworks'] },
   { id: 'servers', title: 'Server admins', pages: ['dedicated-servers', 'servers', 'admin-pages'] },
-  { id: 'modding', title: 'Modding', pages: ['first-mod', 'code-mods', 'events', 'manifest', 'multiplayer', 'data-packs', 'game-data'] },
+  { id: 'modding', title: 'Modding', pages: ['first-mod', 'code-mods', 'events', 'world-programs', 'manifest', 'multiplayer', 'data-packs', 'game-data'] },
   {
     id: 'gameplay',
     title: 'Gameplay',
     pages: [
       'blocks',
       'new-items',
+      'inventory',
       'creatures',
       'creature-ai',
       'abilities',
@@ -21,12 +22,13 @@ export const kilnWikiSections = [
       'talents',
       'quests',
       'npcs',
+      'world-blocks',
       'world-edits',
       'player-rules',
       'world-progress',
     ],
   },
-  { id: 'looks', title: 'Looks and sound', pages: ['game-ui', 'drawing', 'assets', 'models', 'shaders', 'sounds'] },
+  { id: 'looks', title: 'Looks and sound', pages: ['game-ui', 'ui-blocks', 'drawing', 'assets', 'models', 'shaders', 'sounds'] },
   { id: 'devkit', title: 'Dev kit', pages: ['dev-kit', 'cli', 'lint', 'vscode', 'catalogs', 'testing', 'hot-reload', 'debugging'] },
   { id: 'reference', title: 'Reference', pages: ['forge', 'status'] },
 ] as const;
@@ -57,6 +59,8 @@ export const kilnSkillFiles = [
   { path: 'references/setup.md', about: 'Kiln.Sdk, templates, project properties, build targets.' },
   { path: 'references/api.md', about: 'The mod API by area, with the thread each part runs on.' },
   { path: 'references/manifest.md', about: 'kiln.mod.json: sides, what players need, version ranges, load order.' },
+  { path: 'references/blocks.md', about: 'dev.20+ block templates, world fields, UI bindings and actions.' },
+  { path: 'references/world-programs.md', about: 'dev.20+ boot ECS declarations, worker access and callback lifetime.' },
   { path: 'references/data-packs.md', about: 'Data packs, new items, game data, creatures and assets.json.' },
   { path: 'references/quests-talents-sounds.md', about: 'Talents, progression, quests, friendly NPCs, sounds and voice.' },
   { path: 'references/devkit.md', about: 'The kiln command, lint, analyzers, catalogs, VS Code, the debugger.' },
@@ -67,4 +71,4 @@ export const kilnSkillFiles = [
 ] as const;
 
 /** Fixed timestamp for the skill zip, so the same files build the same bytes. Update with the mirror. */
-export const kilnSkillUpdated = '2026-11-06';
+export const kilnSkillUpdated = '2026-11-08';

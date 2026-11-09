@@ -3,7 +3,7 @@ title: "EML and ShroudForge mods"
 nav: "EML and ShroudForge"
 description: "Kiln runs EML data mods and ShroudForge's Lua mods unchanged, with no extra loader and no Wine settings."
 status: "pending"
-updated: "2026-11-07"
+updated: "2026-11-08"
 ---
 
 EML (the Enshrouded Mod Loader) and ShroudForge are the frameworks with the most Enshrouded mods. Both come with Kiln
@@ -95,3 +95,17 @@ data mods as the server; Kiln's join check doesn't compare them yet. See
 - In a player's game: an EML mod's effect, ShroudForge's Modloader window, keybinds and in-game mods. On test servers
   both ran their mods and their settings changed live.
 - EML mods that add new items, checked in a player's game.
+
+## dev.20 pairing with EMF
+
+**Staged, not a dev.19 feature or a full gameplay claim.** EMF 0.6.0 / API v27 support includes upstream-compatible mod
+messages, needed by the current Lua/Beastmaster path. ShroudForge and EMF keep their own mod folders and settings. Kiln's
+join check does not yet prove that every other framework's mods and settings match between server and player.
+
+Two dedicated-server dev.20 runs loaded ShroudForge beside EMF Lua 1.19 and Beastmaster 1.13, each once per run; each
+network probe finished with 11 passes and no failures. The optionalbear/beasts asset-pack run failed at startup under
+Wine with **Access denied**. Pack startup and portrait-manifest handling remain unresolved. Loading proves only that
+those modules started. Beastmaster capture/release, stable
+E prompts and portraits, wheel input, commands and joined-player synchronization still need hosted and joined game checks.
+Use the same required mod/dependency versions on the sides the mod requires, and keep a test copy of the world for the
+check. [EMF support and limits](/kiln/wiki/emf-mods#dev20-support-in-preparation).

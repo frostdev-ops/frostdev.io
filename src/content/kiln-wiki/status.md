@@ -1,7 +1,7 @@
 ---
 title: "What works today"
 description: "What Kiln does in the current build, what awaits a game test, what's being built and what isn't, as of November 2026."
-updated: "2026-11-07"
+updated: "2026-11-08"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
@@ -11,6 +11,27 @@ Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/en
 test sessions of 6 and 7 November 2026. Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
+
+## In preparation for 0.2.0-dev.20
+
+The additions below are staged in source and documentation. **dev.19 remains the latest released build described above.**
+They are not a release announcement or a claim that the pending client checks passed.
+
+| Area | Staged change and remaining check |
+|---|---|
+| [Quest and dialogue blocks](/kiln/wiki/quests#quest-and-dialogue-blocks-dev20) | typed blocks and `blocks/*.json`; first-start JSON journal compilation, lifetime cleanup. New-form journal/dialogue/reward presentation and party play need a client |
+| [World blocks](/kiln/wiki/world-blocks) | crafting props and manual-station requirements, one-time container loot, lid/door controls, several collision boxes. Craft UI, animations and collision need a client |
+| [UI blocks](/kiln/wiki/ui-blocks) | windows, HUD and keys bound to config/safe game values, with lifetime cleanup. Rendering, mouse/gamepad input and joined-server ability/effect actions need a client |
+| [Templates](/kiln/wiki/dev-kit#templates), loot and recipes | block-first projects; standalone loot tables, creature drops and recipes at game stations. Visible tooltips, menus and drops need a client |
+| [Inventory transfers](/kiln/wiki/inventory) | state-preserving moves, container names, quick-stack/move-all rules and reports. Player slots, R-key/station behaviour and the shroudlink client addon need a client. Gear entity data is session-only; no persistent per-item data or affixes |
+| [World programs](/kiln/wiki/world-programs) | boot declarations in `kiln.programs.json`, `OnLoad` callback binding, declared other-entity writes and multiple event inputs. Worker callbacks remain separate from tick-thread services; replication needs a client |
+| [World progress](/kiln/wiki/world-progress#changing-the-flame-level-dev20) | verified-result flame level write and limits readback. The game's UI, fog and placement limits need a client |
+| [EMF](/kiln/wiki/emf-mods#dev20-support-in-preparation) | 0.6.0 / API v27 networking; radial wheels, right-click input, attributes and program/spawn work. Current Beastmaster and ShroudForge pairing needs the hosted/joined player checks; no full gameplay compatibility claim |
+| [SET](/kiln/wiki/more-frameworks#set) | level/flame administration, names, text catalogs and more tool windows. Window drawing/input remains pending; game options, Admin.send, ImGui Debug and SET's settings.ini editor remain unavailable |
+| [Nexus sign-in](/kiln/wiki/install#mods-from-nexus-mods) | browser OAuth + PKCE replaces personal keys. Approved app registration and real-account sign-in, refresh, sign-out and download checks remain pending; sign-in is unavailable without that registration |
+
+Source/host tests and dedicated-server tests can validate registration, refusals, save state and cleanup. They do not draw
+UI, press keys, animate a lid or establish real-provider OAuth success. The feature pages keep those boundaries explicit.
 
 ## New in 0.2.0-dev.19
 

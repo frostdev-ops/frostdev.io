@@ -3,12 +3,16 @@ title: "New items and recipes"
 nav: "New items"
 description: "Add items and recipes, borrow other items' models, name them in every language, and place them in loot and traders."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-08"
 ---
 
 A new item is a copy of an existing one (its **base**) with its own GUID, name, texts and values.
 
 > **Generate a GUID once and never change it after release.** Saves store the id made from it.
+
+To create an item without choosing a base or a GUID, start with [blocks](/kiln/wiki/blocks). dev.20+ adds the
+`item-blocks` template and reusable loot-table blocks. To move existing gear while keeping its state, use
+[inventory transfers](/kiln/wiki/inventory); persistent per-item data and affixes are not supplied.
 
 ## In a data pack
 

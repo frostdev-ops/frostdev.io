@@ -2,11 +2,13 @@
 title: "Game UI"
 description: "Menu entries, your own screens, crafting tabs and panels, HUD lines, toasts and key bindings."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-08"
 ---
 
 All client side. On a dedicated server `Ui.Available` is false and calls do nothing, so a `side: both` mod can call them freely.
 `OnLoad` can add entries in the main menu, before any world.
+
+**dev.20+ adds [UI blocks](/kiln/wiki/ui-blocks):** windows, HUD lines and keys from JSON or typed records, without a draw function. Staged; not in released dev.19.
 
 ## Menu entries
 
