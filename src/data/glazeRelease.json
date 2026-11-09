@@ -1,6 +1,6 @@
 {
-  "version": "4.0.5",
-  "sourceCommit": "aa0cbee6c18b9d7007edbf6e40753e3364324e57",
-  "updated": "2026-11-07",
-  "summary": "Chrome, Edge and Firefox: a new install opens a setup guide. Choose a theme (Frost or one of the eleven Looks) and motion, place Glaze's navigation at the side or the top with your shortcuts in it, turn each feature on or off beside a short animated picture of it, pick an AI (Rime on this computer, your browser's own model or your own key) or leave it off, then add your school. Every choice saves as you make it. Ask Rime's study help answers from your school's records: ask about your next test and it names the test, its course and its due date. Ask Rime reads each list once and keeps what it read, instead of reading the same list again or losing it in a long chat. Pearson inside Blackboard no longer fills your browser's error list for Glaze while a Pearson page is still loading."
+  "version": "4.0.6",
+  "sourceCommit": "5defc7c8b2d00300ace7b7c945ddcd092178f214",
+  "updated": "2026-11-09",
+  "summary": "Settings uses setup’s theme thumbnails and motion choices, with a live paper-setting sample in Writer. The full preview stays in reach on narrow screens. Settings → Course pages → Speed groups instant pages, course-data prefetch and loading feedback; Score bars live with Grades. School and setup are directly accessible, and Settings → Privacy and data → School links to connection settings. Existing section addresses and advanced controls remain available. Typing / in a key or passphrase no longer opens Settings search. Frost is available as a complete theme in Settings. The separate palette-only reset is labelled Reset palette. Search and paper-format controls follow their parent features without losing saved preferences. Blackboard Activity cards follow their course’s color, including cards reused while scrolling. Blackboard organization quizzes use the sidebar’s assessment layout and keep editor menus within reach. Grade tabs share one rounded surface."
 }
