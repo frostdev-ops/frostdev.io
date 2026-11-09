@@ -1,11 +1,11 @@
 ---
 title: "What works today"
 description: "What Kiln does in the current build, what awaits a game test, what's being built and what isn't, as of November 2026."
-updated: "2026-11-08"
+updated: "2026-11-09"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.20**, the current development release.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.20**; check the download's version before using its new APIs.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026. Where only a game can show the result, it's under
@@ -16,9 +16,9 @@ listed under [Open in the game](#open-in-the-game); some have had fixes since th
 
 ## New in 0.2.0-dev.20
 
-These APIs and adapters are included in dev.20. Install the matching runtime and MDK before using them. The final
-assembled source passed all 13 managed suites (1,538 checks, no failures or skips), native checks and the dedicated-server
-checks described below. A passing server or host check does not establish client rendering, input or multiplayer behaviour.
+These APIs and adapters are included in dev.20. Install the matching runtime and MDK before using them. Source/host
+and dedicated-server evidence is listed below; final release-artifact validation is a separate gate. A passing server
+or host check does not establish client rendering, input or multiplayer behaviour.
 
 | Area | Included in dev.20; evidence and remaining limits |
 |---|---|

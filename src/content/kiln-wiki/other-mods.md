@@ -3,13 +3,13 @@ title: "Mods for other frameworks"
 nav: "Other frameworks"
 description: "Kiln runs mods made for EML, ShroudForge, EMF, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink, unchanged, next to Kiln mods."
 status: "partial"
-updated: "2026-11-08"
+updated: "2026-11-09"
 ---
 
-Kiln is a universal loader. It runs mods made for the other Enshrouded mod frameworks as they are. You don't need to
-install those frameworks: Kiln comes with a part for each one. If you already use one, it keeps working.
+Kiln loads mods made for other Enshrouded mod frameworks without rewriting them. It supplies the runtimes listed
+below, with limits for each adapter. Server startup checks do not guarantee every mod or loader combination.
 
-New in 0.2.0-dev.18. Most of this has run on test servers. Where no player has seen it in the game yet, the table says
+Introduced in dev.18 and expanded in dev.20. Most of this has run on test servers. Where no player has seen it in the game yet, the table says
 **untested in game**.
 
 ## Every framework
@@ -36,13 +36,14 @@ is skipped with the reason. It is never added as a plain DLL.
 
 ## Your other loader is installed too
 
-You don't have to remove anything.
+Check the guide for your framework before combining loaders; use one startup owner for each framework.
 
 - **Kiln steps aside.** When another framework's own loader runs in the game, Kiln's part for that framework does
-  nothing, and that loader runs its mods. A mod never runs twice. `kiln/logs/kiln.log` says `steps aside`.
+  nothing, and that loader runs its mods. `kiln/logs/kiln.log` says `steps aside`. A native loader arriving after a mod
+  has already started can still conflict; detection cannot undo arbitrary native hooks or threads.
 - **Kiln fills in.** When the other loader's files are there but it didn't start, for example on Linux or a Steam Deck
   where Proton doesn't load it, Kiln runs its mods instead.
-- **Kiln never breaks it.** Kiln only takes the name `dinput8.dll`. Another tool's `dinput8.dll` is moved into Kiln's
+- **Kiln preserves loader files.** Kiln only takes the name `dinput8.dll`. Another tool's `dinput8.dll` is moved into Kiln's
   folder and loaded from there. Files under other names (EML's `dbghelp.dll`, Shroudtopia's `winmm.dll`, Enshwick's
   `powrprof.dll`) stay where they are. Uninstalling Kiln puts every file back as it was.
 - **ShroudForge** asks first: the launcher takes over its `dinput8.dll` only after you agree. Its folder, settings and

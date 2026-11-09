@@ -3,7 +3,7 @@ title: "EMF mods"
 nav: "EMF mods"
 description: "Install EMF DLL and Lua mods with API v27 support, current differences and server/client evidence limits."
 status: "partial"
-updated: "2026-11-08"
+updated: "2026-11-09"
 ---
 
 **0.2.0-dev.20** runs mods made for EMF (the Enshrouded Modding Framework), including EMF 0.6.0 / API v27 and
@@ -45,7 +45,8 @@ Admins are players with the game's admin rights, or accounts listed in `kiln/con
 
 ## EMF installed too
 
-When EMF's own core runs in the game, Kiln's EMF part steps aside and EMF runs the mods. A mod never runs twice.
+When EMF's own core is detected at startup, Kiln's EMF part steps aside and EMF runs the mods. Use one startup owner
+for EMF; loading another native core after mods have already started can still conflict.
 
 An older EMF 0.3.3 core goes idle on the tested game build, and Kiln's log says how to hand its mods to Kiln.
 Put `;` in front of EMF's line in `kiln/chain.ini`, then restart. EMF's files can stay in `emf/`; only its loader must

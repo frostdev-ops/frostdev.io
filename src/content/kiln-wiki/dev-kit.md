@@ -2,7 +2,7 @@
 title: "The dev kit"
 description: "Kiln.Sdk, project templates, the kiln command, a linter, analyzers, a VS Code extension, a debugger and game-id constants."
 status: "works"
-updated: "2026-11-08"
+updated: "2026-11-09"
 ---
 
 | Part | For |
@@ -16,7 +16,8 @@ updated: "2026-11-08"
 | [**Testing**](/kiln/wiki/testing) | tests that run inside the server |
 | [**Debugging**](/kiln/wiki/debugging) | breakpoints in a running server, logs, crash reports |
 
-Before release, these are built from Kiln's source, and the packages go into a local folder (a "feed").
+Use the SDK/MDK download matching your Kiln runtime, or build it from source. The folder holding its `.nupkg` files
+is the local package "feed"; pass it to `kiln new` with `--feed <folder>` or set `$KILN_FEED`.
 
 ## Kiln.Sdk
 
@@ -45,7 +46,7 @@ mod. Without a `kiln.mod.json`, the build writes one from the properties; with o
 | `KilnServices` | the services you use, and `Testing` |
 | `KilnServer` | your test server's folder |
 | `KilnTestsAutoRun` | run tests at server start and after reloads |
-| `KilnModFolders` | data folders to ship; default `content;assets;skills;quests;icons;impact;audio` |
+| `KilnModFolders` | data folders to ship; default `content;assets;skills;quests;blocks;icons;impact;audio;vfx;models` |
 | `KilnAnalyzers`, `KilnGameIds` | [analyzers](/kiln/wiki/lint), [game-id constants](/kiln/wiki/catalogs) |
 
 Items: `KilnDependency`, `KilnLoadBefore`, `KilnLoadAfter`, `KilnIncompatible`.
@@ -54,7 +55,7 @@ The `kiln` command drives the targets, which also work alone: `dotnet build -t:K
 
 ## Templates
 
-`kiln new <template> <Name>`, or `dotnet new kiln-<template>`.
+`kiln new <template> <Name>`, or `dotnet new kiln-<template>`. The dev.20 CLI lists 23 templates with `kiln new --list`.
 
 | Template | Gives you | Side, clients |
 |---|---|---|

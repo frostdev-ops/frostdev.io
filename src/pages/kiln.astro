@@ -37,9 +37,9 @@ const snippets = [
   ].join('\n') },
   { name: 'terminal', kind: 'shell', html: '<span class="t-c">$</span> kiln deploy --reload' },
 ];
-const pending = ['Windows PCs (tested under Wine)', 'Join rules for players without Kiln or a required mod (test servers so far)', 'Quest, NPC and talent fixes awaiting a retest'];
-const building = ['Building blocks: typed Blocks.Define for spells, items and effects; Body, Animation, AI and Behaviour blocks for custom NPCs', 'A glTF animation converter', 'Skinned bodies', 'VFX, particles, materials and custom shaders'];
-const notBuilt = ['Worn armour', 'An online mod catalog'];
+const pending = ['Windows PCs (standalone Windows binaries tested under Wine)', 'Hosted and joined multiplayer, including EMF taming and peer handshakes', 'EMF wheels, windows, custom portraits and input', 'New quest/dialogue presentation, skinned bodies, worn looks and shader visuals'];
+const building = ['Typed building blocks for items, spells, effects, world objects, quests and UI', 'glTF model and animation cooking, including retargeting', 'Skinned bodies and worn looks, checked on test servers', 'VFX, particles, materials and custom shader authoring; see the wiki for game-test limits'];
+const notBuilt = ['Ragdolls'];
 const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
 ---
 
@@ -76,7 +76,7 @@ const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
       <div class="product-section-heading">
         <p class="product-eyebrow">Works today</p>
         <h2 id="works-title">The whole game, moddable.</h2>
-        <p>Tested on dedicated servers and in the game.</p>
+        <p>Server, host and in-game checks cover different features. The wiki lists what each check proves.</p>
       </div>
       {/* shot: product-launcher | The launcher's Play page, or a modded scene in game */}
       <div class="product-grid">
@@ -99,8 +99,8 @@ const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
       <div class="product-panel">
         <ul class="kiln-safe">
           <li><strong>Unknown game builds are left alone</strong><span>After a game update, Kiln’s hooks and C# mods stay off until Kiln supports the build.</span></li>
-          <li><strong>A failing mod is switched off</strong><span>Not the server. A crash report names the mod.</span></li>
-          <li><strong>Plays well with others</strong><span>EMF mods and plain DLL mods load next to Kiln mods.</span></li>
+          <li><strong>Managed errors are isolated</strong><span>Reports help identify a failing C# handler. Native mods can still crash the game or server.</span></li>
+          <li><strong>Other frameworks</strong><span>EMF 0.6.0 / API v27 and other loaders’ mods, within the <a href="/kiln/wiki/other-mods">documented compatibility limits</a>.</span></li>
         </ul>
       </div>
     </section>
@@ -139,7 +139,7 @@ const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
       </div>
       <h3 class="kiln-progress-label">Built, game test pending</h3>
       <ul class="kiln-progress">{pending.map((item) => <li>{item}</li>)}</ul>
-      <h3 class="kiln-progress-label">Being built, not available yet</h3>
+      <h3 class="kiln-progress-label">Authoring tools, with game checks still open</h3>
       <ul class="kiln-progress">{building.map((item) => <li>{item}</li>)}</ul>
       <h3 class="kiln-progress-label">Not built yet</h3>
       <ul class="kiln-progress">{notBuilt.map((item) => <li>{item}</li>)}</ul>
@@ -156,6 +156,7 @@ const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
       <p class="product-meta">
         <a href={release.github}>GitHub</a> · <a href={release.nexus}>Nexus Mods</a> · <a href={download(release.files.sums)}>Checksums</a> · <a href="/kiln/wiki/install">Install</a>
       </p>
+      <p>In 0.2.0-dev.20, the Nexus Catalog, account sign-in and Mod Manager Download links are disabled while OAuth approval is pending. Download mod archives in your browser and import them through Library. The launcher distributed on Nexus has no self-updater.</p>
     </section>
   </div>
 </KilnLayout>
