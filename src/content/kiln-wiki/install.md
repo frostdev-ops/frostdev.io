@@ -78,12 +78,17 @@ shows **Vanilla**. On a Steam Deck, Home shows a **Kiln is not loading** button 
 
 ## Mods from Nexus Mods
 
-> **dev.20 sign-in is staged.** It replaces personal API keys with browser authorization (OAuth 2.0 + PKCE).
-> The app-registration request has been sent; Nexus approval, the public client ID, approved redirect and real-account
-> sign-in/download checks are pending, so a build without an approved registration
+> **Staged for dev.20+, absent from released dev.19.** A build with Nexus integration disabled has no **Catalog** or
+> **Nexus Mods** settings, and Mod Manager Download links are unavailable. Download a mod's archive in your browser and
+> drop it on the launcher instead.
+>
+> Builds with Nexus integration enabled use browser authorization (OAuth 2.0 + PKCE), replacing personal API keys.
+> The registration request has been sent; Nexus approval, the public client ID, approved redirect and real-account
+> checks remain pending. An enabled development build without registration
 > shows **Nexus Mods sign-in is not available in this build**. Released dev.19 used the older key flow.
 
-The **Catalog** (desktop: in the top bar; Deck mode: the Catalog tab) lists Enshrouded's mods on Nexus Mods.
+The steps below apply to builds with Nexus integration enabled. The **Catalog** (desktop: in the top bar; Deck mode:
+the Catalog tab) lists Enshrouded's mods on Nexus Mods.
 
 1. In a configured dev.20+ build, open **Settings > Nexus Mods** and choose **Sign in to Nexus Mods**. Your browser
    opens Nexus's authorization page; return to Kiln after approving it. Kiln keeps authorization in your system keyring
@@ -104,15 +109,15 @@ The **Catalog** (desktop: in the top bar; Deck mode: the Catalog tab) lists Ensh
 5. **Updates:** when a mod you added has a newer file, its card says **Update** and a banner lists it. Nothing updates
    by itself.
 
-Without sign-in the Catalog still lists every Enshrouded mod, but can't tell which are Kiln mods or download them. The
-launcher from Nexus Mods has the Catalog too: it downloads only the mods you pick, never itself. Only zip files are
-taken; for a 7z or RAR, download it by hand and unpack it.
+In a Nexus-enabled build, the Catalog still lists every Enshrouded mod without sign-in, but can't tell which are Kiln
+mods or download them. A launcher distributed through Nexus Mods can include the Catalog too: it downloads only the
+mods you pick, never itself. Only zip files are taken; for a 7z or RAR, download it by hand and unpack it.
 
 **Mod authors:** your mod shows as a Kiln mod when a file on its Nexus page is a zip with `kiln.mod.json` at its root or
 in one folder, as `kiln pack` makes it. Put it in your main file, keep the Nexus version and the one in `kiln.mod.json`
 the same, and upload new versions into the same file so players see them as updates. Set requirements on the file (add
 Kiln's page, mod 301, too), keep `dependencies` in `kiln.mod.json` for Kiln's own check, and leave Mod Manager Download
-on: free players add your mod through it.
+on for players whose build includes Nexus integration. Players can also download the archive and import it by hand.
 
 ## Play without mods
 

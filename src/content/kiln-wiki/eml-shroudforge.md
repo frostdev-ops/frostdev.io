@@ -102,10 +102,14 @@ data mods as the server; Kiln's join check doesn't compare them yet. See
 messages, needed by the current Lua/Beastmaster path. ShroudForge and EMF keep their own mod folders and settings. Kiln's
 join check does not yet prove that every other framework's mods and settings match between server and player.
 
-Two dedicated-server dev.20 runs loaded ShroudForge beside EMF Lua 1.19 and Beastmaster 1.13, each once per run; each
-network probe finished with 11 passes and no failures. The optionalbear/beasts asset-pack run failed at startup under
-Wine with **Access denied**. Pack startup and portrait-manifest handling remain unresolved. Loading proves only that
-those modules started. Beastmaster capture/release, stable
-E prompts and portraits, wheel input, commands and joined-player synchronization still need hosted and joined game checks.
+With the current fixes, two dedicated-server dev.20 runs loaded ShroudForge beside EMF Lua 1.19 and Beastmaster 1.13,
+plus the enabled bear 2.1 / beasts 2.2 asset packs. The Lua host, Beastmaster and ShroudForge each started once per run;
+each network probe finished with 11
+passes and no failures. The second run reused the cache with identical patched resource output. This fixes the earlier
+Wine **Access denied** startup failure in these checks. The final release bundle is still being assembled.
+
+Offline portrait checks produced wolf PNGs from the client archive; native-loader review is still pending. Custom-pack
+portraits and their appearance in the game remain unverified. Beastmaster capture/release, stable E prompts and portraits,
+wheel input, commands and joined-player synchronization still need hosted and joined game checks.
 Use the same required mod/dependency versions on the sides the mod requires, and keep a test copy of the world for the
 check. [EMF support and limits](/kiln/wiki/emf-mods#dev20-support-in-preparation).

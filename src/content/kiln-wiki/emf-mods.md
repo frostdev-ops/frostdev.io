@@ -63,13 +63,17 @@ This work also adds radial-wheel support, right-click window events, stamina/man
 paths. Client-world ECS programs remain unsupported. Windows still need a game client and retain Kiln's overlay look.
 The full API slot count and final integration results are still being checked.
 
-**Beastmaster and ShroudForge together:** two dedicated-server dev.20 runs loaded EMF Lua 1.19 and Beastmaster 1.13 beside
-ShroudForge, each once per run. Each network probe finished with 11 passes and no failures. The optionalbear/beasts
-asset-pack run failed at startup under Wine with **Access denied**; pack startup and portrait-manifest handling remain
-unresolved. These checks do not verify portraits, player UI or gameplay. API v27 support is needed by that Lua/Beastmaster path. Install
-the matching Lua host and mod dependencies on the sides the mod requires. A successful load, a network fixture or an
-unchanged ShroudForge setting does not verify capture, stable offers/portraits, wheel choices, commands or joined-player
-synchronization. That pairing still needs hosted and joined game checks. See also
+**Beastmaster and ShroudForge together:** with the current fixes, two dedicated-server dev.20 runs loaded EMF Lua 1.19
+and Beastmaster 1.13 beside ShroudForge and the enabled bear 2.1 / beasts 2.2 asset packs. The Lua host, Beastmaster and
+ShroudForge each started once per run;
+each network probe finished with 11 passes and no failures. The second run reused the asset cache with identical patched
+resource output. The earlier Wine **Access denied** startup failure is fixed in these checks; the final release bundle
+is still being assembled.
+
+Offline portrait checks produced wolf PNGs from the client archive. Native-loader review is still pending; custom-pack
+portraits and their appearance in the game remain unverified. These are asset and server-startup checks, not player
+gameplay checks. Install the matching Lua host and dependencies on the sides the mod requires. Capture, stable
+offers/portraits, wheel choices, commands and joined-player synchronization still need hosted and joined game checks. See also
 [ShroudForge](/kiln/wiki/eml-shroudforge#dev20-pairing-with-emf).
 
 ## What doesn't work yet
