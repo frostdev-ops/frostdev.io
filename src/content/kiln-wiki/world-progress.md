@@ -6,8 +6,8 @@ updated: "2026-11-08"
 ---
 
 `WorldProgress` answers "how far is this world, and this character?" in typed values, read from the game's own data and
-rules. In released dev.19 it is read only: to change progress, grant knowledge or move [quests](/kiln/wiki/quests).
-dev.20+ adds the flame-level write below.
+rules. In 0.2.0-dev.20, the flame level can also be changed with the verified-result API below. Other progress
+changes still use knowledge grants or [quests](/kiln/wiki/quests).
 
 It's part of the Quests service: `<KilnServices>Quests</KilnServices>` in the project.
 
@@ -80,7 +80,7 @@ More on events: [Events](/kiln/wiki/events).
 
 ## Changing the flame level (dev.20+)
 
-**Staged, absent from released dev.19.** On the tick thread after the world starts:
+**Available in 0.2.0-dev.20 and newer.** On the tick thread after the world starts:
 
 ```csharp
 FlameChange result = await WorldProgress.SetFlameLevel(4);

@@ -6,8 +6,8 @@ status: "pending"
 updated: "2026-11-08"
 ---
 
-> **dev.20+ — staged.** These APIs are absent from released 0.2.0-dev.19. Server and client checks are tracked on
-> [What works today](/kiln/wiki/status#in-preparation-for-020-dev20).
+> **New in 0.2.0-dev.20.** These APIs require the dev.20 runtime and MDK or newer. Server evidence and pending client checks are tracked on
+> [What works today](/kiln/wiki/status#new-in-020-dev20).
 
 `Kiln.Items` adds moves that preserve the item's entity: level, upgrades, gem slot and durability follow it. A take followed
 by a give creates new gear. Everything here runs on the tick thread; moves finish in a later simulation step.

@@ -6,8 +6,8 @@ status: "pending"
 updated: "2026-11-08"
 ---
 
-> **dev.20+ — staged.** `EcsPrograms` and `kiln.world` v2 are absent from released dev.19. Real-client replication and
-> client-world EMF programs are not established by this API.
+> **New in 0.2.0-dev.20.** `EcsPrograms` and `kiln.world` v2 require the dev.20 runtime and MDK or newer.
+> Client-world ECS programs remain unsupported; real-client replication remains unchecked.
 
 Use ordinary tick events and service APIs when they express the work. A world program is for an ECS update with declared
 component and event access, running on the game's worker threads. `EcsPrograms.Available` checks boot declaration/binding

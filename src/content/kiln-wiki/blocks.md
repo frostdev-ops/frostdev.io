@@ -17,9 +17,9 @@ need. There's no `base` to name and no GUID to write.
 The older ways still work and stay there for what blocks don't cover yet: [new items](/kiln/wiki/new-items) by clone,
 [game data](/kiln/wiki/game-data) and string paths.
 
-**Staged for dev.20+:** standalone loot tables/recipes, [quest and dialogue blocks](/kiln/wiki/quests#quest-and-dialogue-blocks-dev20),
-[world-block fields](/kiln/wiki/world-blocks), and [UI blocks](/kiln/wiki/ui-blocks). These are absent from released dev.19;
-see the [release and test boundary](/kiln/wiki/status#in-preparation-for-020-dev20).
+**New in 0.2.0-dev.20:** standalone loot tables/recipes, [quest and dialogue blocks](/kiln/wiki/quests#quest-and-dialogue-blocks-dev20),
+[world-block fields](/kiln/wiki/world-blocks), and [UI blocks](/kiln/wiki/ui-blocks). These require the dev.20 runtime and MDK or newer;
+see the [release and test boundary](/kiln/wiki/status#new-in-020-dev20).
 
 ## Setup
 

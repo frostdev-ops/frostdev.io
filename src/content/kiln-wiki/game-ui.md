@@ -8,7 +8,7 @@ updated: "2026-11-08"
 All client side. On a dedicated server `Ui.Available` is false and calls do nothing, so a `side: both` mod can call them freely.
 `OnLoad` can add entries in the main menu, before any world.
 
-**dev.20+ adds [UI blocks](/kiln/wiki/ui-blocks):** windows, HUD lines and keys from JSON or typed records, without a draw function. Staged; not in released dev.19.
+**dev.20+ adds [UI blocks](/kiln/wiki/ui-blocks):** windows, HUD lines and keys from JSON or typed records, without a draw function. Requires the dev.20 runtime and MDK or newer; rendering and input checks remain on the feature page.
 
 ## Menu entries
 

@@ -6,8 +6,8 @@ status: "pending"
 updated: "2026-11-08"
 ---
 
-> **dev.20+ additions — staged.** Crafting props, default loot, lid and door controls, and several collider boxes require
-> the dev.20 runtime and MDK. They are absent from released dev.19; visible behaviour still needs a client check.
+> **New in 0.2.0-dev.20.** Crafting props, default loot, lid and door controls, and several collider boxes require
+> the dev.20 runtime and MDK or newer. Server checks pass; visible behaviour still needs a client check.
 
 [Blocks](/kiln/wiki/blocks) make things players place: props, stations, containers, doors, beds and seats. Define them in
 `OnLoad` or in `blocks/*.json`; Kiln derives their ids. Start with `kiln new world-blocks MyWorkshop`.

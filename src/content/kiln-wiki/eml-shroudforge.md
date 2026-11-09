@@ -98,18 +98,25 @@ data mods as the server; Kiln's join check doesn't compare them yet. See
 
 ## dev.20 pairing with EMF
 
-**Staged, not a dev.19 feature or a full gameplay claim.** EMF 0.6.0 / API v27 support includes upstream-compatible mod
-messages, needed by the current Lua/Beastmaster path. ShroudForge and EMF keep their own mod folders and settings. Kiln's
-join check does not yet prove that every other framework's mods and settings match between server and player.
+**Included in 0.2.0-dev.20.** EMF 0.6.0 / API v27 support includes upstream-compatible mod messages used by the current
+Lua/Beastmaster path. ShroudForge and EMF keep their own mod folders and settings. Kiln's join check does not prove that
+every other framework's mods and settings match between server and player.
 
-With the current fixes, two dedicated-server dev.20 runs loaded ShroudForge beside EMF Lua 1.19 and Beastmaster 1.13,
-plus the enabled bear 2.1 / beasts 2.2 asset packs. The Lua host, Beastmaster and ShroudForge each started once per run;
-each network probe finished with 11
-passes and no failures. The second run reused the cache with identical patched resource output. This fixes the earlier
-Wine **Access denied** startup failure in these checks. The final release bundle is still being assembled.
+Two dedicated-server checks loaded ShroudForge beside unmodified EMF Lua 1.19 and Beastmaster 1.13, plus the enabled
+bear 2.1 / beasts 2.2 asset packs. Each framework started once per run and each API v27 network probe passed 11/0. The first
+boot committed 89 resources and added two items; the next reused identical patched resource hashes. Those checks verified
+the earlier Wine **Access denied** startup fix. They predate the final recovery guard and do not establish every mod pair.
 
-Offline portrait checks produced wolf PNGs from the client archive; native-loader review is still pending. Custom-pack
-portraits and their appearance in the game remain unverified. Beastmaster capture/release, stable E prompts and portraits,
-wheel input, commands and joined-player synchronization still need hosted and joined game checks.
-Use the same required mod/dependency versions on the sides the mod requires, and keep a test copy of the world for the
-check. [EMF support and limits](/kiln/wiki/emf-mods#dev20-support-in-preparation).
+The bundled SF fork is pinned at `1ef3896068b9106a96743e55850b599d8cd08aad` (`1.7.9 kiln.1ef3896`). Its clean component
+was rebuilt with matching source/submodule records and licenses. Reader/publication/recovery hardening and native review
+are complete; recovery checks cover refusal of linked staged paths. This source and build evidence is separate from the
+earlier mixed boots.
+
+Offline portrait checks through the actual Windows DLL rendered wolf PNGs from a read-only client archive and reused the
+cache on Wine C: and mounted Z: paths. Symbolic/junction redirects are refused without external mutation. Custom-pack
+portraits displayed in game remain unverified. Beastmaster capture/release, stable E prompts, wheel input, commands and
+joined-player synchronization still need hosted and joined game checks. The exact other SF mod from the original report
+was not identified, so these records cannot establish its compatibility.
+
+Use matching required mod/dependency versions on every side the mod requires, and keep a test copy of the world for the
+check. [EMF support and limits](/kiln/wiki/emf-mods#dev20-support).

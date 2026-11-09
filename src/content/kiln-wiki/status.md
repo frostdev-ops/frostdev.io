@@ -5,35 +5,41 @@ updated: "2026-11-08"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes 0.2.0-dev.19.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.20**, the current development release.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026. Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
 
-## In preparation for 0.2.0-dev.20
+<a id="in-preparation-for-020-dev20"></a>
 
-The additions below are staged in source and documentation. **dev.19 remains the latest released build described above.**
-They are not a release announcement or a claim that the pending client checks passed.
+## New in 0.2.0-dev.20
 
-| Area | Staged change and remaining check |
+These APIs and adapters are included in dev.20. Install the matching runtime and MDK before using them. The final
+assembled source passed all 13 managed suites (1,538 checks, no failures or skips), native checks and the dedicated-server
+checks described below. A passing server or host check does not establish client rendering, input or multiplayer behaviour.
+
+| Area | Included in dev.20; evidence and remaining limits |
 |---|---|
-| [Quest and dialogue blocks](/kiln/wiki/quests#quest-and-dialogue-blocks-dev20) | typed blocks and `blocks/*.json`; first-start JSON journal compilation, lifetime cleanup. New-form journal/dialogue/reward presentation and party play need a client |
-| [World blocks](/kiln/wiki/world-blocks) | crafting props and manual-station requirements, one-time container loot, lid/door controls, several collision boxes. Craft UI, animations and collision need a client |
+| [Quest and dialogue blocks](/kiln/wiki/quests#quest-and-dialogue-blocks-dev20) | typed blocks and `blocks/*.json`; first-start JSON journal compilation and lifetime cleanup. New-form journal/dialogue/reward presentation and party play need a client |
+| [World blocks](/kiln/wiki/world-blocks) | crafting props and manual-station requirements, one-time container loot with save/restart journaling, lid/door controls and several collision boxes. Craft UI, animations and physical collision need a client |
 | [UI blocks](/kiln/wiki/ui-blocks) | windows, HUD and keys bound to config/safe game values, with lifetime cleanup. Rendering, mouse/gamepad input and joined-server ability/effect actions need a client |
-| [Templates](/kiln/wiki/dev-kit#templates), loot and recipes | seven block templates and three samples pass build/lint checks; the sample set loads on two dedicated-server boots. Standalone loot tables, creature drops and recipes at game stations are staged. Visible tooltips, menus and drops need a client |
-| [Inventory transfers](/kiln/wiki/inventory) | state-preserving moves, container names, quick-stack/move-all rules and reports. Player slots, R-key/station behaviour and the shroudlink client addon need a client. Gear entity data is session-only; no persistent per-item data or affixes |
-| [World programs](/kiln/wiki/world-programs) | boot declarations in `kiln.programs.json`, `OnLoad` callback binding, declared other-entity writes and multiple event inputs; eight reload checks completed without failures or leaked contexts. Worker callbacks remain separate from tick-thread services; replication needs a client |
-| [World progress](/kiln/wiki/world-progress#changing-the-flame-level-dev20) | verified-result flame level write and limits readback. The game's UI, fog and placement limits need a client |
-| [EMF](/kiln/wiki/emf-mods#dev20-support-in-preparation) | 0.6.0 / API v27 networking; radial wheels, right-click input, attributes and program/spawn work. Two server boots load current Lua/Beastmaster with ShroudForge and bear/beasts asset packs; cache reuse checked. Offline wolf portraits generated; native-loader review, custom/in-game portraits and hosted/joined gameplay checks remain pending |
-| [SET](/kiln/wiki/more-frameworks#set) | level/flame administration, names, text catalogs and more tool windows. Window drawing/input remains pending; game options, Admin.send, ImGui Debug and SET's settings.ini editor remain unavailable |
-| [Nexus integration](/kiln/wiki/install#mods-from-nexus-mods) | a disabled build hides Catalog/Nexus settings and has no Mod Manager Download handling; it may release without Nexus approval. The enabled variant replaces personal keys with browser OAuth + PKCE and still needs approved registration and real-account sign-in, refresh, sign-out and download checks before release |
+| [Templates](/kiln/wiki/dev-kit#templates), loot and recipes | block-first templates, standalone loot tables, creature drops and recipes at game stations pass build/lint and dedicated-server checks. Visible tooltips, menus and drops need a client |
+| [Inventory transfers](/kiln/wiki/inventory) | state-preserving moves, container names, quick-stack/move-all rules and reports. Player slots, R-key/station behaviour and the shroudlink client addon need a client. Gear entity data is session-only; no persistent per-item payload or affix API |
+| [World programs](/kiln/wiki/world-programs) | boot declarations in `kiln.programs.json`, `OnLoad` callback binding, declared other-entity writes and multiple event inputs; eight reload checks completed without failures or leaked contexts. Worker callbacks remain separate from tick-thread services; client-world programs are unsupported and replication needs a client |
+| [World progress](/kiln/wiki/world-progress#changing-the-flame-level-dev20) | verified-result flame-level writes and limits readback, including stored/replicated state and restoration. The game's UI, fog and placement limits need a client |
+| [EMF](/kiln/wiki/emf-mods#dev20-support) | EMF 0.6.0 / API v27: 77 full, 13 partial and no missing C slots. Official `#!emf1` networking, radial wheels, right-click events, attributes and program/spawn work are implemented. Server/host checks and offline Windows portrait archive/cache checks pass; custom/in-game portraits and hosted/joined gameplay remain unverified |
+| [ShroudForge](/kiln/wiki/eml-shroudforge#dev20-pairing-with-emf) | bundled reader/publication/recovery fixes. Two mixed server boots with Lua 1.19, Beastmaster 1.13 and optional bear/beasts assets succeeded and reused identical cached output. Those earlier boots do not prove every mod pairing or the final recovery guard in a joined game |
+| [SET](/kiln/wiki/more-frameworks#set) | level/flame administration, English names/text catalogs and more tool windows. The final assembled server probe passes 39/0, including event payload observation and flame restoration. Window drawing/input remains untested; game options, `Admin.send`, ImGui Debug and SET's `settings.ini` editor remain unavailable |
+| [Nexus integration](/kiln/wiki/install#mods-from-nexus-mods) | **Disabled in this official build:** no Catalog, Nexus account/settings or `nxm://` handler on desktop or Deck. Download archives in a browser and import them manually. A future enabled build requires approved OAuth configuration and real-provider proof; there is no personal-key fallback |
 
-Source/host tests and dedicated-server tests can validate registration, refusals, save state and cleanup. They do not draw
-UI, press keys, animate a lid or establish real-provider OAuth success. The feature pages keep those boundaries explicit.
+Source/host tests and dedicated-server tests validate registration, refusals, save state and cleanup. They do not draw UI,
+press keys, animate a lid or establish real-provider OAuth success. The feature pages keep those boundaries explicit.
 
 ## New in 0.2.0-dev.19
+
+Historical release notes. The current dev.20 features and limits are listed above.
 
 - **Frame rate fixed.** 0.2.0-dev.18 could drop the game to about 10 fps whenever a profile was active. The SET
   support checked every loaded game file on every frame; now only when a new file loads.
@@ -57,8 +63,8 @@ UI, press keys, animate a lid or establish real-provider OAuth success. The feat
 |---|---|
 | [EML](/kiln/wiki/eml-shroudforge#eml-mods) | game test pending. Mods patch the game data on test servers; a broken mod is switched off instead of stopping the game |
 | [ShroudForge](/kiln/wiki/eml-shroudforge#shroudforge-mods) | game test pending. Kiln's bundled copy and a player's own copy both run mods on test servers, with live settings |
-| [EMF](/kiln/wiki/emf-mods) | partly built: EMF 0.5.1's API with gaps (no radial wheels; programs and events in the server's world only; no stamina or mana). EMF 0.3.3's mods load on a test server; the clock mod seen in the game |
-| [SET](/kiln/wiki/more-frameworks#set) | partly built: game options, a few admin functions and most overlay windows missing. Also runs on dedicated servers |
+| [EMF](/kiln/wiki/emf-mods) | EMF 0.6.0 / API v27, 77 full and 13 partial C slots. Client-world programs/events remain unsupported; player-facing rendering/input and joined-game checks remain open. The older clock mod was seen in game |
+| [SET](/kiln/wiki/more-frameworks#set) | server probe 39/0; game options, `Admin.send`, ImGui Debug and the `settings.ini` editor remain unavailable. Kiln tool-window drawing/input needs a client |
 | [Greeneye Loader](/kiln/wiki/more-frameworks#greeneye-loader) | game test pending. The whole API, tested on Linux under Wine |
 | [Creative Mode (Flame)](/kiln/wiki/more-frameworks#creative-mode-flame) | game test pending. Started on a test server |
 | [Shroudtopia](/kiln/wiki/more-frameworks#shroudtopia) | game test pending. The whole API; Shroudweave's mods untried |
@@ -78,8 +84,8 @@ UI, press keys, animate a lid or establish real-provider OAuth success. The feat
 Nothing below has been seen in the game yet. The new features are listed under
 [Built, game test pending](#built-game-test-pending) with what they were tested on.
 
-- **Mods from Nexus Mods** in the launcher: a Catalog to browse, add and update mods, and optional Mod Manager Download
-  links. [Install](/kiln/wiki/install#mods-from-nexus-mods)
+- **Historical Nexus integration:** dev.16 introduced the Catalog and optional Mod Manager Download links. These are
+  disabled in the current dev.20 build; use [manual archive import](/kiln/wiki/install#mods-from-nexus-mods).
 - **"No Kiln"** in the launcher when Steam starts the game without Kiln, with what to do, instead of "Starting" forever.
   Some recent Valve Proton builds load Kiln without the launch option. [Install](/kiln/wiki/install#no-kiln-kiln-is-not-loading)
 - **Steam Deck mode:** focus no longer gets lost after dialogs or on disabled buttons, B always closes a dialog, holding
@@ -121,13 +127,13 @@ Nothing below has been seen in the game yet. The new features are listed under
 | [Sounds and voice](/kiln/wiki/sounds) | heard in game. Server sounds on a joined player: open |
 | [Who can join](/kiln/wiki/multiplayer#who-can-join) | seen in the game: players without Kiln refused by servers whose mods they need, a Kiln player without a required mod refused with a message, modSync off letting players without Kiln in without Kiln-only things |
 | [Player rules and creative mode](/kiln/wiki/player-rules) | `/creative` seen in the game: flying and building outside bases, the Shroud timer frozen, gliding. The plane-style glide: not flown yet |
-| [World progress](/kiln/wiki/world-progress) | flame level, difficulty, spires, shrines, Shroud Roots, bosses, chests, a character's quests, with events. Read only. Test servers |
+| [World progress](/kiln/wiki/world-progress) | flame level, difficulty, spires, shrines, Shroud Roots, bosses, chests and a character's quests, with events. Flame-level writes and restoration also pass server checks; client UI/fog/placement effects remain open |
 | Water in containers | seen in the game: a larger watering can from a mod |
 | [Per-character progress](/kiln/wiki/multiplayer#per-character-progress) | talents follow the character; quests stay with the world |
 | Game UI: menus, screens, crafting tabs, HUD, keys, gamepad | |
 | Content and config sync to Kiln players | |
 | Kiln DLL mods and stand-alone `dinput8.dll` mods | |
-| [EMF mods](/kiln/wiki/emf-mods) | EMF 0.3.3's mods on test servers; the clock mod in the game. EMF 0.5 and the gaps: [above](#mods-for-other-frameworks) |
+| [EMF mods](/kiln/wiki/emf-mods) | older mods and current Lua/Beastmaster paths on test servers; the older clock mod seen in game. Current API v27 limits: [above](#mods-for-other-frameworks) |
 | The launcher: install, profiles, library, saves, save editor | Linux and Windows. Windows: checked on a Windows PC by a tester |
 | Simpler first run | finds the game, installs Kiln, makes a "My mods" profile; drop a mod on the window to add it |
 | Linux builds | glibc 2.35 or newer: Steam Deck (SteamOS), Ubuntu 22.04 and later |
@@ -171,7 +177,6 @@ These pass offline or on a test server. What's missing is a player looking at th
 | [Material reskins](/kiln/wiki/shaders#reskinning-a-game-material) | new. Tested on a lab server: served, taken off at unload, handed to the next mod; not yet seen in the game |
 | [New blocks](/kiln/wiki/blocks): status and perk icons, tools, piercing, props with your own model, sound blocks, a VFX on a look | new. Tested on a lab server; not yet seen in the game |
 | [VFX](/kiln/wiki/blocks#vfx) spawn shapes, streaks and play parameters | new. Tested in Kiln's VFX tests and on a real GPU; not yet seen in the game |
-| [The Nexus Mods catalog](/kiln/wiki/install#mods-from-nexus-mods) | new. The mod list read from the real Nexus Mods without an account; adding and updating tested against a stand-in, not with a real account |
 | ["No Kiln"](/kiln/wiki/install#no-kiln-kiln-is-not-loading) in the launcher | new. Checked in the launcher's tests; not yet on a real Steam Deck |
 | Some blocks in play | a Frostbolt's area damage, a wand's attacks, armour's worn look, frost VFX on hits |
 | Cosmetics with models of their own | not seen in the game |

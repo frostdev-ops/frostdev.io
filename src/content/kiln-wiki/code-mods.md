@@ -82,7 +82,7 @@ var homes = _config.Value.MaxHomes;        // always current
 Kiln writes a commented file, keeps the player's values, fixes bad ones and reloads on change. `[RequiresRestart]` applies
 at the next load. `[Synced]` sends the server's value to players.
 
-**Staged for dev.20+:** `Config.RegisterWorld<MyConfig>()` keeps one config beside each world's sidecar. Values switch
+**New in 0.2.0-dev.20:** `Config.RegisterWorld<MyConfig>()` keeps one config beside each world's sidecar. Values switch
 before `WorldLoadedEvent`; with no world, they are defaults. `[RequiresRestart]` changes apply when that world next opens.
 `Context.Locale.Get(key, args)` reads this mod's `locales/<language>.json`, falling back to English and then the key.
 `StatusLines.Set("state", "waiting for the world")` or `Add(() => cachedText)` reports status in mod lists. A status source

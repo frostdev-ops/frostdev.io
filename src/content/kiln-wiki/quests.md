@@ -61,7 +61,7 @@ offers the quests it gives and takes the deliveries it's owed, each as a topic.
 
 ## Quest and dialogue blocks (dev.20+)
 
-**Staged, absent from released dev.19.** Put `quests` and `dialogues` beside NPC, item and status blocks in
+**Available in 0.2.0-dev.20 and newer.** Put `quests` and `dialogues` beside NPC, item and status blocks in
 `blocks/*.json`, or define `QuestBlock` and `DialogueBlock` in C#. `kiln new quest MyQuest` starts a project.
 
 ```jsonc
@@ -91,7 +91,7 @@ form. Blocks have no top-level `knowledge`, option `set`, `toast` or `waypoint` 
 Keep quest/block names, step ids, dialogue node names and option order stable after release. Unloading removes runtime
 quest/dialogue registrations; reloading creates a fresh owning lifetime. The native journal is still boot data, so reload
 does not replace a restart or prove the new form's appearance. Journal, dialogue, rewards and party behaviour need the
-[client checks](/kiln/wiki/status#in-preparation-for-020-dev20).
+[client checks](/kiln/wiki/status#new-in-020-dev20).
 
 ## What players need
 

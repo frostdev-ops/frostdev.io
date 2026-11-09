@@ -6,7 +6,7 @@ status: "pending"
 updated: "2026-11-08"
 ---
 
-> **dev.20+ — staged.** These blocks are absent from released dev.19. Their rendering, clicks, key/gamepad input and
+> **New in 0.2.0-dev.20.** These blocks require the dev.20 runtime and MDK or newer. Their rendering, clicks, key/gamepad input and
 > actions on a joined server still need a client check.
 
 `WindowBlock`, `HudLineBlock` and `KeyBindingBlock` describe UI without a draw function. The same shape goes in the

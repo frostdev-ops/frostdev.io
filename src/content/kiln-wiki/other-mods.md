@@ -3,7 +3,7 @@ title: "Mods for other frameworks"
 nav: "Other frameworks"
 description: "Kiln runs mods made for EML, ShroudForge, EMF, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink, unchanged, next to Kiln mods."
 status: "partial"
-updated: "2026-11-07"
+updated: "2026-11-08"
 ---
 
 Kiln is a universal loader. It runs mods made for the other Enshrouded mod frameworks as they are. You don't need to
@@ -18,8 +18,8 @@ New in 0.2.0-dev.18. Most of this has run on test servers. Where no player has s
 |---|---|---|---|---|
 | **EML** (Enshrouded Mod Loader) 0.2.0 | data mods: stats, stacks, recipes, new items | runs EML's own code before the game starts. Installed by default | untested in game (works on test servers) | drop the mod in, or import it in the launcher. [EML and ShroudForge](/kiln/wiki/eml-shroudforge) |
 | **ShroudForge** | Lua mods, with settings | ships ShroudForge's runtime and runs it. Installed by default. Your own ShroudForge can be used instead | untested in game (works on test servers) | drop the mod in, or import it. [EML and ShroudForge](/kiln/wiki/eml-shroudforge) |
-| **EMF** 0.3.3 to 0.5.1 | DLL and Lua mods, server tools, commands | gives EMF mods EMF's API on Kiln. Installed by default | partial: most of the API, some gaps | drop the mod in, or import it, then switch it on. [EMF mods](/kiln/wiki/emf-mods) |
-| **SET** (Shrouded Engine Tweaks) 0.1.1 | Lua mods with windows and tweaks | runs SET's Lua API on Kiln, also on dedicated servers | partial: some functions and windows missing | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#set) |
+| **EMF** 0.3.3 through 0.6.0 / API v27 | DLL and Lua mods, server tools, commands | gives EMF mods EMF's API on Kiln. Installed by default | 77 full / 13 partial C slots; client checks remain | drop the mod in, or import it, then switch it on. [EMF mods](/kiln/wiki/emf-mods) |
+| **SET** (Shrouded Engine Tweaks) 0.1.1 | Lua mods with windows and tweaks | runs SET's Lua API on Kiln, also on dedicated servers | server probe 39/0; API and client limits remain | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#set) |
 | **Greeneye Loader** 1.2.2 | client mods: The Worst Map Mod, Find, Quick Deposit, Town Portals | gives them Greeneye's whole API. Works on Linux too | untested in game | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#greeneye-loader) |
 | **Flame** | Creative Mode | starts Creative Mode without its loader | untested in game | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#creative-mode-flame) |
 | **Shroudtopia** 0.1.1 and 1.0 | minimaps, first-person view, older tweaks | gives them Shroudtopia's whole API | untested in game. Shroudweave's mods: untried | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#shroudtopia) |
@@ -102,12 +102,12 @@ mods in your [modpack](/kiln/wiki/modpacks).
 
 - **Untested in game.** Most framework parts are new in 0.2.0-dev.18. They ran on test servers and in Kiln's own tests,
   not yet in a player's game. Please report what you see.
-- **EMF.** No radial wheels yet. Mod programs and events run in the server's world only. Stamina and mana can't be read
-  or changed. Mod windows have no right click. Mods that need an EMF API newer than 0.5.1 are refused. Details:
-  [EMF mods](/kiln/wiki/emf-mods#what-doesnt-work-yet).
-- **SET.** SET itself only runs in worlds you host. On Kiln its mods run on dedicated servers too, but SET's game
-  options, a few admin functions and most of its overlay windows aren't there yet. If another tool's `powrprof.dll` is
-  loaded (Enshwick's own, Shared XP), Kiln's SET part stays off.
+- **EMF.** API v27 implements radial wheels, stamina/mana and right-click window events. Client-world programs/events
+  remain unsupported, and player-facing rendering/input and joined delivery remain unchecked. Mods requesting above
+  API v27 are refused. [Current differences](/kiln/wiki/emf-mods#what-doesnt-work-yet).
+- **SET.** SET itself only runs in worlds you host. Kiln's dedicated-server probe passes 39/0; game options, `Admin.send`,
+  ImGui Debug and SET's `settings.ini` editor remain unavailable. Kiln's tool windows still need client drawing/input
+  checks. If another tool's `powrprof.dll` is loaded (Enshwick's own, Shared XP), Kiln's SET part stays off.
 - **Ember** mods are found and listed, but don't run until Ember publishes its loader.
 - **Greeneye Loader** doesn't start under Wine or Proton. Kiln runs its mods there instead. That ran in tests on Linux,
   not yet in a real game.
@@ -142,8 +142,8 @@ One or more DLLs, with a small `native.json` naming them and when they load:
 Add them to a profile (the **Native** tab), or drop them into `kiln/native/<folder>/`. One that crashes while loading is
 marked failed with a crash report, and the game carries on. DLL mods never unload, so changes need a restart.
 
-Mods you add from the launcher's [Nexus Mods catalog](/kiln/wiki/install#mods-from-nexus-mods) are imported the same
-way, whatever framework they're for. Its **All Enshrouded** list marks EMF and DLL mods.
+The official dev.20 launcher has no Nexus Catalog, account sign-in or Mod Manager Download handler.
+[Download the archive in your browser and import it](/kiln/wiki/install#mods-from-nexus-mods), whatever framework it uses.
 
 ## Logs
 
