@@ -13,19 +13,20 @@ mods, and take Kiln off again. You don't need to build anything.
 
 | Your server | What you download | How you install |
 |---|---|---|
-| Rented (GTXGaming, G-Portal, ...): you only have FTP or a file manager | the server pack | unzip it into the server folder |
-| Your own Windows PC | the server pack, or the Kiln Launcher | unzip, or the launcher's Servers page |
-| Your own Linux machine, no desktop | `kilnctl` and the Kiln runtime zip | a few `kilnctl` commands |
+| Rented (GTXGaming, G-Portal, ...): you only have FTP or a file manager | the [server pack](/kiln/download/server) | unzip it into the server folder |
+| Your own Windows PC | the [server pack](/kiln/download/server), or the [Kiln Launcher](/kiln/download) | unzip, or the launcher's Servers page |
+| Your own Linux machine, no desktop | [`kilnctl`](/kiln/download#servers) and the [Kiln runtime zip](/kiln/download/runtime) | a few `kilnctl` commands |
 
-Downloads: every [Kiln release on GitHub](https://github.com/frostdev-ops/kiln/releases), and the optional files on
-[Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301?tab=files). On Nexus the server pack is the optional file
-**Kiln server pack**; kilnctl is in **Kiln runtime (manual install)**.
+Downloads: the [download page](/kiln/download) has the server pack, `kilnctl`, the runtime zip and the systemd units,
+each with its size and SHA-256. They are also on every [Kiln release on GitHub](https://github.com/frostdev-ops/kiln/releases),
+and the optional files on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301?tab=files). On Nexus the server pack
+is the optional file **Kiln server pack**; kilnctl is in **Kiln runtime (manual install)**.
 
 0.2.0-dev.17 and older have no server pack: unzip `kiln-runtime-<version>.zip` the same way instead.
 
 ## The server pack
 
-`kiln-server-<version>.zip` holds exactly what a server needs:
+`kiln-server-<version>.zip` ([download](/kiln/download/server)) holds exactly what a server needs:
 
 | In the zip | What it is |
 |---|---|
@@ -87,8 +88,8 @@ SteamCMD, makes the Wine prefix, installs Kiln, and runs the server.
 You need `steamcmd`, GE-Proton (in a Steam `compatibilitytools.d` folder) or your distro's wine, and Linux 6.14 or newer
 for `/dev/ntsync` (or set `require_ntsync = false` in the instance file).
 
-From the release, put `kilnctl` in `~/.local/bin` (on GitHub it's called `kilnctl-<version>-linux-x86_64`) and keep
-`kiln-runtime-<version>.zip` somewhere. Then:
+From the [download page](/kiln/download#servers), put `kilnctl` in `~/.local/bin` (on GitHub it's called
+`kilnctl-<version>-linux-x86_64`) and keep [`kiln-runtime-<version>.zip`](/kiln/download/runtime) somewhere. Then:
 
 ```sh
 install -Dm755 kilnctl ~/.local/bin/kilnctl
@@ -103,8 +104,8 @@ kilnctl stop myserver                                                 # saves, t
 ```
 
 To keep it running and start it at boot, use the systemd units (`kiln@.service`, `kiln-backup@.service`,
-`kiln-backup@.timer`; from 0.2.0-dev.18 they come with each release, as `kiln-systemd-units-<version>.tar.gz` on
-GitHub):
+`kiln-backup@.timer`; from 0.2.0-dev.18 they come with each release: three separate files on the
+[download page](/kiln/download#servers), and `kiln-systemd-units-<version>.tar.gz` on GitHub):
 
 ```sh
 install -Dm644 -t ~/.config/systemd/user kiln@.service kiln-backup@.service kiln-backup@.timer

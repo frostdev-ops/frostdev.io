@@ -1,0 +1,79 @@
+---
+// One downloadable file of a Kiln release (src/lib/kilnDownloads.ts): a large button ("card", the main downloads),
+// a list row ("row"), or a short row for the sample mods ("compact"). The SHA-256 sits in a disclosure with the full
+// value selectable; the script below adds a Copy button when it runs. Everything else works without JavaScript.
+import { fileHref, fileName, formatSize, shortHash, type KilnFile } from '../lib/kilnDownloads';
+
+interface Props {
+  file: KilnFile;
+  variant?: 'card' | 'row' | 'compact';
+  /** card only: the quieter button style. */
+  secondary?: boolean;
+}
+const { file, variant = 'row', secondary = false } = Astro.props;
+const name = fileName(file.path);
+const href = fileHref(file.path);
+const size = file.size === undefined ? undefined : formatSize(file.size);
+---
+
+{variant === 'card' ? (
+  <li class="kiln-dl-card">
+    <a class:list={['product-button', 'kiln-dl-button', { secondary }]} href={href}>{file.label} <span aria-hidden="true">↓</span></a>
+    {file.about && <p class="kiln-dl-about">{file.about}</p>}
+    <p class="kiln-dl-file-name"><code>{name}</code>{size && <> · {size}</>}</p>
+    {file.sha256 && (
+      <details class="kiln-dl-sha" data-file={name}>
+        <summary>SHA-256 <span aria-hidden="true">{shortHash(file.sha256)}</span></summary>
+        <code>{file.sha256}</code>
+      </details>
+    )}
+  </li>
+) : (
+  <li class:list={['kiln-dl-file', { compact: variant === 'compact' }]}>
+    <div class="kiln-dl-line">
+      <a class="kiln-dl-name" href={href}>{file.label}</a>
+      {size && <span class="kiln-dl-size">{size}</span>}
+    </div>
+    {variant === 'row' && file.about && <p class="kiln-dl-about">{file.about}</p>}
+    {variant === 'row' && file.label !== name && <p class="kiln-dl-file-name"><code>{name}</code></p>}
+    {file.sha256 && (
+      <details class="kiln-dl-sha" data-file={name}>
+        <summary>SHA-256 <span aria-hidden="true">{shortHash(file.sha256)}</span></summary>
+        <code>{file.sha256}</code>
+      </details>
+    )}
+  </li>
+)}
+
+<script>
+  for (const box of document.querySelectorAll<HTMLElement>('.kiln-dl-sha')) {
+    const code = box.querySelector('code');
+    if (!code || box.querySelector('.kiln-dl-copy')) continue;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'kiln-dl-copy';
+    button.textContent = 'Copy';
+    button.setAttribute('aria-label', `Copy the SHA-256 of ${box.dataset.file ?? 'this file'}`);
+    const status = document.createElement('span');
+    status.className = 'sr-only';
+    status.setAttribute('role', 'status');
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(code.textContent ?? '');
+        button.textContent = 'Copied';
+        status.textContent = 'SHA-256 copied';
+      } catch {
+        // No clipboard access (an older browser, or http): select the value so Ctrl+C or a long press copies it.
+        const range = document.createRange();
+        range.selectNodeContents(code);
+        const selection = getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        button.textContent = 'Selected';
+        status.textContent = 'SHA-256 selected';
+      }
+      setTimeout(() => { button.textContent = 'Copy'; status.textContent = ''; }, 2000);
+    });
+    code.after(button, status);
+  }
+</script>

@@ -5,15 +5,16 @@ status: "works"
 updated: "2026-11-10"
 ---
 
-> **Early access.** [Download the launcher](/kiln#download): Windows installer, Linux AppImage or .deb. Also on
-> [GitHub](https://github.com/frostdev-ops/kiln/releases) and [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301).
+> **Early access.** Download the launcher: [Windows installer](/kiln/download/windows), [Linux AppImage](/kiln/download/linux)
+> or [.deb](/kiln/download/deb). The [download page](/kiln/download) has every other file, with sizes and SHA-256 checksums.
+> Also on [GitHub](https://github.com/frostdev-ops/kiln/releases) and [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301).
 
 ## What you need
 
 - Enshrouded from Steam.
 - Windows 10 or 11, or Linux with glibc 2.35 or newer: Steam Deck (SteamOS), Ubuntu 22.04 and later, Fedora, Mint,
   Debian 12, Arch.
-- The **Kiln Launcher**: AppImage or .deb on Linux, an installer on Windows. It includes the Kiln runtime.
+- The **Kiln Launcher** ([download](/kiln/download)): AppImage or .deb on Linux, an installer on Windows. It includes the Kiln runtime.
 
 Any Windows user name and game folder name works, including Cyrillic, Chinese and accented letters. Before dev.22 such
 a name crashed the quests part at boot, kept SET mods from loading and stopped build regions from saving. That fix was

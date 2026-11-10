@@ -22,6 +22,7 @@ const kiln = path === '/kiln' || path.startsWith('/kiln/');
   <meta slot="head" property="og:image" content={`https://frostdev.io${image}`} />
   <meta slot="head" name="twitter:card" content="summary_large_image" />
   <meta slot="head" name="google-adsense-account" content="ca-pub-1806642805052030" />
+  <slot name="head" slot="head" />
 
   {ambient && <div class="splash-ground"></div>}
   {ambient && <canvas id="splash-canvas" aria-hidden="true"></canvas>}
@@ -37,6 +38,7 @@ const kiln = path === '/kiln' || path.startsWith('/kiln/');
         <a href="/guides">Guides</a>
         {glaze && <a href="/glaze/looks" aria-current={path === '/glaze/looks' ? 'page' : undefined}>Looks</a>}
         {glaze && <a href="/glaze/mods" aria-current={path === '/glaze/mods' ? 'page' : undefined}>Mods</a>}
+        {kiln && <a href="/kiln/download" aria-current={path === '/kiln/download' || path.startsWith('/kiln/download/') ? 'page' : undefined}>Download</a>}
         {kiln && <a href="/kiln/wiki" aria-current={path === '/kiln/wiki' || path.startsWith('/kiln/wiki/') ? 'page' : undefined}>Wiki</a>}
         {kiln && <a href="/kiln/agents" aria-current={path === '/kiln/agents' ? 'page' : undefined}>Agent skill</a>}
         <a href={glaze ? "/glaze" : "/login"}>{glaze ? "Get Glaze" : "Sign in"} <span aria-hidden="true">↗</span></a>
@@ -46,6 +48,7 @@ const kiln = path === '/kiln' || path.startsWith('/kiln/');
     <footer class="marketing-footer">
       <span>© {new Date().getFullYear()} Frostdev</span>
       <nav aria-label="Footer navigation">
+        {kiln && <a href="/kiln/download">Download Kiln</a>}
         <a href="https://github.com/frostdev-ops">GitHub</a>
         <a href={glaze ? "/glaze/privacy" : "/privacy"}>{glaze ? "Glaze privacy" : "Privacy"}</a>
         {glaze && <a href="/glaze/terms">Terms</a>}

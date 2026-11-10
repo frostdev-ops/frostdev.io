@@ -7,7 +7,8 @@ updated: "2026-11-10"
 ---
 
 > Rented server with only FTP, or a server without the launcher? See
-> [Kiln on a dedicated server](/kiln/wiki/dedicated-servers).
+> [Kiln on a dedicated server](/kiln/wiki/dedicated-servers). The launcher is on the
+> [download page](/kiln/download); the [server pack](/kiln/download/server) and `kilnctl` are there too.
 
 ## Kinds of server
 

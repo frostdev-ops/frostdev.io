@@ -37,6 +37,7 @@ const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'glaze/privacy'
   'guides/rimewire-agent-handoffs', 'guides/frostsim-first-simulation',
   'guides/loothing-raid-loot', 'guides/glaze-safari', 'guides/glaze-chrome',
   'kiln', 'kiln/wiki', 'kiln/wiki/install', 'kiln/wiki/first-mod', 'kiln/wiki/status', 'kiln/agents',
+  'kiln/download', ...['windows', 'linux', 'deb', 'server', 'runtime'].map((target) => `kiln/download/${target}`),
   ...['install', 'features', 'privacy', 'agents', 'mods-api', 'mods-widgets', 'relay', 'development', 'firefox-android'].map((doc) => `guides/glaze-${doc}`)];
 for (const page of pages) assert(statSync(`dist/${page ? page + '/' : ''}index.html`).size > 0);
 for (const file of ['robots.txt', 'sitemap.xml', 'ads.txt']) assert(statSync(`dist/${file}`).size > 0);
@@ -140,6 +141,7 @@ for origin in origin public; do
         /guides/rimewire-agent-handoffs /guides/frostsim-first-simulation \
         /guides/loothing-raid-loot /guides/glaze-safari /guides/glaze-chrome /guides/glaze-agents \
         /kiln /kiln/wiki /kiln/wiki/install /kiln/wiki/first-mod /kiln/agents \
+        /kiln/download /kiln/download/windows /kiln/download/linux /kiln/download/deb /kiln/download/server /kiln/download/runtime \
         /kiln/agents/kiln-modding.zip /kiln/agents/kiln-modding/SKILL.md \
         /robots.txt /sitemap.xml /ads.txt; do
         case "$route" in

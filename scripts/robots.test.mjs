@@ -48,7 +48,7 @@ test('every sitemap URL is crawlable, including all four Glaze pages', () => {
 
 test('the Kiln product page, wiki and agent skill are crawlable and in the sitemap', () => {
   const paths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
-  for (const path of ['/kiln', '/kiln/wiki', '/kiln/wiki/install', '/kiln/agents']) {
+  for (const path of ['/kiln', '/kiln/download', '/kiln/wiki', '/kiln/wiki/install', '/kiln/agents']) {
     assert(paths.includes(path), `Missing sitemap page: ${path}`);
     assert(crawlable(path), path);
   }

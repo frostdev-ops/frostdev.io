@@ -48,8 +48,9 @@ other sites. See [docs/looks-gallery.md](looks-gallery.md). Production nginx nee
 `/glaze/looks/submit` and `/glaze/looks/api/` locations from `ops/public-site.nginx.conf`, and the
 gallery server (`ops/deploy-gallery.sh`).
 
-`/kiln` is Kiln's product page: a mod framework and launcher for Enshrouded, not released yet, so it has no
-download ("Coming soon"). It and the wiki hub link Kiln's public repository, never a file in it. Kiln's pages wear
+`/kiln` is Kiln's product page: a mod framework and launcher for Enshrouded in early access. Its download section
+shows the main files (Windows installer, Linux AppImage, .deb, .rpm when the release has one, the server pack) and
+leads to `/kiln/download`, which lists every file of the release. It and the wiki hub link Kiln's public repository, never a file in it. Kiln's pages wear
 Kiln's own brand (charcoal, ember and gold from Kiln's
 `branding/palette.json`, the Fraunces display face) inside the site's header and footer, without the frost background
 animation; `src/layouts/KilnLayout.astro` and `src/styles/kiln.css`. `/kiln/wiki` and `/kiln/wiki/<page>` are its
@@ -62,6 +63,32 @@ skill's canonical copy is in Kiln's repository (`agent/skills/kiln-modding/`); `
 checkout>` copies it into `src/content/kiln-skill/`. Production nginx needs the `/kiln/` location and the `kiln` entry
 of the product-page location from `ops/public-site.nginx.conf`. Every Kiln page ends with "Enshrouded is a trademark of
 Keen Games GmbH. Kiln is unofficial."
+
+Kiln releases. The release folder from Kiln's release tooling (`kiln-<version>/`) is served at
+`/kiln/downloads/<version>/` without its `nexus/` and `updates/` folders (see "Kiln Launcher self-update" in
+`ops/public-site.nginx.conf`). `src/data/kilnRelease.json` describes the current release, and `/kiln`, `/kiln/download`
+and the stable links all read it through `src/lib/kilnDownloads.ts`. To publish a release:
+
+1. Put the finished folder on the download host (the Kiln repository's `tools/release/publish.sh` does).
+2. Regenerate the data from that folder:
+   `node scripts/kiln-release-data.mjs <release folder> --verify` (add `--released YYYY-MM-DD` when README.txt has no
+   "Built" date or the date is wrong). It lists every downloadable file with its size and SHA-256 (from the folder's
+   `SHA256SUMS`, computed when a file is not listed), and fails, writing nothing, when the Windows setup program,
+   AppImage, .deb, runtime zip or server pack is missing. Read its warnings: an unknown file is listed under its own
+   name, and a file the web server cannot read (not world-readable) is reported.
+3. Review `git diff src/data/kilnRelease.json`, then `npm run check && npm run build`. The build warns when a file in
+   the data has no size or SHA-256 (the data was not generated from a real folder yet).
+4. Update the wiki and the Nexus-off note on `/kiln` for the release, commit and deploy.
+
+`/kiln/download` ("Download Kiln") groups the files by who needs them: the launcher as large buttons, then dedicated
+servers (server pack, kilnctl, systemd units), manual install (the runtime zip and its instructions), mod authors
+(SDK packages, the `kiln` command, the VS Code extension, the sample mods in a collapsed list) and source and notes.
+Each file shows its size and SHA-256 (a disclosure; a Copy button appears when JavaScript runs), and the page explains
+how to check a download and why Nexus Mods may hold some files. Without JavaScript every download is still a plain
+link. The stable links `/kiln/download/windows`, `/linux`, `/deb`, `/server`, `/runtime` (and `/rpm` when the release has
+an .rpm) are static pages generated from the same data: each sends the browser to the current version's file with a
+zero-second meta refresh and shows the same file as a button, so they work on static hosting behind nginx and never
+need editing per release. They are `noindex` and not in the sitemap. `scripts/kiln-release-data.test.mjs` tests the script.
 
 Kiln's pages have screenshot slots, invisible to readers: `<!-- shot: name | what it shows -->` in the wiki and
 `{/* shot: ... */}` on the product page. `grep -rn "shot:" src/content/kiln-wiki src/pages/kiln.astro` lists them. To

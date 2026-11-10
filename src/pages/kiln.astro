@@ -1,10 +1,11 @@
 ---
 import KilnLayout from '../layouts/KilnLayout.astro';
 import { kilnSource } from '../data/kiln';
-import release from '../data/kilnRelease.json';
+import { fileHref, release } from '../lib/kilnDownloads';
 
-// Kiln is in early access: the launcher downloads come from /kiln/downloads/<version>/ (src/data/kilnRelease.json, written
-// with each release), also on GitHub and Nexus Mods. Facts follow Kiln's docs; the wiki carries the detail.
+// Kiln is in early access: the downloads come from /kiln/downloads/<version>/ (src/data/kilnRelease.json, written from the
+// release folder by scripts/kiln-release-data.mjs), also on GitHub and Nexus Mods. The #download section below shows the
+// main files; /kiln/download lists every file of the release. Facts follow Kiln's docs; the wiki carries the detail.
 // Screenshot slots: search for "shot:" here and in src/content/kiln-wiki/ (docs/public-pages.md).
 const features = [
   { title: 'C# mods', text: 'Events, configs, commands, saved data. Hot reload on a running server.' },
@@ -40,7 +41,7 @@ const snippets = [
 const pending = ['Windows PCs (standalone Windows binaries tested under Wine)', 'Hosted and joined multiplayer, including EMF taming and peer handshakes', 'EMF wheels, windows, custom portraits and input', 'New quest/dialogue presentation, skinned bodies, worn looks and shader visuals', 'The hook registry, chat fix and late-loaded DLL mods in a real client', 'The dev.22 mod loading: copies for other loaders, 7z and rar, the in-game mod manager and the EML first start, on Windows, a Steam Deck and a real client'];
 const building = ['Typed building blocks for items, spells, effects, world objects, quests and UI', 'glTF model and animation cooking, including retargeting', 'Skinned bodies and worn looks, checked on test servers', 'VFX, particles, materials and custom shader authoring; see the wiki for game-test limits'];
 const notBuilt = ['Ragdolls'];
-const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
+const download = fileHref;
 ---
 
 <KilnLayout
@@ -56,7 +57,7 @@ const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
         <h1 class="product-title" id="kiln-title">Mods for Enshrouded.<br /><span>Server and client.</span></h1>
         <p class="product-lead">A mod framework and launcher. C# mods, data packs and modded servers, from one app.</p>
         <div class="product-actions">
-          <a class="product-button" href="#download">Download <span aria-hidden="true">↓</span></a>
+          <a class="product-button" href="/kiln/download">Download <span aria-hidden="true">↓</span></a>
           <a class="product-button secondary" href="/kiln/wiki">Read the wiki <span aria-hidden="true">→</span></a>
           <a class="product-button secondary" href={kilnSource}>View on GitHub <span aria-hidden="true">↗</span></a>
         </div>
@@ -152,9 +153,12 @@ const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
         <a class="product-button" href={download(release.files.windows)}>Windows <span aria-hidden="true">↓</span></a>
         <a class="product-button secondary" href={download(release.files.appimage)}>Linux AppImage <span aria-hidden="true">↓</span></a>
         <a class="product-button secondary" href={download(release.files.deb)}>.deb <span aria-hidden="true">↓</span></a>
+        {release.files.rpm && <a class="product-button secondary" href={download(release.files.rpm)}>.rpm <span aria-hidden="true">↓</span></a>}
+        <a class="product-button secondary" href={download(release.files.server)}>Server pack <span aria-hidden="true">↓</span></a>
       </div>
+      <p>Playing: the launcher for your system. Running a server: the server pack, a zip you unpack into the server folder. The runtime on its own, kilnctl, the SDK, the sample mods and every checksum are on the <a href="/kiln/download">download page</a>.</p>
       <p class="product-meta">
-        <a href={release.github}>GitHub</a> · <a href={release.nexus}>Nexus Mods</a> · <a href={download(release.files.sums)}>Checksums</a> · <a href="/kiln/wiki/install">Install</a>
+        <a href="/kiln/download">All downloads</a> · <a href={release.github}>GitHub</a> · <a href={release.nexus}>Nexus Mods</a> · <a href={download(release.files.sums)}>Checksums</a> · <a href="/kiln/wiki/install">Install</a>
       </p>
       <p>In 0.2.0-dev.22, the Nexus Catalog, account sign-in and Mod Manager Download links are disabled while OAuth approval is pending. Download mod archives in your browser and import them through Library. The launcher distributed on Nexus has no self-updater.</p>
     </section>

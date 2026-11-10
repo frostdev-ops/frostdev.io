@@ -6,8 +6,119 @@
     "windows": "windows/kiln-launcher_0.2.0-dev.22_x64-setup.exe",
     "appimage": "linux/kiln-launcher_0.2.0-dev.22_amd64.AppImage",
     "deb": "linux/kiln-launcher_0.2.0-dev.22_amd64.deb",
+    "server": "runtime/kiln-server-0.2.0-dev.22.zip",
+    "runtime": "runtime/kiln-runtime-0.2.0-dev.22.zip",
     "sums": "SHA256SUMS"
   },
   "github": "https://github.com/frostdev-ops/kiln/releases/tag/v0.2.0-dev.22",
-  "nexus": "https://www.nexusmods.com/enshrouded/mods/301"
+  "nexus": "https://www.nexusmods.com/enshrouded/mods/301",
+  "groups": [
+    {
+      "id": "launcher",
+      "title": "Launcher",
+      "about": "Most people want one of these. The launcher installs Kiln into the game and keeps your mods and profiles.",
+      "files": [
+        {"kind":"windows","path":"windows/kiln-launcher_0.2.0-dev.22_x64-setup.exe","label":"Windows installer","about":"For Windows 10 and 11. Installs for your user and updates itself.","size":87502782,"sha256":"366fa4d878d0b6f7a96d7eed32c3f4175c872f9596db95f856e122c87267d33b"},
+        {"kind":"appimage","path":"linux/kiln-launcher_0.2.0-dev.22_amd64.AppImage","label":"Linux AppImage","about":"One file, no install: make it executable and run it. Updates itself.","size":168647160,"sha256":"6bc9891c75c216aac9d304e7e691e77d4888ccd24fa06b103c73ff8e2f2f17ad"},
+        {"kind":"deb","path":"linux/kiln-launcher_0.2.0-dev.22_amd64.deb","label":"Linux .deb package","about":"For Debian, Ubuntu and Mint. Update it by installing the next package.","size":90891914,"sha256":"bf1514280805becfe3763fd9e49ef175f3bf3497790622417397c18332d2e769"}
+      ]
+    },
+    {
+      "id": "servers",
+      "title": "Dedicated servers",
+      "about": "For people who run an Enshrouded dedicated server. Unzip the server pack into the server folder, also over FTP on a rented server. kilnctl and the systemd units are for a server you run yourself.",
+      "files": [
+        {"kind":"server","path":"runtime/kiln-server-0.2.0-dev.22.zip","label":"Server pack","about":"Unzip it into the folder with enshrouded_server.exe. Nothing else to install.","size":75893538,"sha256":"afb60a5990976679275654a440cdaa71ea699258e979d1aba78148b8b88e74c3"},
+        {"kind":"kilnctl-linux","path":"runtime/kilnctl","label":"kilnctl for Linux","about":"Command line that installs the Kiln runtime, runs a server under Wine and backs it up.","size":5759240,"sha256":"a4d225f8c81a1c4004cdd397f46996b68a88ba70ec5723a1de23eb7c035a73ae"},
+        {"kind":"kilnctl-windows","path":"runtime/kilnctl.exe","label":"kilnctl for Windows","about":"Command line that installs the Kiln runtime into a game or server folder.","size":6397440,"sha256":"2fcc3856a010330295ad1c2ed6e5e5c8527c50aaddab6ddb69fdb788e23f6c94"},
+        {"kind":"systemd-run","path":"runtime/kiln@.service","label":"kiln@.service","about":"systemd user unit that runs one kilnctl server. Put the server name after the @.","size":1348,"sha256":"5a2c3946cf679343a83ee17b4d127b4c458e1d967533555bd42da6300af2eff2"},
+        {"kind":"systemd-backup","path":"runtime/kiln-backup@.service","label":"kiln-backup@.service","about":"systemd user unit that backs up the savegame of one kilnctl server.","size":366,"sha256":"6dd1e6ee4f1062ed166bd2312e59fcd499982b64a4404a62990bd0047927c835"},
+        {"kind":"systemd-timer","path":"runtime/kiln-backup@.timer","label":"kiln-backup@.timer","about":"Starts that backup every day.","size":338,"sha256":"e32ba5cd72bc54a2ad81b7d52ca68962bc9fa5d012a88a1ad6835a6a907e1d97"}
+      ]
+    },
+    {
+      "id": "manual",
+      "title": "Manual install",
+      "about": "For installing Kiln by hand, without the launcher. kilnctl, in Dedicated servers, installs this zip for you.",
+      "files": [
+        {"kind":"runtime","path":"runtime/kiln-runtime-0.2.0-dev.22.zip","label":"Kiln runtime","about":"Kiln without the launcher. Install it with kilnctl, or by hand.","size":78624609,"sha256":"35581e3f488760d3448418bbb7854afac84d26b413aabe99674cf28df7b4ca7a"},
+        {"kind":"install-runtime","path":"runtime/INSTALL-RUNTIME.txt","label":"Install instructions","about":"Step by step: the runtime on a game client or a server.","size":3309,"sha256":"d87c4a3773e59810a4cc4d09beb60bf46c084b78df7cd346d74c1e489d03ffe3"}
+      ]
+    },
+    {
+      "id": "authors",
+      "title": "Mod authors",
+      "about": "For people who write mods: the SDK packages, the kiln command line tool, the VS Code extension and sample mods to read and copy.",
+      "files": [
+        {"kind":"sdk","path":"sdk/Kiln.Sdk.0.2.0-dev.22.nupkg","label":"Kiln.Sdk package","about":"The MSBuild SDK for mod projects.","size":302485,"sha256":"c3856693a29b9f87dd4b3c99d46f0c111ecb83c445a748960464f59b14d76d2a"},
+        {"kind":"sdk-api","path":"sdk/Kiln.Api.0.2.0-dev.22.nupkg","label":"Kiln.Api package","about":"The mod API your code builds against.","size":2495465,"sha256":"7eb3c60b23b251c67de6d959069d0bbe4fcbb10c01ce80dd0ec5ae9b0115f25a"},
+        {"kind":"sdk-templates","path":"sdk/Kiln.Templates.0.2.0-dev.22.nupkg","label":"Kiln.Templates package","about":"Project templates for dotnet new kiln-mod.","size":177515,"sha256":"da930761efdc6eb7cba890db66acc23df03f7e1305734ab72c461cc1f435b7c3"},
+        {"kind":"kiln-linux","path":"sdk/kiln","label":"kiln command line tool for Linux","about":"Make, build, deploy, test and pack mods from the command line.","size":6157104,"sha256":"6768f03a67c448d5d0e7df84c47ad96a078894f2359c754e967b2c3eb050f8d1"},
+        {"kind":"kiln-windows","path":"sdk/kiln.exe","label":"kiln command line tool for Windows","about":"Make, build, deploy, test and pack mods from the command line.","size":6725632,"sha256":"09adfd6e45bb6de44b8b7dd076e2efc5ca2f4c6c26c7a46736140f22361f6915"},
+        {"kind":"vscode","path":"sdk/kiln-vscode-0.1.0.vsix","label":"VS Code extension","about":"Schemas, lint, game ids, tests, logs and a debugger for mod projects. In VS Code: Extensions, Install from VSIX.","size":3731342,"sha256":"71eaba80a585a8c6968b3fd3a6c7c0be3b953ed8a2f50c2244331ec4004962f3"},
+        {"kind":"sample","path":"samples/ability-blocks-0.1.0.zip","label":"ability-blocks 0.1.0","size":1100808,"sha256":"ccd1181f03567ce7d5efdf6631869b6386ef33ac2ef8ace3759ccdeb716738a2"},
+        {"kind":"sample","path":"samples/asset-sample-0.1.0.zip","label":"asset-sample 0.1.0","size":21947,"sha256":"4a8a7dd5126688081a679688ef3e586440c2e9ba7186e0ae1968de5fa2d2872a"},
+        {"kind":"sample","path":"samples/bigstacks-1.0.0.zip","label":"bigstacks 1.0.0","size":13375,"sha256":"0c6f792c0a82c567d6cff4a56f10f802e083705348cc98af950abb9fb2507af3"},
+        {"kind":"sample","path":"samples/claims-0.1.0.zip","label":"claims 0.1.0","size":22079,"sha256":"cbef23edc8ff923fe3aad225c1102d5b10e048412464c84d60af067daaba6b2b"},
+        {"kind":"sample","path":"samples/cosmetic-sample-0.1.0.zip","label":"cosmetic-sample 0.1.0","size":1120654,"sha256":"364ae48d759b4ef0ff2ae642cca4b97d56a0665b717cfcb7209ceab9fbf58b32"},
+        {"kind":"sample","path":"samples/creature-ai-0.1.0.zip","label":"creature-ai 0.1.0","size":16149,"sha256":"6aba374cb0ed62f4f5989342ba816b23de17de9c0243ee0b337a85a00b4490d1"},
+        {"kind":"sample","path":"samples/creature-blocks-0.1.0.zip","label":"creature-blocks 0.1.0","size":1103304,"sha256":"4c5d31b0b258fe26ecf178df72451031741e754bbb98d565b1dd90efba3ea6a0"},
+        {"kind":"sample","path":"samples/creaturetweaks-1.0.0.zip","label":"creaturetweaks 1.0.0","size":19039,"sha256":"9d5a745e424584c100e77dc8f87c20a0edb750a07e4e4fd1778596fa9f0848f5"},
+        {"kind":"sample","path":"samples/elite-vukah-0.1.0.zip","label":"elite-vukah 0.1.0","size":17215,"sha256":"e2e1fa341639cce18537995b7151cb6945d3e9a9a9b7bcbbdebaca7dcd6a346d"},
+        {"kind":"sample","path":"samples/firenova-0.1.0.zip","label":"firenova 0.1.0","size":13950,"sha256":"c6f0b9a8a59fbfcc8a57f89939bff1c27980051b57381dfe17e434f938db46be"},
+        {"kind":"sample","path":"samples/frostbolt-block-0.1.1.zip","label":"frostbolt-block 0.1.1","size":1099737,"sha256":"9c3a752fa22e0228a3f5892d3f4513f90536f601166a2310ddceb20e8ecaeef2"},
+        {"kind":"sample","path":"samples/furniture-blocks-0.1.1.zip","label":"furniture-blocks 0.1.1","size":1100441,"sha256":"a2c15ed5455fa2a44f73c6e43fe3fb95f73f2af190fd697e5d892a131639ea7f"},
+        {"kind":"sample","path":"samples/hello-0.1.0.zip","label":"hello 0.1.0","size":11662,"sha256":"e3d4adc07b22a5202895ed41de08a5d072d695d89ef075adcff2778cb7e254aa"},
+        {"kind":"sample","path":"samples/hooksample-0.1.0.zip","label":"hooksample 0.1.0","size":14304,"sha256":"fefceadbea617455f54915cd9f06b103f8a499a7e548e1248f2140eba1c376ff"},
+        {"kind":"sample","path":"samples/impactsample-0.1.0.zip","label":"impactsample 0.1.0","size":18532,"sha256":"e4b1bb77bbed940e88cb6a667d2acb886b11192c4aa71be9bad55b0b805d9e0c"},
+        {"kind":"sample","path":"samples/item-blocks-0.1.0.zip","label":"item-blocks 0.1.0","size":1103356,"sha256":"d8cc67b85fdc6e884b46e5bf01629cd28e049e08b76b135409a8fbaf6a9d7ec7"},
+        {"kind":"sample","path":"samples/loot-blocks-0.1.0.zip","label":"loot-blocks 0.1.0","size":1096776,"sha256":"5405169c2db53d4022c50890aa7e5b5d8ea6b8cde4c2382189b35461d858e4c6"},
+        {"kind":"sample","path":"samples/material-tweaks-0.1.0.zip","label":"material-tweaks 0.1.0","size":842951,"sha256":"bcf616b676720dfd4335c04fc69e1e6e18b27f3e3bef9aab13fe0510a11252fd"},
+        {"kind":"sample","path":"samples/materialsample-0.1.0.zip","label":"materialsample 0.1.0","size":82537,"sha256":"59dc899040f630e1195741038d8c5fb76d8d1a75f5a593565baf465ae890067f"},
+        {"kind":"sample","path":"samples/menu-blocks-0.1.0.zip","label":"menu-blocks 0.1.0","size":1095285,"sha256":"89243b0d1f7cf91bde948996f08ec6512b3f684a3de917ee71877057c218d3aa"},
+        {"kind":"sample","path":"samples/menubuttons-1.0.0.zip","label":"menubuttons 1.0.0","size":18573,"sha256":"ab0e9ec38b046834932a2d95753c8c7a88e39c0c2ded3bda2654aba761e01d63"},
+        {"kind":"sample","path":"samples/modelsample-0.1.0.zip","label":"modelsample 0.1.0","size":38598,"sha256":"1f67d00630c6370150c4156c78424d310bc68f55c643ec257bf1fb36db1ca653"},
+        {"kind":"sample","path":"samples/netsample-1.0.0.zip","label":"netsample 1.0.0","size":15807,"sha256":"839092d0fdebe23c259d5709cca91cb5f7a36c9213f5262663f48b81db1092d9"},
+        {"kind":"sample","path":"samples/newitems-1.0.0.zip","label":"newitems 1.0.0","size":27490,"sha256":"954ccbfe5448af98abd123516cfaf88759fb686a6f0a8a018b1df8c73a2fd9f0"},
+        {"kind":"sample","path":"samples/npcsample-0.1.0.zip","label":"npcsample 0.1.0","size":19563,"sha256":"ca92d7d062ca7016fcf3ec93388f9c7fa813bc6464d5323360802d05cad16045"},
+        {"kind":"sample","path":"samples/quests-sample-2.0.0.zip","label":"quests-sample 2.0.0","size":16419,"sha256":"2b055b43d49b0c675488277d36cc2ebf96a9400a46a4320ecefaea327c95b1e9"},
+        {"kind":"sample","path":"samples/rendersample-1.0.0.zip","label":"rendersample 1.0.0","size":23595,"sha256":"1cc959a51ac47638d85d79ac8fae9f65fbb89867f4abeaaa563f3681e95c5695"},
+        {"kind":"sample","path":"samples/rule-vukah-0.1.0.zip","label":"rule-vukah 0.1.0","size":13061,"sha256":"6d9dfa79d3091ecc0780a4c001577431682446ab8f7443dabfe8474d1c192834"},
+        {"kind":"sample","path":"samples/rules-sample-0.1.0.zip","label":"rules-sample 0.1.0","size":13590,"sha256":"417f3751c180d5b5809ea8546585233841da2159566234b49811afb783e8f075"},
+        {"kind":"sample","path":"samples/sample-consumer-0.3.0.zip","label":"sample-consumer 0.3.0","size":852755,"sha256":"db8c7b446859000b584d3e1568b9222f8411986ca903dafd91682748f3d35c6d"},
+        {"kind":"sample","path":"samples/sample-faulty-0.1.0.zip","label":"sample-faulty 0.1.0","size":840795,"sha256":"f9f79034f8b905d25ed0f4ef73d8346367b042cc6e501928cc67c2bdfba2274f"},
+        {"kind":"sample","path":"samples/sample-lib-1.2.0.zip","label":"sample-lib 1.2.0","size":853967,"sha256":"d0a7a4597c04fabe427e31e52c7120387b1c742c5d3c163aafca237cca09d07c"},
+        {"kind":"sample","path":"samples/sample-tests-0.1.0.zip","label":"sample-tests 0.1.0","size":857544,"sha256":"9706ef1f14195b8faf1f6b1c48bac595f1dde205aec8bd06af7628b4002eaf7d"},
+        {"kind":"sample","path":"samples/schematics-0.1.0.zip","label":"schematics 0.1.0","size":18741,"sha256":"7fbcff8a72d5301bc7d07137efd11b961cd47826b01bae22734a6695077e551f"},
+        {"kind":"sample","path":"samples/screen-effects-0.1.0.zip","label":"screen-effects 0.1.0","size":1096510,"sha256":"4a72945c02733ae271e5a62a83b5fb4e1b65c1b7ad78d7d2ae91e6a8bb29b0b4"},
+        {"kind":"sample","path":"samples/shader-sample-0.1.0.zip","label":"shader-sample 0.1.0","size":18333,"sha256":"a6cde9115cb2805fb717df5c752288a1cbf08f2418c23d3df9a3227e37ee1d83"},
+        {"kind":"sample","path":"samples/skilltreesample-1.0.0.zip","label":"skilltreesample 1.0.0","size":16787,"sha256":"8a562daaad5e4f2bada9b435709d16b5d28546c7a366f3ee5e01e8c23f96f99f"},
+        {"kind":"sample","path":"samples/soundsample-0.1.0.zip","label":"soundsample 0.1.0","size":17758,"sha256":"3481dfb035333421da944b5f21ddbb976df7149946f994b0afad0e17b70efee5"},
+        {"kind":"sample","path":"samples/spelltweaks-1.0.0.zip","label":"spelltweaks 1.0.0","size":12565,"sha256":"b3652d1bb0744b2cde88f17bae4f383f723239c8b4f4bbf390da2e9b4ee7d345"},
+        {"kind":"sample","path":"samples/station-blocks-0.1.0.zip","label":"station-blocks 0.1.0","size":1098251,"sha256":"4181259ebdcde839e21c46623403915a6d04690ab7dad78a2fd98685888766ac"},
+        {"kind":"sample","path":"samples/surface-sample-0.1.0.zip","label":"surface-sample 0.1.0","size":1407012,"sha256":"9e1eb5ec10c88118e810e912c6ebd5d575cb71826563f4a9a49a5f2daa2c5e92"},
+        {"kind":"sample","path":"samples/terrain-sample-0.1.2.zip","label":"terrain-sample 0.1.2","size":1099048,"sha256":"57f3007e8a985de242ae8643359190a6e01538495e28cbea3a753184e9586827"},
+        {"kind":"sample","path":"samples/typed-fields-0.1.0.zip","label":"typed-fields 0.1.0","size":3608497,"sha256":"1d31b6fc34624a172a4c785ac5a72a442724d8a528f8dd212cb98c8c9c4ec0d0"},
+        {"kind":"sample","path":"samples/ui-blocks-0.1.0.zip","label":"ui-blocks 0.1.0","size":1099828,"sha256":"a4aaf542b8f26f498610248b0fddfff9d237e6fcd5bd7da6cb5193d29fc59cfb"},
+        {"kind":"sample","path":"samples/uisample-1.0.0.zip","label":"uisample 1.0.0","size":12867,"sha256":"aae7ae00e3c678c326fc38a23c36b42773f2434f1b219485d7f82d85be223711"},
+        {"kind":"sample","path":"samples/vfx-sample-0.1.0.zip","label":"vfx-sample 0.1.0","size":1101233,"sha256":"e58b1820ebd0341070c74c6ce5a4144132b45e54d5f7cac0cdb6b06541b4efe7"},
+        {"kind":"sample","path":"samples/world-programs-0.1.0.zip","label":"world-programs 0.1.0","size":841140,"sha256":"5f63be171b3065ae4379cab7d806a421a18936ddf3e1e7e6d458db8cac34888c"}
+      ]
+    },
+    {
+      "id": "source",
+      "title": "Source and notes",
+      "about": "The source code of this release, its notes, the licences and the checksums.",
+      "files": [
+        {"kind":"source","path":"source/kiln-0.2.0-dev.22-src.tar.gz","label":"Kiln source","about":"The source code of this release.","size":14274669,"sha256":"9320988683995424ea4713039b61a4e2ac5b81ac5b645ccbd085a38ced9e42bb"},
+        {"kind":"source-shroudforge","path":"source/shroudforge-kiln-724a884799d4-src.tar.gz","label":"ShroudForge source","about":"Source of the ShroudForge build that comes with Kiln.","size":77050077,"sha256":"cd46c6044dc891cc16035c0cfb2a89579ba6d000da4e8a6eb5773b8d8daed2c7"},
+        {"kind":"release-notes","path":"RELEASE-NOTES.md","label":"Release notes","about":"What changed in this version.","size":10293,"sha256":"e3bfcf57e089eb8a563dbb6f182a19466add77325250f242f03bf29a86e5a056"},
+        {"kind":"readme","path":"README.txt","label":"Release README","about":"Which file to pick, and how to check it.","size":9775,"sha256":"8c8b11e763b6ba2050fc09a9aa6a328ed34758d86fe2c58a3291d7751d5239ed"},
+        {"kind":"license","path":"LICENSE","label":"Licence","about":"Kiln is open source under the MIT licence.","size":1074,"sha256":"45af562b78a4a3ed91ce2b008575a60396cc84d2f6fc53874025dd6b19923acf"},
+        {"kind":"credits","path":"CREDITS.md","label":"Credits","about":"Whose work Kiln builds on.","size":6633,"sha256":"a5c58ef4e88d6a6916c4923b674e193808658c04dce608032f1f5c8746495880"},
+        {"kind":"third-party","path":"THIRD-PARTY-NOTICES.txt","label":"Third-party notices","about":"The licences of the software Kiln includes. A large text file.","size":2784151,"sha256":"ce94f6cff2b1ee71608543dd79f2bc05009ed93d4b3cec43479587ae9cd7384d"},
+        {"kind":"sums","path":"SHA256SUMS","label":"SHA256SUMS","about":"The SHA-256 of every file in this release.","size":7662,"sha256":"e6985be6660c93d879c84158c017a05b7fdd25b22cd64a7bd13675e1e76d531c"}
+      ]
+    }
+  ]
 }

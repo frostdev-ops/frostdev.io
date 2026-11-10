@@ -9,7 +9,8 @@ updated: "2026-11-10"
 
 - The .NET 10 SDK.
 - A test server with Kiln, not one people play on. See [Run a server](/kiln/wiki/servers).
-- Kiln's matching SDK/MDK download and the [`kiln` command](/kiln/wiki/cli), or a source-built MDK. Unpack the download:
+- Kiln's matching SDK/MDK download and the [`kiln` command](/kiln/wiki/cli), both under
+  [Mod authors](/kiln/download#authors) on the download page, or a source-built MDK. Unpack the download:
   the folder holding the `.nupkg` files is the local package "feed". Point `kiln new` at it with `--feed` or `$KILN_FEED`.
   Use the full package version (`0.2.0-dev.22` for this release), not the API base `0.2.0`.
 

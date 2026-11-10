@@ -61,6 +61,7 @@ body:has(.kiln-root) .skip-link { background: #0f0d0c; }
 .kiln-root .product-button:hover { background: var(--k-ember-300); border-color: var(--k-ember-300); }
 .kiln-root .product-button.secondary { color: var(--k-text0); border-color: var(--k-line-strong); background: var(--k-bg1); }
 .kiln-root .product-button.secondary:hover { border-color: var(--k-ember-400); background: var(--k-bg2); }
+.kiln-page .product-cta > p:not(.product-eyebrow) { max-width: 42rem; margin: 1rem auto 0; }
 .kiln-page .product-cta { border-color: var(--k-line); background: radial-gradient(ellipse at 50% 0%, rgb(255 106 26 / 0.12), transparent 70%), var(--k-bg1); }
 .kiln-page .product-text-link { color: var(--k-ember-300); }
 .kiln-page .product-text-link:hover { color: var(--k-text0); }
@@ -204,14 +205,14 @@ body:has(.kiln-root) .skip-link { background: #0f0d0c; }
 .kiln-hub-list a:hover strong { color: var(--k-ember-300); }
 .kiln-hub-list a span.d { display: block; margin-top: 0.25rem; color: var(--k-text2); font-size: 0.84rem; line-height: 1.6; }
 
-/* Agent skill page. */
-.kiln-agents { max-width: 64rem; margin: 0 auto; padding: 2rem 2rem 3rem; }
-.kiln-agents-hero { padding: 2rem 0 2.5rem; }
-.kiln-agents-hero h1 { margin: 0.9rem 0 1rem; color: var(--k-text0); font-family: var(--k-display); font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 560; line-height: 1.08; letter-spacing: -0.03em; }
-.kiln-agents-hero h1 span { color: var(--k-ember); }
-.kiln-agents-hero p.lead { max-width: 40rem; color: var(--k-text1); font-size: 1.05rem; line-height: 1.75; }
-.kiln-agents-hero .product-actions { margin-top: 1.75rem; }
-.kiln-agents-hero .product-meta { color: var(--k-text2); }
+/* Agent skill page; the download page (.kiln-dl) shares its frame and hero. */
+.kiln-agents, .kiln-dl { max-width: 64rem; margin: 0 auto; padding: 2rem 2rem 3rem; }
+.kiln-agents-hero, .kiln-dl-hero { padding: 2rem 0 2.5rem; }
+.kiln-agents-hero h1, .kiln-dl-hero h1 { margin: 0.9rem 0 1rem; color: var(--k-text0); font-family: var(--k-display); font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 560; line-height: 1.08; letter-spacing: -0.03em; }
+.kiln-agents-hero h1 span, .kiln-dl-hero h1 span { color: var(--k-ember); }
+.kiln-agents-hero p.lead, .kiln-dl-hero p.lead { max-width: 40rem; color: var(--k-text1); font-size: 1.05rem; line-height: 1.75; }
+.kiln-agents-hero .product-actions, .kiln-dl-hero .product-actions { margin-top: 1.75rem; }
+.kiln-agents-hero .product-meta, .kiln-dl-hero .product-meta { color: var(--k-text2); }
 .kiln-install { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin: 1rem 0 3rem; }
 .kiln-install > div { min-width: 0; padding: 1.4rem; border: 1px solid var(--k-line); border-radius: 0.75rem; background: var(--k-bg1); }
 .kiln-install h2 { margin-bottom: 0.6rem; color: var(--k-text0); font-size: 1rem; font-weight: 600; }
@@ -229,6 +230,39 @@ body:has(.kiln-root) .skip-link { background: #0f0d0c; }
 .kiln-file summary a { color: var(--k-ember-300); font-size: 0.78rem; }
 .kiln-file pre { margin: 0; padding: 1.1rem 1.2rem; max-height: 34rem; overflow: auto; border-top: 1px solid var(--k-line); background: var(--k-bg0); color: var(--k-text0); font-size: 0.78rem; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
 
+/* Download page: the main downloads as cards, the other files as rows with a SHA-256 disclosure. */
+.kiln-dl-main { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14.5rem), 1fr)); gap: 1rem; margin: 1.25rem 0 1.5rem; list-style: none; }
+.kiln-dl-main.single { max-width: 22rem; }
+.kiln-dl-card { min-width: 0; padding: 1.1rem; border: 1px solid var(--k-line); border-radius: 0.75rem; background: var(--k-bg1); }
+.kiln-dl-button { width: 100%; padding: 1rem 1.1rem; font-size: 0.95rem; }
+.kiln-dl-card .kiln-dl-about { margin-top: 0.9rem; }
+.kiln-dl-section { margin-top: 3rem; }
+.kiln-dl-hero + .kiln-dl-section { margin-top: 0; }
+.kiln-dl-files { margin-top: 1.25rem; list-style: none; border-top: 1px solid var(--k-line); }
+.kiln-dl-file { padding: 0.95rem 0; border-bottom: 1px solid var(--k-bg3); }
+.kiln-dl-file.compact { padding: 0.6rem 0; }
+.kiln-dl-line { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.2rem 1rem; }
+.kiln-dl-name { color: var(--k-text0); font-weight: 600; overflow-wrap: anywhere; }
+.kiln-dl-name:hover { color: var(--k-ember-300); }
+.kiln-dl-size { color: var(--k-text2); font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kiln-dl-about { margin-top: 0.25rem; color: var(--k-text1); font-size: 0.88rem; line-height: 1.65; }
+.kiln-dl-file-name { margin-top: 0.3rem; color: var(--k-text2); font-size: 0.75rem; line-height: 1.5; }
+.kiln-dl-file-name code, .kiln-dl-sha code { overflow-wrap: anywhere; }
+.kiln-dl-sha { margin-top: 0.45rem; font-size: 0.78rem; }
+.kiln-dl-sha summary { display: list-item; width: fit-content; padding: 0.15rem 0; list-style: none; color: var(--k-text2); cursor: pointer; }
+.kiln-dl-sha summary::-webkit-details-marker { display: none; }
+.kiln-dl-sha summary::before { content: '▸'; display: inline-block; margin-right: 0.45rem; color: var(--k-ember-400); transition: transform 0.15s; }
+.kiln-dl-sha[open] summary::before { transform: rotate(90deg); }
+.kiln-dl-sha summary:hover { color: var(--k-text0); }
+.kiln-dl-sha summary span { margin-left: 0.4rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.kiln-dl-sha code { display: block; margin-top: 0.4rem; padding: 0.55rem 0.7rem; border-radius: 0.4rem; background: var(--k-bg2); color: var(--k-text0); font-size: 0.74rem; line-height: 1.55; user-select: all; }
+.kiln-dl-copy { margin: 0.5rem 0 0; padding: 0.4rem 0.8rem; border: 1px solid var(--k-line-strong); border-radius: 0.4rem; background: var(--k-bg1); color: var(--k-text1); font: inherit; font-size: 0.76rem; cursor: pointer; }
+.kiln-dl-copy:hover { border-color: var(--k-ember-400); color: var(--k-text0); }
+.kiln-dl-sha summary:focus-visible, .kiln-dl-copy:focus-visible { outline: 2px solid var(--k-ember-400); outline-offset: 3px; border-radius: 3px; }
+.kiln-dl .kiln-file { margin-top: 1.25rem; }
+.kiln-dl .kiln-file .kiln-dl-files { margin: 0; padding: 0 1.1rem; }
+.kiln-file summary strong { color: var(--k-text0); font-size: 0.92rem; }
+
 @media (max-width: 1180px) {
   .kiln-wiki { grid-template-columns: 14rem minmax(0, 1fr); gap: 2.5rem; }
   .kiln-toc { display: none; }
@@ -245,7 +279,7 @@ body:has(.kiln-root) .skip-link { background: #0f0d0c; }
   .kiln-wiki-nav summary span { color: var(--k-text2); font-weight: 400; }
   .kiln-wiki-home { display: none; }
   .kiln-wiki-nav nav { padding-bottom: 0.75rem; }
-  .kiln-hub, .kiln-agents { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .kiln-hub, .kiln-agents, .kiln-dl { padding-left: 1.25rem; padding-right: 1.25rem; }
   .kiln-doc-head { padding-top: 0.75rem; }
   .kiln-prose pre { padding: 0.9rem; font-size: 0.76rem; }
   .kiln-code-panel pre { padding: 0.85rem 0.9rem 0.95rem; font-size: 0.7rem; }

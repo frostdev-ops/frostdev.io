@@ -16,7 +16,8 @@ updated: "2026-11-10"
 | [**Testing**](/kiln/wiki/testing) | tests that run inside the server |
 | [**Debugging**](/kiln/wiki/debugging) | breakpoints in a running server, logs, crash reports |
 
-Use the SDK/MDK download matching your Kiln runtime, or build it from source. The folder holding its `.nupkg` files
+Use the SDK/MDK download matching your Kiln runtime (the SDK packages, the `kiln` command and the VS Code extension are under
+[Mod authors](/kiln/download#authors) on the download page), or build it from source. The folder holding its `.nupkg` files
 is the local package "feed"; pass it to `kiln new` with `--feed <folder>` or set `$KILN_FEED`.
 
 ## Kiln.Sdk

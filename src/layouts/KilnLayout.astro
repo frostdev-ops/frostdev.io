@@ -16,6 +16,7 @@ const { title, description, path, image = '/projects/kiln/kiln-og.webp' } = Astr
 ---
 
 <MarketingLayout title={title} description={description} path={path} image={image} ambient={false}>
+  <slot name="head" slot="head" />
   <div class="kiln-root">
     <slot />
     <p class="kiln-trademark">Enshrouded is a trademark of Keen Games GmbH. Kiln is unofficial.</p>

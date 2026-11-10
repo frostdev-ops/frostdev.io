@@ -1,0 +1,100 @@
+---
+import KilnLayout from '../../../layouts/KilnLayout.astro';
+import KilnFile from '../../../components/KilnFile.astro';
+import { fileHref, groups, release, releasedLong, stableLinks } from '../../../lib/kilnDownloads';
+
+// Every file of the current Kiln release, from src/data/kilnRelease.json (scripts/kiln-release-data.mjs writes it from the
+// release folder, which is served at /kiln/downloads/<version>/). The launcher files come first as large buttons; the rest
+// is grouped by who needs it. Downloads are plain links; only the Copy buttons next to the SHA-256 values need JavaScript.
+const launcher = groups.find((group) => group.id === 'launcher')!;
+const buttons = ['windows', 'appimage', 'deb', 'rpm'].flatMap((kind) => launcher.files.filter((file) => file.kind === kind));
+const moreLauncher = launcher.files.filter((file) => !buttons.includes(file));
+const others = groups.filter((group) => group.id !== 'launcher');
+const sums = fileHref(release.files.sums);
+---
+
+<KilnLayout
+  title="Download Kiln for Enshrouded"
+  description="Download Kiln: the launcher for Windows and Linux, the dedicated server pack, kilnctl, the SDK and every other file of a release, with sizes and SHA-256 checksums."
+  path="/kiln/download"
+>
+  <div class="kiln-dl">
+    <header class="kiln-dl-hero">
+      <p class="product-eyebrow"><a href="/kiln">Kiln</a> · Download</p>
+      <h1>Download Kiln<br /><span>{release.version}</span></h1>
+      <p class="lead">Early access, released {releasedLong}. Get the launcher for your system. Server owners and mod authors: your files are further down.</p>
+      <p class="product-meta">
+        <span class="sr-only">On this page: </span>
+        {others.map((group) => <><a href={`#${group.id}`}>{group.title}</a> · </>)}
+        <a href="#check">Check your download</a> · <a href="#nexus">Nexus Mods and GitHub</a> · <a href="#links">Stable links</a>
+      </p>
+    </header>
+
+    <section class="kiln-dl-section" id="launcher" aria-labelledby="launcher-title">
+      <div class="kiln-prose">
+        <h2 id="launcher-title">{launcher.title}</h2>
+        <p>{launcher.about}</p>
+      </div>
+      <ul class="kiln-dl-main">
+        {buttons.map((file, i) => <KilnFile file={file} variant="card" secondary={i > 0} />)}
+      </ul>
+      {moreLauncher.length > 0 && <ul class="kiln-dl-files">{moreLauncher.map((file) => <KilnFile file={file} />)}</ul>}
+      <div class="kiln-prose">
+        <p>Then open the launcher, let it find Enshrouded, and press <strong>Install</strong>. <a href="/kiln/wiki/install">Read the install guide</a>.</p>
+      </div>
+    </section>
+
+    {others.map((group) => {
+      const samples = group.files.filter((file) => file.kind === 'sample');
+      const rest = group.files.filter((file) => file.kind !== 'sample');
+      return (
+        <section class="kiln-dl-section" id={group.id} aria-labelledby={`${group.id}-title`}>
+          <div class="kiln-prose">
+            <h2 id={`${group.id}-title`}>{group.title}</h2>
+            <p>{group.about}</p>
+          </div>
+          {rest.length > 0 && <ul class="kiln-dl-files">{rest.map((file) => <KilnFile file={file} />)}</ul>}
+          {samples.length > 0 && (
+            <details class="kiln-file">
+              <summary><strong>Sample mods ({samples.length})</strong><span class="about">Small working mods to read and copy. Import a zip in the launcher’s Library.</span></summary>
+              <ul class="kiln-dl-files">{samples.map((file) => <KilnFile file={file} variant="compact" />)}</ul>
+            </details>
+          )}
+        </section>
+      );
+    })}
+
+    <section class="kiln-dl-section" id="check" aria-labelledby="check-title">
+      <div class="kiln-prose">
+        <h2 id="check-title">Check your download</h2>
+        <p>Every file here has a SHA-256: a 64-character fingerprint of its exact contents. Work out the SHA-256 of your copy and compare it with the one on this page. If the two match, you have the file we published. Upper and lower case do not matter.</p>
+        <h3>Windows (PowerShell)</h3>
+        <pre><code>Get-FileHash &lt;file&gt; -Algorithm SHA256</code></pre>
+        <h3>Linux</h3>
+        <pre><code>sha256sum &lt;file&gt;</code></pre>
+        <p>The same values are in <a href={sums}>SHA256SUMS</a>, a text file with one line per file of this release. Each line gives the path inside the release, such as <code>windows/</code> or <code>runtime/</code>.</p>
+        <p>Windows may warn that the publisher is unknown, because the installer is not code-signed yet. Compare the SHA-256 first. If it matches, choose <strong>More info</strong>, then <strong>Run anyway</strong>.</p>
+      </div>
+    </section>
+
+    <section class="kiln-dl-section" id="nexus" aria-labelledby="nexus-title">
+      <div class="kiln-prose">
+        <h2 id="nexus-title">Nexus Mods and GitHub</h2>
+        <p>Nexus Mods holds several of Kiln’s files (the Windows launcher, the server pack, the runtime and the SDK) for review after its automated checks, as it does for files with programs in them. Until that review is done, every file is here and on GitHub.</p>
+        <p>The files here and on GitHub are the same builds. The launcher on Nexus is a separate build with no self-update, so its checksums differ. The launcher on this page updates itself.</p>
+        <p>Kiln is open source. If you want to look before you run anything, the source is under <a href="#source">Source and notes</a> and on GitHub.</p>
+        <p><a href={release.github}>This release on GitHub</a> · <a href={release.nexus}>Kiln on Nexus Mods</a></p>
+      </div>
+    </section>
+
+    <section class="kiln-dl-section" id="links" aria-labelledby="links-title">
+      <div class="kiln-prose">
+        <h2 id="links-title">Stable links</h2>
+        <p>These links always lead to the file of the current version. Use them in posts and descriptions.</p>
+        <ul>
+          {stableLinks.map((link) => <li><a href={link.href}><code>https://frostdev.io{link.href}</code></a>: {link.file.label}</li>)}
+        </ul>
+      </div>
+    </section>
+  </div>
+</KilnLayout>

@@ -6,7 +6,7 @@ status: "works"
 updated: "2026-11-04"
 ---
 
-A `.vsix` you install yourself. It isn't on the Marketplace or Open VSX.
+A `.vsix` you install yourself ([download](/kiln/download#authors)). It isn't on the Marketplace or Open VSX.
 
 ```sh
 code --install-extension kiln-vscode-0.1.0.vsix

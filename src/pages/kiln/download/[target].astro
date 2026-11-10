@@ -1,0 +1,36 @@
+---
+import KilnLayout from '../../../layouts/KilnLayout.astro';
+import KilnFile from '../../../components/KilnFile.astro';
+import { fileHref, release, stableLinks } from '../../../lib/kilnDownloads';
+
+// The stable links /kiln/download/windows, /linux, /deb, /rpm, /server and /runtime. The site is static, so each one is a
+// small page that sends the browser to the current version's file with a zero-second meta refresh and shows the same
+// file as a plain link, for browsers that do not follow it. getStaticPaths reads src/data/kilnRelease.json: a new
+// release changes where they lead, and an .rpm link exists only when the release has an .rpm.
+export function getStaticPaths() {
+  return stableLinks.map((link) => ({ params: { target: link.id }, props: { link } }));
+}
+const { link } = Astro.props;
+const { file } = link;
+const href = fileHref(file.path);
+---
+
+<KilnLayout
+  title={`${file.label}, Kiln ${release.version}`}
+  description={`Download the ${file.label} of Kiln ${release.version}, the current version.`}
+  path={link.href}
+>
+  <meta slot="head" http-equiv="refresh" content={`0; url=${href}`} />
+  <meta slot="head" name="robots" content="noindex" />
+  <div class="kiln-dl">
+    <header class="kiln-dl-hero">
+      <p class="product-eyebrow"><a href="/kiln">Kiln</a> · <a href="/kiln/download">Download</a></p>
+      <h1>{file.label}<br /><span>{release.version}</span></h1>
+      <p class="lead">Your download should start by itself. If it does not, use the button.</p>
+    </header>
+    <ul class="kiln-dl-main single"><KilnFile file={file} variant="card" /></ul>
+    <div class="kiln-prose">
+      <p>Every other file, with its checksum, is on the <a href="/kiln/download">download page</a>.</p>
+    </div>
+  </div>
+</KilnLayout>
