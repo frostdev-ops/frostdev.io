@@ -3,7 +3,7 @@ title: "Kiln on a dedicated server"
 nav: "Dedicated servers"
 description: "Put Kiln on an Enshrouded dedicated server: a rented host over FTP, your own Windows PC, or a headless Linux machine."
 status: "partial"
-updated: "2026-11-07"
+updated: "2026-11-10"
 ---
 
 This page is for server owners. It shows how to put Kiln on an Enshrouded dedicated server, check that it runs, add
@@ -75,7 +75,9 @@ The Kiln Launcher can do this too: its **Servers** page finds Steam's server, in
 has admin pages. See [Run a server](/kiln/wiki/servers).
 
 Honest note: Kiln's server side has been tested under Wine on Linux, not yet on a real Windows PC. It should behave
-the same. If it doesn't, please report it.
+the same. If it doesn't, please report it. One difference is known: on a native Windows server, a mod's new items and
+recipes did not register (GitHub issue 14: Kiln found no free memory within reach of the game's item data). dev.22 fixes
+that. The fix was checked with replayed address-space layouts and under Wine, not yet on a Windows PC.
 
 ## Your own Linux server
 
@@ -127,6 +129,10 @@ Open `kiln/logs/kiln.log` after the server has started.
 | no kiln.log | `dinput8.dll` wasn't loaded: wrong folder, or Wine without the setting |
 
 On Linux, `kilnctl status myserver` shows the same build line.
+
+Kiln doesn't load, or mods don't? Save a support report and send that zip when you ask for help:
+`kilnctl report myserver`, or `kilnctl report --dir <server folder>` for a folder kilnctl doesn't manage, or **Logs** on the
+launcher's server page. See [Save a support report](/kiln/wiki/debugging#save-a-support-report).
 
 ## Admin without a desktop
 

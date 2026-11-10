@@ -2,7 +2,7 @@
 title: "The manifest"
 description: "kiln.mod.json: id and version, where the mod runs, what players need, dependencies and load order."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-10"
 ---
 
 Every mod folder has a `kiln.mod.json`. Kiln.Sdk writes it from your project file, or add your own. The build checks it
@@ -77,3 +77,22 @@ mod x 1.0.0 skipped: side 'client': not loaded on a server
 ```
 
 A misspelt key only warns (`unknown key 'dependecies' (ignored)`). `kiln lint` catches it before you build.
+
+## Mods of data only
+
+Since dev.22, `entryAssembly` is optional. A folder with a `kiln.mod.json` and a `content/*.json` data pack is a mod with
+nothing to run. It has its id, version, dependencies, side and a place in the load order, it shows in the mod list, and
+its data packs apply.
+
+```jsonc
+// kiln/mods/pack-only/kiln.mod.json, with kiln/mods/pack-only/content/items.json beside it
+{ "id": "pack-only", "version": "1.0.0", "apiVersion": "0.2", "side": "both", "clients": "kiln" }
+```
+
+```
+[host] mod pack-only 1.0.0 loaded in 0.4 ms (data only: no entryAssembly)
+```
+
+A key that is there must still name a `.dll` file: an empty `entryAssembly` is refused. A code project still has to name
+the assembly it builds (`KILN001`). Before dev.22 Kiln refused a manifest without it, and the folder's data packs were
+skipped. Not yet tried in a real game.

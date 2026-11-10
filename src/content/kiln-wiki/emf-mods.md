@@ -6,7 +6,7 @@ status: "partial"
 updated: "2026-11-10"
 ---
 
-**0.2.0-dev.21** runs mods made for EMF (the Enshrouded Modding Framework), including EMF 0.6.0 / API v27 and
+**0.2.0-dev.22** runs mods made for EMF (the Enshrouded Modding Framework), including EMF 0.6.0 / API v27 and
 older DLL/Lua mods. You do not need EMF's `dinput8.dll` or its core. Kiln's EMF part is installed by default.
 
 The C table has **90 slots: 77 full, 13 partial, none missing**. That describes implemented contracts, not a claim that
@@ -46,7 +46,11 @@ Admins are players with the game's admin rights, or accounts listed in `kiln/con
 ## EMF installed too
 
 When EMF's own core is detected at startup, Kiln's EMF part steps aside and EMF runs the mods. Use one startup owner
-for EMF; loading another native core after mods have already started can still conflict.
+for EMF; loading another native core after mods have already started can still conflict. Since dev.22, while EMF's own
+loader is installed, the launcher copies your profile's EMF mods into `emf/mods/<name>/` for it, so they load too, and
+removes its copies when the loader is gone. Activate the profile again after you install EMF's loader. EMF's own
+`emf/config/<mod>.ini` still decides whether a mod is on; `kiln/state/emf.json` lists the copies, and the reason says
+when that file keeps one off.
 
 An older EMF 0.3.3 core goes idle on the tested game build, and Kiln's log says how to hand its mods to Kiln.
 Put `;` in front of EMF's line in `kiln/chain.ini`, then restart. EMF's files can stay in `emf/`; only its loader must

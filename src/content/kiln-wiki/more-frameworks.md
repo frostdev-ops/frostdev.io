@@ -7,11 +7,15 @@ updated: "2026-11-10"
 ---
 
 Kiln has a part for each of these frameworks. All of them come with Kiln, so you don't install the framework. Each
-part steps aside when the framework's own loader runs, so a mod never runs twice. New in 0.2.0-dev.18: unless a section
+part steps aside when the framework's own loader runs, so a mod never runs twice. Since dev.22 the launcher also copies
+your profile's mods into the folder that loader reads
+([details](/kiln/wiki/other-mods#your-other-loader-is-installed-too)). New in 0.2.0-dev.18: unless a section
 says otherwise, they ran in Kiln's tests and on test servers, and no player has checked them in the game yet.
 
-The launcher imports mods of all of them: drop a mod on the window and it goes on your profile's **Engines** tab. Or put
-the mod in the folder named below, inside the game folder.
+The launcher imports mods of all of them: drop a mod on the window and it goes on your profile's **Engines** tab
+([what it accepts](/kiln/wiki/other-mods#adding-mods-in-the-launcher)). Or put the mod in the folder named below, inside
+the game folder, and switch that framework's drop-in on in the profile's settings. The profile's **In the game folder**
+list shows what is there and whether it loads ([Profiles and mods](/kiln/wiki/profiles#in-the-game-folder)).
 
 ## SET
 
@@ -43,6 +47,10 @@ physical input, fog or placement limits. Status: partial for the remaining API d
 
 **In dev.21:** SET no longer re-reads a catalog without texts every 60 s, and handles non-ASCII Windows paths. SET mod
 placement no longer refuses a game folder because `/home` is a link to `/var/home` (Fedora Atomic, Bazzite).
+
+**In dev.22:** SET mods load again when C# mods are on. Kiln's SET part took Kiln's own in-game mod list for SET's
+runtime and stood aside. With a Cyrillic, Chinese or accented Windows user name or game folder, SET mods did not load;
+that is fixed too. Neither fix has run on a Windows PC.
 
 ## Greeneye Loader
 
@@ -95,7 +103,8 @@ Enshwick mods of every kind: DLL mods, Luau mods (`main.luau`) and data packs (`
   check.
 - **Enshwick installed too:** your own copy wins. Kiln uses the loader in `mods/enshwick/` when it's there, and its own
   copy only when it isn't (setting `"loader": "auto"` in `kiln/config/kiln-enshwick.json`). If Enshwick's
-  `powrprof.dll` starts by itself, Kiln starts nothing.
+  `powrprof.dll` starts by itself, Kiln starts nothing, and since dev.22 it copies new profile mods into `mods/` for it.
+  Enshwick's loader may see a mod that was copied while it was already running only from the next start.
 - **Linux and Steam Deck:** you don't need the `WINEDLLOVERRIDES=powrprof=n,b` launch option.
 - **Join check:** Enshwick's own. A server records its mods, and a player with a different version of a mod that has a
   join check can't join.
@@ -116,11 +125,17 @@ kit.
 - Kiln runs shroudlink's own server part, so mods behave as under shroudlink, hot reload included.
 - shroudlink's EML data mods (bigger stacks, bigger chests) go to Kiln's EML part.
 - **Players:** shroudlink's optional client addon (a `dinput8.dll`) adds the MODS tab, chest search and slot locks.
-  Install Kiln in the game and it keeps the addon and loads it.
+  Install Kiln in the game and it keeps the addon and loads it. Drop the addon on the launcher (alone, or in shroudlink's
+  singleplayer package) and it is added as a mod of its own, loaded with your profile. Before dev.22 the launcher took
+  it for a loader Kiln doesn't need and left it out, so the tab never appeared. You still don't need shroudlink's core:
+  Kiln runs it.
+- **shroudlink's own core installed:** it reads only flat DLLs in `shroudlink_mods/`, not Kiln's layout. While it runs,
+  the profile's shroudlink mods don't load through Kiln, and the state file and the launcher's engine row say so.
 - **Moving from shroudlink's own setup:** stop the server, delete `steam_api64.dll`, rename `steam_api64_o.dll` back to
   `steam_api64.dll` (or verify the files in Steam), keep `shroudlink_mods/`, install Kiln.
 
-Status: works on a test server (shroudlink's own self-test passed). With players joined: untested.
+Status: works on a test server (shroudlink's own self-test passed). With players joined: untested. The MODS tab after
+dropping the addon on the launcher: not seen in a real client yet.
 
 ## Ember
 

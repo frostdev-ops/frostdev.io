@@ -15,12 +15,17 @@ updated: "2026-11-10"
   Debian 12, Arch.
 - The **Kiln Launcher**: AppImage or .deb on Linux, an installer on Windows. It includes the Kiln runtime.
 
+Any Windows user name and game folder name works, including Cyrillic, Chinese and accented letters. Before dev.22 such
+a name crashed the quests part at boot, kept SET mods from loading and stopped build regions from saving. That fix was
+tested under Wine with such paths, not on a Windows PC.
+
 ## Install
 
 1. Open the launcher. It finds Enshrouded in your Steam libraries by itself; if it doesn't, use **Add a folder**.
 2. Press **Install** on the Play page and confirm.
-3. Drop a mod's zip, folder or DLL anywhere on the launcher window. It goes into your active profile ("My mods" at
-   first); **Undo** takes it out again.
+3. Drop a mod's archive (zip, 7z or rar), folder or DLL anywhere on the launcher window. It goes into your active
+   profile ("My mods" at first); **Undo** takes it out again. A rar needs a tool that is already on your PC (unrar,
+   7-Zip, bsdtar or Windows' tar); without one the launcher says to extract it first.
 4. Press **Play**.
 
 <!-- shot: launcher-play | The launcher's Play page with its one-off starts -->
@@ -28,14 +33,17 @@ updated: "2026-11-10"
 Steam's Play button also starts Kiln, with the profile you last activated.
 
 Mods made for other frameworks (EML, ShroudForge, EMF, Enshwick, Greeneye and more) work too: drop them on the window
-like Kiln mods. You don't need to install those frameworks. Already have another tool's `dinput8.dll`, or another
-framework installed? Kiln keeps it. See [Mods for other frameworks](/kiln/wiki/other-mods).
+like Kiln mods. You don't need to install those frameworks. A mod id with capitals is fine, and so is a package shaped
+like the game folder (a `mods` folder with a loader DLL beside it). Already have another tool's `dinput8.dll`, or
+another framework installed? Kiln keeps it, and copies your profile's mods for that framework's own loader. See
+[Mods for other frameworks](/kiln/wiki/other-mods) and [Adding mods in the launcher](/kiln/wiki/other-mods#adding-mods-in-the-launcher).
 
 ## Steam Deck
 
 On a Steam Deck the launcher opens in **Deck mode**: a controller-friendly screen (D-pad or stick to move, A to choose,
 B to go back, L1/R1 for tabs). Download the AppImage in Desktop Mode, then add it to Steam as a non-Steam game
-(right-click it, **Add to Steam**) to start it from Game Mode. **Add mods** lists the mods in your Downloads folder.
+(right-click it, **Add to Steam**) to start it from Game Mode. **Add mods** lists the mods in your Downloads folder: `.zip`, `.7z` and `.rar` files, DLLs and mod folders. A `.rar`
+needs a tool on the Deck; without one, extract it first.
 If Kiln doesn't load with your Proton, set the launch option below; Deck mode's **Help** shows the steps and whether it's
 set. Switch to the desktop screen in **Settings**, or start the launcher with `--desktop`.
 
@@ -48,6 +56,7 @@ After the restart, **Update game** puts the new Kiln runtime into the game. Noth
 gets a download link instead.
 
 The **Runtime** page also updates, rolls back and uninstalls Kiln. A dropped zip there is only for rollback or test builds.
+If you uninstall Kiln and install it again, the profile you used is active again, and a mod you drop goes into it.
 
 ## On Linux (Proton)
 
@@ -81,7 +90,7 @@ shows **Vanilla**. On a Steam Deck, Home shows a **Kiln is not loading** button 
 
 ## Mods from Nexus Mods
 
-The official **0.2.0-dev.21** launcher ships with Nexus integration disabled, as dev.20 did. There is no **Catalog**,
+The official **0.2.0-dev.22** launcher ships with Nexus integration disabled, as dev.20 and dev.21 did. There is no **Catalog**,
 **Nexus Mods** account/settings page or Mod Manager Download (`nxm://`) handler in this build, on desktop or Deck.
 
 It cleans up what dev.19 left behind:
@@ -92,8 +101,9 @@ It cleans up what dev.19 left behind:
 - A personal Nexus API key stored by dev.19 is deleted when the launcher starts, without being shown.
 
 1. Open [Nexus Mods](https://www.nexusmods.com/enshrouded/mods) in your browser and use **Manual Download** on the mod's file page.
-2. Drop the downloaded zip on the launcher, or choose it with **Add mods**. Check its requirements and include the
-   matching dependencies. For a 7z or RAR archive, unpack it first and import the mod folder.
+2. Drop the downloaded archive (zip, 7z or rar) on the launcher, or choose it with **Add mods**. Check its requirements
+   and include the matching dependencies. A rar needs a tool already on your PC; without one, extract it and import the
+   mod folder. A password-protected or split archive has to be extracted first too.
 3. To update a mod, download the new archive and import it into the same profile. Check the Library's result before playing.
 
 [Kiln's Nexus page](https://www.nexusmods.com/enshrouded/mods/301) remains available for downloads and reports.

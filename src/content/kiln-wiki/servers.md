@@ -3,7 +3,7 @@ title: "Run a server"
 nav: "Run a server"
 description: "Install, update and run dedicated servers with Kiln, from the launcher or kilnctl on Linux."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-10"
 ---
 
 > Rented server with only FTP, or a server without the launcher? See
@@ -93,6 +93,7 @@ kilnctl start myserver        # returns when the world is up
 kilnctl status myserver
 kilnctl stop myserver         # the game saves first
 kilnctl backup myserver       # archive the save
+kilnctl report myserver       # a zip to send when something fails
 ```
 
 Keep it running: `systemctl --user enable --now kiln@myserver`.
