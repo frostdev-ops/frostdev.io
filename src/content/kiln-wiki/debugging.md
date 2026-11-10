@@ -2,7 +2,7 @@
 title: "Debugging"
 description: "Why a mod didn't load, the fault policy, crash reports, and breakpoints in a running server."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-10"
 ---
 
 ## Start with kiln.log
@@ -51,6 +51,20 @@ launcher's **Logs** page and the admin **Crashes** page.
 | a content change isn't reapplied at world load | made in `OnLoad`; use `Content.OnReady` |
 | items disappear from saves | the item's GUID changed |
 | the old version runs after a reload | a thread, timer or static reference keeps it alive |
+
+## Hooks and other DLLs
+
+When a feature stops working next to another DLL mod, check the hook lines in kiln.log (new in dev.21):
+
+```
+[kiln] hooks: chat/ChatLogAdd chained over enshwick.dll+0x11ea80
+[kiln] hooks: xhl.dll+0x4410 hooked over Kiln's chat/ChatLogAdd (Kiln's detour stays armed; it is reached through their jump)
+[W] [kiln] compat: overlap: xhl-core.dll+0x11ea80 hooked chat/ChatLogAdd before chat, emf; Kiln chained over it. ...
+```
+
+`kiln/state/hooks.json` lists every hooked function, its links in order, overlaps and the compat rules that fired. The
+fix for an overlap is usually to load the other DLL late:
+[closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods). For your own hooks: [Hooks and patches](/kiln/wiki/hooks).
 
 ## Breakpoints
 

@@ -2,7 +2,7 @@
 title: "Code mods"
 description: "The Mod class, the tick thread, events, configs, commands, permissions, saved data and other mods."
 status: "works"
-updated: "2026-11-08"
+updated: "2026-11-10"
 ---
 
 ## The mod
@@ -86,7 +86,8 @@ at the next load. `[Synced]` sends the server's value to players.
 before `WorldLoadedEvent`; with no world, they are defaults. `[RequiresRestart]` changes apply when that world next opens.
 `Context.Locale.Get(key, args)` reads this mod's `locales/<language>.json`, falling back to English and then the key.
 `StatusLines.Set("state", "waiting for the world")` or `Add(() => cachedText)` reports status in mod lists. A status source
-may run on a worker, so read snapshots produced on the tick thread rather than live game state.
+may run on a worker, so read snapshots produced on the tick thread rather than live game state. Since dev.21 a mod list
+shows the last snapshot and refreshes it a moment later, so a status line never makes the menu, tick or frame wait.
 
 ## Commands and permissions
 
@@ -143,4 +144,5 @@ A service can be unavailable on a build Kiln doesn't fully support. Check `Playe
 
 ## The advanced tier
 
-Low-level hooks into the game's code, for the rare mod that needs them. Opt in with `"advanced": true`.
+Low-level hooks into the game's code, for the rare mod that needs them. Opt in with `"advanced": true`. Detours, mid
+hooks, memory patches, symbols, and the hook registry new in 0.2.0-dev.21: [Hooks and patches](/kiln/wiki/hooks).

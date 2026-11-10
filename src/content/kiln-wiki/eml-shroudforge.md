@@ -3,7 +3,7 @@ title: "EML and ShroudForge mods"
 nav: "EML and ShroudForge"
 description: "Kiln runs EML data mods and ShroudForge's Lua mods unchanged, with no extra loader and no Wine settings."
 status: "pending"
-updated: "2026-11-08"
+updated: "2026-11-10"
 ---
 
 EML (the Enshrouded Mod Loader) and ShroudForge are the frameworks with the most Enshrouded mods. Both come with Kiln
@@ -29,7 +29,11 @@ What you don't need:
 How it behaves:
 - **A broken mod doesn't stop the game.** Under EML, one bad mod stops the game with a "Fatal error". On Kiln that mod
   is switched off, the log names it, and the other mods still apply.
-- **Fast starts.** When nothing changed since the last start, Kiln skips the work.
+- **A mod that can't be read is switched off first.** Since dev.21, a mod whose `src/mod.lua` is missing or unreadable
+  is switched off before the long game-data step. `kiln/state/eml.json` and kiln.log give the reason, for example
+  `entry src/mod.lua: file metadata failed: ...`. A file that vanishes during the run drops only its own mod.
+- **Fast starts.** When nothing changed since the last start, Kiln skips the work, and since dev.21 it reads almost no
+  game data to find that out. [Faster starts](#faster-starts-dev21).
 - **Game updates.** After an update Kiln applies your EML mods again, before the world loads. EML mods need none of
   Kiln's hooks, so they apply even on a game build Kiln doesn't know yet.
 - **Back to vanilla.** Remove every EML mod and the next start puts the original game data back. The launcher also has
@@ -41,6 +45,31 @@ How it behaves:
 
 EML mods change data that the server and every player need to agree on. Use the same EML mods on the server and in
 each player's game. A server with bigger stacks and a player without them can lose items.
+
+## Faster starts (dev.21)
+
+To know whether anything changed, EML checks the game's data files. Before dev.21 that read every file several times
+per start: on a full client install (about 48 GiB) even a start that changed nothing read 48 GiB. Since dev.21 Kiln
+reads each file at most once per start, and not at all while the OS shows it unchanged since it was last read. The
+checks are the same; Kiln just doesn't re-read what can't have changed.
+
+Measured on a lab server under Wine, with 7.5 GiB of real server data. Not measured on a real client yet.
+
+| Start | Full read (`KILN_EML_FULL_HASH=1`) | dev.21 |
+|---|---|---|
+| nothing changed | 7.6 GiB read, 5.4 s | 562 B read, 64 ms |
+| after a mod change | 30.2 GiB read, 13.4 s | 141.5 MiB read, 1.0 s |
+
+- **The first start after the update** still reads all game files once (about 48 GiB on a full client, as in dev.20).
+  The old cache has no change stamps yet. Later starts don't.
+- **kiln.log** says what was read: `[eml] Fingerprints: hashed 562 B in 4 file(s), reused 22 file(s) (7.6 GiB not read)`.
+  A start with no change says `nothing changed since the last run`. If it says `Change stamps are not trusted here`,
+  it names the reason, and that start reads every file in full. Please report it.
+- **exFAT and FAT** game folders don't keep the times Kiln needs. EML reads every file in full there, as before.
+- **After a power loss or a hard crash of the machine**, a game file can come back changed with its old size and times.
+  Start once with `KILN_EML_FULL_HASH=1` in the launch options, or let Steam verify the game files.
+- `KILN_EML_FULL_HASH=1` turns the reuse off: every file is read in full, as in EML 0.2.0.
+- Kiln's EML cache file (`kiln/eml/cache/files.json`) gains change stamps. An older Kiln still reads it.
 
 ## ShroudForge mods
 
@@ -69,6 +98,15 @@ If ShroudForge is installed already, keep it.
   updater with the game closed. If it puts its own `dinput8.dll` back, reinstall Kiln from the launcher; your mods stay.
 - If ShroudForge starts by itself next to Kiln (through its own `dbghelp.dll`), Kiln lets it and starts nothing twice.
 
+**Engine hooks (dev.21).** When Kiln hosts ShroudForge, ShroudForge's six engine hooks go through Kiln's
+[hook registry](/kiln/wiki/hooks). Another DLL's hook on one of them (XHL, a closed-source mod) no longer switches
+ShroudForge's native runtime off. On the current game build these hooks are dormant: no shipped game profile names them.
+`KILN_SF_ENGINE_HOOKS=self` in the launch options keeps the old behaviour. If a closed-source DLL still clashes, load it
+[after Kiln and ShroudForge](/kiln/wiki/other-mods#closed-source-dll-mods).
+
+**Linked home folder.** Since dev.21 ShroudForge placement no longer refuses a game folder just because `/home` is a
+link to `/var/home` (Fedora Atomic, Bazzite). Links inside the managed folders are still refused.
+
 To start once without ShroudForge mods, use **Play without mods once**, or set `KILN_SHROUDFORGE=0` in the launch
 options.
 
@@ -94,6 +132,8 @@ data mods as the server; Kiln's join check doesn't compare them yet. See
 
 - In a player's game: an EML mod's effect, ShroudForge's Modloader window, keybinds and in-game mods. On test servers
   both ran their mods and their settings changed live.
+- dev.21's faster EML starts on a real client install, and the first start's one-time full read there.
+- An EML mod on a `/home -> /var/home` host (Fedora Atomic, Bazzite).
 - EML mods that add new items, checked in a player's game.
 
 ## dev.20 pairing with EMF

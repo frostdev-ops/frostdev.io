@@ -2,7 +2,7 @@
 title: "Install Kiln"
 description: "Install Kiln for Enshrouded, import downloaded mod archives, and play with or without mods."
 status: "works"
-updated: "2026-11-08"
+updated: "2026-11-10"
 ---
 
 > **Early access.** [Download the launcher](/kiln#download): Windows installer, Linux AppImage or .deb. Also on
@@ -61,6 +61,9 @@ WINEDLLOVERRIDES="dinput8=n,b" %command%
 It does no harm where it isn't needed, so set it if you're unsure. The launcher shows what to change. It never edits
 Steam's settings.
 
+On Fedora Atomic and Bazzite, `/home` is a link to `/var/home`. Since dev.21 ShroudForge and SET placement and modpack
+installs accept that. Links inside Kiln's managed folders are still refused.
+
 ## "No Kiln": Kiln is not loading
 
 If Steam starts the game without Kiln, the launcher says **No Kiln** (in amber) instead of waiting on "Starting", and
@@ -78,9 +81,15 @@ shows **Vanilla**. On a Steam Deck, Home shows a **Kiln is not loading** button 
 
 ## Mods from Nexus Mods
 
-The official **0.2.0-dev.20** launcher ships with Nexus integration disabled. There is no **Catalog**, **Nexus Mods**
-account/settings page or Mod Manager Download (`nxm://`) handler in this build, on desktop or Deck. It does not register
-or take ownership of those links; existing saved credentials and handler associations are left untouched.
+The official **0.2.0-dev.21** launcher ships with Nexus integration disabled, as dev.20 did. There is no **Catalog**,
+**Nexus Mods** account/settings page or Mod Manager Download (`nxm://`) handler in this build, on desktop or Deck.
+
+It cleans up what dev.19 left behind:
+
+- If dev.19 took over `nxm://` links, the launcher gives them back to the handler you had before (Vortex, for example).
+  A stray link is forwarded to it, or you get a message on how to reset the handler. If a launcher already runs, that
+  message opens a second window.
+- A personal Nexus API key stored by dev.19 is deleted when the launcher starts, without being shown.
 
 1. Open [Nexus Mods](https://www.nexusmods.com/enshrouded/mods) in your browser and use **Manual Download** on the mod's file page.
 2. Drop the downloaded zip on the launcher, or choose it with **Add mods**. Check its requirements and include the
@@ -106,7 +115,7 @@ One-off starts on the Play page, for the next start only:
 |---|---|
 | Play vanilla once | nothing, as if Kiln weren't installed. It warns first |
 | Play without mods once | Kiln, no mods |
-| Play a profile once | another profile, without switching to it |
+| Play a profile once | another profile, without switching to it, with its compat rules |
 
 The warning: a character carrying Kiln items can crash on a server that lets vanilla clients in, and may lose those items on other
 servers. Use another character.

@@ -3,7 +3,7 @@ title: "Inventory transfers"
 nav: "Inventory transfers"
 description: "Move gear with its state, read container names, and keep items out of quick stack or move all."
 status: "pending"
-updated: "2026-11-08"
+updated: "2026-11-10"
 ---
 
 > **New in 0.2.0-dev.20.** These APIs require the dev.20 runtime and MDK or newer. Server evidence and pending client checks are tracked on
@@ -30,6 +30,10 @@ changes, including source, destination, item, amount and gear entity; totals cov
 
 `MoveOptions.DryRun` runs and rolls back, without a transfer event. Equipped/held gear and the action bar stay out by
 default; `Equipped` and `ActionBar` opt in. `Silent` skips transfer rules and events.
+
+Since dev.21 a dry-run move also runs native transfer handlers (`kiln.items` `transfer_listen`), unless it is silent too.
+They see `KILN_TRANSFER_DRY_RUN` in `ev->flags`. Keep and cancel as usual, so the dry run predicts the real move, but
+don't count, log or change anything outside the transfer: it is all rolled back.
 
 ## Names, rules and reports
 

@@ -37,7 +37,7 @@ const snippets = [
   ].join('\n') },
   { name: 'terminal', kind: 'shell', html: '<span class="t-c">$</span> kiln deploy --reload' },
 ];
-const pending = ['Windows PCs (standalone Windows binaries tested under Wine)', 'Hosted and joined multiplayer, including EMF taming and peer handshakes', 'EMF wheels, windows, custom portraits and input', 'New quest/dialogue presentation, skinned bodies, worn looks and shader visuals'];
+const pending = ['Windows PCs (standalone Windows binaries tested under Wine)', 'Hosted and joined multiplayer, including EMF taming and peer handshakes', 'EMF wheels, windows, custom portraits and input', 'New quest/dialogue presentation, skinned bodies, worn looks and shader visuals', 'The dev.21 hook registry, chat fix and late-loaded DLL mods in a real client'];
 const building = ['Typed building blocks for items, spells, effects, world objects, quests and UI', 'glTF model and animation cooking, including retargeting', 'Skinned bodies and worn looks, checked on test servers', 'VFX, particles, materials and custom shader authoring; see the wiki for game-test limits'];
 const notBuilt = ['Ragdolls'];
 const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
@@ -100,7 +100,7 @@ const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
         <ul class="kiln-safe">
           <li><strong>Unknown game builds are left alone</strong><span>After a game update, Kiln’s hooks and C# mods stay off until Kiln supports the build.</span></li>
           <li><strong>Managed errors are isolated</strong><span>Reports help identify a failing C# handler. Native mods can still crash the game or server.</span></li>
-          <li><strong>Other frameworks</strong><span>EMF 0.6.0 / API v27 and other loaders’ mods, within the <a href="/kiln/wiki/other-mods">documented compatibility limits</a>.</span></li>
+          <li><strong>Other frameworks</strong><span>EMF 0.6.0 / API v27 and other loaders’ mods, within the <a href="/kiln/wiki/other-mods">documented compatibility limits</a>. Closed-source DLL mods can load after Kiln.</span></li>
         </ul>
       </div>
     </section>
@@ -156,7 +156,7 @@ const download = (file: string) => `/kiln/downloads/${release.version}/${file}`;
       <p class="product-meta">
         <a href={release.github}>GitHub</a> · <a href={release.nexus}>Nexus Mods</a> · <a href={download(release.files.sums)}>Checksums</a> · <a href="/kiln/wiki/install">Install</a>
       </p>
-      <p>In 0.2.0-dev.20, the Nexus Catalog, account sign-in and Mod Manager Download links are disabled while OAuth approval is pending. Download mod archives in your browser and import them through Library. The launcher distributed on Nexus has no self-updater.</p>
+      <p>In 0.2.0-dev.21, the Nexus Catalog, account sign-in and Mod Manager Download links are disabled while OAuth approval is pending. Download mod archives in your browser and import them through Library. The launcher distributed on Nexus has no self-updater.</p>
     </section>
   </div>
 </KilnLayout>

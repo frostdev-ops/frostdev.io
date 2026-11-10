@@ -3,10 +3,10 @@ title: "EMF mods"
 nav: "EMF mods"
 description: "Install EMF DLL and Lua mods with API v27 support, current differences and server/client evidence limits."
 status: "partial"
-updated: "2026-11-09"
+updated: "2026-11-10"
 ---
 
-**0.2.0-dev.20** runs mods made for EMF (the Enshrouded Modding Framework), including EMF 0.6.0 / API v27 and
+**0.2.0-dev.21** runs mods made for EMF (the Enshrouded Modding Framework), including EMF 0.6.0 / API v27 and
 older DLL/Lua mods. You do not need EMF's `dinput8.dll` or its core. Kiln's EMF part is installed by default.
 
 The C table has **90 slots: 77 full, 13 partial, none missing**. That describes implemented contracts, not a claim that
@@ -52,6 +52,23 @@ An older EMF 0.3.3 core goes idle on the tested game build, and Kiln's log says 
 Put `;` in front of EMF's line in `kiln/chain.ini`, then restart. EMF's files can stay in `emf/`; only its loader must
 not run.
 
+## dev.21 changes
+
+- **Hooks.** An EMF mod's `hook`, `hook_pattern` and `hook_address` are now links in Kiln's
+  [hook registry](/kiln/wiki/hooks), owned by `emf:<id>`. On one game function they run newest first, before Kiln's own
+  links, together with Shroudtopia's mod hooks. Hooks on functions outside the game exe still use plain safetyhook.
+- **Chat.** Kiln's chat commands no longer depend on the game's return address. kiln-emf's chat hook, or an EMF mod's
+  hook in front of Kiln's, can no longer hide players' lines from them (a dev.20 bug). Tested with stand-in hooks under
+  Wine; with kiln-emf's client chat bridge in a real client: open.
+- **Portraits.** Pictures are drawn off the boot thread. When every picture is current, Kiln doesn't call the renderer
+  and the game doesn't wait. `image_load("portrait:<key>")` from a tick or render thread returns a handle at once
+  while the picture is still being drawn. It shows nothing until the drawing finishes, then the picture. A mod that
+  calls it while its DLL loads still waits (at most 120 s for the whole start).
+- **Portrait cache codes.** 5 (busy), 6 (full) and 7 (cache I/O error, tried again next start) are new. Use kiln-emf and
+  kiln-eml from the same release.
+- **Closed-source DLLs.** A DLL that hooks the same function as an EMF mod shows up as an overlap on the profile's
+  **Native** tab. [Closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods).
+
 <a id="dev20-support-in-preparation"></a>
 
 ## dev.20 support
@@ -84,7 +101,7 @@ commands and joined-player synchronization still need hosted and joined game che
 
 These are the current API v27 differences and evidence limits, replacing the older dev.19 gap list.
 
-| What | In dev.20 |
+| What | In dev.21 |
 |---|---|
 | Mod programs and event listeners | server world only, including a world you host; not the game client's own world |
 | HUD and notifications | client overlay; on a server, HUD lines are retained and notes logged. Only the older clock display has been seen in game |
@@ -92,7 +109,7 @@ These are the current API v27 differences and evidence limits, replacing the old
 | Setting a player's level | queued for a later server step; a nonzero XP adjustment follows the level result and can take more steps |
 | Mod windows | left/right clicks implemented, with Kiln's plain ImGui look. Refused on dedicated servers, as in EMF; client interaction still needs verification |
 | Spawn with an E prompt | the prompt appears a step or two after the spawn |
-| Images and portraits | decoded-pixel limits plus a 64 MB encoded-file limit. Offline archive/cache proof does not establish in-game presentation |
+| Images and portraits | decoded-pixel limits plus a 64 MB encoded-file limit. A portrait asked for from a tick or render thread is empty until its drawing finishes. Offline archive/cache proof does not establish in-game presentation |
 | Radial-wheel input, joined messages and replication | implemented paths with host/server checks; real-client checks remain open |
 | EMF's console window, debug bridge, save backups and profile manager | EMF's own tools, outside Kiln's EMF C API |
 
@@ -103,5 +120,5 @@ call can succeed in the wrong world, without its dependencies or without a welco
 
 The final source has host/ABI/adapter checks, the dedicated-server conformance probe and the two mixed-server boots above.
 Earlier compatibility checks loaded all 13 DLL mods shipped with EMF 0.3.3, and its Lua host ran eight Lua mods. The clock
-mod's time display was seen in game. No new physical-client session has verified API v27 networking, wheels, windows,
+mod's time display was seen in game. dev.21's hook and chat changes were tested under Wine and on lab servers. No new physical-client session has verified API v27 networking, wheels, windows,
 portraits, E prompts, taming or multiplayer behaviour. Install matching Lua/dependency versions on every side the mod requires.

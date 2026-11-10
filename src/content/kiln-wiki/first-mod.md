@@ -2,7 +2,7 @@
 title: "Your first mod"
 description: "Make a mod from a template, build it into a test server, change it while the server runs, and test it."
 status: "works"
-updated: "2026-11-09"
+updated: "2026-11-10"
 ---
 
 ## What you need
@@ -11,7 +11,7 @@ updated: "2026-11-09"
 - A test server with Kiln, not one people play on. See [Run a server](/kiln/wiki/servers).
 - Kiln's matching SDK/MDK download and the [`kiln` command](/kiln/wiki/cli), or a source-built MDK. Unpack the download:
   the folder holding the `.nupkg` files is the local package "feed". Point `kiln new` at it with `--feed` or `$KILN_FEED`.
-  Use the full package version (`0.2.0-dev.20` for this release), not the API base `0.2.0`.
+  Use the full package version (`0.2.0-dev.21` for this release), not the API base `0.2.0`.
 
 ## 1. Make the mod
 
@@ -62,7 +62,7 @@ You get `my-mod-0.1.0.zip`. Players add it to their launcher library. Admins unz
 ## Without `kiln`
 
 ```sh
-dotnet new install "<feed>/Kiln.Templates.0.2.0-dev.20.nupkg" # once; use your MDK's full version
+dotnet new install "<feed>/Kiln.Templates.0.2.0-dev.21.nupkg" # once; use your MDK's full version
 dotnet new kiln-mod -n MyMod --feed <feed> --server <folder> --tests
 dotnet build -t:KilnDeploy                                 # add -p:KilnReload=true to reload
 dotnet build -t:KilnPack

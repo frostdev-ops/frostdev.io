@@ -3,7 +3,7 @@ title: "Greeneye, Enshwick, SET and more"
 nav: "More frameworks"
 description: "How Kiln runs mods for SET, Greeneye Loader, Creative Mode's Flame, Shroudtopia, Enshwick, shroudlink and Ember."
 status: "pending"
-updated: "2026-11-08"
+updated: "2026-11-10"
 ---
 
 Kiln has a part for each of these frameworks. All of them come with Kiln, so you don't install the framework. Each
@@ -41,6 +41,9 @@ The final assembled dev.20 dedicated-server probe passed **39 checks, no failure
 This supersedes the earlier 37/2 record from before the integrated event fixes. It does not establish client windows,
 physical input, fog or placement limits. Status: partial for the remaining API differences and client checks above.
 
+**In dev.21:** SET no longer re-reads a catalog without texts every 60 s, and handles non-ASCII Windows paths. SET mod
+placement no longer refuses a game folder because `/home` is a link to `/var/home` (Fedora Atomic, Bazzite).
+
 ## Greeneye Loader
 
 Client mods for Greeneye Loader 1.2.2: The Worst Map Mod, Find, Quick Deposit, Town Portals, Embervale Teleport,
@@ -75,6 +78,9 @@ Mods for Shroudtopia 0.1.1 and its Enshrouded 1.0 release: minimaps, first-perso
 - **Settings:** `kiln/config/shroudtopia/shroudtopia.json`, in Shroudtopia's own format. The first start copies your old
   `shroudtopia.json`. Set a mod's `active` to switch it on or off while you play. The launcher edits it too.
 - Shroudweave's mods (Minimap and Weather Clock) use the same format as far as we know, but haven't been tried.
+- **Hooks (dev.21):** a mod's `CreateDetour` on the game exe is a link in Kiln's [hook registry](/kiln/wiki/hooks), owned
+  by `shroudtopia:<mod>`. Shroudtopia and EMF mod hooks on one function run newest first, before Kiln's own links, as
+  layered hooks did before. Hooks outside the game exe still use plain safetyhook.
 
 Status: untested in game.
 

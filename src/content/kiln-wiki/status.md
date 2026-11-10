@@ -1,22 +1,67 @@
 ---
 title: "What works today"
 description: "What Kiln does in the current build, what awaits a game test, what's being built and what isn't, as of November 2026."
-updated: "2026-11-09"
+updated: "2026-11-10"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.20**; check the download's version before using its new APIs.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.21**, the current development release; check the download's version before using its new APIs.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026. Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
 
+## New in 0.2.0-dev.21
+
+dev.21 fixes the problems found in the dev.20 review. It stops the launcher from removing mods while Enshrouded runs,
+makes EML mods start much faster, moves every hook Kiln places on the game into one registry, and helps closed-source
+DLL mods (XHL, trainers) work next to Kiln. Most new paths were verified only under Wine: unit tests, Wine host tests
+and dedicated-server labs. Not on Windows, and not in the real client. Nexus features stay off, as in dev.20.
+
+| Area | Included in dev.21; evidence and remaining limits |
+|---|---|
+| [Library guard](/kiln/wiki/profiles#the-library) | **Remove** and **Clean up** are refused while Enshrouded runs: "Close Enshrouded first: the game may be reading this mod". Clean up never lists a version the active profile uses. This is Kiln's side of GitHub issue #4; the reporter's root cause is not proven. Launcher pages covered by tests and mock data, not a real install |
+| [EML starts](/kiln/wiki/eml-shroudforge#faster-starts-dev21) | each game file is read at most once per start, and not at all while the OS shows it unchanged. Lab server under Wine, 7.5 GiB of server data: a start that changed nothing went from 7.6 GiB read in 5.4 s to 562 B in 64 ms. Not measured on a real client. The first start after the update still reads all game files once (about 48 GiB on a full client) |
+| [EML mods that can't be read](/kiln/wiki/eml-shroudforge#eml-mods) | a mod whose `src/mod.lua` can't be read is switched off before the long game-data step, with the reason in `state/eml.json` and kiln.log. The other mods still run |
+| [Closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods) | the profile's **Native** tab has a **Load after Kiln and ShroudForge** switch per chain entry, last session's hook overlaps with **Load late**, and the compat rules that apply. Tested under Wine and on lab servers; not yet with XHL-Core in a real game |
+| Chat | Kiln's chat commands no longer depend on the game's return address, so kiln-emf's chat hook or an EMF mod's hook can't hide players' lines from them (a dev.20 bug). Tested with stand-in hooks under Wine; the real-client check is open |
+| [Hooks](/kiln/wiki/hooks) | kiln.hooks v2: one registry owns one detour per game function, for Kiln's services, the core tick, EMF and Shroudtopia mods and C# mods. `kiln/state/hooks.json` maps them. About 6 ns per call through an empty chain and 59 ns through a C# handler (lab, Wine). Client UI, camera and render hooks need a client check |
+| [ShroudForge](/kiln/wiki/eml-shroudforge#shroudforge-mods) | its six engine hooks go through kiln.hooks when Kiln hosts it, so another DLL's hook on one no longer switches its native runtime off. Dormant on the current game build: no shipped game profile names engine hooks. `KILN_SF_ENGINE_HOOKS=self` keeps the old behaviour |
+| Linked `/home` | ShroudForge and SET placement and modpack installs accept a `/home` that links to `/var/home` (Fedora Atomic, Bazzite). Links inside the managed folders are still refused. Tested with symlinks on Linux, not on a Fedora Atomic host |
+| [Nexus leftovers](/kiln/wiki/install#mods-from-nexus-mods) | a launcher build with Nexus off gives `nxm://` links back to the handler you had before (Vortex, for example). Every build deletes the personal Nexus API key dev.19 stored, without showing it |
+| Smoother play | mod status lines never make the menu, tick or frame wait. [EMF portraits](/kiln/wiki/emf-mods#dev21-changes) are drawn off the boot thread, and current pictures skip the renderer. SET no longer re-reads a catalog without texts every 60 s, and handles non-ASCII Windows paths |
+| File names | names Windows would change (trailing dots or spaces) are refused in mod zips, runtime bundles and modpacks |
+| Mod API | [inventory](/kiln/wiki/inventory) transfer handlers also run on a dry-run move, with `KILN_TRANSFER_DRY_RUN` set. `component_change` refuses an add whose payload doesn't match the component's size. `Overrides` from a background thread belong to the mod that got the handle; without one they throw `InvalidOperationException`. `Texts.Get` returns `null` while another thread loads the catalog. `Assets.Reflect` returns `null` on builds without kiln.types. [World program](/kiln/wiki/world-programs) `TryRead`/`TryWrite` no longer allocate or lock per entity. KILN111 counts items registered with `ItemDefinition`, and a game-style name missing from your local catalog is info, not a warning |
+
+**Breaking and behaviour changes.** `Hooks.Detour` and the v1 `detour` pass every argument to the original. EMF and
+Shroudtopia mod hooks run before Kiln's own links ([all hook changes](/kiln/wiki/hooks#changes-from-dev20)). Library
+removal is refused while the game runs, even with force; a running server blocks it only when its profile points into
+the Library. Use kiln-emf and kiln-eml from the same release. An older proxy ignores `[late]` and loads those DLLs early.
+
+### Client checklist
+
+Only a real client or a joined player can confirm these. Please report what you see.
+
+- Kiln's menu opens and draws; camera, render and in-game UI hooks behave as in dev.20.
+- With kiln-emf's client chat bridge on, Kiln chat commands and EMF mods' chat both work, in both directions.
+- Item moves and quick stack, combat, abilities, audio, quests, flight and creative rules, saves, time, spawns, NPC
+  factions, VFX and world programs with a player. Their server side ran in labs.
+- **Load after Kiln and ShroudForge** on XHL-Core: XHL works, kiln.log shows it loaded late, the overlaps panel updates.
+- While Enshrouded starts with an EML mod active, Remove or Clean up of that version is refused, and works after the
+  game closes.
+- The EML first start reads about 48 GiB once; later starts log `nothing changed` within a second or two.
+- EMF portraits: the game enters the world without waiting when every picture is current, and pictures still show.
+- The game starts with the new proxy on a real client. Labs covered the dedicated server only.
+- Play a profile once whose compat rules differ from the active profile's: that start follows its own rules.
+- On a `/home -> /var/home` host, the profile's EML mod loads.
+- Windows, launcher with Nexus off: `nxm://` links that dev.19 took over from Vortex point at Vortex again.
+
 <a id="in-preparation-for-020-dev20"></a>
 
 ## New in 0.2.0-dev.20
 
-These APIs and adapters are included in dev.20. Install the matching runtime and MDK before using them. Source/host
+These APIs and adapters came with dev.20 and are in dev.21 too. Install the matching runtime and MDK before using them. Source/host
 and dedicated-server evidence is listed below; final release-artifact validation is a separate gate. A passing server
 or host check does not establish client rendering, input or multiplayer behaviour.
 
@@ -32,14 +77,14 @@ or host check does not establish client rendering, input or multiplayer behaviou
 | [EMF](/kiln/wiki/emf-mods#dev20-support) | EMF 0.6.0 / API v27: 77 full, 13 partial and no missing C slots. Official `#!emf1` networking, radial wheels, right-click events, attributes and program/spawn work are implemented. Server/host checks and offline Windows portrait archive/cache checks pass; custom/in-game portraits and hosted/joined gameplay remain unverified |
 | [ShroudForge](/kiln/wiki/eml-shroudforge#dev20-pairing-with-emf) | bundled reader/publication/recovery fixes. Two mixed server boots with Lua 1.19, Beastmaster 1.13 and optional bear/beasts assets succeeded and reused identical cached output. Those earlier boots do not prove every mod pairing or the final recovery guard in a joined game |
 | [SET](/kiln/wiki/more-frameworks#set) | level/flame administration, English names/text catalogs and more tool windows. The final assembled server probe passes 39/0, including event payload observation and flame restoration. Window drawing/input remains untested; game options, `Admin.send`, ImGui Debug and SET's `settings.ini` editor remain unavailable |
-| [Nexus integration](/kiln/wiki/install#mods-from-nexus-mods) | **Disabled in this official build:** no Catalog, Nexus account/settings or `nxm://` handler on desktop or Deck. Download archives in a browser and import them manually. A future enabled build requires approved OAuth configuration and real-provider proof; there is no personal-key fallback |
+| [Nexus integration](/kiln/wiki/install#mods-from-nexus-mods) | **Disabled in the official dev.20 and dev.21 builds:** no Catalog, Nexus account/settings or `nxm://` handler on desktop or Deck. Download archives in a browser and import them manually. A future enabled build requires approved OAuth configuration and real-provider proof; there is no personal-key fallback |
 
 Source/host tests and dedicated-server tests validate registration, refusals, save state and cleanup. They do not draw UI,
 press keys, animate a lid or establish real-provider OAuth success. The feature pages keep those boundaries explicit.
 
 ## New in 0.2.0-dev.19
 
-Historical release notes. The current dev.20 features and limits are listed above.
+Historical release notes. The dev.21 and dev.20 features and limits are listed above.
 
 - **Frame rate fixed.** 0.2.0-dev.18 could drop the game to about 10 fps whenever a profile was active. The SET
   support checked every loaded game file on every frame; now only when a new file loads.
@@ -61,7 +106,7 @@ Historical release notes. The current dev.20 features and limits are listed abov
 
 | Framework | Status |
 |---|---|
-| [EML](/kiln/wiki/eml-shroudforge#eml-mods) | game test pending. Mods patch the game data on test servers; a broken mod is switched off instead of stopping the game |
+| [EML](/kiln/wiki/eml-shroudforge#eml-mods) | game test pending. Mods patch the game data on test servers; a broken mod is switched off instead of stopping the game. dev.21's faster starts: measured on a lab server under Wine |
 | [ShroudForge](/kiln/wiki/eml-shroudforge#shroudforge-mods) | game test pending. Kiln's bundled copy and a player's own copy both run mods on test servers, with live settings |
 | [EMF](/kiln/wiki/emf-mods) | EMF 0.6.0 / API v27, 77 full and 13 partial C slots. Client-world programs/events remain unsupported; player-facing rendering/input and joined-game checks remain open. The older clock mod was seen in game |
 | [SET](/kiln/wiki/more-frameworks#set) | server probe 39/0; game options, `Admin.send`, ImGui Debug and the `settings.ini` editor remain unavailable. Kiln tool-window drawing/input needs a client |
@@ -72,6 +117,7 @@ Historical release notes. The current dev.20 features and limits are listed abov
 | [shroudlink](/kiln/wiki/more-frameworks#shroudlink) | works on a test server (shroudlink's self-test). With players joined: pending |
 | [Ember](/kiln/wiki/more-frameworks#ember) | not running: waiting for Ember's loader |
 | Stand-alone `dinput8.dll` mods | works: loaded next to Kiln |
+| [Closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods) loaded late | new in dev.21. Tested under Wine and on lab servers; not yet in a real game |
 
 ## New in 0.2.0-dev.17
 
@@ -85,7 +131,7 @@ Nothing below has been seen in the game yet. The new features are listed under
 [Built, game test pending](#built-game-test-pending) with what they were tested on.
 
 - **Historical Nexus integration:** dev.16 introduced the Catalog and optional Mod Manager Download links. These are
-  disabled in the current dev.20 build; use [manual archive import](/kiln/wiki/install#mods-from-nexus-mods).
+  disabled in the current dev.21 build; use [manual archive import](/kiln/wiki/install#mods-from-nexus-mods).
 - **"No Kiln"** in the launcher when Steam starts the game without Kiln, with what to do, instead of "Starting" forever.
   Some recent Valve Proton builds load Kiln without the launch option. [Install](/kiln/wiki/install#no-kiln-kiln-is-not-loading)
 - **Steam Deck mode:** focus no longer gets lost after dialogs or on disabled buttons, B always closes a dialog, holding
@@ -185,6 +231,7 @@ These pass offline or on a test server. What's missing is a player looking at th
 | A remote server with server mods | local test servers so far |
 | [Mods for other frameworks](/kiln/wiki/other-mods) | new. EML, ShroudForge, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink: tested on test servers and in Kiln's own tests; not yet seen in a player's game |
 | [The server pack](/kiln/wiki/dedicated-servers#the-server-pack) | new. Holds the same files `kilnctl` installs; not yet tried on a rented host |
+| [The hook registry](/kiln/wiki/hooks), late DLL loading, the Library guard | new in dev.21. The registry and late loading: tested under Wine and on lab servers. The launcher's new pages: tests and mock data, not a real install. The [client checklist](#client-checklist) is open |
 
 ## Being built
 

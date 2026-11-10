@@ -6,7 +6,7 @@ export const kilnSource = 'https://github.com/frostdev-ops/kiln';
 export const kilnWikiSections = [
   { id: 'players', title: 'Players', pages: ['install', 'profiles', 'modpacks', 'other-mods', 'eml-shroudforge', 'emf-mods', 'more-frameworks'] },
   { id: 'servers', title: 'Server admins', pages: ['dedicated-servers', 'servers', 'admin-pages'] },
-  { id: 'modding', title: 'Modding', pages: ['first-mod', 'code-mods', 'events', 'world-programs', 'manifest', 'multiplayer', 'data-packs', 'game-data'] },
+  { id: 'modding', title: 'Modding', pages: ['first-mod', 'code-mods', 'hooks', 'events', 'world-programs', 'manifest', 'multiplayer', 'data-packs', 'game-data'] },
   {
     id: 'gameplay',
     title: 'Gameplay',
@@ -71,4 +71,4 @@ export const kilnSkillFiles = [
 ] as const;
 
 /** Fixed timestamp for the skill zip, so the same files build the same bytes. Update with the mirror. */
-export const kilnSkillUpdated = '2026-11-08';
+export const kilnSkillUpdated = '2026-11-10';

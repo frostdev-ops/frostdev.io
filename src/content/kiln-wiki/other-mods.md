@@ -3,13 +3,13 @@ title: "Mods for other frameworks"
 nav: "Other frameworks"
 description: "Kiln runs mods made for EML, ShroudForge, EMF, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink, unchanged, next to Kiln mods."
 status: "partial"
-updated: "2026-11-09"
+updated: "2026-11-10"
 ---
 
 Kiln loads mods made for other Enshrouded mod frameworks without rewriting them. It supplies the runtimes listed
 below, with limits for each adapter. Server startup checks do not guarantee every mod or loader combination.
 
-Introduced in dev.18 and expanded in dev.20. Most of this has run on test servers. Where no player has seen it in the game yet, the table says
+Introduced in dev.18 and expanded in dev.20 and dev.21. Most of this has run on test servers. Where no player has seen it in the game yet, the table says
 **untested in game**.
 
 ## Every framework
@@ -27,6 +27,7 @@ Introduced in dev.18 and expanded in dev.20. Most of this has run on test server
 | **shroudlink** 0.8.0 | server mods: chestsort, assistants, storage, meter, gemforge | runs shroudlink's own server part | works on a test server; with players: untested | put the mods on the server, or import them. [More frameworks](/kiln/wiki/more-frameworks#shroudlink) |
 | **Ember** (server SDK) | private-chests | finds and lists the mods; doesn't run them | not yet: Ember hasn't published its loader | nothing to do yet. [More frameworks](/kiln/wiki/more-frameworks#ember) |
 | Stand-alone `dinput8.dll` mods | one DLL each | loads them next to Kiln | works | install Kiln; it keeps them. [Below](#stand-alone-dinput8-mods) |
+| Closed-source DLL mods (XHL-Core, Auto Loot Plus, trainers) | one or more DLLs | loads them next to Kiln, early or after Kiln | late loading: untested in game | switch on **Load after Kiln and ShroudForge** if they clash. [Below](#closed-source-dll-mods) |
 | Kiln DLL mods | DLLs with a `native.json` | loads them at the time you choose | works | add them to a profile. [Below](#kiln-dll-mods) |
 
 The launcher's Library imports mods of every framework above. Drop a mod's zip, folder or DLL on the launcher window:
@@ -120,6 +121,9 @@ mods in your [modpack](/kiln/wiki/modpacks).
   [EML and ShroudForge](/kiln/wiki/eml-shroudforge#eml-and-shroudforge-together).
 - **Two mods on the same thing.** Kiln doesn't stop two frameworks' mods that change the same game system (both change
   loot, both change building cost). Both apply.
+- **Two mods on the same game function.** Since dev.21 Kiln, EMF mods, Shroudtopia mods and a hosted ShroudForge share
+  one hook per game function, in a fixed order ([Hooks and patches](/kiln/wiki/hooks)). A closed-source DLL hooks on
+  its own; see [below](#closed-source-dll-mods).
 - Every native mod, of any framework, runs its own code in the game. Install mods only from sources you trust.
 
 ## Stand-alone dinput8 mods
@@ -143,8 +147,62 @@ One or more DLLs, with a small `native.json` naming them and when they load:
 Add them to a profile (the **Native** tab), or drop them into `kiln/native/<folder>/`. One that crashes while loading is
 marked failed with a crash report, and the game carries on. DLL mods never unload, so changes need a restart.
 
-The official dev.20 launcher has no Nexus Catalog, account sign-in or Mod Manager Download handler.
+The official dev.21 launcher has no Nexus Catalog, account sign-in or Mod Manager Download handler.
 [Download the archive in your browser and import it](/kiln/wiki/install#mods-from-nexus-mods), whatever framework it uses.
+
+## Closed-source DLL mods
+
+Mods that ship only as a DLL (XHL-Core, Auto Loot Plus, trainers, overlays) hook game functions when they load, before
+Kiln has hooked anything. Kiln then hooks over them and usually works. Some clash: a feature of Kiln, ShroudForge or an
+EMF mod stops working, or ShroudForge's own engine hooks refuse to start. New in 0.2.0-dev.21, three things help.
+
+**Load it after Kiln.** On the profile's **Native** tab, each chain entry has a **Load after Kiln and ShroudForge**
+switch. Switch it on and restart the game. Kiln then loads that DLL after its own services, plugins and ShroudForge:
+Kiln hooks first and the DLL hooks over Kiln. kiln.log says it loaded late. Without the launcher, name the DLL in
+`kiln/chain.ini` under `[late]`, and keep its line in its own list:
+
+```ini
+[chain]
+chain\xhl-core-dinput8.dll
+[late]
+chain\xhl-core-dinput8.dll
+```
+
+A late DLL that fails to load is a warning in kiln.log, and the game goes on. An older proxy ignores `[late]` and loads
+those DLLs early.
+
+**Overlaps.** The same page shows last session's hook overlaps: functions where another DLL and Kiln, ShroudForge or an
+EMF mod both hook. **Load late** next to an overlap switches that DLL to late in one click. kiln.log warns once per
+overlap, names both sides and the fix. The list is in `kiln/state/hooks.json` under `overlaps`. Before the first start
+with dev.21 the page says "No hook map yet".
+
+**Compat rules.** The page lists the compat rules that apply to this profile. A rule can `warn`, load a chain DLL
+`late`, or `disable` a chain DLL or a mod the profile lists. Kiln ships its own rules (`kiln/compat-rules.json`); yours go
+in the profile's config folder as `compat-rules.json`, and a rule of yours with the same `id` replaces Kiln's:
+
+```json
+{ "format": 1, "rules": [
+  { "id": "xhl-and-shroudforge",
+    "when": [ { "module": "xhl-*.dll" }, { "engine": "shroudforge" } ],
+    "action": "late", "subject": { "module": "xhl-*.dll" },
+    "message": "XHL hooks the same functions as ShroudForge. It loads after Kiln so both work." } ] }
+```
+
+The launcher applies `late` and `disable` of chain entries when it writes `chain.ini`, so activate the profile (or press
+**Play**) after you change a rule. Kiln itself logs `warn` rules and skips a disabled mod the profile lists. A rule it
+can't apply is reported in kiln.log as not applied.
+
+What loading late can't do:
+
+- **EMF's own loader** always loads first. The launcher shows it as "Always loads first", without a switch.
+- **A DLL another loader already started** (with EMF's loader chained, it starts the DLLs in `dinput8-chain.ini`) is
+  reported as `already-loaded`. Use a compat rule, or switch one side off.
+- **A disabled native mod's** late DLL doesn't load. An early or boot native mod can't require a late one.
+- **`disable` on a native mod** whose DLL already loaded at `dllmain` is reported as not applied. Re-activate the
+  profile in the launcher to apply it.
+
+Status: the switch, overlaps and rules were tested under Wine and on lab servers, and the launcher pages with tests and
+mock data. Nobody has tried them with XHL-Core in a real game yet.
 
 ## Logs
 

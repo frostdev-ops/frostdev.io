@@ -1,7 +1,7 @@
 ---
 title: "Coming from Forge"
 description: "Minecraft Forge concepts and their Kiln equivalents."
-updated: "2026-11-08"
+updated: "2026-11-10"
 ---
 
 | Forge | Kiln |
@@ -30,7 +30,7 @@ updated: "2026-11-08"
 | GameTest | `Kiln.Testing`, `[KilnTest]` |
 | MDK, ForgeGradle | `Kiln.Sdk`, `kiln new`, `kiln deploy`, `kiln pack` |
 | crash reports | `kiln/crash-reports/` |
-| mixins, access transformers | low-level hooks, for the advanced tier |
+| mixins, access transformers | [hooks and patches](/kiln/wiki/hooks), for the advanced tier |
 | launchers with instances | the Kiln Launcher: profiles, library, server modpacks |
 
 ## What Kiln has that Forge doesn't
@@ -43,6 +43,6 @@ updated: "2026-11-08"
 
 ## Not there yet
 
-The official dev.20 launcher has no online mod Catalog or account integration; import downloaded archives manually.
+The official dev.21 launcher, like dev.20, has no online mod Catalog or account integration; import downloaded archives manually.
 [Drawing](/kiln/wiki/drawing), [particle shaders](/kiln/wiki/shaders) and particles (`VfxBlock`) have implementations with
 explicit test limits. Surface shaders for models remain work in progress. See [What works today](/kiln/wiki/status).

@@ -2,7 +2,7 @@
 title: "The dev kit"
 description: "Kiln.Sdk, project templates, the kiln command, a linter, analyzers, a VS Code extension, a debugger and game-id constants."
 status: "works"
-updated: "2026-11-09"
+updated: "2026-11-10"
 ---
 
 | Part | For |
@@ -21,10 +21,10 @@ is the local package "feed"; pass it to `kiln new` with `--feed <folder>` or set
 
 ## Kiln.Sdk
 
-Use the full version from your MDK pack (`0.2.0-dev.20` for this release); local packs have their own version.
+Use the full version from your MDK pack (`0.2.0-dev.21` for this release); local packs have their own version.
 
 ```xml
-<Project Sdk="Kiln.Sdk/0.2.0-dev.20">
+<Project Sdk="Kiln.Sdk/0.2.0-dev.21">
   <PropertyGroup>
     <KilnModId>my-mod</KilnModId>
     <Version>1.0.0</Version>
@@ -55,7 +55,7 @@ The `kiln` command drives the targets, which also work alone: `dotnet build -t:K
 
 ## Templates
 
-`kiln new <template> <Name>`, or `dotnet new kiln-<template>`. The dev.20 CLI lists 23 templates with `kiln new --list`.
+`kiln new <template> <Name>`, or `dotnet new kiln-<template>`. The dev.21 CLI lists 23 templates with `kiln new --list`.
 
 | Template | Gives you | Side, clients |
 |---|---|---|
