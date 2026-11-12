@@ -985,8 +985,8 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
     return { now, saved };
   };
   // Files no Look names any more go: not the Look worn, nor history's or favorites' (env.decode reads their codes). A file just
-  // kept waits a minute for the Look that names it to be saved, and one only an offer named waits an hour (the editor's Cancel
-  // takes it at once). A record the index doesn't list (a write cut short) goes too, and so does an entry with no record.
+  // kept waits a minute for the Look that names it to be saved, and one only an offer named waits an hour from its last touch
+  // (the editor's Cancel takes it at once; its heartbeat while the offer is shown is `touch`). A record the index doesn't list (a write cut short) goes too, and so does an entry with no record.
   const collect = async (area, { decode, now = Date.now } = {}) => {
     const idx = await index(area.local);
     const named = await uses(area, decode), at = now(), records = new Set(await area.files.keys()), gone = [];
@@ -1003,6 +1003,9 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
   // How long a fetch may take, and the most bytes a file of each type may be (the editor's put and every fetch below count the same).
   const WAIT = { video: 60000, image: 30000, lottie: LIMIT.fetch };
   const capOf = (type) => (type === 'video' ? LIMIT.bg.video : type === 'image' ? LIMIT.bg.image.bytes : LIMIT.bg.lottie);
+  // An address that answered with a redirect or a refusal answers the same a moment later (final: the page does not ask
+  // again); the server's own trouble (5xx), a wait (408, 429) or a fetch that did not get through may pass.
+  const refused = (r) => ({ ok: false, error: 'network', ...((r.type === 'opaqueredirect' || r.redirected || (r.status < 500 && r.status !== 408 && r.status !== 429)) && { final: true }) });
   // A response's body, counted as it arrives: → { bytes }, or { error: 'big' | 'network' } with the rest left unread.
   const pull = async (r, cap) => {
     if (Number(r.headers.get('content-length')) > cap) { r.body?.cancel?.().catch(() => {}); return { error: 'big' }; }
@@ -1035,7 +1038,7 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
       r = await env.fetch(url, { method: 'GET', credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'manual', signal: AbortSignal.timeout(LIMIT.fetch) });
     } catch { return { ok: false, error: 'network' }; }
     // A redirect is refused rather than followed to somewhere the Look did not name.
-    if (r.type === 'opaqueredirect' || r.redirected || !r.ok || (r.status >= 300 && r.status < 400)) { r.body?.cancel?.().catch(() => {}); return { ok: false, error: 'network' }; }
+    if (r.type === 'opaqueredirect' || r.redirected || !r.ok || (r.status >= 300 && r.status < 400)) { r.body?.cancel?.().catch(() => {}); return refused(r); }
     const body = await pull(r, LIMIT.bg.lottie);
     if (!body.bytes) return { ok: false, error: body.error };
     const got = lottie(td.decode(body.bytes));
@@ -1058,7 +1061,7 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
     } catch { return { ok: false, error: 'network' }; }
     // A redirect is refused rather than followed to somewhere the Look did not name (the worker is not held to the page's
     // rules about the local network, so where a request lands matters).
-    if (r.type === 'opaqueredirect' || r.redirected || !r.ok || (r.status >= 300 && r.status < 400)) { r.body?.cancel?.().catch(() => {}); return { ok: false, error: 'network' }; }
+    if (r.type === 'opaqueredirect' || r.redirected || !r.ok || (r.status >= 300 && r.status < 400)) { r.body?.cancel?.().catch(() => {}); return refused(r); }
     const body = await pull(r, capOf(kind));
     if (!body.bytes) return { ok: false, error: body.error };
     const got = check(body.bytes, 'bg');
@@ -1082,7 +1085,7 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
   };
 
   // ops: put { kind, b64, expect?, pending? } → { ok, h (its name), type, mime, size, width?, height?, frames? }; list → { files:
-  // [{ h, t, size, pending?, saved? }] }; drop { h, pending? }; keep { h } (an offer's file, now used); reset; file { h } →
+  // [{ h, t, size, pending?, saved? }] }; drop { h, pending? }; keep { h } (an offer's file, now used); touch { h } (an offer's file, still shown); reset; file { h } →
   // { ok, mime, b64 } (as kept, for a page); lottie { src } → { ok, json }; remote { src, kind } → { ok, type, mime, b64 } (a video
   // or picture at an address, fetched and cleaned). area: { local, sync, files }.
   // env: { fetch, allow(src) → whether this page may have that address fetched } for lottie and remote; decode (sharing/share.js) for
@@ -1101,7 +1104,16 @@ var GZ_MEDIA = globalThis.GZ_MEDIA || (() => {
     }
     if (m.op === 'lottie') return lottieFrom(m.src, area, env);
     if (m.op === 'remote') return remoteFrom(m.src, m.kind, env);
-    if (['file', 'drop', 'keep'].includes(m.op) && !HASH.test(m.h)) return { ok: false, error: 'bad' };
+    if (['file', 'drop', 'keep', 'touch'].includes(m.op) && !HASH.test(m.h)) return { ok: false, error: 'bad' };
+    // The editor's heartbeat for an offer it is still showing: a pending file gets its hour again (collect), a kept one is left
+    // as it is, and a file that is gone says so, so the editor knows its preview has lost it.
+    if (m.op === 'touch') {
+      const idx = await index(local), e = idx[m.h];
+      if (!e || !(await files.keys()).includes(m.h)) return { ok: false, error: 'missing' };
+      if (!e.p) return { ok: true };
+      e.at = Date.now();
+      return { ok: await keepIndex(local, idx) };
+    }
     if (m.op === 'file') {
       const rec = await stored(area, m.h, env.queue);
       return rec ? { ok: true, mime: rec.t, b64: rec.b } : { ok: false, error: 'missing' };

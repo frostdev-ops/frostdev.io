@@ -1,7 +1,7 @@
 ---
 title: "Development"
 description: "How Glaze is put together, and how to build, test, package and publish it."
-updated: "2026-11-08"
+updated: "2026-11-11"
 wiki: "https://github.com/frostdev-ops/glaze/wiki/Development"
 ---
 <!-- Mirrored from Glaze's docs/development.md by its tools/dev/docs-mirror.js: edit it there. -->
@@ -86,7 +86,10 @@ it does not establish support for Pearson tests, other products, or native Safar
 Blackboard's Stream notification settings contain a Glaze section, also available at
 Settings → Course pages → Blackboard Dashboard → More options → Activity Stream. Timeline dates default to due dates for deadline
 notifications and posted dates for other updates. Choose posted dates or both, relative due
-dates, compact cards, and whether encouragement appears. The exact deadline and time zone
+dates, compact cards, whether encouragement appears, and Submission status (on by default): each card that
+names an assignment the planner holds gets its status chip, matched by course and title
+(`GZ_STREAM.find`) and drawn by `courses/page/cardtasks.js` from the card tasks' planner answer
+(`checks/courses/stream-status-check.js`). The exact deadline and time zone
 remain available on the date's accessible label and hover title. Relative dates fall back to
 calendar dates if Blackboard's zone differs from the browser's. These controls save Glaze
 preferences immediately; Blackboard's notification delivery settings are unchanged.
@@ -103,10 +106,10 @@ Both browser checks accept an optional evidence directory and use the shared bro
 ## Building
 
 ```sh
-./package.sh
+tools/build/package.sh
 ```
 
-Writes `dist/glaze-v<version>.zip`, ready for the Chrome Web Store. Requires `node` and `zip`.
+Writes `dist/glaze-v<version>.zip`, ready for the Chrome Web Store. Requires `node` and `zip`. It, `package-firefox.sh` and the App Store scripts refuse a working tree with edits or untracked files, because a release is built from a commit; `--allow-dirty` packages the tree as it stands for local work (`package-firefox.sh` takes `--development` for that).
 From a clean `dev/firefox` checkout, `sh tools/build/package-firefox.sh` writes it too, plus `dist/glaze-v<version>-firefox.zip` for Firefox Add-ons. The Firefox compatibility branch must include the intended main release. Other checkouts require an explicit `--development` argument; that produces a visibly named development build for local checks, not a store upload. Each Firefox ZIP records its source commit and development status in `glaze-build.json`.
 For a release, `sh tools/release/release.sh` builds everything into `release/<version>/`, from a fresh checkout of the committed `HEAD` (it refuses a dirty working tree).
 
@@ -118,6 +121,19 @@ Runs the tests for the colour, settings and page-text logic. Use Node 26, matchi
 
 The browser checks in `checks/*/*-check.js` need Playwright (`NODE_PATH=/path/to/node_modules`, and `npx playwright install chromium` once). They launch Playwright's own Chromium; set `CHROME` to use another executable. `mods-api-check.js`, `mods-sandbox-check.js` and `widgets-builder-check.js` also use macOS's `sandbox-exec` and run only there. The three heaviest checks (`background-shell-check.js`, `background-pages-check.js` and `docreview-check.js`) take a lock directory so only one runs at a time: `glaze-heavy.lock` in the OS temp directory, or `GLAZE_LOCK` if set (`tools/dev/check-env.js` resolves both).
 
+### The suite on the Mac, and the sweep
+
+A bare `node --test` in a working copy also runs test files in ignored folders (`release/<version>/…/website/server/*.test.mjs` fail there), which a clean checkout never has. When the runner is down, `nice -n 19 taskpolicy -b node tools/dev/suite.js` runs the files a clean checkout would: `git ls-files -co --exclude-standard` (tracked, and new but not ignored) filtered by Node 26's default test patterns, from the repo root. Arguments go to `node --test` (`--test-name-pattern=drive`). `.gitignore`'s `release/` also matches `test/release/`: a new test there runs only after `git add -f`.
+
+`checks/checks.json` has one entry for each check file (`<area>/*-check.{js,mjs,py}`, `firefox/*`, `safari/*`): `needs`, `limit` (seconds; first guesses, not measured), `args` and `env` (`{out}` is the evidence folder), and a note. `test/release/all-checks.test.js` fails when a check file has no entry. `needs` says where a check can run:
+
+- `runner`: plain Chromium, in the Linux runner's container (it also runs on the Mac). `mac`: only on the Mac (sandbox-exec, Safari, native Firefox). `canvas`, `moodle`: the local LMS on the Mac.
+- `linux` and `headed` (Xvfb): the runner only. `network`: the real internet. `safari`: drives the owner's Safari, so only with the owner's OK. `inputs`: files or a revision that aren't in the repo. `gpu`: a real adapter. `unknown`: couldn't be told by reading, with a `why`.
+
+`node tools/dev/all-checks.js --where runner|mac` runs each check that can run there once, no retries. On the runner each goes through `glaze-remote -o <evidence>/<name> -e TZ=UTC -t <limit> -- node checks/<script> /out`, `--jobs` at once (default 1: the runner is a person's own computer, so more at once needs their say), started a second and a half apart; exit 255 from `glaze-remote` means the runner failed, so it is recorded as `runner-failed`, never as a failing check, and nothing more is dispatched. On the Mac they run one at a time under `nice -n 10 lockf -k <heavy lock>` with `NODE_PATH` and `TZ=UTC`; it won't start without `--lock <the lock file every heavy job takes>` and `--node-path <Playwright's node_modules>` (or `GLAZE_HEAVY_LOCK` and `NODE_PATH`). A check whose `needs` aren't allowed is skipped and says which: `--needs canvas,moodle` allows those (local LMS up), `--only writer,ai/ask-check.js` picks areas or checks, `--dry-run` prints every command and skip.
+
+`<evidence>/summary.md` has a row per check: `pass`, `fail`, `timed out` (the limit; the client waits `--grace` more, 10 minutes, for the queue), `runner-failed` (exit 255, or not dispatched after one), `skipped: needs …`, with the last 25 lines of each failing check below the table. `<name>.log` is a check's whole output and `<name>/` its evidence. `--known <file>` (a check's name or `<area>/<name>-check.js` per line, `#` comments) shows a known failure as `fail (known)`, an unlisted one as `FAIL (new)`, and a listed one that passes as `pass (was known failing)`. The exit status is 1 for a new failure or time-out, 2 for an incomplete sweep (the runner failed), else 0.
+
 `checks/settings/settings-wiring-check.js [report.json]` exercises every generic settings control through its input/change handlers,
 real sync storage, sanitization and reopened controls. It validates all offered choices and slider endpoints, respects the
 storage write quota, and checks Blackboard's card preview after edits and reset. `WIRING_CASE=cards` runs that regression
@@ -125,7 +141,7 @@ alone. The check uses a disposable profile and blocks external requests. Gradesc
 remain covered by their dedicated tests; this sweep complements the layout checks and feature runtime tests, and does not
 establish signed-in LMS or native Safari behavior.
 
-CI's browser gate (`.github/workflows/browser.yml`) runs on every push and pull request and before a release zip is built: `tools/dev/ci-browser-checks.js` runs the settings, popup, sites and pointer checks in the Playwright, Chromium and FFmpeg pinned in `.github/pins/`, and keeps their logs and screenshots as the `browser-evidence` artifact when one fails. Release tags run it through packaging only. The runner verifies binaries again before any check, rejects `CHROME`, `EXT` and `IA_CASE` overrides, allows six minutes for settings and two for each other check within an eleven-minute total budget, and awaits detached browser cleanup before releasing the lock. Firefox and Safari are checked separately before a release. Firefox: `FIREFOX=<Firefox.app> nice node checks/firefox/firefox-check.mjs` runs the package in native Firefox. Safari: `bash tools/build/sync-safari-resources.sh --check` proves packaged-resource parity only, that both targets bundle the package's files; native runtime needs the built app run in Safari on Mac and iOS.
+CI's browser gate (`.github/workflows/browser.yml`) runs on every push to `main` and `dev/firefox`, every pull request (a branch with a pull request runs once, there), and before a release zip is built; `workflow_dispatch` runs it on any branch by hand: `tools/dev/ci-browser-checks.js` runs the settings, popup, sites and pointer checks in the Playwright, Chromium and FFmpeg pinned in `.github/pins/`, and keeps their logs and screenshots as the `browser-evidence` artifact when one fails. Release tags run it through packaging only. The runner verifies binaries again before any check, rejects `CHROME`, `EXT` and `IA_CASE` overrides, allows six minutes for settings and two for each other check within an eleven-minute total budget, and awaits detached browser cleanup before releasing the lock. Firefox and Safari are checked separately before a release. Firefox: `FIREFOX=<Firefox.app> nice node checks/firefox/firefox-check.mjs` runs the package in native Firefox. Safari: `bash tools/build/sync-safari-resources.sh --check` proves packaged-resource parity only, that both targets bundle the package's files; native runtime needs the built app run in Safari on Mac and iOS.
 
 `NODE_PATH=/path/to/node_modules node checks/courses/announce-read-check.js /path/to/evidence` checks Ultra announcement read
 controls against synthetic native markup. It covers scroll/focus recovery after first-page resets, bulk reading across
@@ -236,7 +252,7 @@ the extension's resources and native handler with the Mac targets. To try it in 
 
 ## Bundled libraries
 
-Glaze is MIT licensed ([LICENSE](https://github.com/frostdev-ops/glaze/blob/main/LICENSE)). Bundled with it, each under its own license beside it: three.js (MIT, `vendor/three.LICENSE`), lottie-web's light canvas player (MIT, `vendor/lottie/LICENSE`), pdf.js 6.4.299 with its JBIG2 and JPEG 2000 decoders, the core-js it bundles, Brotli's dictionary and one of Firefox's viewer images (Apache-2.0, BSD, MIT and MPL-2.0, `vendor/pdfjs/`), the Tesseract OCR engine and its tessdata_fast models (Apache-2.0, `vendor/tesseract/`), ProseMirror, Writer's editor engine, as one readable esbuild bundle (MIT, `vendor/pm.js`, `vendor/pm.css`, `vendor/pm.LICENSE`), harper.js, Writer's spelling and grammar checker, as published with its slim wasm and two unused paths cut (Apache-2.0, `vendor/harper/`), and Writer's paper fonts Tinos, Arimo, Carlito and Cousine from @fontsource (SIL OFL 1.1, `vendor/fonts/`), each rebuilt by its `tools/vendor/vendor-*.sh` (`vendor-pdfjs.sh`, `vendor-prosemirror.sh`, `vendor-harper.sh`, `vendor-paper-fonts.sh`). MathLive 0.111.4 (MIT, `vendor/mathlive/`) ships its readable ESM distribution and math fonts, reproduced from an integrity-pinned tarball by `tools/vendor/vendor-mathlive.sh`. Inter and Atkinson Hyperlegible (SIL OFL 1.1, `fonts/`) have no vendor script. The scripts check what they download against pinned hashes; `vendor-three.sh` and `vendor-prosemirror.sh`, which use npm, install with install scripts off and checks the installed packages against pinned integrity values (`tools/vendor/npm-integrity.js`).
+Glaze is MIT licensed ([LICENSE](https://github.com/frostdev-ops/glaze/blob/main/LICENSE)). Bundled with it, each under its own license beside it: three.js (MIT, `vendor/three.LICENSE`), lottie-web's light canvas player (MIT, `vendor/lottie/LICENSE`), pdf.js 6.4.299 with its JBIG2 and JPEG 2000 decoders, the core-js it bundles, Brotli's dictionary and one of Firefox's viewer images (Apache-2.0, BSD, MIT and MPL-2.0, `vendor/pdfjs/`), the Tesseract OCR engine and its tessdata_fast models (Apache-2.0, `vendor/tesseract/`), ProseMirror, Writer's editor engine, as one readable esbuild bundle (MIT, `vendor/pm.js`, `vendor/pm.css`, `vendor/pm.LICENSE`), harper.js, Writer's spelling and grammar checker, as published with its slim wasm and two unused paths cut (Apache-2.0, `vendor/harper/`), and Writer's paper fonts Tinos, Arimo, Carlito and Cousine from @fontsource (SIL OFL 1.1, `vendor/fonts/`), each rebuilt by its `tools/vendor/vendor-*.sh` (`vendor-pdfjs.sh`, `vendor-prosemirror.sh`, `vendor-harper.sh`, `vendor-paper-fonts.sh`). MathLive 0.111.4 (MIT, `vendor/mathlive/`) ships its readable ESM distribution and math fonts, reproduced from an integrity-pinned tarball by `tools/vendor/vendor-mathlive.sh`. QuickJS (MIT, `vendor/quickjs/`), the engine behind Rime's `run_js`, is quickjs-emscripten 0.32.0's WebAssembly build, rebuilt and checked against its recorded hashes by `tools/build/vendor-quickjs.sh`. Inter and Atkinson Hyperlegible (SIL OFL 1.1, `fonts/`) have no vendor script. The scripts check what they download against pinned hashes; `vendor-three.sh` and `vendor-prosemirror.sh`, which use npm, install with install scripts off and checks the installed packages against pinned integrity values (`tools/vendor/npm-integrity.js`).
 
 ### Settings and setup
 
