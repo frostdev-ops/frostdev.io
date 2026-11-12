@@ -8,6 +8,7 @@ export interface Film {
 }
 
 export const films: Film[] = [
+  { file: 'nothing-missing', thumb: '10-nothing-missing', title: 'Nothing missing.', category: 'Thanksgiving', duration: '0:31', has4k: false },
   { file: 'glaze', thumb: '01-glaze', title: 'Your colors. Your Blackboard.', category: 'Meet Glaze', duration: '0:22' },
   { file: '1158pm', thumb: '02-1158pm', title: '11:58 PM', category: 'Typing backup', duration: '0:20' },
   { file: 'should-have-shown', thumb: '03-should-have-shown', title: 'It should have shown you.', category: 'Grades & due dates', duration: '0:24' },
