@@ -1,8 +1,7 @@
 ---
-import { orderFilms, type Film } from '../../data/glazeFilms';
-interface Props { films: Film[]; halloween?: boolean; }
-const { films, halloween = false } = Astro.props;
-const orderedFilms = orderFilms(films, halloween);
+import type { Film } from '../../data/glazeFilms';
+interface Props { films: Film[]; }
+const { films: orderedFilms } = Astro.props;
 const firstFilm = orderedFilms[0];
 const media = '/projects/glaze/';
 ---

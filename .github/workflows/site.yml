@@ -21,6 +21,8 @@ jobs:
         run: node --test scripts/robots.test.mjs
       - name: Test the Kiln release data script
         run: node --test scripts/kiln-release-data.test.mjs
+      - name: Test Glaze's films list and changelog data
+        run: node --test scripts/glaze-films.test.mjs scripts/glaze-changelog.test.mjs
       - name: Check the Glaze Looks gallery entries
         run: node scripts/looks.mjs
       - name: Test the Looks gallery server (mock OpenRouter and mail, nothing leaves the runner)

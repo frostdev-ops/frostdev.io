@@ -1,6 +1,7 @@
 ---
 import releaseInfo from '../../data/glazeRelease.json';
-const { version, summary, updated } = releaseInfo;
+const { version, updated, changes } = releaseInfo;
+import GlazeChangelog from '../../components/marketing/GlazeChangelog.astro';
 import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
@@ -63,7 +64,7 @@ const chapters = [
       <li>Disable any other Glaze copy, so only one runs.</li>
     </ol>
     <p>An unpacked copy doesn’t update itself. To switch to a store copy that includes these features, first choose <strong>Back up…</strong> in <strong>Settings → Privacy and data → Backup and reset</strong>. Remove the unpacked copy, install the store copy, then use <strong>Restore…</strong> there. Keep the backup private: it includes share keys. Glaze needs Chrome 113 or newer. On a Mac with Safari, follow the <a href="/guides/glaze-safari">Safari guide</a>.</p>
-    <p><strong>New in {version}:</strong> {summary}</p>
+    <GlazeChangelog compact version={version} updated={updated} changes={changes} notes={`https://github.com/frostdev-ops/glaze/releases/tag/v${version}`} />
     <p><strong>New in 3.3.0:</strong> Canvas and Blackboard Ultra share a resizable sidebar: <strong>This page</strong> keeps the page’s own tools above the <strong>My widgets</strong> dock. It makes room beside your work on wide screens and opens as a drawer on narrow ones. Better To Do follows the current course, with an <strong>All courses</strong> option. Move compatible widgets between the sidebar, Dashboard and floating.</p>
     <p><strong>Since 3.3.1:</strong> Blackboard assessment details share the sidebar with docked widgets, sidebar controls stay below page headers and course tabs, discussion participants load and scroll again, and pets remain visible on assessment overview pages.</p>
   </section>

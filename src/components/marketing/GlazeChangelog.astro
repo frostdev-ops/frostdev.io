@@ -1,0 +1,66 @@
+---
+// What a Glaze release changed, as its changelog groups it (src/data/glazeRelease.json `changes`, written by
+// scripts/prepare-glaze-release.mjs). `compact` is the guides' form: no heading band, one column.
+interface Group { type: string; items: string[]; }
+interface Props { version: string; updated: string; changes: Group[]; notes: string; compact?: boolean; }
+const { version, updated, changes, notes, compact = false } = Astro.props;
+const date = new Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${updated}T00:00:00Z`));
+// An item's `code` spans, as the changelog writes them.
+const parts = (item: string) => item.split('`').map((text, i) => ({ text, code: i % 2 === 1 }));
+const kind = (type: string) => (['added', 'changed', 'fixed', 'removed', 'security', 'deprecated'].includes(type.toLowerCase()) ? type.toLowerCase() : 'changed');
+---
+
+<div class:list={['glaze-changelog', { compact }]}>
+  <header class="changelog-head">
+    <div class="changelog-title">
+      {!compact && <p class="product-eyebrow">Changelog</p>}
+      {compact ? <h3 id="changelog-heading">New in {version}</h3> : <h2 id="changelog-heading">New in {version}</h2>}
+    </div>
+    <p class="changelog-meta"><span class="changelog-version">v{version}</span><time datetime={updated}>{date}</time><a href={notes}>Release notes <span aria-hidden="true">↗</span></a></p>
+  </header>
+  <div class="changelog-groups">
+    {changes.map((group) => (
+      <section class={`changelog-group is-${kind(group.type)}`} aria-label={`${group.type}: ${group.items.length}`}>
+        <p class="changelog-tag"><span>{group.type}</span><span class="changelog-count" aria-hidden="true">{group.items.length}</span></p>
+        <ul>
+          {group.items.map((item) => <li>{parts(item).map((part) => (part.code ? <code>{part.text}</code> : part.text))}</li>)}
+        </ul>
+      </section>
+    ))}
+  </div>
+</div>
+
+<style>
+  .glaze-changelog { --log-ink: var(--glaze-ink, #e8f2fa); --log-muted: var(--glaze-muted, #b3c8dc); --log-line: var(--glaze-line, #23394e); --log-surface: var(--glaze-surface, rgb(10 23 37 / 0.8)); }
+  .changelog-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem 2rem; margin-bottom: 2rem; }
+  .changelog-title h2 { color: var(--log-ink); font-size: clamp(1.9rem, 3vw, 2.8rem); letter-spacing: -0.04em; font-weight: 600; line-height: 1.15; margin: 0; }
+  .changelog-title h3 { color: var(--log-ink); font-size: 1.1rem; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+  .changelog-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 0; color: var(--log-muted); font-size: 0.8rem; line-height: 1.6; }
+  .changelog-version { padding: 0.15rem 0.6rem; border: 1px solid var(--log-line); border-radius: 999px; color: var(--log-ink); font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.75rem; }
+  .changelog-meta a { color: var(--glaze-accent-secondary, #9ce9fa); text-decoration: underline; text-underline-offset: 0.2em; }
+  .changelog-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; align-items: start; }
+  .changelog-group { min-width: 0; padding: 1.5rem 1.75rem; border: 1px solid var(--log-line); border-radius: 0.75rem; background: var(--log-surface); }
+  /* The longest group takes the second column to itself; the others stack in the first. */
+  .changelog-group:last-child:nth-child(3) { grid-column: 2; grid-row: 1 / span 2; }
+  .changelog-tag { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 1rem; }
+  .changelog-tag > span:first-child { padding: 0.2rem 0.65rem; border-radius: 0.35rem; color: var(--tag-ink); background: var(--tag); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .changelog-count { color: var(--log-muted); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+  .is-added { --tag: #86efac; --tag-ink: #052e16; }
+  .is-changed { --tag: #fcd34d; --tag-ink: #3b2a00; }
+  .is-fixed { --tag: #7dd3fc; --tag-ink: #06283d; }
+  .is-removed, .is-deprecated { --tag: #fda4af; --tag-ink: #4c0519; }
+  .is-security { --tag: #d8b4fe; --tag-ink: #2e1065; }
+  .changelog-group ul { display: grid; gap: 0.7rem; margin: 0; padding: 0; list-style: none; }
+  .changelog-group li { position: relative; padding-left: 1.1rem; color: var(--log-muted); font-size: 0.9rem; line-height: 1.6; text-wrap: pretty; }
+  .changelog-group li::before { content: ''; position: absolute; left: 0; top: 0.62em; width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--tag); }
+  .changelog-group code { padding: 0.05rem 0.3rem; border: 1px solid var(--log-line); border-radius: 0.25rem; color: var(--log-ink); font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.85em; white-space: nowrap; }
+  .compact { margin: 1.5rem 0; }
+  .compact .changelog-head { align-items: center; margin-bottom: 1rem; }
+  .compact .changelog-groups { grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
+  .compact .changelog-group, .compact .changelog-group:last-child:nth-child(3) { grid-column: auto; grid-row: auto; padding: 1.1rem 1.25rem; }
+  @media (max-width: 800px) {
+    .changelog-groups { grid-template-columns: minmax(0, 1fr); }
+    .changelog-group:last-child:nth-child(3) { grid-column: auto; grid-row: auto; }
+    .changelog-group { padding: 1.25rem; }
+  }
+</style>

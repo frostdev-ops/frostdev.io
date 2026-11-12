@@ -17,7 +17,7 @@ Other browsers and visitors without JavaScript
 retain both platform-labelled choices. A separate Firefox preview link explains the
 Firefox 140+ temporary desktop installation and its session-only lifetime. Downloads begin only when a link is chosen.
 
-The Glaze page features its latest cover and eight motion ads in a media carousel.
+The Glaze page features its latest cover and the films of `src/data/glazeFilms.ts` in a media carousel.
 One native player shows the chosen film, with sound controlled by the visitor,
 English captions and no automatic playback or advancement. Clicking or tapping the
 poster or a thumbnail starts playback. Each film starts at the smallest resolution
@@ -25,10 +25,20 @@ that covers the player's width in physical pixels: 720p, 1080p or 4K. Resuming a
 paused film preserves its position and quality. The thumbnail rail uses
 native horizontal scrolling and snap points. Previous/next controls and the rail's
 arrow, Home and End keys select a film.
-Reduced motion disables animated rail movement. Without JavaScript, all eight
+Reduced motion disables animated rail movement. Without JavaScript, all the
 thumbnail links open their films directly. No Seedance concepts are included.
 The public nginx include serves caption files as `text/vtt` and MP4 video with
 byte-range support for seeking.
+
+The Glaze page wears a seasonal skin, one flag in `src/pages/glaze.astro` (`thanksgiving`; false takes the colours,
+decorations and seasonal note off together). Its art is in `public/projects/glaze/thanksgiving/`, decoration only
+(`alt=""`, `aria-hidden`), and its falling leaves, garland and turkey hold still under reduced motion. Halloween's skin,
+art and three films are gone.
+
+**New in <version>** on the Glaze page and both Glaze guides is the release's changelog entry as it is grouped (Added,
+Changed, Fixed), drawn by `src/components/marketing/GlazeChangelog.astro` from `changes` in `src/data/glazeRelease.json`.
+`scripts/prepare-glaze-release.mjs` writes it from Glaze's CHANGELOG.md with `scripts/glaze-changelog.mjs`
+(`node --test scripts/glaze-changelog.test.mjs`); `summary` is the same items as one paragraph.
 
 The desktop project carousel animates and supports dragging, arrow keys and
 pause/resume. Phones use native horizontal scrolling with snap points, so vertical

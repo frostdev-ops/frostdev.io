@@ -5,7 +5,6 @@ export interface Film {
   category: string;
   duration: string;
   has4k?: boolean;
-  halloweenPriority?: number;
 }
 
 export const films: Film[] = [
@@ -18,9 +17,6 @@ export const films: Film[] = [
   { file: 'hover-to-know', thumb: '07-hover-to-know', title: 'A little hint. A big help.', category: 'Previews & hints', duration: '0:18' },
   { file: 'course-colors', thumb: '08-course-colors', title: 'Every course. Its own color.', category: 'Course colors', duration: '0:21' },
   { file: 'glaze-now-on-canvas', thumb: '09-glaze-now-on-canvas', title: 'Glaze on Canvas.', category: 'Canvas', duration: '0:30', has4k: false },
-  { file: 'the-haunting-of-canvas', thumb: '10-the-haunting-of-canvas', title: 'The Haunting of Canvas', category: 'Halloween Looks', duration: '0:20', has4k: false, halloweenPriority: 2 },
-  { file: 'night-of-the-living-deadlines', thumb: '11-night-of-the-living-deadlines', title: 'Night of the Living Deadlines', category: 'A Glaze Halloween', duration: '0:30', has4k: false, halloweenPriority: 1 },
-  { file: 'due-at-midnight', thumb: '12-due-at-midnight', title: 'Due at Midnight', category: 'A Glaze Halloween', duration: '0:34', has4k: false, halloweenPriority: 0 },
 ];
 
 // What the player and the rail load for a film, under public/projects/glaze/. The page lists a film only once all of
@@ -32,8 +28,3 @@ export const filmFiles = (film: Film): string[] => [
 
 export const availableFilms = (fileExists: (file: string) => boolean): Film[] =>
   films.filter((film) => filmFiles(film).every(fileExists));
-
-export const orderFilms = (films: readonly Film[], halloween = false): Film[] =>
-  halloween
-    ? [...films].sort((a, b) => (a.halloweenPriority ?? Infinity) - (b.halloweenPriority ?? Infinity))
-    : [...films];

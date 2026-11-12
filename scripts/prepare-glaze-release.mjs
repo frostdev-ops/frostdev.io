@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { changes, summary as summarize } from './glaze-changelog.mjs';
 
 const root = process.cwd();
 const [mode, ...values] = process.argv.slice(2);
@@ -27,18 +28,14 @@ if (!verifyOnly) {
   const different = a.findIndex((value, i) => value !== b[i]);
   if (different >= 0 && a[different] > b[different]) throw new Error('Refusing to roll the website back to an older Glaze release.');
   const changelog = fs.readFileSync(path.join(source, 'CHANGELOG.md'), 'utf8');
-  const start = changelog.indexOf(`## [${version}]`);
-  if (start < 0) throw new Error('The release needs a changelog entry.');
-  const summary = changelog.slice(start).split('\n').slice(1).join('\n').split(/^## /m)[0]
-    .replace(/^#+.*$/gm, '').replace(/^\s*[-*]\s+/gm, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .replace(/[`*]/g, '').replace(/\s+/g, ' ').trim();
+  const groups = changes(changelog, version), summary = summarize(groups);
   if (!summary) throw new Error('The release needs nonempty notes.');
   exec('sh', ['scripts/vendor-glaze.sh', `v${version}`]);
   const wiki = fs.mkdtempSync(path.join(os.tmpdir(), 'glaze-wiki-mirror-'));
   try { exec('node', [path.join(source, 'tools/dev/docs-mirror.js'), wiki, root], source); }
   finally { fs.rmSync(wiki, { recursive: true, force: true }); }
   fs.copyFileSync(feed, path.join(root, 'public/projects/glaze/appcast.xml'));
-  fs.writeFileSync(metadata, JSON.stringify({ version, sourceCommit: commit, updated: exec('git', ['show', '-s', '--format=%cs', 'HEAD'], source), summary }, null, 2) + '\n');
+  fs.writeFileSync(metadata, JSON.stringify({ version, sourceCommit: commit, updated: exec('git', ['show', '-s', '--format=%cs', 'HEAD'], source), summary, changes: groups }, null, 2) + '\n');
   console.log(`Prepared Glaze ${version} website metadata, both vendors, mirrored docs and exact signed feed.`);
 } else {
   if (JSON.parse(fs.readFileSync(metadata)).version !== version) throw new Error('Website release metadata is stale.');

@@ -1,6 +1,7 @@
 ---
 import releaseInfo from '../../data/glazeRelease.json';
-const { version, summary, updated } = releaseInfo;
+const { version, updated, changes } = releaseInfo;
+import GlazeChangelog from '../../components/marketing/GlazeChangelog.astro';
 import GuideLayout from '../../layouts/GuideLayout.astro';
 
 const source = 'https://github.com/frostdev-ops/glaze';
@@ -61,7 +62,7 @@ const chapters = [
       <li>Glaze opens Safari’s Extensions settings beside a two-step guide, covered next.</li>
     </ol>
     <p>Leave Glaze.app in Applications: Safari loads the extension from it, but it doesn’t need to be running. The release includes a <code>.sha256</code> file for checking the download. If macOS says the app is damaged, download it again; don’t bypass the check in Terminal.</p>
-    <p><strong>New in {version}:</strong> {summary}</p>
+    <GlazeChangelog compact version={version} updated={updated} changes={changes} notes={`https://github.com/frostdev-ops/glaze/releases/tag/v${version}`} />
     <p><strong>Since 3.3.1:</strong> the resizable setup guide shows your installed version, explains website access and Safari profiles, and includes support and update controls. Choose automatic checks and downloads, or check for an update yourself.</p>
     <p><strong>New in 3.3.0:</strong> Canvas and Blackboard Ultra share a resizable sidebar: <strong>This page</strong> keeps the page’s own tools above the <strong>My widgets</strong> dock. It makes room beside your work on wide screens and opens as a drawer on narrow ones. Better To Do follows the current course, with an <strong>All courses</strong> option. Move compatible widgets between the sidebar, Dashboard and floating.</p>
   </section>
