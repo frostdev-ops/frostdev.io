@@ -5,13 +5,34 @@ updated: "2026-11-12"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.25**, the current development release; check the download's version before using its new APIs.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.26**, the current development release; check the download's version before using its new APIs.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
-test sessions of 6 and 7 November 2026, or, for dev.24, in the one real game its release notes name (Linux, Proton, one
-client). Where only a game can show the result, it's under
+test sessions of 6 and 7 November 2026, or, for dev.24 and later, in the one real game the release's notes name (Linux,
+Proton, one client). Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
+
+## New in 0.2.0-dev.26
+
+The first of the releases that complete the mod API, and the data folder move players asked for on Nexus. **Seen in a
+real game (Linux, Proton, one player on a dedicated test server):** the launcher and the game starting with this release,
+item data in the backpack and in a chest through a server restart and a rejoin, mod creatures with a faction of their own,
+and the sample weapons playing their own attack states after a join check that passed. The rest was tested on Linux hosts,
+on dedicated test servers under Wine and in Kiln's tests. Nothing ran on native Windows or on a Steam Deck.
+
+| Area | Included in dev.26; evidence and remaining limits |
+|---|---|
+| [Move Kiln's data folder](/kiln/wiki/profiles#the-data-folder) | **Settings**, **Library**, **Data folder**, **Change** moves everything Kiln keeps (mods, runtimes, modpacks, profiles, backups) to a folder or drive you choose. Kiln checks the copy before it switches and only then removes the old one; a failed or canceled move changes nothing. Tested by the launcher's own tests, not in the real launcher window and not on Windows |
+| [Notes about mod folders](/kiln/wiki/profiles#in-the-game-folder) | the launcher tells you once about a folder it leaves alone, files it kept and notes on your mods, instead of at every change to your mods; **Notes** above the list shows them again, a switch in Settings turns them off, and a notice no longer covers the window. Asked for on Nexus. The launcher's tests and a browser against a stand-in for its backend, not the installed app |
+| [ShroudForge settings](/kiln/wiki/eml-shroudforge#shroudforge-mods) | a ShroudForge mod you had in ShroudForge's mods folder before Kiln can have its settings changed in the launcher: Kiln writes only the setting you change. Changing a setting in ShroudForge's own in-game menu no longer makes Kiln treat its copy of the mod as yours (that kept the folder at every change and locked its settings). Kiln's tests; the menu's behaviour follows ShroudForge's source |
+| Data on one item | a mod can keep a value on one particular item (kills on one sword) through moves, saves, crashes and restored backups. When Kiln can't tell two identical items apart, the value waits instead of jumping to the wrong item. Backpack and chest items through a restart and a rejoin: seen in the game. The action bar, worn items, a crash and crafting with such an item wait for a game test |
+| Weapons with their own attacks | a mod's weapons can have player animation states of their own (attacks, guards, casts), timing and chains, and parts that move while held. The server and every player's game need the mod, cooked ([below](/kiln/wiki/dedicated-servers#mods-with-a-cook-recipe)); the join check compares both sides. The join and the sample weapons' states: seen in the game. How the states blend, a second player seeing them, hit timing and root motion wait for a game test |
+| Cooking on a dedicated server | `kiln cook` works against a server's files: it cooks the animations a server needs and skips the models, which only a player's game draws. It needs Python and Kiln's source; the launcher doesn't cook yet, so a player who adds such a mod sees the plain weapon, and a mod with player animation states is refused at join until the player's game cooked it too. Tested against a test server's files |
+| Mod creatures | creatures a mod defines keep their own friends and foes again (dev.24 dropped them at the first server step). Seen in the game |
+| What works on this game build | `kiln/state/capabilities.json` lists what works on your game build and side and why something is off; a mod that doesn't load because the build lacks something says what and why in kiln.log and in the mod list. Test servers |
+| For mod authors | mod API 0.2.1 (additive; a mod built with this MDK needs dev.26 or newer). About 120 lab and test helpers are now a build error unless a project opts in (`KILNX001`). Typed reads of every game component, tests under `dotnet test` with no game (`Kiln.TestKit`), guided client checks, one error rule. The [release notes](https://github.com/frostdev-ops/kiln/releases/tag/v0.2.0-dev.26) have the list |
+| Fixes | a mod's own attack sequences work in a second world of the same game run; animations authored on a game skeleton no longer tear the body apart (cook them again); from GitHub issue 23: another tool's `POWRPROF.dll` is no longer taken for SET, a Shroudtopia mod another loader started isn't started twice, two EML loaders in one game are reported, a misplaced `chain.ini` is named in proxy.log |
 
 ## New in 0.2.0-dev.25
 

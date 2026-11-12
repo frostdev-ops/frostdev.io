@@ -2,7 +2,7 @@
 title: "Your first mod"
 description: "Make a mod from a template, build it into a test server, change it while the server runs, and test it."
 status: "works"
-updated: "2026-11-10"
+updated: "2026-11-12"
 ---
 
 ## What you need
@@ -12,7 +12,9 @@ updated: "2026-11-10"
 - Kiln's matching SDK/MDK download and the [`kiln` command](/kiln/wiki/cli), both under
   [Mod authors](/kiln/download#authors) on the download page, or a source-built MDK. Unpack the download:
   the folder holding the `.nupkg` files is the local package "feed". Point `kiln new` at it with `--feed` or `$KILN_FEED`.
-  Use the full package version (`0.2.0-dev.22` for this release), not the API base `0.2.0`.
+  Use the full package version (`0.2.0-dev.26` for this release), not the API base `0.2.0`.
+  Since 0.2.0-dev.26 the packages are also on a NuGet feed, for `dotnet` and your IDE: the source is
+  `https://frostdev.io/kiln/downloads/0.2.0-dev.26/sdk/feed/index.json`. `kiln new` still takes the unpacked folder.
 
 ## 1. Make the mod
 
@@ -63,7 +65,7 @@ You get `my-mod-0.1.0.zip`. Players add it to their launcher library. Admins unz
 ## Without `kiln`
 
 ```sh
-dotnet new install "<feed>/Kiln.Templates.0.2.0-dev.22.nupkg" # once; use your MDK's full version
+dotnet new install "<feed>/Kiln.Templates.0.2.0-dev.26.nupkg" # once; use your MDK's full version
 dotnet new kiln-mod -n MyMod --feed <feed> --server <folder> --tests
 dotnet build -t:KilnDeploy                                 # add -p:KilnReload=true to reload
 dotnet build -t:KilnPack

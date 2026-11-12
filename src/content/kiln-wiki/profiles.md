@@ -3,7 +3,7 @@ title: "Profiles and mods"
 nav: "Profiles and mods"
 description: "Every mod in one list on Play, saved sets of mods as profiles in Settings, the mods in your game folder, the library, and mod settings in the launcher or in game."
 status: "works"
-updated: "2026-11-11"
+updated: "2026-11-12"
 ---
 
 ## Profiles
@@ -93,6 +93,11 @@ values) are carried to the new version at an update, and kept in `kiln/kept-mod-
 Kiln is uninstalled. A folder you changed yourself stays where it is; the launcher says so, and whether that mod may
 still run.
 
+**Notes about mod folders.** Since 0.2.0-dev.26 the launcher tells you once about a folder it leaves alone, files it
+kept and its notes on your mods, not at every change to your mods. **Notes** above the list shows them again. In
+Settings, **Show notes about mod folders** turns them off; the one notice that still comes is the first about a
+folder that may still run a mod you switched off. A long notice shows its first lines and **Show all**.
+
 ## Drop-in folders
 
 A profile's **Folders and notes** (Settings, Profiles; also on the **Load order** view) has one switch per kind of folder:
@@ -139,6 +144,22 @@ under its id in lower case, with its own id shown next to it.
   lists a version the game's loaded profile uses.
 - **While Enshrouded runs**, removing is refused: "Close Enshrouded first: the game may be reading this mod". Force doesn't
   change that. A running server blocks removal only when its profile points into the library. (New in dev.21.)
+
+### The data folder
+
+Everything Kiln keeps lives in one data folder: the library, runtimes, modpacks, profiles and backups. It starts as
+`%LOCALAPPDATA%\Kiln` on Windows and `~/.local/share/kiln` on Linux. Since 0.2.0-dev.26 you can move it: **Settings**, **Library**,
+**Data folder**, **Change**, then pick a folder or a drive (a drive root such as `D:\` becomes `D:\Kiln`).
+
+- Kiln copies everything, checks the copy, switches to it and only then removes the old folder. A move that fails or that
+  you cancel changes nothing.
+- An interrupted move removes only the files Kiln can prove it copied; anything else stays and is listed.
+- A place whose paths would be too long for the game is refused, with the reason.
+- After a move, start only 0.2.0-dev.26 or newer: an older launcher doesn't know the new place and starts empty.
+- Close Enshrouded and stop your servers first: the move is refused while one of them runs.
+
+The move was tested by the launcher's own tests, not yet in the installed launcher or on Windows. Keep a copy of your
+backups elsewhere before the first move.
 
 ## Without a profile
 

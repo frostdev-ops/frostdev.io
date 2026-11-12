@@ -3,7 +3,7 @@ title: "Kiln on a dedicated server"
 nav: "Dedicated servers"
 description: "Put Kiln on an Enshrouded dedicated server: a rented host over FTP, your own Windows PC, or a headless Linux machine."
 status: "partial"
-updated: "2026-11-10"
+updated: "2026-11-12"
 ---
 
 This page is for server owners. It shows how to put Kiln on an Enshrouded dedicated server, check that it runs, add
@@ -179,6 +179,28 @@ removing mods.
 
 Players need some of these mods too, EML data mods above all. Kiln's join check doesn't compare other frameworks' mods
 yet, so tell your players or put them in your modpack. See [Servers and players](/kiln/wiki/other-mods#servers-and-players).
+
+### Mods with a cook recipe
+
+Some Kiln mods make files from the game's own files on each machine (`assets/cook.json`: player animations, models,
+sounds); the mod's archive doesn't carry them. A mod that gives weapons **their own attack animations** needs these files
+on the server too: without them the server leaves those animations out, and then refuses every player whose game has
+them. Since 0.2.0-dev.26 you can cook on the server:
+
+```
+KILN_REPO=<a Kiln source checkout> kiln cook <server folder>/kiln/mods/<mod> --game <server folder>
+```
+
+This needs Python 3 and Kiln's source (the cook tools are its `tools/` folder), so it works on your own server, not on a
+rented one with only FTP. The cook makes what the server uses and skips the models, which only a player's game draws.
+Cook again after every game update.
+
+No Python on the server? Cook the mod on a PC with the game, then copy the mod's folder with its `assets/cooked` folder
+and `assets/assets.json` to the server. That works when the PC's game and the server run the same Enshrouded update.
+
+The launcher doesn't cook mods yet, so your players have to cook such a mod too, the same way against their own game
+folder. A player who hasn't cooked the mod sees the plain weapon, and for a mod with attack animations the join is
+refused.
 
 What players need depends on the mod. Its `kiln.mod.json` says it in `clients`:
 

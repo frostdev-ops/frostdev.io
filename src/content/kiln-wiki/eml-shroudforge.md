@@ -3,7 +3,7 @@ title: "EML and ShroudForge mods"
 nav: "EML and ShroudForge"
 description: "Kiln runs EML data mods and ShroudForge's Lua mods unchanged, with no extra loader and no Wine settings."
 status: "pending"
-updated: "2026-11-11"
+updated: "2026-11-12"
 ---
 
 EML (the Enshrouded Mod Loader) and ShroudForge are the frameworks with the most Enshrouded mods. Both come with Kiln
@@ -135,6 +135,12 @@ ShroudForge drops every package whose id it finds twice, so when a folder there 
 id already, Kiln leaves its copy out and yours runs. Since dev.22, with the **ShroudForge mods** drop-in on, Kiln hosts
 ShroudForge for the packages you put in its mods folder by hand too, not only for a ShroudForge mod in the profile. Once
 ShroudForge runs, it runs the whole folder, switch or not.
+
+**A ShroudForge mod you had before Kiln** stays your own folder when you add it to your list: Kiln never moves,
+replaces or switches a folder it did not put there, and says so once. Since 0.2.0-dev.26 you can still change its
+settings in the launcher (the mod's menu, Settings): Kiln writes only the setting you change. When two of your folders
+hold the same package, ShroudForge leaves the package out and the launcher asks you to keep one. Changing a setting in
+ShroudForge's own in-game menu no longer makes Kiln treat its copy of a mod as yours.
 
 ### Your own ShroudForge
 

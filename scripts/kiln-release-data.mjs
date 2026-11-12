@@ -5,7 +5,9 @@
 //
 // The folder is the one Kiln's release tooling produces (kiln-<version>/: linux/, windows/, runtime/, sdk/, samples/,
 // source/, README.txt, RELEASE-NOTES.md, SHA256SUMS, ...). The web server serves it at /kiln/downloads/<version>/ without
-// nexus/ and updates/, so this script leaves those two folders out, and the .sig updater signatures too.
+// nexus/ and updates/, so this script leaves those two folders out, and the .sig updater signatures too. Since Kiln
+// 0.2.0-dev.26 a release also holds sdk/feed/ (the SDK as a static NuGet feed) and sdk/api/ (the API reference site):
+// thousands of small files a NuGet client or a browser reads, not downloads, so they are left out of the list as well.
 //
 // The JSON it writes keeps what /kiln already read (version, channel, released, files.windows/appimage/deb/sums, github,
 // nexus), adds files.rpm (only when the folder has an .rpm), files.server and files.runtime, and a "groups" list: every
@@ -32,6 +34,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 export const GITHUB_RELEASES = 'https://github.com/frostdev-ops/kiln/releases/tag/';
 export const NEXUS_PAGE = 'https://www.nexusmods.com/enshrouded/mods/301';
 const EXCLUDED_DIRS = new Set(['nexus', 'updates']);
+// Folders below the top level that are not downloads (see above).
+const EXCLUDED_PATHS = new Set(['sdk/feed', 'sdk/api']);
 
 // The groups, in page order. `about` is the sentence the page shows under the heading.
 const GROUPS = [
@@ -78,6 +82,8 @@ const CATALOG = [
     label: 'Kiln.Api package', about: 'The mod API your code builds against.' },
   { re: /^sdk\/Kiln\.Templates\.[^/]+\.nupkg$/, kind: 'sdk-templates', group: 'authors',
     label: 'Kiln.Templates package', about: 'Project templates for dotnet new kiln-mod.' },
+  { re: /^sdk\/Kiln\.TestKit\.[^/]+\.nupkg$/, kind: 'sdk-testkit', group: 'authors',
+    label: 'Kiln.TestKit package', about: 'Runs a mod\'s tests under dotnet test, with no game.' },
   { re: /^sdk\/kiln$/, kind: 'kiln-linux', group: 'authors',
     label: 'kiln command line tool for Linux', about: 'Make, build, deploy, test and pack mods from the command line.' },
   { re: /^sdk\/kiln\.exe$/, kind: 'kiln-windows', group: 'authors',
@@ -122,6 +128,7 @@ function listFiles(root) {
       if (entry.isSymbolicLink()) { skipped.push(`${relative} (a symbolic link)`); continue; }
       if (entry.isDirectory()) {
         if (!prefix && EXCLUDED_DIRS.has(name)) continue;
+        if (EXCLUDED_PATHS.has(relative)) continue;
         walk(path, `${relative}/`);
       } else if (entry.isFile()) {
         if (relative.endsWith('.sig')) continue;
