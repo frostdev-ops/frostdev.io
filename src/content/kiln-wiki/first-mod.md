@@ -15,6 +15,8 @@ updated: "2026-11-12"
   Use the full package version (`0.2.0-dev.26` for this release), not the API base `0.2.0`.
   Since 0.2.0-dev.26 the packages are also on a NuGet feed, for `dotnet` and your IDE: the source is
   `https://frostdev.io/kiln/downloads/0.2.0-dev.26/sdk/feed/index.json`. `kiln new` still takes the unpacked folder.
+- The [API reference](https://frostdev.io/kiln/downloads/0.2.0-dev.26/sdk/api/) of this release: every public type and
+  member, with the thread and the side it is for, and the modder's guide next to it.
 
 ## 1. Make the mod
 
