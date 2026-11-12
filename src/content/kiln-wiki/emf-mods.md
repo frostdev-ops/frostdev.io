@@ -3,7 +3,7 @@ title: "EMF mods"
 nav: "EMF mods"
 description: "Install EMF DLL and Lua mods with API v27 support, current differences and server/client evidence limits."
 status: "partial"
-updated: "2026-11-10"
+updated: "2026-11-11"
 ---
 
 **0.2.0-dev.22** runs mods made for EMF (the Enshrouded Modding Framework), including EMF 0.6.0 / API v27 and
@@ -15,7 +15,7 @@ every mod or player-facing feature has been tested. [Remaining differences](#wha
 ## Install a mod
 
 1. Put the mod in `emf/mods/<mod>/` in the game folder, with its `mod.json` and DLL, or as a single
-   `emf/mods/<name>.dll`. Or drop it on the launcher window: it goes on your profile's **EMF** tab.
+   `emf/mods/<name>.dll`. Or drop it on the launcher window: it shows up in the list on **Play**.
    Lua mods also need EMF's `lua` mod (`emf/mods/lua/`).
 2. Switch it on. Most EMF mods start switched off. Kiln creates `kiln/config/emf/<mod>.ini` at the first start, with
    every setting at its default. Set `enabled=1` there, or use the launcher's settings editor.
@@ -48,7 +48,7 @@ Admins are players with the game's admin rights, or accounts listed in `kiln/con
 When EMF's own core is detected at startup, Kiln's EMF part steps aside and EMF runs the mods. Use one startup owner
 for EMF; loading another native core after mods have already started can still conflict. Since dev.22, while EMF's own
 loader is installed, the launcher copies your profile's EMF mods into `emf/mods/<name>/` for it, so they load too, and
-removes its copies when the loader is gone. Activate the profile again after you install EMF's loader. EMF's own
+removes its copies when the loader is gone. Start once from the launcher's **Play** after you install EMF's loader. EMF's own
 `emf/config/<mod>.ini` still decides whether a mod is on; `kiln/state/emf.json` lists the copies, and the reason says
 when that file keeps one off.
 
@@ -70,8 +70,8 @@ not run.
   calls it while its DLL loads still waits (at most 120 s for the whole start).
 - **Portrait cache codes.** 5 (busy), 6 (full) and 7 (cache I/O error, tried again next start) are new. Use kiln-emf and
   kiln-eml from the same release.
-- **Closed-source DLLs.** A DLL that hooks the same function as an EMF mod shows up as an overlap on the profile's
-  **Native** tab. [Closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods).
+- **Closed-source DLLs.** A DLL that hooks the same function as an EMF mod shows up as an overlap on **Native and DLLs**
+  (next to **Load order**, from the list on Play). [Closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods).
 
 <a id="dev20-support-in-preparation"></a>
 

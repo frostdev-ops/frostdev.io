@@ -1,7 +1,7 @@
 ---
 title: "Coming from Forge"
 description: "Minecraft Forge concepts and their Kiln equivalents."
-updated: "2026-11-10"
+updated: "2026-11-11"
 ---
 
 | Forge | Kiln |
@@ -31,7 +31,7 @@ updated: "2026-11-10"
 | MDK, ForgeGradle | `Kiln.Sdk`, `kiln new`, `kiln deploy`, `kiln pack` |
 | crash reports | `kiln/crash-reports/` |
 | mixins, access transformers | [hooks and patches](/kiln/wiki/hooks), for the advanced tier |
-| launchers with instances | the Kiln Launcher: profiles, library, server modpacks |
+| launchers with instances | the Kiln Launcher: one list of every mod, profiles in Settings, server modpacks |
 
 ## What Kiln has that Forge doesn't
 

@@ -3,7 +3,7 @@ title: "Player rules and creative mode"
 nav: "Player rules, creative"
 description: "Let players fly and build anywhere, change building costs and digging, keep health or water full, freeze the Shroud timer. /creative is one preset."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-11"
 ---
 
 Some things the game decides for itself: where a player may fly and build, what building costs, how fast tools dig, how
@@ -26,13 +26,21 @@ What it gives:
 - free building (dismantling gives nothing back); tools that break blocks and terrain in one hit
 - no damage; health, stamina, mana and water containers kept full
 - the Shroud timer frozen
-- gliding like a plane: no stamina, level flight holds altitude, look up to climb and down to dive, hold Shift to push
-  along (up to 35 m/s)
+- a steered glider (new in dev.24): no stamina and no gravity; S raises the glider's nose (up to 85 degrees), letting go
+  holds the pitch, W lowers it as in the game, and Shift speeds it up along the nose (up to 35 m/s). An analog stick
+  steers in proportion. A player whose Kiln is older, or whose controls use the game's other pitch mode, glides as
+  before: like a plane, S climbs and W dives along a path, and letting go settles into a normal glide
 
 It grants no levels, experience, skill points or unlocks, and other players' bases stay theirs. It ends with
 `/creative off`, when the player leaves or when the world closes; builds placed outside bases stay in the save. The
 player needs Kiln on their game. To change what it gives on a server, edit `rules/creative.json` in the server's Kiln
 config folder.
+
+**The steered glider's rule.** It is `glideSteer` in `rules/creative.json`; the file's header says how to switch it off
+(`"glideSteer": null`, or delete its `glideSteer` block: the glide is then the plane-like one). `"allowGlideSteer": false`
+in the server's `rules.json` switches it off for every player. `/creative` tells a player when their game cannot steer.
+The steered glider with an analog stick, with the game's other pitch mode, and another player's steered glider seen
+from a second game are not checked in a game yet.
 
 ## Rules from a mod
 
@@ -70,6 +78,7 @@ Creative.Set(player, true);
 | `MinHealth`, `MinStamina`, `MinMana` | kept at least this full, 0 to 1 |
 | `FreezeShroudTimer`, `MinShroudTime` | the Shroud timer held, or kept above a share |
 | `UnlimitedGliding`, `GlideSink`, `GlideBoost` | gliding with no stamina, a slower sink, plane-like flight |
+| `GlideSteer` | the glider's nose follows the movement keys: S raises it (up to `MaxClimbAngle` degrees, 85), a centred stick holds the pitch, W dives as in the game. Only for a player whose game confirms it steers too; others glide as before |
 | `Water` | water containers refilled: `WaterRule.KeepFull(items)` or `WaterRule.Rate(chargesPerSecond, items)` |
 
 **How rule sets combine.** A switch is on if any rule set turns it on, unless one says `false`: a denial wins, so an arena
@@ -88,8 +97,8 @@ the game's rules. `Rules.Of(player)` says what applies now; `PlayerRulesChangedE
 ## Server limits
 
 `rules.json` in the server's Kiln config folder caps what any mod may give: `allowFlyAnywhere`, `allowBuildOutsideBases`,
-`allowInvulnerable`, `allowIgnoreBasePermissions` (off by default), `minBuildCost`, `maxDigDamage`, `maxGlideSpeed` and
-more. Edits apply within a second.
+`allowInvulnerable`, `allowIgnoreBasePermissions` (off by default), `minBuildCost`, `maxDigDamage`, `maxGlideSpeed`,
+`allowGlideSteer` (on by default), `maxGlideSteerAngle` (0 to 85 degrees) and more. Edits apply within a second.
 
 ## Who needs what
 

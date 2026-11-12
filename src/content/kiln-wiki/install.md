@@ -2,7 +2,7 @@
 title: "Install Kiln"
 description: "Install Kiln for Enshrouded, import downloaded mod archives, and play with or without mods."
 status: "works"
-updated: "2026-11-10"
+updated: "2026-11-11"
 ---
 
 > **Early access.** Download the launcher: [Windows installer](/kiln/download/windows), [Linux AppImage](/kiln/download/linux)
@@ -24,14 +24,20 @@ tested under Wine with such paths, not on a Windows PC.
 
 1. Open the launcher. It finds Enshrouded in your Steam libraries by itself; if it doesn't, use **Add a folder**.
 2. Press **Install** on the Play page and confirm.
-3. Drop a mod's archive (zip, 7z or rar), folder or DLL anywhere on the launcher window. It goes into your active
-   profile ("My mods" at first); **Undo** takes it out again. A rar needs a tool that is already on your PC (unrar,
-   7-Zip, bsdtar or Windows' tar); without one the launcher says to extract it first.
+3. Drop a mod's archive (zip, 7z or rar), folder or DLL anywhere on the launcher window, or choose it with **Add mods**.
+   It shows up in the list on Play, switched on; **Undo** takes it out again. A rar needs a tool that is already on your
+   PC (unrar, 7-Zip, bsdtar or Windows' tar); without one the launcher says to extract it first.
 4. Press **Play**.
 
-<!-- shot: launcher-play | The launcher's Play page with its one-off starts -->
+<!-- shot: launcher-play | The launcher's Play page: every mod in one list, with Just once above it -->
 
-Steam's Play button also starts Kiln, with the profile you last activated.
+Play is one list of every mod you added, for every loader, and the mods you put into the game folder by hand. Each row
+has an on/off switch where Kiln can switch it, and a menu (the three dots, or a right click) with the mod's settings,
+its versions, its folder and **Remove**. Removing is one click, unless you switch on **Type a mod's name to remove it**
+in Settings. There is no profile to set up: Kiln keeps your mods in one profile, **My mods**, by itself. Saved sets of
+mods are in Settings ([Profiles and mods](/kiln/wiki/profiles)).
+
+Steam's Play button also starts Kiln, with the mods you switched on in the launcher.
 
 Mods made for other frameworks (EML, ShroudForge, EMF, Enshwick, Greeneye and more) work too: drop them on the window
 like Kiln mods. You don't need to install those frameworks. A mod id with capitals is fine, and so is a package shaped
@@ -44,7 +50,8 @@ another framework installed? Kiln keeps it, and copies your profile's mods for t
 On a Steam Deck the launcher opens in **Deck mode**: a controller-friendly screen (D-pad or stick to move, A to choose,
 B to go back, L1/R1 for tabs). Download the AppImage in Desktop Mode, then add it to Steam as a non-Steam game
 (right-click it, **Add to Steam**) to start it from Game Mode. **Add mods** lists the mods in your Downloads folder: `.zip`, `.7z` and `.rar` files, DLLs and mod folders. A `.rar`
-needs a tool on the Deck; without one, extract it first.
+needs a tool on the Deck; without one, extract it first. **Mods** is the same list of every mod as on the desktop: A
+switches a mod on or off, X removes it. Profiles are in Deck **Settings**, **Profile**.
 If Kiln doesn't load with your Proton, set the launch option below; Deck mode's **Help** shows the steps and whether it's
 set. Switch to the desktop screen in **Settings**, or start the launcher with `--desktop`.
 
@@ -57,7 +64,7 @@ After the restart, **Update game** puts the new Kiln runtime into the game. Noth
 gets a download link instead.
 
 The **Runtime** page also updates, rolls back and uninstalls Kiln. A dropped zip there is only for rollback or test builds.
-If you uninstall Kiln and install it again, the profile you used is active again, and a mod you drop goes into it.
+If you uninstall Kiln and install it again, the profile you used is loaded again, and a mod you drop goes into it.
 
 ## On Linux (Proton)
 
@@ -77,8 +84,8 @@ installs accept that. Links inside Kiln's managed folders are still refused.
 ## "No Kiln": Kiln is not loading
 
 If Steam starts the game without Kiln, the launcher says **No Kiln** (in amber) instead of waiting on "Starting", and
-the Play page shows a **Kiln is not loading** banner. That works for every start except **Play vanilla once**, which
-shows **Vanilla**. On a Steam Deck, Home shows a **Kiln is not loading** button that opens Help. (New in
+the Play page shows a **Kiln is not loading** banner. That works for every start except **Just once**, **Vanilla**,
+which shows **Vanilla**. On a Steam Deck, Home shows a **Kiln is not loading** button that opens Help. (New in
 0.2.0-dev.16; checked in the launcher's tests, not yet on a real Steam Deck.)
 
 1. Close the game.
@@ -105,7 +112,8 @@ It cleans up what dev.19 left behind:
 2. Drop the downloaded archive (zip, 7z or rar) on the launcher, or choose it with **Add mods**. Check its requirements
    and include the matching dependencies. A rar needs a tool already on your PC; without one, extract it and import the
    mod folder. A password-protected or split archive has to be extracted first too.
-3. To update a mod, download the new archive and import it into the same profile. Check the Library's result before playing.
+3. To update a mod, download the new archive and add it the same way. Check the result line before playing. A mod's
+   menu on Play has **Use &lt;version&gt;** for the other versions you have.
 
 [Kiln's Nexus page](https://www.nexusmods.com/enshrouded/mods/301) remains available for downloads and reports.
 Downloading the launcher from Nexus and having Nexus integration inside the launcher are separate things.
@@ -120,13 +128,14 @@ in the manifest for Kiln's check. Players of this build download and import that
 
 ## Play without mods
 
-One-off starts on the Play page, for the next start only:
+**Just once** on the Play page, for the next start only:
 
 | Button | Loads |
 |---|---|
-| Play vanilla once | nothing, as if Kiln weren't installed. It warns first |
-| Play without mods once | Kiln, no mods |
-| Play a profile once | another profile, without switching to it, with its compat rules |
+| Vanilla | nothing, as if Kiln weren't installed. It warns first |
+| Without mods | Kiln, no mods |
+
+To play with another set of mods, load that profile in Settings, Profiles. Since dev.24 there is no "play a profile once".
 
 The warning: a character carrying Kiln items can crash on a server that lets vanilla clients in, and may lose those items on other
 servers. Use another character.
@@ -137,6 +146,18 @@ From Steam: `KILN_DISABLE=1 %command%`. Uninstalling on the Runtime page restore
 
 Kiln never writes your saves. The **Saves** page backs them up and restores them (never while the game runs). Its save
 editor changes a save only when you use it.
+
+## Steam and the game
+
+- **Play works when Steam is closed** (Linux AppImage, since dev.24). The launcher used to start Steam with settings
+  meant only for the AppImage; every game start from that Steam then ended within seconds, with no window and nothing in
+  Kiln's logs, until Steam was restarted.
+- **A game without a window still counts as running.** If the game's window thread ends while the rest of the process
+  goes on (it still hosts and saves the world), the launcher took the game for stopped before dev.24. Stop it in Steam
+  before you start it again.
+- **After you quit on Linux**, Steam can show the game as running for about a minute. Steam's own networking library
+  crashes while the game shuts down, and the system then writes a crash dump of several gigabytes. No Kiln or mod code is
+  on either side of that crash; whether it also happens without Kiln is not known yet.
 
 ## After a game update
 

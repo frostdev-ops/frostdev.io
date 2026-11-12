@@ -3,15 +3,16 @@ title: "Mods for other frameworks"
 nav: "Other frameworks"
 description: "Kiln runs mods made for EML, ShroudForge, EMF, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink, unchanged, next to Kiln mods."
 status: "partial"
-updated: "2026-11-10"
+updated: "2026-11-11"
 ---
 
 Kiln loads mods made for other Enshrouded mod frameworks without rewriting them. It supplies the runtimes listed
 below, with limits for each adapter. Server startup checks do not guarantee every mod or loader combination.
 
-Introduced in dev.18 and expanded in dev.20, dev.21 and dev.22. dev.22 is about mods that did not load: how the launcher
-takes them in, lists them and hands them to another loader. Most of this has run on test servers. Where no player has
-seen it in the game yet, the table says **untested in game**.
+Introduced in dev.18 and expanded in dev.20, dev.21, dev.22 and dev.24. dev.22 is about mods that did not load: how the
+launcher takes them in, lists them and hands them to another loader. dev.24 makes mods of other loaders really run: EML
+mods next to ShroudForge mods, Flame mods from the game's `mods` folder, and nothing a mod wrote deleted. Most of this has
+run on test servers. Where no player has seen it in the game yet, the table says **untested in game**.
 
 ## Every framework
 
@@ -22,21 +23,22 @@ seen it in the game yet, the table says **untested in game**.
 | **EMF** 0.3.3 through 0.6.0 / API v27 | DLL and Lua mods, server tools, commands | gives EMF mods EMF's API on Kiln. Installed by default | 77 full / 13 partial C slots; client checks remain | drop the mod in, or import it, then switch it on. [EMF mods](/kiln/wiki/emf-mods) |
 | **SET** (Shrouded Engine Tweaks) 0.1.1 | Lua mods with windows and tweaks | runs SET's Lua API on Kiln, also on dedicated servers | server probe 39/0; API and client limits remain | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#set) |
 | **Greeneye Loader** 1.2.2 | client mods: The Worst Map Mod, Find, Quick Deposit, Town Portals | gives them Greeneye's whole API. Works on Linux too | untested in game | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#greeneye-loader) |
-| **Flame** | Creative Mode | starts Creative Mode without its loader | untested in game | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#creative-mode-flame) |
+| **Flame** | Creative Mode | starts Creative Mode without its loader, from the game's `mods` folder | untested in game | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#creative-mode-flame) |
 | **Shroudtopia** 0.1.1 and 1.0 | minimaps, first-person view, older tweaks | gives them Shroudtopia's whole API | untested in game. Shroudweave's mods: untried | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#shroudtopia) |
-| **Enshwick** 1.0.0-alpha.13 | DLL, Luau and data-pack mods | runs Enshwick's own loader. Kiln ships it, so you don't need Enshwick | untested in game (works on test servers) | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#enshwick) |
+| **Enshwick** 1.0.0-alpha.14 | DLL, Luau and data-pack mods | runs Enshwick's own loader. Kiln ships it, so you don't need Enshwick | untested in game (works on test servers) | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#enshwick) |
 | **shroudlink** 0.8.0 | server mods: chestsort, assistants, storage, meter, gemforge | runs shroudlink's own server part. Its client addon (the in-game MODS tab) imports as a mod of its own | works on a test server; with players: untested | put the mods on the server, or import them. [More frameworks](/kiln/wiki/more-frameworks#shroudlink) |
 | **Ember** (server SDK) | private-chests | finds and lists the mods; doesn't run them | not yet: Ember hasn't published its loader | nothing to do yet. [More frameworks](/kiln/wiki/more-frameworks#ember) |
 | Stand-alone `dinput8.dll` mods | one DLL each | loads them next to Kiln | works | install Kiln; it keeps them. [Below](#stand-alone-dinput8-mods) |
 | Closed-source DLL mods (XHL-Core, Auto Loot Plus, trainers) | one or more DLLs | loads them next to Kiln, early or after Kiln | late loading: untested in game | switch on **Load after Kiln and ShroudForge** if they clash. [Below](#closed-source-dll-mods) |
-| Kiln DLL mods | DLLs with a `native.json` | loads them at the time you choose | works | add them to a profile. [Below](#kiln-dll-mods) |
+| Kiln DLL mods | DLLs with a `native.json` | loads them at the time you choose | works | add them in the launcher. [Below](#kiln-dll-mods) |
 
 ## Adding mods in the launcher
 
-The launcher's Library imports mods of every framework above. Drop a mod on the launcher window, or choose it with
-**Add mods**. The launcher says which framework the mod is for and puts it in your profile, on its **Engines** tab, with
-a switch, versions and settings where the mod has them. Something Kiln can't run is skipped with the reason. It is never
-added as a plain DLL. Since dev.22 mods are taken the way they are shared:
+The launcher imports mods of every framework above. Drop a mod anywhere on the launcher window, or choose it with
+**Add mods** above the list on **Play**. The launcher says which framework the mod is for and adds it to that list,
+switched on, with its kind next to its name. Its menu (the three dots, or a right click) has its settings where the mod
+has them, its versions, its folder and Remove. Something Kiln can't run is skipped with the reason. It is never added as
+a plain DLL. Since dev.22 mods are taken the way they are shared:
 
 - **Archives.** `.zip`, `.7z` and `.rar`. The launcher reads 7z itself. A rar needs a tool that is already on your PC:
   `unrar`, 7-Zip, `bsdtar`, or the `tar` that comes with Windows. Without one, the launcher says to extract the archive
@@ -53,9 +55,11 @@ added as a plain DLL. Since dev.22 mods are taken the way they are shared:
 - **A `dinput8.dll` mod keeps its files.** A DLL beside the `.ini`, data or picture files it reads (or `powrprof.dll` with a
   folder) is imported as one mod with all its files, and loaded from that folder, so it finds them next to its DLL. A mod
   that looks for its files in the game folder instead is not served by this: the launcher can't place files there yet.
+  Since dev.24 an update of such a mod (dinput8.dll and the like) replaces the old version instead of becoming a second
+  entry, and the same DLL is no longer loaded twice.
 
-More on the Library: [Profiles and mods](/kiln/wiki/profiles#the-library). Mods you extracted into the game folder by hand
-are listed on the profile's [In the game folder](/kiln/wiki/profiles#in-the-game-folder) list.
+More on the library: [Profiles and mods](/kiln/wiki/profiles#the-library). Mods you extracted into the game folder by hand
+are in the same list, marked **Game folder** ([In the game folder](/kiln/wiki/profiles#in-the-game-folder)).
 
 ## Your other loader is installed too
 
@@ -69,19 +73,24 @@ Check the guide for your framework before combining loaders; use one startup own
   code. Before, under Proton without a DLL override, it could step aside for a loader file that never ran, and nothing
   ran the mods.
 - **The launcher copies your profile's mods for that loader.** Another framework's own loader (EML's `dbghelp.dll`, for
-  example) reads only its own folder (`mods/` for EML) and never Kiln's Library. A mod you added to your profile did
+  example) reads only its own folder (`mods/` for EML) and never Kiln's Library. A mod you added in the launcher did
   not run at all while that loader was installed. Since dev.22, while such a loader is installed, the launcher copies
   the profile's mods of that framework into the folder it reads, and takes its copies out again when the loader is gone.
   A mod never runs twice. A mod you put in that folder yourself is never touched, and when it is the same mod, yours
   runs. A copy a mod changed (settings written into its folder) is left as it is.
-- **Activate the profile again after you install such a loader.** The copies are made when the profile is activated.
-  Install the loader later and nothing is copied until you activate the profile again. The same goes the other way:
-  remove the loader, activate the profile again, and the copies go.
+- **Press Play in the launcher after you install or remove such a loader.** The copies are made when a profile is loaded
+  (Settings, Profiles) and when the launcher brings the profile up to date before a start. Install the loader later and
+  start once from the launcher's **Play**, not Steam's; the same goes the other way: remove the loader, start from
+  the launcher, and the copies go.
+- **EML mods next to ShroudForge mods.** ShroudForge carries EML. While it runs, it patches the game's data and runs an
+  EML mod only when its own switch for that mod is on. Kiln's copies had no such switch before dev.24: nobody applied
+  them, and Kiln said they ran. Since dev.24 Kiln sets the switch, also on Linux when EML's own `dbghelp.dll` is still in
+  the game folder. For a mod ShroudForge does not run, the launcher and the in-game menu say why (switched off, made for
+  the other side, or a file ShroudForge refuses) and suggest a switch only where a switch helps.
+  [EML and ShroudForge together](/kiln/wiki/eml-shroudforge#eml-and-shroudforge-together).
 - **Where it can't help.** shroudlink's and Ember's own loaders can't read Kiln's layout. With one of them running, the
   profile's mods of that framework don't load, and kiln.log, the state file and the launcher's engine row say so.
-- **One start with another profile.** **Play a profile once** is refused for a framework whose own loader is installed
-  when that profile's mods of the framework differ from the active profile's: the loader's folder is fixed for a start.
-  The message says to activate the profile. **Play without mods once** can't stop such a loader: it runs what is in its
+- **One start without mods.** **Just once**, **Without mods** on Play can't stop such a loader: it runs what is in its
   folder, Kiln's copies included.
 - **Kiln preserves loader files.** Kiln only takes the name `dinput8.dll`. Another tool's `dinput8.dll` is moved into Kiln's
   folder and loaded from there. Files under other names (EML's `dbghelp.dll`, Shroudtopia's `winmm.dll`, Enshwick's
@@ -90,7 +99,7 @@ Check the guide for your framework before combining loaders; use one startup own
   mods stay.
 
 To let a framework's own loader run its mods instead of Kiln, keep that loader installed. To hand them back to Kiln,
-remove that loader (or switch its line off in `kiln/chain.ini` if Kiln chained it), then activate the profile again.
+remove that loader (or switch its line off in `kiln/chain.ini` if Kiln chained it), then press **Play** in the launcher.
 
 ## Where the mods go
 
@@ -104,7 +113,7 @@ install steps still work.
 | EMF | `emf/mods/<mod>/` or `emf/mods/<name>.dll` |
 | SET | `shrouded_engine_tweaks/mods/<mod>/` |
 | Greeneye Loader | `greeneye/<mod>/` |
-| Creative Mode (Flame) | `mods/creative/` |
+| Creative Mode (Flame) | `mods/creative/` (a mod added in the launcher: `mods/<id>/`) |
 | Shroudtopia | `mods/<mod>.dll` or `mods/<mod>/` |
 | Enshwick | `mods/<author.name>/` |
 | shroudlink | `shroudlink_mods/<name>.dll` (server) |
@@ -113,10 +122,10 @@ install steps still work.
 
 Several frameworks share `mods/`. Kiln tells their mods apart by their files, and each part only takes its own.
 
-With the launcher you don't need these folders: import the mod and switch it on in your profile. Kiln loads the
-profile's list for each framework. A mod you put in a framework's folder by hand is read when that framework's
-**drop-in switch** is on in the profile's settings. That is the one rule for every framework, and the profile's
-**In the game folder** list shows each hand-placed mod and whether it loads. [Drop-in folders](/kiln/wiki/profiles#drop-in-folders)
+With the launcher you don't need these folders: add the mod and switch it on in the list on **Play**. Kiln loads the
+list for each framework. A mod you put in a framework's folder by hand is read when that framework's **drop-in switch**
+is on (the profile's **Folders and notes**). That is the one rule for every framework, and the list on Play shows each
+hand-placed mod, marked **Game folder**, and whether it loads. [Drop-in folders](/kiln/wiki/profiles#drop-in-folders)
 has the switches. Two loaders read their whole folder themselves once they run: ShroudForge, when the profile has an
 enabled ShroudForge mod, and Enshwick, when it has an Enshwick mod. SET has no switch: its folder always loads.
 
@@ -150,8 +159,14 @@ mods in your [modpack](/kiln/wiki/modpacks).
   the drop-in switches, the game-folder list, packages shaped like the game folder and 7z and rar were tested with unit
   tests, Wine host tests with stand-in loader DLLs, and dedicated-server labs under Wine. One lab run used a real
   ShroudForge loader build. [What works today](/kiln/wiki/status#new-in-020-dev22) has the checklist.
-- **Copies are made at activation.** Install another framework's own loader after you activated the profile, and its
-  copies are not there until you activate the profile again.
+- **Copies are made by the launcher.** Install another framework's own loader and start from Steam, and its copies are
+  not there until you start once from the launcher's **Play**.
+- **dev.24 was not run on Windows or on a Steam Deck.** In a real game (Linux, Proton, one client) Kiln's entries in the
+  main menu with ShroudForge mods on, W and S steering with ShroudForge's Unlimited Flight, and SET's tools were seen.
+  Everything else was tested on Linux hosts, under Wine without a display and on dedicated test servers.
+  [What works today](/kiln/wiki/status#new-in-020-dev24) has the list.
+- **One failing EML mod inside ShroudForge** makes ShroudForge drop its whole startup pass: none of its data mods apply
+  that start. The in-game Mods menu shows them as failed; the launcher's **Engines** view can still say they run.
 - **A loader that was already running.** Enshwick's own loader may see a mod copied while it was running only from the
   next start.
 - **EMF.** API v27 implements radial wheels, stamina/mana and right-click window events. Client-world programs/events
@@ -197,7 +212,8 @@ One or more DLLs, with a small `native.json` naming them and when they load:
 | `boot` | after Kiln's own services |
 | `world` | when the first world starts |
 
-Add them to a profile (the **Native** tab), or drop them into `kiln/native/<folder>/`. One that crashes while loading is
+Add them in the launcher (they are listed on Play, and **Native and DLLs**, next to **Load order**, groups them by
+load time), or drop them into `kiln/native/<folder>/`. One that crashes while loading is
 marked failed with a crash report, and the game carries on. DLL mods never unload, so changes need a restart.
 
 The official dev.22 launcher has no Nexus Catalog, account sign-in or Mod Manager Download handler.
@@ -209,8 +225,8 @@ Mods that ship only as a DLL (XHL-Core, Auto Loot Plus, trainers, overlays) hook
 Kiln has hooked anything. Kiln then hooks over them and usually works. Some clash: a feature of Kiln, ShroudForge or an
 EMF mod stops working, or ShroudForge's own engine hooks refuse to start. New in 0.2.0-dev.21, three things help.
 
-**Load it after Kiln.** On the profile's **Native** tab, each chain entry has a **Load after Kiln and ShroudForge**
-switch. Switch it on and restart the game. Kiln then loads that DLL after its own services, plugins and ShroudForge:
+**Load it after Kiln.** On **Native and DLLs** (next to **Load order**, from the list on Play), each chain entry has a
+**Load after Kiln and ShroudForge** switch. Switch it on and restart the game. Kiln then loads that DLL after its own services, plugins and ShroudForge:
 Kiln hooks first and the DLL hooks over Kiln. kiln.log says it loaded late. Without the launcher, name the DLL in
 `kiln/chain.ini` under `[late]`, and keep its line in its own list:
 
@@ -229,7 +245,7 @@ EMF mod both hook. **Load late** next to an overlap switches that DLL to late in
 overlap, names both sides and the fix. The list is in `kiln/state/hooks.json` under `overlaps`. Before the first start
 with dev.21 the page says "No hook map yet".
 
-**Compat rules.** The page lists the compat rules that apply to this profile. A rule can `warn`, load a chain DLL
+**Compat rules.** The page lists the compat rules that apply to the loaded profile. A rule can `warn`, load a chain DLL
 `late`, or `disable` a chain DLL or a mod the profile lists. Kiln ships its own rules (`kiln/compat-rules.json`); yours go
 in the profile's config folder as `compat-rules.json`, and a rule of yours with the same `id` replaces Kiln's:
 
@@ -241,8 +257,8 @@ in the profile's config folder as `compat-rules.json`, and a rule of yours with 
     "message": "XHL hooks the same functions as ShroudForge. It loads after Kiln so both work." } ] }
 ```
 
-The launcher applies `late` and `disable` of chain entries when it writes `chain.ini`, so activate the profile (or press
-**Play**) after you change a rule. Kiln itself logs `warn` rules and skips a disabled mod the profile lists. A rule it
+The launcher applies `late` and `disable` of chain entries when it writes `chain.ini`, so press **Play** in the launcher
+after you change a rule. Kiln itself logs `warn` rules and skips a disabled mod the profile lists. A rule it
 can't apply is reported in kiln.log as not applied.
 
 What loading late can't do:
@@ -251,8 +267,8 @@ What loading late can't do:
 - **A DLL another loader already started** (with EMF's loader chained, it starts the DLLs in `dinput8-chain.ini`) is
   reported as `already-loaded`. Use a compat rule, or switch one side off.
 - **A disabled native mod's** late DLL doesn't load. An early or boot native mod can't require a late one.
-- **`disable` on a native mod** whose DLL already loaded at `dllmain` is reported as not applied. Re-activate the
-  profile in the launcher to apply it.
+- **`disable` on a native mod** whose DLL already loaded at `dllmain` is reported as not applied. Start again from the
+  launcher's **Play** to apply it.
 
 Status: the switch, overlaps and rules were tested under Wine and on lab servers, and the launcher pages with tests and
 mock data. Nobody has tried them with XHL-Core in a real game yet.

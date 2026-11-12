@@ -3,7 +3,7 @@ title: "EML and ShroudForge mods"
 nav: "EML and ShroudForge"
 description: "Kiln runs EML data mods and ShroudForge's Lua mods unchanged, with no extra loader and no Wine settings."
 status: "pending"
-updated: "2026-11-10"
+updated: "2026-11-11"
 ---
 
 EML (the Enshrouded Mod Loader) and ShroudForge are the frameworks with the most Enshrouded mods. Both come with Kiln
@@ -18,7 +18,8 @@ with EML's own code, so they behave as they do under EML. Kiln itself stays MIT;
 1. Put the mod in `mods/<mod>/` in the game folder (the folder with `mod.json` and `src/mod.lua`), or as a zip. Or drop
    it on the launcher window, as a zip, 7z or rar ([what it accepts](/kiln/wiki/other-mods#adding-mods-in-the-launcher)).
    A mod id with capitals, such as `HoardersHelper`, is fine. A hand-placed mod loads when the profile's **EML mods**
-   drop-in is on ([Drop-in folders](/kiln/wiki/profiles#drop-in-folders)).
+   drop-in is on ([Drop-in folders](/kiln/wiki/profiles#drop-in-folders)); the list on the launcher's **Play** shows it,
+   marked **Game folder**, with **Load them** when that switch is off.
 2. Start the game or the server through Kiln.
 
 `kiln/logs/kiln.log` then says how many EML mods ran, for example
@@ -38,8 +39,11 @@ How it behaves:
   game data to find that out. Since dev.22 that includes the first start. [Faster starts](#faster-starts-dev21-and-dev22).
 - **Game updates.** After an update Kiln applies your EML mods again, before the world loads. EML mods need none of
   Kiln's hooks, so they apply even on a game build Kiln doesn't know yet.
-- **Back to vanilla.** Remove every EML mod and the next start puts the original game data back. The launcher also has
-  **Restore vanilla game data** on the Logs page and the profile's Engines tab.
+- **Back to vanilla.** Switch off every EML mod and the next start through Kiln puts back the game data Kiln can prove
+  it wrote. **Game files Kiln can't prove it wrote are never overwritten or deleted** (since dev.24): leftovers of
+  older versions are moved to `kiln/eml/displaced` in the game folder, and the launcher names them (Logs, **Engines**,
+  and the **Engines** view from the list on Play). When Kiln can't prove the data is its own, it leaves it and says why;
+  Steam's **Verify integrity of game files** is the other way back.
 - **Kiln asset packs win.** If a Kiln mod's assets and an EML mod change the same game resource, the Kiln mod's
   version is the one you see.
 - **EML installed too.** When EML's own loader runs, Kiln stands aside: EML has already applied the mods. When EML's file
@@ -48,7 +52,7 @@ How it behaves:
   was tested under Wine with a stand-in `dbghelp.dll`, not yet on a Steam Deck.
 - **Your profile's EML mods under EML's own loader.** EML reads only `mods/`, never Kiln's Library. So while EML's
   `dbghelp.dll` is installed, the launcher copies the profile's EML mods into `mods/<name>/` for it, and removes
-  its copies when the loader is gone. Activate the profile again after you install EML's loader. If you already have the
+  its copies when the loader is gone. Press **Play** in the launcher once after you install EML's loader. If you already have the
   same mod in `mods/` under another folder name, Kiln adds no second copy (EML stops the game on a duplicate id) and
   yours runs. `kiln/state/eml.json` lists each profile mod as `own-loader` (EML runs Kiln's copy) or `not-loaded` with
   the reason, and kiln.log warns about each one that doesn't load. [Details](/kiln/wiki/other-mods#your-other-loader-is-installed-too).
@@ -111,12 +115,20 @@ installed ShroudForge.
    launcher window, as a zip, 7z or rar. A package whose id has capitals imports too (ShroudForge's own id rule applies:
    letters of both cases, digits, `.`, `-` and `_`, at most 80 characters). A hand-placed mod is read when the profile's
    **ShroudForge mods** drop-in is on ([Drop-in folders](/kiln/wiki/profiles#drop-in-folders)).
-2. Turn it on and set its options. Use the launcher (the profile's **Engines** tab, **Settings**), ShroudForge's
-   in-game Modloader window, or the mod's `extended.mod.json`. A setting marked "live" changes while you play.
+2. Turn it on and set its options. Use the launcher (its switch in the list on **Play**, and **Settings** in its
+   menu), Kiln's in-game **Mods** menu (since dev.24 a page per ShroudForge mod with its switch, its settings and its
+   buttons), ShroudForge's in-game Modloader window, or the mod's `extended.mod.json`. A setting marked "live" changes
+   while you play.
 3. Start the game or the server through Kiln.
 
 `kiln/logs/kiln.log` names the runtime that runs (`ShroudForge runtime: bundled ...`) and shows ShroudForge's own log
 as `[sf] ...` lines. On Linux and the Steam Deck you need no Wine setting beyond Kiln's own.
+
+**Shortcuts** of ShroudForge mods work with the ShroudForge that Kiln brings along since dev.24; you no longer need
+ShroudForge installed for them. This is what broke steering with W and S on the glider with ShroudForge's Unlimited
+Flight; that steering was seen working in a real game (Linux, Proton). With ShroudForge mods on, Kiln's **Mods** entry
+is in the game's main menu again (also seen in a real game). Kiln brings ShroudForge 1.7.9; 1.8.0 is not released yet,
+and Kiln will support it when it is out.
 
 How the launcher places the mods: it puts a profile's ShroudForge package in ShroudForge's mods folder as `<name>/`.
 ShroudForge drops every package whose id it finds twice, so when a folder there (your own copy) holds the same package
@@ -148,21 +160,30 @@ ShroudForge's native runtime off. On the current game build these hooks are dorm
 **Linked home folder.** Since dev.21 ShroudForge placement no longer refuses a game folder just because `/home` is a
 link to `/var/home` (Fedora Atomic, Bazzite). Links inside the managed folders are still refused.
 
-To start once without ShroudForge mods, use **Play without mods once**, or set `KILN_SHROUDFORGE=0` in the launch
-options.
+To start once without ShroudForge mods, use **Just once**, **Without mods** on the launcher's Play, or set
+`KILN_SHROUDFORGE=0` in the launch options. Going back to ShroudForge alone no longer needs a reinstall (dev.24): Kiln's
+EML part used to put the game's data files back from a backup although ShroudForge had patched them.
 
 ## EML and ShroudForge together
 
 ShroudForge contains EML. Both change the game's files before the game starts, and two writers in a row would undo each
 other. So Kiln lets only one write per start:
 
-- When ShroudForge runs, it applies the ShroudForge mods and the EML mods in its mods folder (`mods/` by default). Keep
-  your EML mods there.
+- When ShroudForge runs, it applies the ShroudForge mods and the EML mods in its mods folder (`mods/` by default), but
+  only those its own switch for that mod has on. Keep your EML mods there.
 - EML mods that are only in Kiln's EML folder (`kiln/eml/mods`) don't apply in a start where ShroudForge runs. The log
-  says which writer ran. EML mods of a launcher profile do apply when the profile has an enabled ShroudForge mod: since
-  dev.22 the launcher copies them into ShroudForge's mods folder, and `kiln/state/eml.json` lists them as `own-loader`.
-  A profile with EML mods and no ShroudForge mod is run by Kiln's EML part, as before.
-- With no ShroudForge mod in use, Kiln's EML part applies every EML mod.
+  says which writer ran. EML mods you added in the launcher do apply when a ShroudForge mod is on too: the launcher
+  copies them into ShroudForge's mods folder, and since dev.24 it sets ShroudForge's switch for each of them from your
+  list, also on Linux when EML's own `dbghelp.dll` is still in the game folder. Before, nobody applied those copies, and
+  Kiln said they ran. `kiln/state/eml.json` lists them as `own-loader`.
+- **When ShroudForge doesn't run one.** The launcher and the in-game Mods menu say why: switched off in ShroudForge, made
+  for the other side, or a file ShroudForge refuses. They suggest a switch only where a switch helps. A folder you put
+  in ShroudForge's mods folder yourself is never written. Values you set in ShroudForge for an EML mod are kept when the
+  mod is switched off, removed, or Kiln is uninstalled.
+- **One failing EML mod stops the whole pass.** When one EML mod fails inside ShroudForge, ShroudForge drops its whole
+  startup pass and none of its data mods apply that start. The in-game Mods menu shows them as failed; the launcher's
+  **Engines** view can still say they run.
+- With no ShroudForge mod in use, Kiln's EML part applies every EML mod, as before.
 
 ## On a server
 
@@ -173,8 +194,10 @@ data mods as the server; Kiln's join check doesn't compare them yet. See
 
 ## Not tested yet
 
-- In a player's game: an EML mod's effect, ShroudForge's Modloader window, keybinds and in-game mods. On test servers
-  both ran their mods and their settings changed live.
+- In a player's game: an EML mod's effect, ShroudForge's Modloader window and most in-game mods. On test servers
+  both ran their mods and their settings changed live. dev.24 saw two things in a real game (Linux, Proton, one client):
+  Kiln's main-menu entries with ShroudForge mods on, and W and S steering with ShroudForge's Unlimited Flight. dev.24's
+  ShroudForge switch for EML mods was tested on Linux hosts and dedicated test servers, not in a game.
 - dev.21's faster EML starts and dev.22's first start (no full read) on a real client install, with the progress window
   and the Play page line.
 - EML's own `dbghelp.dll` in the game folder, with a profile's EML mods copied for it, on Windows. And the same

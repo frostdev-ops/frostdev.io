@@ -3,7 +3,7 @@ title: "Join a modded server"
 nav: "Join a modded server"
 description: "What a modded server needs from your game, and how the launcher installs its modpack with your consent."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-11"
 ---
 
 ## What a server needs from you
@@ -51,7 +51,8 @@ Tick the box and install. The launcher:
 2. checks its checksum, and each mod's against what the server asked for;
 3. adds the mods to your library and makes a profile named **Server: &lt;name&gt;**. A pack can hold mods for other
    frameworks too, such as EML data mods;
-4. backs up your saves and activates the profile.
+4. backs up your saves and loads the profile. Play names it at the top ("Profile: Server: &lt;name&gt;"); to go back
+   to your own mods, load **My mods** in Settings, Profiles.
 
 Press **Launch** and join again. Nothing downloads until you agree. Dismiss the banner and that server's pack won't be
 offered again.

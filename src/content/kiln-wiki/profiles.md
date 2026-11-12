@@ -1,70 +1,101 @@
 ---
 title: "Profiles and mods"
 nav: "Profiles and mods"
-description: "Keep sets of mods as profiles, build a mod library, see the mods in your game folder, and change mod settings in the launcher or in game."
+description: "Every mod in one list on Play, saved sets of mods as profiles in Settings, the mods in your game folder, the library, and mod settings in the launcher or in game."
 status: "works"
-updated: "2026-11-10"
+updated: "2026-11-11"
 ---
 
 ## Profiles
 
-A profile is a list of mods with its own folder of settings. Create, duplicate, delete and activate them on the **Profiles**
-page. Every game start uses the active one, Steam's included. If you uninstall Kiln and install it again, the profile you
-used is active again, and a mod you drop goes into it.
+Since 0.2.0-dev.24 there is no profile to set up. Kiln keeps your mods in one profile, **My mods**, by itself, and the
+launcher's main screen (**Play**) is one list of every mod you added, for whatever loader, each with an on/off switch.
+Every game start uses that list, Steam's included. If you uninstall Kiln and install it again, the profile you used is
+loaded again, and a mod you drop goes into it.
 
-<!-- shot: launcher-profiles | A profile's Mods tab with the load-order preview -->
+<!-- shot: launcher-profiles | Settings, Profiles: the saved profiles with Load, and "Save current as..." -->
 
-| Tab | Holds |
+A profile is a saved set of mods and their switches. For several sets (one for a server, one for a solo run), open
+**Settings**, **Profiles**:
+
+| Action | Does |
 |---|---|
-| Mods | Kiln mods: on or off, version, add from the library, with a load-order preview. Below them, [In the game folder](#in-the-game-folder) |
-| Native | DLL mods by load time; drag to reorder within a group. The chain card: other DLLs, **Load after Kiln and ShroudForge**, hook overlaps and compat rules ([closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods)) |
-| EMF | EMF mods |
-| Engines | mods for the [other frameworks](/kiln/wiki/other-mods): EML, ShroudForge, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick, shroudlink, Ember. Below them, [In the game folder](#in-the-game-folder) for those frameworks |
-| Configs | mod settings |
-| Saves | backups made while playing this profile |
+| Load | makes that profile the one in use. The list on Play then shows its mods |
+| Save current as... | saves the mods and switches you have now under a new name. The profile you had stays loaded |
+| Rename | renames a profile |
+| Folders and notes | the profile's name, mod data, [drop-in folders](#drop-in-folders) and notes |
+| Delete | deletes a profile, after a typed confirmation. The loaded one can't be deleted |
+| No profile | no profile at all: the game folder decides, and the mods in it load as they are |
+
+Each profile shows how many mods it has (of every kind) and the server it is for. A [server's modpack](/kiln/wiki/modpacks)
+makes a profile named **Server: &lt;name&gt;**, listed here too. When a profile other than **My mods** is loaded, Play
+names it in one small link at the top ("Profile: Ember run"), which opens Settings, Profiles.
 
 A broken profile file means **no mods at all**, with the reason in the log. Kiln never silently loads another set.
 
-**Play a profile once** (on the Play page) starts another profile without switching to it. Since dev.21 that start also
-follows the other profile's compat rules and late DLLs. The next normal start is back to the active profile's. Since
-dev.22 it is refused for a framework whose own loader is installed (EML's `dbghelp.dll`, for example) when the other
-profile's mods of that framework differ from the active profile's: that loader's folder is fixed for a start. The
-message says to activate the profile instead.
+The launcher no longer has a **Profiles** page, a profile picker on Play, a profile's Mods, Native, EMF, Engines, Configs
+and Saves tabs, or a **Library** page. Where those went:
+
+| Was | Now |
+|---|---|
+| a profile's **Mods** and **EMF** tabs, the **Library** page | the list on **Play** |
+| **Native** tab | **Native and DLLs**, next to **Load order** (from the list on Play) |
+| **Engines** tab | **Engines**, from the list on Play |
+| **Configs** tab | **Configs** in a mod's menu, or next to **Load order** |
+| **Saves** tab | the **Saves** page |
+| **Play a profile once** | gone. Load the other profile in Settings, Profiles. **Just once** on Play still has **Vanilla** and **Without mods** |
+
+## The list on Play
+
+One row per mod, by name: its switch, its kind (Kiln, EMF, EML, ShroudForge, SET, Greeneye, Flame, Native and so on),
+its version, and a short note only when there is something to say ("Starts with your world", "Will not run",
+"Failed at the last start", "Left in the game folder"). The line above it counts every kind: "12 mods on, 3 off."
+
+- **The switch.** Off keeps the mod in your list with its version and settings.
+- **The menu** (the three dots, or a right click on the row): Switch on/off, **Settings** (for mods that have them, such as
+  ShroudForge's and Shroudtopia's), **Configs** (when the mod wrote a config file), **Use &lt;version&gt;** (another
+  version you have), **Open folder**, **Remove &lt;version&gt;** (one of several versions) and **Remove**.
+- **Above the list:** **Filter** and **Kind** (with more than six rows), **Load order**, **Engines** and **Add mods**.
+  Dropping a file anywhere on the window adds a mod too, switched on. Settings' **Switch new mods on** (on by default)
+  decides that; switched off, new mods are added off.
+- **Load order** shows every mod that is on, in the order a start brings them up, then the ones that are on but don't
+  load (with the reason) and the ones that are off. Its neighbours are **Native and DLLs**, **Engines** and **Configs**.
+- **Engines** shows which loader runs which kind of mod, how each did at the last start, and the other loaders found next
+  to the game.
 
 ## In the game folder
 
-Mod pages often say "extract it into the game folder". The profile's **Mods** tab (every kind of mod) and **Engines**
-tab (the other frameworks) list those mods under **In the game folder**: every mod you put there by hand, whether it
-loads with this profile, and why. Copies Kiln placed or synced itself, Kiln's own plugins and hidden entries are not
-listed. Your files are never moved or deleted.
+Mod pages often say "extract it into the game folder". The list on Play shows every mod you put there by hand, marked
+**Game folder**, with whether it loads and why. Copies Kiln placed or synced itself, Kiln's own plugins and hidden
+entries are not listed. Your files are never moved or deleted.
+
+A game-folder mod has no switch: nothing per mod could honour one. It shows its state and, where it helps, a fix:
 
 | State | Means | What you can do |
 |---|---|---|
-| Loads | this profile reads that folder, or the framework's own loader runs it | nothing |
-| Not loaded | the framework's drop-in switch is off (for ShroudForge and Enshwick also: the profile has no enabled mod of theirs). Or the mod sits in a folder its loader doesn't read (an EMF mod in `mods`), or the folder holds several mods, or Kiln isn't installed | one of the two buttons below |
-| In this profile | the profile lists the same mod | nothing: the profile's copy wins |
-| Can't run | Kiln doesn't know it as a mod, it is a link, an Ember mod, or a DLL over 64 MiB | nothing; the line says why |
+| Loads from the game folder | the profile reads that folder, or the framework's own loader runs it | nothing |
+| Does not load | the framework's drop-in switch is off (for ShroudForge and Enshwick also: the profile has no enabled mod of theirs). Or the mod sits in a folder its loader doesn't read (an EMF mod in `mods`), or the folder holds several mods, or Kiln isn't installed | one of the two fixes below |
+| A copy is in your list | your list has the same mod | nothing: the list's copy wins |
+| Can't run | Kiln doesn't know it as a mod, it is a link, an Ember mod, or a DLL over 64 MiB | nothing; hover for the reason |
 
-The two buttons:
+The two fixes:
 
-- **Load the game-folder EML mods** (the name follows the framework: Greeneye, Flame and so on) switches that
-  framework's drop-in on, when that is enough.
-- **Add to this profile** adds the mod: the Library imports it from your folder and the profile lists it, switched on.
-  Your folder stays as it is.
+- **Load them** switches that framework's [drop-in folder](#drop-in-folders) on, when that is enough.
+- **Add it** adds the mod to the library and to your list, switched on. Your folder stays as it is.
 
-When a framework's own loader is in the game folder, the tab says so ("EML's own loader (dbghelp.dll) is in the game
-folder and loads its mods itself"). On Windows a loader under a proxy name (`dbghelp.dll`, `powrprof.dll`) always runs.
+When a framework's own loader is in the game folder, the launcher says so ("EML's own loader (dbghelp.dll) is installed:
+it runs the EML mods in mods/"). On Windows a loader under a proxy name (`dbghelp.dll`, `powrprof.dll`) always runs.
 Under Wine and Proton it runs only with a DLL override, which the launcher can't see. So there a mod counts as loading
 only when Kiln reads its folder, and the line names the loader.
 
-The Play page shows one line when the active profile leaves some of these out ("3 mods in the game folder do not load
-with this profile") and links here. The list is cheap to make: one listing per folder, at most 512 entries, no mod
-opened.
+**Files a mod wrote are kept.** Since dev.24, files a mod wrote into its folder in the game (settings, logs, saved
+values) are carried to the new version at an update, and kept in `kiln/kept-mod-files` when the mod is switched off or
+Kiln is uninstalled. A folder you changed yourself stays where it is; the launcher says so, and whether that mod may
+still run.
 
 ## Drop-in folders
 
-The profile's **Settings** has one switch per kind of folder, under **Drop-in folders** (Kiln's own) and **Other
-engines' folders**:
+A profile's **Folders and notes** (Settings, Profiles; also on the **Load order** view) has one switch per kind of folder:
 
 | Switch | Folder |
 |---|---|
@@ -77,7 +108,7 @@ engines' folders**:
 | Enshwick mods | `mods` |
 | shroudlink mods (servers) | `shroudlink_mods` |
 
-**The one rule.** With an active profile, a framework's own folder is read when its switch is on, and not otherwise.
+**The one rule.** With a profile loaded, a framework's own folder is read when its switch is on, and not otherwise.
 Every framework follows it since dev.22. Before, Greeneye, Flame, Shroudtopia, shroudlink and Ember read their folder
 whenever the profile had no mod of that framework, and Enshwick's loader ran for every hand-installed folder.
 
@@ -91,29 +122,38 @@ no switch: `shrouded_engine_tweaks/mods` always loads. Ember's mods are found bu
 
 ## The library
 
-Drop a mod's archive (zip, 7z or rar), folder or DLL on the **Library** page. The launcher identifies it (Kiln, DLL, EMF
-or [another framework](/kiln/wiki/other-mods)), keeps every version, and can clean up versions no profile uses. What it
-accepts, and how mods with capitals in their id or a loader DLL in the package are handled:
+The library is where Kiln keeps every mod's files, by version. You don't open it to add a mod: drop the mod's archive
+(zip, 7z or rar), folder or DLL on the launcher window, or choose it with **Add mods** above the list on Play. The
+launcher identifies it (Kiln, DLL, EMF or [another framework](/kiln/wiki/other-mods)) and adds it to the list, switched
+on. What it accepts, and how mods with capitals in their id or a loader DLL in the package are handled:
 [Adding mods in the launcher](/kiln/wiki/other-mods#adding-mods-in-the-launcher). A mod for another framework is listed
 under its id in lower case, with its own id shown next to it.
 
-- **Remove** names what uses the version, and its button waits for that list. It refuses if something it didn't name
-  uses the version.
-- **Clean up** removes versions in no profile. It never lists a version the game's active profile uses.
-- **While Enshrouded runs**, both are refused: "Close Enshrouded first: the game may be reading this mod". Force doesn't
-  change that. A running server blocks removal only when its profile points into the Library. (New in dev.21.)
+**Settings**, **Library** shows how many mods and versions it holds, its size on disk and its folder (**Open**).
+
+- **Remove** is in a mod's menu on Play. The mod leaves your list, then its versions leave the library. It is one click
+  with a plain confirmation; to type the mod's name first, switch on **Type a mod's name to remove it** in Settings.
+  Another profile that lists the mod is named in the confirmation, and shows it as missing afterwards. **Remove
+  &lt;version&gt;** removes one of several versions.
+- **Clean up** (Settings, Library) removes every version no profile and no game uses, after a typed confirmation. It never
+  lists a version the game's loaded profile uses.
+- **While Enshrouded runs**, removing is refused: "Close Enshrouded first: the game may be reading this mod". Force doesn't
+  change that. A running server blocks removal only when its profile points into the library. (New in dev.21.)
 
 ## Without a profile
 
-With no active profile, Kiln loads the drop-in folders `kiln/mods`, `kiln/native`, `kiln/plugins` and `emf/mods`, and
-the other frameworks' own folders ([where they are](/kiln/wiki/other-mods#where-the-mods-go)). With a profile, each is
-read when its [switch](#drop-in-folders) is on. An empty `.disabled` file in a mod's folder switches it off.
+With **No profile** (Settings, Profiles), Kiln loads the drop-in folders `kiln/mods`, `kiln/native`, `kiln/plugins` and
+`emf/mods`, and the other frameworks' own folders ([where they are](/kiln/wiki/other-mods#where-the-mods-go)). Play then
+says "No profile is loaded: the mods in the game folder load as they are.", and the switches stay off until you load a
+profile. With a profile, each folder is read when its [switch](#drop-in-folders) is on. An empty `.disabled` file in a
+mod's folder switches it off.
 
 ## Mod settings
 
 Each mod has a commented JSON file in the profile's config folder. Change it:
 
-- in the launcher, on the **Configs** tab;
+- in the launcher: **Configs** in the mod's menu on Play (it opens the config editor on that mod's file), or the
+  **Configs** view next to **Load order**. ShroudForge and Shroudtopia mods also have **Settings** in their menu;
 - in game, in the **Kiln menu**: press **Insert**, or choose **Mods** in the main or pause menu, then **Config**.
 
 Kiln checks every value. Most apply at once; the form says which need a restart.
@@ -137,8 +177,13 @@ is missing) and one row per framework with its count. The middle column lists th
 Off, Failed, Not loaded or Missing, and has a search box (every word must match the name, id or framework). The right
 column shows the selected mod with the full reason and what to do about it. Escape, or B on a gamepad, goes back to the
 main menu. In a world, **Mods** in the pause menu, or Insert, opens the same list over the game. Where the game's menu
-page can't be used (another game build, say), **Mods** in the main menu opens that list over the game as well. Not yet
-seen in a real client.
+page can't be used (another game build, say), **Mods** in the main menu opens that list over the game as well. The page
+itself has not been reported from a real client yet.
+
+Since dev.24 each ShroudForge mod has a page there with its switch, its settings and its buttons, and an EML mod that
+ShroudForge does not run says why. With ShroudForge mods on, Kiln's entries are in the main menu again (ShroudForge wraps
+the game's menu entries, and Kiln's were lost behind it); that was seen in a real game (Linux, Proton). A ShroudForge mod that does all its work at startup shows "applied" instead of "Waiting".
+Next to ReShade or another overlay the page is no longer empty; when Kiln still can't draw, kiln.log says why.
 
 ## Logs
 

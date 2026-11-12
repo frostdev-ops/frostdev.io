@@ -2,7 +2,7 @@
 title: "Debugging"
 description: "Why a mod didn't load, the support report to send, the fault policy, crash reports, and breakpoints in a running server."
 status: "works"
-updated: "2026-11-10"
+updated: "2026-11-11"
 ---
 
 ## Start with kiln.log
@@ -56,8 +56,12 @@ launcher's **Logs** page and the admin **Crashes** page.
 | a content change isn't reapplied at world load | made in `OnLoad`; use `Content.OnReady` |
 | items disappear from saves | the item's GUID changed |
 | the old version runs after a reload | a thread, timer or static reference keeps it alive |
-| a mod you extracted into the game folder doesn't run | that framework's drop-in switch is off for the profile. The profile's **In the game folder** list says so, and has a button ([Profiles and mods](/kiln/wiki/profiles#in-the-game-folder)) |
-| a profile's EML mod is missing while EML's own `dbghelp.dll` is installed | the launcher copies it into `mods/` when the profile is activated. Activate the profile again ([Your other loader is installed too](/kiln/wiki/other-mods#your-other-loader-is-installed-too)) |
+| a mod you extracted into the game folder doesn't run | that framework's drop-in switch is off for the profile. The list on the launcher's **Play** shows the mod, marked **Game folder**, with **Load them** or **Add it** ([Profiles and mods](/kiln/wiki/profiles#in-the-game-folder)) |
+| an EML mod you added is missing while EML's own `dbghelp.dll` is installed | the launcher copies it into `mods/` when it sets up the profile. Start once from the launcher's **Play** ([Your other loader is installed too](/kiln/wiki/other-mods#your-other-loader-is-installed-too)) |
+| an EML mod doesn't apply while a ShroudForge mod is on | ShroudForge runs an EML mod only when its own switch for it is on. The launcher and the in-game Mods menu say why it doesn't run, and suggest a switch where one helps ([EML and ShroudForge together](/kiln/wiki/eml-shroudforge#eml-and-shroudforge-together)) |
+| none of ShroudForge's data mods apply | one EML mod failed inside ShroudForge, and ShroudForge dropped its whole startup pass. The in-game Mods menu shows them as failed; the launcher's **Engines** view can still say they run |
+| the in-game Mods page is empty next to ReShade or another overlay | since dev.24 Kiln takes the graphics device over when the game makes its swapchain, if the PC has one graphics device. When it can't, kiln.log says why |
+| Steam shows the game as running for about a minute after you quit (Linux) | Steam's networking library crashes while the game shuts down, and the system writes a crash dump of several gigabytes. No Kiln or mod code is in that crash |
 | a `.rar` is refused | no unrar, 7-Zip or bsdtar on the PC. Extract it and drop the folder |
 
 ## Save a support report
