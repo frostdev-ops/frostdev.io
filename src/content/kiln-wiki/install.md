@@ -78,6 +78,22 @@ WINEDLLOVERRIDES="dinput8=n,b" %command%
 It does no harm where it isn't needed, so set it if you're unsure. The launcher shows what to change. It never edits
 Steam's settings.
 
+### A black launcher window
+
+On some Linux machines (one report: NVIDIA, X11) the launcher's window stayed black. Since 0.2.0-dev.25 the launcher
+notices when its page has not come up 15 seconds after the window opened, starts again without the GPU, and keeps doing
+so at later starts; **Settings**, **Appearance**, **Draw the launcher without the GPU** turns it off again. To start that
+way at once:
+
+```
+./Kiln*.AppImage --software-render
+kiln-launcher --software-render
+```
+
+(the second for the .deb). Without the GPU the Play button has no fire. If the window is still black, start the launcher
+from a terminal: its first line names its log (usually `~/.local/share/kiln/logs/launcher.log`). Send that file; its
+`render:` lines say how the window was drawn.
+
 On Fedora Atomic and Bazzite, `/home` is a link to `/var/home`. Since dev.21 ShroudForge and SET placement and modpack
 installs accept that. Links inside Kiln's managed folders are still refused.
 
@@ -98,7 +114,7 @@ which shows **Vanilla**. On a Steam Deck, Home shows a **Kiln is not loading** b
 
 ## Mods from Nexus Mods
 
-The official **0.2.0-dev.24** launcher ships with Nexus integration disabled, as every one since dev.20 did. There is no **Catalog**,
+The official **0.2.0-dev.25** launcher ships with Nexus integration disabled, as every one since dev.20 did. There is no **Catalog**,
 **Nexus Mods** account/settings page or Mod Manager Download (`nxm://`) handler in this build, on desktop or Deck.
 
 It cleans up what dev.19 left behind:

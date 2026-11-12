@@ -1,17 +1,31 @@
 ---
 title: "What works today"
 description: "What Kiln does in the current build, what awaits a game test, what's being built and what isn't, as of November 2026."
-updated: "2026-11-11"
+updated: "2026-11-12"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.24**, the current development release; check the download's version before using its new APIs.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.25**, the current development release; check the download's version before using its new APIs.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026, or, for dev.24, in the one real game its release notes name (Linux, Proton, one
 client). Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
+
+## New in 0.2.0-dev.25
+
+A hotfix for dev.24. **Seen in a real game (Linux, Proton, one client):** ShroudForge's data mods next to EML mods
+(Unlock Blueprints updated 2544 recipes), ShroudForge mods' shortcuts, and ShroudForge, EML, Greeneye, shroudlink, native
+DLL and Kiln mods loaded together. The rest was tested on Linux hosts, under Wine without a display and in a virtual X
+display.
+
+| Area | Included in dev.25; evidence and remaining limits |
+|---|---|
+| [EML next to ShroudForge](/kiln/wiki/eml-shroudforge#eml-and-shroudforge-together) | with More Gliders and Unlock Blueprints together, ShroudForge refused one write and dropped its whole startup pass, so no data mod applied. Kiln's ShroudForge 1.7.9 and Kiln's own EML runner now check a write into a value a mod created against that field's type. Seen in the game |
+| XHL mods | XHL's newer mods (a `mod.json` that only names the mod) import as XHL-Core plugins instead of "Nothing to add". XHL-Core 2.x is recognised as one mod, "xhl-core". Kiln runs XHL-Core from its own copy named `xhl-core.dll` in `kiln\chain\`: as `dinput8.dll` it took itself for the game's main one and started no plugins (seen under Proton). Kiln's tests and a Wine harness; XHL plugins not yet seen in a game |
+| Skill Search | its search box (a Shroudtopia module in the same folder as its EML part) loads again. Kiln's host tests |
+| [A black launcher window](/kiln/wiki/install#a-black-launcher-window) (Linux) | the launcher starts again without the GPU when its page has not come up after 15 s; `--software-render` forces it. Tested on a virtual X display, not yet on the NVIDIA / X11 machine of the report |
 
 ## New in 0.2.0-dev.24
 
