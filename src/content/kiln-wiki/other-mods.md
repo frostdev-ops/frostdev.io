@@ -216,7 +216,7 @@ Add them in the launcher (they are listed on Play, and **Native and DLLs**, next
 load time), or drop them into `kiln/native/<folder>/`. One that crashes while loading is
 marked failed with a crash report, and the game carries on. DLL mods never unload, so changes need a restart.
 
-The official dev.22 launcher has no Nexus Catalog, account sign-in or Mod Manager Download handler.
+The official dev.24 launcher has no Nexus Catalog, account sign-in or Mod Manager Download handler.
 [Download the archive in your browser and import it](/kiln/wiki/install#mods-from-nexus-mods), whatever framework it uses.
 
 ## Closed-source DLL mods

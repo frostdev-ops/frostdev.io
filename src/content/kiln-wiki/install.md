@@ -98,7 +98,7 @@ which shows **Vanilla**. On a Steam Deck, Home shows a **Kiln is not loading** b
 
 ## Mods from Nexus Mods
 
-The official **0.2.0-dev.22** launcher ships with Nexus integration disabled, as dev.20 and dev.21 did. There is no **Catalog**,
+The official **0.2.0-dev.24** launcher ships with Nexus integration disabled, as every one since dev.20 did. There is no **Catalog**,
 **Nexus Mods** account/settings page or Mod Manager Download (`nxm://`) handler in this build, on desktop or Deck.
 
 It cleans up what dev.19 left behind:
