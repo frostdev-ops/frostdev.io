@@ -10,7 +10,7 @@ import '../styles/products.css';
 
 // Set false to remove the entire Thanksgiving skin, decorations, and seasonal copy.
 const thanksgiving = true;
-// Harvest Moon and Turkey Trot are built in from Glaze 4.0.8; before it, the season's Looks are the gallery's.
+// Harvest Moon, Turkey Trot and Hearthside are built in from Glaze 4.0.8; before it, the season's Looks are the gallery's.
 const builtIn = version.localeCompare('4.0.8', undefined, { numeric: true }) >= 0;
 const art = '/projects/glaze/thanksgiving';
 const source = 'https://github.com/frostdev-ops/glaze';
@@ -64,7 +64,7 @@ const films = availableFilms((file) => existsSync(`public/projects/glaze/${file}
           </a>
         </nav>
         {thanksgiving && <p class="thanksgiving-note">{builtIn
-          ? <>Thanksgiving Looks Harvest Moon and Turkey Trot each have their own animated scene.</>
+          ? <>Thanksgiving Looks Harvest Moon, Turkey Trot and Hearthside each have their own animated scene.</>
           : <>Thanksgiving Looks Harvest Gathering and Home for Thanksgiving are in the <a href="/glaze/looks">Looks gallery</a>.</>}<br />Something warm for your study space.</p>}
         <p class="product-meta">Free and open source<br />Chrome, Safari and Firefox packages {version}<br />No analytics. No account.</p>
         <p class="product-caption"><a href="#browser-heading">See all browser downloads →</a></p>
