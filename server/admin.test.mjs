@@ -194,6 +194,23 @@ test('login starts require the site Origin and are limited per trusted client ne
   clock += 3600e3; await begin({}, { headers: { 'x-real-ip': '2001:db8:1:2::1' } });
 });
 
+test('the route nginx asks before it serves the Kiln statistics page: 200 to a session, 401 to anything else', async () => {
+  // ops/public-site.nginx.conf, location = /_kiln_stats_session: an auth_request to GET /glaze/admin/api/live with the
+  // visitor's cookie. nginx lets a 2xx through, sends a 401 to the sign-in and shows an error for anything else, so
+  // this route must not start redirecting, need a parameter, or answer a signed-out visitor with anything but 401.
+  await start();
+  const gate = '/api/live';
+  assert.equal((await request(gate)).status, 401);
+  assert.equal((await request(gate, { cookie: `__Secure-gz_admin=${'a'.repeat(43)}` })).status, 401, 'a cookie that is no session');
+  const who = await login();
+  const r = await request(gate, { cookie: who.cookie });
+  assert.equal(r.status, 200);
+  assert.deepEqual(await r.json(), { feeds: [] });
+  assert.equal(r.headers.get('set-cookie'), null);
+  clock += 12 * 3600e3 + 1;
+  assert.equal((await request(gate, { cookie: who.cookie })).status, 401, 'an expired session');
+});
+
 test('every private route refuses without a session; sessions persist, expire and sign out with CSRF and Origin', async () => {
   await start();
   const look = seedLook(), mod = await seedMod();

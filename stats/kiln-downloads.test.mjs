@@ -330,6 +330,13 @@ test('a collection stores one file per day, writes the page, and a second run ch
   assert.deepEqual(JSON.parse(readFileSync(join(cf.env.DATA_DIR, 'sizes.json'), 'utf8')), { [`${v}/SHA256SUMS`]: 500, [`${v}/${f}`]: EXE_SIZE });
 
   const page = readFileSync(join(cf.env.OUT_DIR, 'index.html'), 'utf8');
+  // the page loads its own stylesheet and script and has nothing inline that runs: the server's policy refuses that
+  for (const name of ['page.css', 'page.js']) assert.equal(readFileSync(join(cf.env.OUT_DIR, name), 'utf8'), readFileSync(new URL(name, import.meta.url), 'utf8'));
+  assert.match(page, /<link rel="stylesheet" href="page\.css">/);
+  assert.match(page, /<script src="page\.js" defer><\/script>/);
+  assert.deepEqual([...page.matchAll(/<script(?![^>]*\bsrc=)[^>]*>/g)].map((m) => m[0]), ['<script id="kiln-stats-data" type="application/json">']);
+  assert(!/<style|\sstyle=|\son[a-z]+=/i.test(page), 'no inline style or event handler');
+  assert(!/setAttribute\('style'|style: `|innerHTML|insertAdjacentHTML|document\.write/.test(readFileSync(new URL('page.js', import.meta.url), 'utf8')), 'the script sets no style attribute and builds no markup from text');
   assert(!page.includes('secret-token-for-tests') && !page.includes(ZONE), 'neither the token nor the zone id is in the page');
   assert(!page.includes('Chrome/157'), 'no User-Agent string is in the page');
   const data = JSON.parse(/<script id="kiln-stats-data" type="application\/json">(.*?)<\/script>/s.exec(page)[1]);

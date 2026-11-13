@@ -4,7 +4,7 @@
 // downloads of the Windows installer and the zips from its cache, so this server never sees them and its nginx keeps
 // no access log for those locations (ops/public-site.nginx.conf). Once an hour this script asks Cloudflare's GraphQL
 // Analytics API for grouped request counts, adds them to one small JSON file per day and writes the private page
-// /kiln/stats/ (stats/page.html with the data inside). docs/kiln-download-stats.md has the rest.
+// (stats/page.html with the data inside, and its page.css and page.js). docs/kiln-download-stats.md has the rest.
 //
 //   node stats/kiln-downloads.mjs collect     ask Cloudflare for the last days, store them, write the page
 //   node stats/kiln-downloads.mjs render      write the page again from what is stored
@@ -12,13 +12,13 @@
 //                                             nothing is stored
 //
 // Environment: CF_API_TOKEN (a token with Zone > Analytics > Read for the zone), CF_ZONE_ID, DATA_DIR (the day files),
-// OUT_DIR (index.html goes here), FILES_DIR (the release folders, read-only, for file sizes; optional),
+// OUT_DIR (index.html, page.css and page.js go here), FILES_DIR (the release folders, read-only, for file sizes; optional),
 // CF_API (the endpoint, tests only), DAYS_BACK (how many days each run asks again, default 3).
 //
 // What is asked for and kept: per day, file, country, HTTP status, kind of program and referring host, a request count
 // and the bytes sent. No IP address is asked for, and the User-Agent string is reduced to a kind ("browser", "launcher",
 // "tool", "bot", "automated") and a system ("windows", "linux", ...) before anything is written.
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -421,6 +421,8 @@ export function renderPage(template, data) {
 // ---- the commands -------------------------------------------------------------------------------------------------
 
 const here = dirname(fileURLToPath(import.meta.url));
+/** What the page loads, written beside it. */
+const ASSETS = ['page.css', 'page.js'];
 
 function settings(env) {
   for (const name of ['DATA_DIR', 'OUT_DIR']) if (!env[name]) throw new Error(`${name} is not set`);
@@ -440,6 +442,11 @@ export function render(env, now = Date.now()) {
     if (!run.ok) data.alerts.push(`The last collection (${run.at}) failed: ${run.error}. The numbers are from the collection before.`);
   }
   mkdirSync(s.outDir, { recursive: true });
+  // the page's stylesheet and script first, so a new page never meets old ones
+  for (const name of ASSETS) {
+    copyFileSync(join(dirname(s.template), name), join(s.outDir, `${name}.tmp-${process.pid}`));
+    renameSync(join(s.outDir, `${name}.tmp-${process.pid}`), join(s.outDir, name));
+  }
   writeAtomic(join(s.outDir, 'index.html'), renderPage(readFileSync(s.template, 'utf8'), data));
   return data;
 }

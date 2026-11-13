@@ -17,7 +17,7 @@ node --test stats/kiln-downloads.test.mjs
 host=loothing-vps
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT
-cp stats/kiln-downloads.mjs stats/page.html stats/Dockerfile ops/kiln-stats.service ops/kiln-stats.timer "$stage/"
+cp stats/kiln-downloads.mjs stats/page.html stats/page.css stats/page.js stats/Dockerfile ops/kiln-stats.service ops/kiln-stats.timer "$stage/"
 git rev-parse HEAD > "$stage/COMMIT"
 ssh "$host" 'mkdir -p /opt/kiln-stats && test -f /etc/kiln-stats.env' || {
     echo "Create /etc/kiln-stats.env (mode 600) on $host first: docs/kiln-download-stats.md." >&2

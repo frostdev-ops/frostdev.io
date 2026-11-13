@@ -90,9 +90,10 @@ and the stable links all read it through `src/lib/kilnDownloads.ts`. To publish 
    the data has no size or SHA-256 (the data was not generated from a real folder yet).
 4. Update the wiki and the Nexus-off note on `/kiln` for the release, commit and deploy.
 
-`/kiln/stats/` is not a public page: the owner's download statistics, behind a password, read from Cloudflare's request
-data once an hour by `stats/kiln-downloads.mjs` on the server. It is not part of the static build and `robots.txt`
-disallows it. See [Kiln download statistics](kiln-download-stats.md).
+`/kiln/stats` is not a public page: the owner's download statistics, read from Cloudflare's request data once an hour
+by `stats/kiln-downloads.mjs` on the server and shown only to someone signed in to the gallery dashboard (it redirects
+to `/glaze/admin/kiln-stats/`). It is not part of the static build and `robots.txt` disallows it. See
+[Kiln download statistics](kiln-download-stats.md).
 
 `/kiln/download` ("Download Kiln") groups the files by who needs them: the launcher as large buttons, then dedicated
 servers (server pack, kilnctl, systemd units), manual install (the runtime zip and its instructions), mod authors

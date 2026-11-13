@@ -1,7 +1,8 @@
 # Kiln download statistics
 
-A private page, `https://frostdev.io/kiln/stats/`, that shows how often each file under `/kiln/downloads/` was
-downloaded: per day, file, release, country, kind of program, system and referring site.
+A private page, `https://frostdev.io/kiln/stats`, that shows how often each file under `/kiln/downloads/` was
+downloaded: per day, file, release, country, kind of program, system and referring site. It opens for whoever is
+signed in to the Glaze gallery dashboard (`/glaze/admin`, Google sign-in); there is no separate password.
 
 ## Where the numbers come from
 
@@ -61,10 +62,24 @@ ssh loothing-vps 'docker run --rm --env-file /etc/kiln-stats.env kiln-stats node
 
 ## The page
 
-`stats/page.html` with the numbers in one JSON script element. It loads nothing else and sends nothing. Filters: time
-range, release, group of files, and the four kinds (which are also the key to the colors). nginx serves it from
-`/opt/frostdev-stats/kiln/` behind a password, with no access log, `Cache-Control: no-store`, a content security
-policy that allows only the page's own script and style, and `X-Robots-Tag: noindex`; `robots.txt` disallows it too.
+`stats/page.html` with the numbers in one JSON script element, and `page.css` and `page.js`, which it loads; nothing
+else is loaded and nothing is sent. Filters: time range, release, group of files, and the four kinds (which are also
+the key to the colors).
+
+## Who can open it
+
+Whoever is signed in to the gallery dashboard: the Google accounts in `ADMIN_EMAILS` of `/etc/glaze-gallery.env`
+([Looks gallery](looks-gallery.md)). nginx serves the three files from `/opt/frostdev-stats/kiln/`, and before each
+one it asks the gallery server whether the visitor's cookie is a dashboard session (`auth_request` to
+`GET /glaze/admin/api/live`: 200 to a session, 401 without; `server/admin.test.mjs` holds the route to that).
+
+- The dashboard's cookie is sent only under `/glaze/admin`, so the page's real address is
+  `/glaze/admin/kiln-stats/`. `/kiln/stats` redirects there.
+- Without a session the browser is sent to `/glaze/admin/login`. After signing in the dashboard opens; open
+  `/kiln/stats` again. A session lasts 12 hours.
+- When the gallery server is down, nobody gets the page (nginx answers 500).
+- No access log, `Cache-Control: no-store`, `X-Robots-Tag: noindex` (and `robots.txt` disallows both paths), never
+  framed, and a content security policy that allows only the page's own stylesheet and script: nothing inline runs.
 
 Cloudflare counts some requests from a sample when it is busy; the page says so when a stored day has such counts.
 
@@ -81,15 +96,9 @@ Cloudflare counts some requests from a sample when it is busy; the page says so 
 2. `ops/deploy-kiln-stats.sh` from a clean checkout: it runs the tests, copies the script to `/opt/kiln-stats`, builds
    the image `kiln-stats`, installs `kiln-stats.service` and `kiln-stats.timer` (seven minutes past every hour) and
    runs one collection. It fails when Cloudflare refuses the token.
-3. The password file, once, as root (the page's user name is `kiln`):
-
-   ```sh
-   printf 'kiln:%s\n' "$(openssl passwd -6)" > /etc/nginx/kiln-stats.htpasswd
-   chown root:www-data /etc/nginx/kiln-stats.htpasswd && chmod 640 /etc/nginx/kiln-stats.htpasswd
-   ```
-
-4. The `/kiln/stats` locations of `ops/public-site.nginx.conf` in `/etc/nginx/snippets/frostdev-public.conf` (the
-   installed file stays byte-identical to the repository's): back up, `nginx -t`, `systemctl reload nginx`.
+3. The Kiln statistics locations of `ops/public-site.nginx.conf` in `/etc/nginx/snippets/frostdev-public.conf` (the
+   installed file stays byte-identical to the repository's): back up, `nginx -t`, `systemctl reload nginx`. They need
+   the gallery dashboard to be running with Google sign-in set up.
 
 ## Looking after it
 

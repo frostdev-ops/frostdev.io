@@ -57,7 +57,7 @@ test('the Kiln product page, wiki and agent skill are crawlable and in the sitem
 });
 
 test('the private Kiln statistics page is blocked, and the pages beside it are not', () => {
-  for (const path of ['/kiln/stats', '/kiln/stats/', '/kiln/stats/index.html', '/kiln/stats?x=1']) assert.equal(crawlable(path), false, path);
+  for (const path of ['/kiln/stats', '/kiln/stats/', '/kiln/stats/index.html', '/kiln/stats?x=1', '/glaze/admin/kiln-stats', '/glaze/admin/kiln-stats/']) assert.equal(crawlable(path), false, path);
   for (const path of ['/kiln/status', '/kiln/wiki/status']) assert(crawlable(path), path);
 });
 
