@@ -27,8 +27,9 @@ final. The day files are kept for good, so the page's history grows past Cloudfl
 
 - **A file of a megabyte or more:** the bytes sent, divided by the file's size. A download that was resumed, or
   fetched in parts by a download manager, counts once; one that was given up counts as the part that arrived. Sizes
-  come from the release folders (`/opt/frostdev-downloads/kiln/downloads`, mounted read-only) and are remembered in
-  `sizes.json`, so a release that is removed later keeps its sizes.
+  come from the release folders (`/opt/frostdev-downloads/kiln/downloads`, mounted read-only), measured again at
+  every run. Each stored day keeps the sizes it was collected with, and `sizes.json` remembers the last one, so a
+  release that is removed keeps its sizes and a file that is replaced does not change what earlier days counted.
 - **A small file, a text file, or a file whose size is not known:** complete answers (status 200). Cloudflare
   compresses text on the way, so its bytes say nothing about how much of a text file arrived.
 - **Not counted:** the API reference site (`sdk/api/`), the NuGet feed's index files (`sdk/feed/*.json`; its packages
@@ -48,10 +49,14 @@ final. The day files are kept for good, so the page's history grows past Cloudfl
 | `other` | Automated | No User-Agent, or one nothing here knows. |
 
 A program can send any User-Agent, so these are estimates. Most scripted downloads copy an old browser's string.
-`automated` is a browser string years behind the newest one seen (30 Chrome versions or 45 Firefox versions, about
-two and a half years each; the newest versions are remembered in `newest-browsers.json`), a Safari before 15,
-Internet Explorer, or a desktop Chrome string from 110 on with a full build number, which Chrome itself has not sent
-since version 101. In the first week of data about half of all requests were automated: the page leaves them out
+`automated` is a browser string years behind the current one (30 Chrome versions or 45 Firefox versions, about
+two and a half years each), a Safari before 15, Internet Explorer, or a string that is exactly desktop Chrome's from
+110 on but with a full build number, which Chrome itself has not sent since version 101 (other Chromium browsers add
+their own name and may send it).
+
+"The current one" is kept in `newest-browsers.json`: the version most counted requests name. A request can claim any
+version, so it never falls and rises by one release at most every two weeks; requests that are not counted (refused
+ones, other paths, bots) do not take part. In the first week of data about half of all requests were automated: the page leaves them out
 until you switch them on.
 
 To see what the classifier does with today's traffic (printed, never stored):
@@ -105,7 +110,8 @@ Cloudflare counts some requests from a sample when it is busy; the page says so 
 - `systemctl list-timers kiln-stats.timer`, `journalctl -u kiln-stats.service -n 20`: each run logs one line, for
   example `kiln-stats: 3 days asked in 3 queries (...)`.
 - When a collection fails (the token was revoked, Cloudflare is down), the stored days stay, the page shows a banner
-  with the reason, and the next run tries again. A gap of less than 31 days fills itself.
+  with the reason, and the next run tries again. A gap of less than 31 days fills itself; a longer one stays in the
+  calendar as days marked "not collected".
 - A new token: edit `/etc/kiln-stats.env`, then `systemctl start kiln-stats.service`.
 - To write the page again from what is stored (after changing `page.html`): deploy, or
   `docker run --rm -v /var/lib/kiln-stats:/data -v /opt/frostdev-stats/kiln:/out kiln-stats node kiln-downloads.mjs render`.

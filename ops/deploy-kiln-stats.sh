@@ -35,10 +35,11 @@ install -d -m 755 /opt/frostdev-stats
 install -d -o 1000 -g 1000 -m 755 /opt/frostdev-stats/kiln
 install -m 644 kiln-stats.service kiln-stats.timer /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now kiln-stats.timer >/dev/null
-# one collection now: the deploy fails when Cloudflare refuses the token or the zone
+# One collection now, before the timer is switched on: when Cloudflare refuses the token or the zone, the deploy fails
+# and a first install leaves no timer running behind it.
 systemctl start kiln-stats.service || { journalctl -u kiln-stats.service -n 20 --no-pager >&2; exit 1; }
 test -s /opt/frostdev-stats/kiln/index.html
+systemctl enable --now kiln-stats.timer >/dev/null
 journalctl -u kiln-stats.service -n 5 --no-pager -o cat | grep 'kiln-stats:' | tail -1
 echo "Kiln download statistics are collected; the timer runs next at $(systemctl show kiln-stats.timer -p NextElapseUSecRealtime --value)"
 REMOTE

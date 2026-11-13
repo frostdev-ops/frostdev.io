@@ -1,14 +1,14 @@
 // Tests of the Kiln download statistics (stats/kiln-downloads.mjs) against a stand-in for Cloudflare's GraphQL API on
 // 127.0.0.1: nothing leaves the machine and no token is involved.
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import {
   buildPageData, classifyAgent, cleanReferrer, collect, countedByBytes, daysToFetch, describeFile, fetchLimits,
-  fetchWindow, fileKey, newestBrowsers, parsePath, readDays, reduceGroups, render, renderPage,
+  fetchWindow, fileKey, fileSizes, newestBrowsers, parsePath, readDays, reduceGroups, refusedField, render, renderPage,
 } from './kiln-downloads.mjs';
 
 const ZONE = '0123456789abcdef0123456789abcdef';
@@ -111,11 +111,14 @@ test('a User-Agent becomes a kind of program, and a browser string no person run
     ['Mozilla/5.0 (Linux; Android 13; Pixel 4a Build/TQ2A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7000.99 Mobile Safari/537.36', 'browser'],
     ['Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0', 'browser'],  // an ESR, 32 versions back
     ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36', 'browser'],
+    // another Chromium browser that sends the full build number: its name follows "Safari/..."
+    ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.6834.210 Safari/537.36 OPR/117.0.5408.93', 'browser'],
+    ['Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.136 Safari/537.36 QQBrowser/19.5', 'browser'],
     // years behind
     ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36', 'automated'],
     ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36', 'automated'],
     ['Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1', 'automated'],
-    // a build number desktop Chrome has not sent since 101
+    // exactly Chrome's own string, with a build number desktop Chrome has not sent since 101
     ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.7000.60 Safari/537.36', 'automated'],
     ['Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)', 'automated'],
     ['Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1', 'browser'],
@@ -134,13 +137,46 @@ test('a User-Agent becomes a kind of program, and a browser string no person run
     'without a newest version to measure against, an old version alone decides nothing');
 });
 
-test('the newest browser is one at least three requests name, and never falls', () => {
-  const group = (agent, count) => ({ count, dimensions: { userAgent: agent } });
-  const groups = [group(CHROME, 5), group(CHROME.replace('157', '999'), 2), group(FIREFOX, 3), group('curl/8', 50)];
-  assert.deepEqual(newestBrowsers(groups), { chrome: 157, firefox: 160 });
-  assert.deepEqual(newestBrowsers([group(UPDATER, 9)]), { chrome: 0, firefox: 0 });
-  assert.deepEqual(newestBrowsers([], { chrome: 150, firefox: 0 }), { chrome: 150, firefox: 0 });
-  assert.deepEqual(newestBrowsers([group(CHROME.replace('157', '140'), 9)], { chrome: 157, firefox: 160 }), { chrome: 157, firefox: 160 });
+test('the newest browser is the one most counted requests name; it never falls and rises one release at a time', () => {
+  const group = (agent, count, dimensions = {}) => ({ count, dimensions: { userAgent: agent, clientRequestPath: EXE, edgeResponseStatus: 200, verifiedBotCategory: '', ...dimensions } });
+  const t0 = at('2026-11-13');
+  const fake = CHROME.replace('157', '999');
+  // the first time: the version most requests name, when at least three do
+  assert.deepEqual(newestBrowsers([group(CHROME, 5), group(fake, 4), group(FIREFOX, 3), group('curl/8', 50)], undefined, t0),
+    { chrome: 157, firefox: 160, at: { chrome: t0, firefox: t0 } });
+  assert.deepEqual(newestBrowsers([group(CHROME, 2), group(FIREFOX, 1)], undefined, t0), { chrome: 0, firefox: 0, at: {} });
+  assert.deepEqual(newestBrowsers([group(UPDATER, 9)], undefined, t0), { chrome: 0, firefox: 0, at: {} });
+  // what is not counted decides nothing: refused requests, other paths, declared and verified bots
+  assert.deepEqual(newestBrowsers([
+    group(CHROME, 3), group(fake, 50, { edgeResponseStatus: 404 }), group(fake, 50, { clientRequestPath: '/kiln/downloads/x/sdk/api/index.html' }),
+    group(fake, 50, { verifiedBotCategory: 'AI Crawler' }), group(`${fake} (compatible; SomeBot/1.0)`, 50),
+  ], undefined, t0), { chrome: 157, firefox: 0, at: { chrome: t0 } });
+  // later runs: a hundred complete downloads that claim Chrome 999 move the measure by one release, and not again for two weeks
+  const known = { chrome: 157, firefox: 160, at: { chrome: t0, firefox: t0 } };
+  const day = 86_400_000;
+  assert.deepEqual(newestBrowsers([group(fake, 100)], known, t0 + day), known);
+  const stepped = newestBrowsers([group(fake, 100)], known, t0 + 14 * day);
+  assert.deepEqual(stepped, { chrome: 158, firefox: 160, at: { chrome: t0 + 14 * day, firefox: t0 } });
+  assert.deepEqual(newestBrowsers([group(fake, 100)], stepped, t0 + 15 * day), stepped);
+  // it never falls, and an answer without browsers changes nothing
+  assert.deepEqual(newestBrowsers([group(CHROME.replace('157', '140'), 9)], known, t0 + 30 * day), known);
+  assert.deepEqual(newestBrowsers([], known, t0 + 30 * day), known);
+  // a measure stored before the times were kept may step at once
+  assert.deepEqual(newestBrowsers([group(CHROME.replace('157', '158'), 3)], { chrome: 157, firefox: 160 }, t0), { chrome: 158, firefox: 160, at: { chrome: t0 } });
+});
+
+test('only a dimension Cloudflare names as refused is left out', () => {
+  const names = ['userAgent', 'verifiedBotCategory', 'clientRefererHost', 'requestSource'];
+  assert.equal(refusedField('unknown field "clientRefererHost" on dimensions', names), 'clientRefererHost');
+  assert.equal(refusedField('Cannot query field "userAgent" on type "ZoneHttpRequestsAdaptiveGroupsDimensions".', names), 'userAgent');
+  assert.equal(refusedField('access to field dimensions_verifiedBotCategory is not allowed on this plan', names), 'verifiedBotCategory');
+  // the refused one is named after "field", whatever else the text mentions
+  assert.equal(refusedField('unknown field "clientRefererHost" (did you mean "userAgent"?)', names), 'clientRefererHost');
+  assert.equal(refusedField('clientRefererHost is not available on your plan', names), 'clientRefererHost');
+  for (const other of ['rate limited, try again', 'Authentication error', 'unknown field "somethingElse"',
+    'syntax error near "userAgent verifiedBotCategory clientRefererHost"', 'userAgent and clientRefererHost are not available', 'quota exceeded for userAgent queries']) {
+    assert.equal(refusedField(other, names), '', other);
+  }
 });
 
 test('a referring host is kept lower case without www., and nothing else gets through', () => {
@@ -284,6 +320,44 @@ test('downloads are counted from the bytes of big files and from full answers of
   ]);
   assert.deepEqual(data.notes, ['Cloudflare counted some of these requests from a sample (as few as 1 in 3): those counts are estimates.']);
   assert.deepEqual(data.alerts, []);
+
+  // a file replaced by a bigger one under the same name: each day counts with the size it was collected with
+  const replaced = buildPageData([
+    day('2026-11-11', [[v, f, 'DE', 200, 'browser', 'windows', '', 1, EXE_SIZE]], { sizes: { [`${v}/${f}`]: EXE_SIZE } }),
+    day('2026-11-12', [[v, f, 'DE', 200, 'browser', 'windows', '', 1, 2 * EXE_SIZE]], { sizes: { [`${v}/${f}`]: 2 * EXE_SIZE } }),
+  ], { [`${v}/${f}`]: 2 * EXE_SIZE }, at('2026-11-12', 9));
+  assert.deepEqual(replaced.rows.map((row) => [row[0], row[6]]), [[0, 1], [1, 1]]);
+  assert.equal(replaced.files[0].size, 2 * EXE_SIZE);
+});
+
+test('a file that is still there is measured again, and one that is gone keeps its size', async (t) => {
+  const cf = await cloudflare(t);
+  const folder = join(cf.env.FILES_DIR, '1.0', 'windows');
+  mkdirSync(folder, { recursive: true });
+  mkdirSync(cf.env.DATA_DIR, { recursive: true });
+  const wanted = [['1.0', 'windows/a.exe'], ['1.0', '../../outside.txt'], ['..', 'x']];
+  writeFileSync(join(cf.dir, 'outside.txt'), 'never measured');
+  writeFileSync(join(folder, 'a.exe'), 'x'.repeat(10));
+  assert.deepEqual(fileSizes(cf.env.DATA_DIR, cf.env.FILES_DIR, wanted), { '1.0/windows/a.exe': 10 });
+  writeFileSync(join(folder, 'a.exe'), 'x'.repeat(25));
+  assert.deepEqual(fileSizes(cf.env.DATA_DIR, cf.env.FILES_DIR, wanted), { '1.0/windows/a.exe': 25 });
+  rmSync(cf.env.FILES_DIR, { recursive: true });
+  assert.deepEqual(fileSizes(cf.env.DATA_DIR, cf.env.FILES_DIR, wanted), { '1.0/windows/a.exe': 25 });
+  assert.deepEqual(fileSizes(cf.env.DATA_DIR, '', wanted), { '1.0/windows/a.exe': 25 });
+});
+
+test('a day that was never collected is in the calendar as an empty day', () => {
+  const v = '0.2.0-dev.26', f = 'SHA256SUMS';
+  const row = [v, f, 'US', 200, 'browser', 'windows', '', 2, 100];
+  const data = buildPageData([
+    { day: '2026-11-09', final: true, rows: [row] },
+    { day: '2026-11-12', final: true, rows: [row] },
+    { day: '2026-11-13', final: false, rows: [row] },
+  ], {}, at('2026-11-13', 9));
+  assert.deepEqual(data.days, [{ day: '2026-11-09', final: true }, { day: '2026-11-10', final: true, missing: true }, { day: '2026-11-11', final: true, missing: true },
+    { day: '2026-11-12', final: true }, { day: '2026-11-13', final: false }]);
+  assert.deepEqual(data.rows.map((r) => r[0]), [0, 3, 4], 'each row is on its own day');
+  assert.deepEqual(data.notes, ['2 days were never collected (shown as empty): Cloudflare no longer had them when the collection ran again.']);
 });
 
 test('the page holds the data and no file name can break out of its script element', () => {
@@ -326,7 +400,10 @@ test('a collection stores one file per day, writes the page, and a second run ch
   assert.deepEqual(day('2026-11-13').skipped, { 'status 404': 1 });
   assert.deepEqual(day('2026-11-12').rows.map((row) => [row[2], row[3], row[4], row[7]]), [['CN', 200, 'automated', 3], ['DE', 200, 'browser', 1], ['DE', 206, 'browser', 1], ['FR', 200, 'browser', 2]]);
   assert.deepEqual(day('2026-11-01').rows, [[v, 'SHA256SUMS', 'US', 200, 'tool', '', '', 1, 500]]);
-  assert.deepEqual(JSON.parse(readFileSync(join(cf.env.DATA_DIR, 'newest-browsers.json'), 'utf8')), { chrome: 157, firefox: 0 });
+  assert.deepEqual(JSON.parse(readFileSync(join(cf.env.DATA_DIR, 'newest-browsers.json'), 'utf8')), { chrome: 157, firefox: 0, at: { chrome: now } });
+  assert.deepEqual(day('2026-11-13').sizes, { [`${v}/${f}`]: EXE_SIZE }, 'a day keeps the sizes it was collected with');
+  assert.deepEqual(readdirSync(cf.env.OUT_DIR).sort(), ['index.html', 'page.css', 'page.js'], 'no temporary file is left');
+  assert.deepEqual(readdirSync(cf.env.DATA_DIR).sort(), ['days', 'last-run.json', 'newest-browsers.json', 'sizes.json']);
   assert.deepEqual(JSON.parse(readFileSync(join(cf.env.DATA_DIR, 'sizes.json'), 'utf8')), { [`${v}/SHA256SUMS`]: 500, [`${v}/${f}`]: EXE_SIZE });
 
   const page = readFileSync(join(cf.env.OUT_DIR, 'index.html'), 'utf8');
@@ -363,8 +440,9 @@ test('when Cloudflare refuses, the stored days stay and the page says so', async
   const cf = await cloudflare(t, { events: [hit('2026-11-13')] });
   await collect(cf.env, now);
   const before = JSON.stringify(readDays(cf.env.DATA_DIR));
-  cf.fail = 'Authentication error';
-  await assert.rejects(collect(cf.env, now + 3_600_000), /Authentication error/);
+  cf.fail = 'Authentication error for secret-token-for-tests';
+  await assert.rejects(collect(cf.env, now + 3_600_000), /Authentication error for \[token\]/);
+  assert(!readFileSync(join(cf.env.DATA_DIR, 'last-run.json'), 'utf8').includes('secret-token-for-tests'), 'the token is in no stored error');
   assert.equal(JSON.stringify(readDays(cf.env.DATA_DIR)), before);
   const page = readFileSync(join(cf.env.OUT_DIR, 'index.html'), 'utf8');
   const data = JSON.parse(/<script id="kiln-stats-data" type="application\/json">(.*?)<\/script>/s.exec(page)[1]);

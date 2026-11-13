@@ -20,6 +20,8 @@
     for (const [name, value] of Object.entries(attrs)) node.setAttribute(name, value);
     return node;
   };
+  // what went wrong with the last collection comes first: also when there is nothing else to show yet
+  for (const alert of data?.alerts || []) $('warnings').append(el('p', { class: 'warn', text: alert }));
   if (!data || !data.days || !data.days.length) {
     $('updated').textContent = 'Nothing has been collected yet.';
     for (const id of ['filters', 'kinds']) $(id).hidden = true;
@@ -89,7 +91,6 @@
   // ---- header -----------------------------------------------------------------------------------------------------
   const when = (iso) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   $('updated').textContent = `Collected ${when(data.collected || data.generated)} (your time) · ${data.days.length === 1 ? dayLabel(data.days[0].day) : `${dayLabel(data.days[0].day)} to ${dayLabel(data.days.at(-1).day)}, ${data.days.length} days`}`;
-  for (const alert of data.alerts || []) $('warnings').append(el('p', { class: 'warn', text: alert }));
   for (const note of data.notes || []) $('notes').append(el('p', { text: note }));
 
   // ---- drawing ----------------------------------------------------------------------------------------------------
@@ -130,6 +131,9 @@
     const step = Math.max(1, [1, 2, 5, 10].map((m) => m * power).find((candidate) => candidate >= rough));
     return { step, max: Math.ceil(Math.max(1, most) / step) * step };
   }
+
+  /** What to say about a day that is not a complete count: today, or a day that was never collected. */
+  const dayState = (day) => (day.missing ? ' (not collected)' : day.final ? '' : ' (so far)');
 
   function daily(days) {
     const host = $('daily');
@@ -184,7 +188,7 @@
       if (d < 0) { tip.hidden = true; return; }
       marks[d].setAttribute('fill', 'var(--wash)');
       const day = days[d];
-      tip.replaceChildren(el('div', { class: 'when', text: dayLabel(day.day, true) + (day.final ? '' : ' (so far)') }));
+      tip.replaceChildren(el('div', { class: 'when', text: dayLabel(day.day, true) + dayState(day) }));
       for (const i of shown) tip.append(el('div', { class: 'row' }, el('span', { class: 'key', style: { background: KINDS[i].color } }), el('span', { text: KINDS[i].name }), el('b', { text: fmt(day.values[i]) })));
       if (shown.length > 1) tip.append(el('div', { class: 'row total' }, el('span', { text: 'All' }), el('b', { text: fmt(totals[d]) })));
       tip.hidden = false;
@@ -207,7 +211,7 @@
     const head = el('tr', {}, el('th', { text: 'Day' }), ...shown.map((i) => el('th', { class: 'num', text: KINDS[i].name })), el('th', { class: 'num', text: 'All' }));
     const body = el('tbody');
     for (let d = days.length - 1; d >= 0; d--) {
-      body.append(el('tr', {}, el('td', { text: dayLabel(days[d].day, true) + (days[d].final ? '' : ' (so far)') }), ...shown.map((i) => el('td', { class: 'num', text: fmt(days[d].values[i]) })), el('td', { class: 'num', text: fmt(totals[d]) })));
+      body.append(el('tr', {}, el('td', { text: dayLabel(days[d].day, true) + dayState(days[d]) }), ...shown.map((i) => el('td', { class: 'num', text: fmt(days[d].values[i]) })), el('td', { class: 'num', text: fmt(totals[d]) })));
     }
     $('daily-table').replaceChildren(el('table', {}, el('thead', {}, head), body));
   }

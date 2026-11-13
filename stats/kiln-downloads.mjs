@@ -18,7 +18,8 @@
 // What is asked for and kept: per day, file, country, HTTP status, kind of program and referring host, a request count
 // and the bytes sent. No IP address is asked for, and the User-Agent string is reduced to a kind ("browser", "launcher",
 // "tool", "bot", "automated") and a system ("windows", "linux", ...) before anything is written.
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import { constants, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -105,9 +106,9 @@ export function browserVersions(agent) {
  *  A program can send any User-Agent, so these are estimates. Most scripted downloads copy an old browser's string:
  *  "automated" is a browser string whose version is years behind the newest seen (`newest`, from browserVersions over
  *  the same answer: 30 Chrome versions or 45 Firefox versions, each about two and a half years), a Safari before 15
- *  (2021; its numbers went from 18 to 26 in one step, so no distance is used), Internet Explorer, or a desktop Chrome
- *  string from 110 on with a full build number, which Chrome itself has not sent since version 101 (it sends
- *  157.0.0.0). os is set where the string names one. */
+ *  (2021; its numbers went from 18 to 26 in one step, so no distance is used), Internet Explorer, or a string that is
+ *  exactly desktop Chrome's from 110 on but with a full build number, which Chrome itself has not sent since version
+ *  101 (it sends 157.0.0.0). os is set where the string names one. */
 export function classifyAgent(agent, { verifiedBot = '', newest = { chrome: 0, firefox: 0 } } = {}) {
   const ua = typeof agent === 'string' ? agent.trim() : '';
   const os = /windows|win32|win64/i.test(ua) ? 'windows'
@@ -126,24 +127,53 @@ export function classifyAgent(agent, { verifiedBot = '', newest = { chrome: 0, f
     const { chrome, firefox, safari } = browserVersions(ua);
     const stale = (chrome && newest.chrome && chrome < newest.chrome - 30) || (firefox && newest.firefox && firefox < newest.firefox - 45)
       || (safari && safari < 15);
-    const fullBuild = chrome >= 110 && !/(?:Chrome|CriOS)\/\d+\.0\.0\.0/.test(ua) && !/android|; wv\)|iphone|ipad/i.test(ua);
+    // only in Chrome's own string, which ends after "Safari/...": other Chromium browsers add their name there, and
+    // some of them do send the full number
+    const fullBuild = chrome >= 110 && /Chrome\/\d+\.\d+\.\d+\.\d+ Safari\/[\d.]+$/.test(ua) && !/Chrome\/\d+\.0\.0\.0 /.test(ua)
+      && !/android|; wv\)|iphone|ipad/i.test(ua);
     return { client: stale || fullBuild ? 'automated' : 'browser', os };
   }
   return { client: 'other', os };
 }
 
-/** The newest Chrome and Firefox among the browser strings of an answer: the highest version that at least three
- *  requests name (one request can claim anything), never lower than `known` (what earlier runs saw). */
-export function newestBrowsers(groups, known = { chrome: 0, firefox: 0 }) {
+/** How often the measure may move up by one release: Chrome and Firefox both ship one about every four weeks. */
+const RELEASE_STEP_MS = 14 * 86_400_000;
+
+/** The Chrome and Firefox versions classifyAgent measures a browser string's age against: {chrome, firefox, at}.
+ *  From an answer's groups it takes, for each browser, the version most requests name, among the requests that are
+ *  counted at all (a complete or partial answer of a download, by something that is not a declared or verified bot),
+ *  and only when at least three name it. A request can claim any version, so the measure cannot be pushed around:
+ *  once there is one (`known`, from the runs before) it never falls, and it rises by one release at most every two
+ *  weeks (`at` remembers when). A burst of requests naming Chrome 999 moves it by one. */
+export function newestBrowsers(groups, known = {}, now = Date.now()) {
   const seen = { chrome: new Map(), firefox: new Map() };
   for (const group of groups) {
-    const versions = browserVersions(group.dimensions?.userAgent);
+    const d = group.dimensions || {};
+    if ('edgeResponseStatus' in d && ![200, 206].includes(Number(d.edgeResponseStatus))) continue;
+    if ('clientRequestPath' in d && !parsePath(d.clientRequestPath)) continue;
+    if (d.verifiedBotCategory || typeof d.userAgent !== 'string' || BOT.test(d.userAgent)) continue;
+    const versions = browserVersions(d.userAgent);
     for (const name of ['chrome', 'firefox']) {
       if (versions[name]) seen[name].set(versions[name], (seen[name].get(versions[name]) || 0) + (Number(group.count) || 0));
     }
   }
-  const newest = (name) => Math.max(known[name] || 0, ...[...seen[name]].filter(([, count]) => count >= 3).map(([version]) => version));
-  return { chrome: newest('chrome'), firefox: newest('firefox') };
+  const out = { chrome: 0, firefox: 0, at: { ...known.at } };
+  for (const name of ['chrome', 'firefox']) {
+    let most = 0, requests = 0;
+    for (const [version, count] of seen[name]) if (count > requests || (count === requests && version > most)) { most = version; requests = count; }
+    if (requests < 3) most = 0;
+    const before = Number(known[name]) || 0;
+    if (!before) {
+      out[name] = most;
+      if (most) out.at[name] = now;
+    } else if (most > before && now - (Number(known.at?.[name]) || 0) >= RELEASE_STEP_MS) {
+      out[name] = before + 1;
+      out.at[name] = now;
+    } else {
+      out[name] = before;
+    }
+  }
+  return out;
 }
 
 /** A referring host, lower case, "frostdev.io" for the site itself; "" when there was none. */
@@ -221,6 +251,17 @@ export async function fetchLimits(env) {
   };
 }
 
+/** The one of `names` an error of Cloudflare's refuses, or "" when it is about something else. The name right after
+ *  the word "field" (unknown field "x", cannot query field x) decides; without that, the error must name exactly one of
+ *  them. An error that merely mentions several names (a quoted query) drops nothing and is passed on. */
+export function refusedField(message, names) {
+  const after = /\bfields?\b[^A-Za-z0-9_]{0,4}([A-Za-z_][A-Za-z0-9_]*)/i.exec(message)?.[1];
+  if (after && names.includes(after)) return after;
+  if (after && names.includes(after.replace(/^dimensions_/, ''))) return after.replace(/^dimensions_/, '');
+  const named = names.filter((name) => new RegExp(`\\b${name}\\b`).test(message));
+  return named.length === 1 && /unknown|cannot|not (?:allowed|available|permitted|supported)|no such|access/i.test(message) ? named[0] : '';
+}
+
 function windowQuery(env, limits, from, to) {
   const filters = [`datetime_geq: "${from.toISOString()}"`, `datetime_lt: "${to.toISOString()}"`, `clientRequestPath_like: "${PREFIX}%"`];
   if (limits.filters.includes('requestSource')) filters.push('requestSource: "eyeball"');
@@ -248,8 +289,8 @@ export async function fetchWindow(env, limits, from, to, state = { queries: 0, t
       groups = (await cfQuery(env, windowQuery(env, limits, from, to))).viewer?.zones?.[0]?.[DATASET];
       break;
     } catch (error) {
-      const refused = [...OPTIONAL.filter((n) => limits.fields.includes(n)), ...limits.filters].find((name) => error.message.includes(name));
-      if (!(error instanceof CloudflareError) || !refused) throw error;
+      const refused = error instanceof CloudflareError && refusedField(error.message, [...OPTIONAL.filter((n) => limits.fields.includes(n)), ...limits.filters]);
+      if (!refused) throw error;
       limits.fields = limits.fields.filter((name) => name !== refused);
       limits.filters = limits.filters.filter((name) => name !== refused);
       (limits.dropped ||= []).push(refused);
@@ -303,9 +344,12 @@ export function reduceGroups(groups, newest = newestBrowsers(groups)) {
 const dayName = (ms) => new Date(ms).toISOString().slice(0, 10);
 const dayStart = (name) => Date.parse(`${name}T00:00:00Z`);
 
+/** A temporary name beside `path` that no other run has: two containers both have process id 1. */
+const tmpName = (path) => `${path}.tmp-${randomBytes(9).toString('base64url')}`;
+
 function writeAtomic(path, text) {
-  const tmp = `${path}.tmp-${process.pid}`;
-  writeFileSync(tmp, text);
+  const tmp = tmpName(path);
+  writeFileSync(tmp, text, { flag: 'wx' });
   renameSync(tmp, path);
 }
 
@@ -331,7 +375,9 @@ export function daysToFetch(stored, now, daysBack, notOlderThanSeconds) {
   return out;
 }
 
-/** Sizes of the files in the release folders, remembered in sizes.json so a release that is removed keeps its sizes. */
+/** Sizes of the files in the release folders, remembered in sizes.json so a release that is removed keeps its sizes.
+ *  A file that is still there is looked at again every time: when it was replaced by one of another size, the new
+ *  size is what counts from now on (each stored day keeps the sizes it was collected with, see collect). */
 export function fileSizes(dataDir, filesDir, wanted) {
   const path = join(dataDir, 'sizes.json');
   const sizes = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {};
@@ -340,13 +386,12 @@ export function fileSizes(dataDir, filesDir, wanted) {
     const root = resolve(filesDir);
     for (const [version, file] of wanted) {
       const key = `${version}/${file}`;
-      if (key in sizes) continue;
       const target = resolve(root, version, file);
       if (!target.startsWith(root + sep)) continue;
       try {
         const stat = statSync(target);
-        if (stat.isFile()) { sizes[key] = stat.size; changed = true; }
-      } catch { /* not there (an old release that was removed before its first count): requests are counted instead */ }
+        if (stat.isFile() && sizes[key] !== stat.size) { sizes[key] = stat.size; changed = true; }
+      } catch { /* not there (a release that was removed): its remembered size stays, or requests are counted */ }
     }
   }
   if (changed) writeAtomic(path, JSON.stringify(sizes));
@@ -374,6 +419,11 @@ export function buildPageData(days, sizes, now) {
   let truncated = 0;
   const dropped = new Set();
   for (const day of days) {
+    // every calendar day from the first to the last, also one that was never collected (an outage longer than
+    // Cloudflare keeps its data): the page's "last 30 days" are then 30 days, and the gap shows as one
+    for (let at = data.days.length ? dayStart(data.days.at(-1).day) + DAY_MS : dayStart(day.day); at < dayStart(day.day); at += DAY_MS) {
+      data.days.push({ day: dayName(at), final: true, missing: true });
+    }
     const dayIndex = data.days.length;
     data.days.push({ day: day.day, final: !!day.final });
     sampled = Math.max(sampled, day.sampled || 1);
@@ -381,7 +431,8 @@ export function buildPageData(days, sizes, now) {
     for (const name of day.dropped || []) dropped.add(name);
     const merged = new Map();
     for (const [version, file, country, status, client, os, referrer, count, bytes] of day.rows) {
-      const size = sizes[`${version}/${file}`];
+      // the size the day was collected with; days stored before sizes were kept with them use today's
+      const size = day.sizes?.[`${version}/${file}`] ?? sizes[`${version}/${file}`];
       const byBytes = countedByBytes(file, size || 0);
       const downloads = byBytes ? bytes / size : (status === 200 ? count : 0);
       const requests = status === 200 ? count : 0;
@@ -390,7 +441,7 @@ export function buildPageData(days, sizes, now) {
       if (fileIndex === undefined) {
         fileIndex = data.files.length;
         maps.files.set(`${version}/${file}`, fileIndex);
-        data.files.push({ version, file, key: fileKey(version, file), ...describeFile(file), size: size ?? null, byBytes });
+        data.files.push({ version, file, key: fileKey(version, file), ...describeFile(file), size: sizes[`${version}/${file}`] ?? size ?? null, byBytes });
       }
       const key = [fileIndex, index(data.countries, maps.countries, country), index(data.clients, maps.clients, client),
         index(data.systems, maps.systems, os), index(data.referrers, maps.referrers, referrer)].join(',');
@@ -403,6 +454,8 @@ export function buildPageData(days, sizes, now) {
       data.rows.push([dayIndex, ...key.split(',').map(Number), Math.round(downloads * 1000) / 1000, requests]);
     }
   }
+  const missing = data.days.filter((day) => day.missing).length;
+  if (missing) data.notes.push(`${missing} ${missing === 1 ? 'day was' : 'days were'} never collected (shown as empty): Cloudflare no longer had ${missing === 1 ? 'it' : 'them'} when the collection ran again.`);
   if (sampled > 1) data.notes.push(`Cloudflare counted some of these requests from a sample (as few as 1 in ${Math.ceil(sampled - 1e-9)}): those counts are estimates.`);
   if (truncated) data.notes.push(`${truncated} one-minute windows had more groups than one answer holds: their counts are too low.`);
   if (dropped.has('userAgent')) data.notes.push('This zone\'s plan gives no User-Agent: every program counts as "unknown".');
@@ -444,8 +497,9 @@ export function render(env, now = Date.now()) {
   mkdirSync(s.outDir, { recursive: true });
   // the page's stylesheet and script first, so a new page never meets old ones
   for (const name of ASSETS) {
-    copyFileSync(join(dirname(s.template), name), join(s.outDir, `${name}.tmp-${process.pid}`));
-    renameSync(join(s.outDir, `${name}.tmp-${process.pid}`), join(s.outDir, name));
+    const tmp = tmpName(join(s.outDir, name));
+    copyFileSync(join(dirname(s.template), name), tmp, constants.COPYFILE_EXCL);
+    renameSync(tmp, join(s.outDir, name));
   }
   writeAtomic(join(s.outDir, 'index.html'), renderPage(readFileSync(s.template, 'utf8'), data));
   return data;
@@ -470,16 +524,22 @@ export async function collect(env, now = Date.now()) {
     }
     // what a browser string's age is measured against: the newest versions of this run and of the runs before
     const newestPath = join(s.dataDir, 'newest-browsers.json');
-    const newest = newestBrowsers(answers.flatMap((answer) => answer.groups), existsSync(newestPath) ? JSON.parse(readFileSync(newestPath, 'utf8')) : undefined);
+    const newest = newestBrowsers(answers.flatMap((answer) => answer.groups), existsSync(newestPath) ? JSON.parse(readFileSync(newestPath, 'utf8')) : undefined, now);
     writeAtomic(newestPath, JSON.stringify(newest));
-    for (const { name, from, groups, truncated } of answers) {
-      const { rows, skipped, sampled } = reduceGroups(groups, newest);
-      const day = { day: name, fetched: run.at, final: now >= from + DAY_MS + SETTLE_MS, sampled, truncated, dropped: limits.dropped || [], skipped, rows };
+    const reduced = answers.map((answer) => ({ ...answer, ...reduceGroups(answer.groups, newest) }));
+    const wantedFiles = new Map();
+    for (const { rows } of reduced) for (const row of rows) wantedFiles.set(`${row[0]}/${row[1]}`, [row[0], row[1]]);
+    const sizes = fileSizes(s.dataDir, s.filesDir, wantedFiles.values());
+    for (const { name, from, truncated, rows, skipped, sampled } of reduced) {
+      // each day keeps the sizes of its files as they are now: a file replaced later does not change what this day counted
+      const daySizes = Object.fromEntries([...new Set(rows.map((row) => `${row[0]}/${row[1]}`))].filter((key) => key in sizes).map((key) => [key, sizes[key]]));
+      const day = { day: name, fetched: run.at, final: now >= from + DAY_MS + SETTLE_MS, sampled, truncated, dropped: limits.dropped || [], skipped, sizes: daySizes, rows };
       writeAtomic(join(s.dataDir, 'days', `${name}.json`), JSON.stringify(day));
     }
     Object.assign(run, { ok: true, days: wanted.length, queries: state.queries, fields: limits.fields, note: limits.note });
   } catch (error) {
-    run.error = error instanceof CloudflareError ? error.message : `${error.name}: ${error.message}`;
+    // Cloudflare's words go into last-run.json, the log and the page: never with the token in them
+    run.error = (error instanceof CloudflareError ? error.message : `${error.name}: ${error.message}`).split(env.CF_API_TOKEN).join('[token]');
   }
   writeAtomic(join(s.dataDir, 'last-run.json'), JSON.stringify(run));
   // the page is written either way: after a failure it says so and shows what the collection before stored
