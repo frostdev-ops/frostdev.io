@@ -52,7 +52,8 @@
   // ---- state and filters ------------------------------------------------------------------------------------------
   const RANGES = [[7, '7 days'], [30, '30 days'], [90, '90 days'], [0, 'All']];
   const state = { range: data.days.length >= 30 ? 30 : 0, version: '', group: '', kinds: new Set(['people', 'launcher', 'tool']) };
-  if (!data.clients.some((client) => !KINDS[3].clients.includes(client))) state.kinds.add('auto');
+  // nothing but automated or unknown programs (a zone without the User-Agent): show them, or the page is empty
+  if (kindOfClient.every((kind) => kind === 3)) state.kinds.add('auto');
 
   for (const [days, label] of RANGES) {
     if (days > data.days.length) continue;  // "All" is that range
@@ -87,7 +88,7 @@
 
   // ---- header -----------------------------------------------------------------------------------------------------
   const when = (iso) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-  $('updated').textContent = `Collected ${when(data.collected || data.generated)} (your time) · ${dayLabel(data.days[0].day)} to ${dayLabel(data.days.at(-1).day)}, ${data.days.length} days`;
+  $('updated').textContent = `Collected ${when(data.collected || data.generated)} (your time) · ${data.days.length === 1 ? dayLabel(data.days[0].day) : `${dayLabel(data.days[0].day)} to ${dayLabel(data.days.at(-1).day)}, ${data.days.length} days`}`;
   for (const alert of data.alerts || []) $('warnings').append(el('p', { class: 'warn', text: alert }));
   for (const note of data.notes || []) $('notes').append(el('p', { text: note }));
 
@@ -251,7 +252,8 @@
       const pct = (total - earlier) / earlier * 100;
       change = el('div', { class: 'delta' }, el('span', { class: pct >= 0 ? 'up' : 'down', text: `${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(0)}%` }), ` vs the ${count} days before (${fmt(earlier)})`);
     }
-    const rangeText = state.range && count < data.days.length ? `the last ${count} days` : `${count} days`;
+    const daysText = count === 1 ? '1 day' : `${count} days`;
+    const rangeText = state.range && count < data.days.length ? `the last ${daysText}` : daysText;
     daily(days);
     const files = ranked($('files'), [...byFile.values()], { nameHead: 'File' });
     $('files-sub').textContent = state.version ? `${files.length} files of ${state.version}.` : `${files.length} files; the same file of every version added up.`;
