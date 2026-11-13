@@ -1,0 +1,18 @@
+# Installed by ops/deploy-kiln-stats.sh as /etc/systemd/system/kiln-stats.service on loothing-vps.
+[Unit]
+Description=Kiln download statistics: one collection from Cloudflare (frostdev.io/kiln/stats/)
+Documentation=https://github.com/frostdev-ops/frostdev.io/blob/main/docs/kiln-download-stats.md
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# A container a stopped run left behind would block the name.
+ExecStartPre=-/usr/bin/docker rm -f kiln-stats
+# The container writes only to its two folders; the release folders are read for file sizes.
+ExecStart=/usr/bin/docker run --rm --name kiln-stats --env-file /etc/kiln-stats.env --read-only --cap-drop ALL \
+    --security-opt no-new-privileges --memory 256m --cpus 1 \
+    -v /var/lib/kiln-stats:/data -v /opt/frostdev-stats/kiln:/out \
+    -v /opt/frostdev-downloads/kiln/downloads:/files:ro kiln-stats
+TimeoutStartSec=600

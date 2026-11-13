@@ -1,0 +1,11 @@
+# Installed by ops/deploy-kiln-stats.sh as /etc/systemd/system/kiln-stats.timer on loothing-vps.
+[Unit]
+Description=Kiln download statistics, once an hour
+
+[Timer]
+OnCalendar=*:07
+RandomizedDelaySec=120
+Persistent=true
+
+[Install]
+WantedBy=timers.target

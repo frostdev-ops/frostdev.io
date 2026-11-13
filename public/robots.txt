@@ -8,6 +8,7 @@ Allow: /rimewire$
 Allow: /rimewire/$
 Allow: /kiln$
 Allow: /kiln/
+Disallow: /kiln/stats
 Allow: /glaze$
 Allow: /glaze/$
 Allow: /glaze/looks$
