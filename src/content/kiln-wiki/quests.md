@@ -3,7 +3,7 @@ title: "Quests and dialogue"
 nav: "Quests and dialogue"
 description: "Quest chains in JSON, shown by the game itself: its journal, NPC menu, map markers, notifications and voice."
 status: "works"
-updated: "2026-11-08"
+updated: "2026-11-13"
 ---
 
 > **Two fixes await a client retest:** an NPC placed in a second hosted world of one session, and done quests notifying again
@@ -84,7 +84,8 @@ A reward is one bundle (`xp`, `items`, `status`, `knowledge`, `lootTable`); step
 land at the player's feet. A world quest pays every player present using one loot-table roll.
 
 The block form uses the game's UI: `side: both`, `clients: mod`. JSON blocks enter journal data on the first start. C#
-definitions enter the generated native sidecar for the next start; ship `quests/generated/<mod>.json` for first-start UI.
+definitions are [baked](/kiln/wiki/dev-kit#definitions-baked-at-build) into the mod at build since 0.2.0-dev.27
+(`quests/generated/<mod>.json`), so they have the game's UI from the first start too.
 Restart server and clients after changes. For a mod vanilla clients join, keep the existing chat/non-native `quests/*.json`
 form. Blocks have no top-level `knowledge`, option `set`, `toast` or `waypoint` actions; unknown fields fail.
 
@@ -245,9 +246,10 @@ Quests.Define(new QuestDefinition
 private void OnBell(BellRungEvent e) => Quests.Signal("mymod.bell", QuestHolder.Of(e.Player));
 ```
 
-It gets the game's UI too, with one difference. The journal is built at boot, before C# runs, so Kiln writes what your code defines
-to `kiln/data/kiln-quests/native/<mod>.json` and builds it at the next start. Until then the quest uses chat lines. To have it at
-the first start, ship that file as `quests/generated/<mod>.json`.
+It gets the game's UI too. The journal is built at boot, before C# runs. Since 0.2.0-dev.27 Kiln.Sdk's build runs your
+mod once and writes what your code defines into the mod as `quests/generated/<mod>.json`, so the quest has the game's UI
+from the first start. With `KilnBake=false`, Kiln writes it to `kiln/data/kiln-quests/native/<mod>.json` at run time and
+builds it at the next start; until then the quest uses chat lines.
 
 ## Saving and testing
 

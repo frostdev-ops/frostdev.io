@@ -1,7 +1,7 @@
 ---
 title: "Coming from Forge"
 description: "Minecraft Forge concepts and their Kiln equivalents."
-updated: "2026-11-11"
+updated: "2026-11-13"
 ---
 
 | Forge | Kiln |
@@ -43,6 +43,6 @@ updated: "2026-11-11"
 
 ## Not there yet
 
-The official dev.25 launcher, like every one since dev.20, has no online mod Catalog or account integration; import downloaded archives manually.
+The official launcher, like every one since dev.20, has no online mod Catalog or account integration; import downloaded archives manually.
 [Drawing](/kiln/wiki/drawing), [particle shaders](/kiln/wiki/shaders) and particles (`VfxBlock`) have implementations with
 explicit test limits. Surface shaders for models remain work in progress. See [What works today](/kiln/wiki/status).

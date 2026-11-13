@@ -3,7 +3,7 @@ title: "Greeneye, Enshwick, SET and more"
 nav: "More frameworks"
 description: "How Kiln runs mods for SET, Greeneye Loader, Creative Mode's Flame, Shroudtopia, Enshwick, shroudlink and Ember."
 status: "pending"
-updated: "2026-11-11"
+updated: "2026-11-13"
 ---
 
 Kiln has a part for each of these frameworks. All of them come with Kiln, so you don't install the framework. Each
@@ -84,6 +84,7 @@ Creative Mode (Nexus mod 146) brings its own small loader, Flame. Kiln starts Cr
   come back.
 - When Creative Mode has no data for the current game build, Kiln's own `/creative` stays available and says why.
 - Creative Mode changes building cost, flight and time of day, like Kiln's own creative mode. Use one or the other.
+  While it runs, Kiln's [NoClip](/kiln/wiki/player-rules#noclip) doesn't work: Creative Mode flies the character itself.
 - Its server version hasn't been tried.
 
 Status: untested in game. Creative Mode 3.2.0 started on a test server.

@@ -2,7 +2,7 @@
 title: "Abilities"
 description: "Key-bound abilities, per-cast changes to the game's spells, explosions and buffs from code, and animations."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-13"
 ---
 
 Spells and attacks run on the server, so this works for players without Kiln. The exception: a key binding needs Kiln and
@@ -54,16 +54,35 @@ private void OnImpact(ImpactStartingEvent e)
 await Abilities.RunImpact("Explosion_Player_Spell_Fireball_1", position,
     new ImpactOptions { Root = caster });
 await Abilities.ApplyBuff(target, buffGuid, TimeSpan.FromSeconds(6), caster);
+BuffRemoveResult off = await Abilities.RemoveBuff(target, buffGuid);   // or a buff id (GameBuffs.Ids)
+IReadOnlyList<EntityBuff> buffs = Abilities.BuffsOf(target);           // id, slot, time left, level
 Abilities.PlaySequence(player, emoteGuid, SequenceOptions.Queue);
 int? mana = Abilities.Attributes.Get(player, AbilityResource.Mana);
 ```
 
+`RemoveBuff` (new in 0.2.0-dev.27) takes a buff off a player, creature or NPC through the game's own removal. The result
+is the game's answer: `Ok` is false, with a reason, when the entity didn't have the buff; `BuffRemovedEvent` follows a
+removal. `BuffsOf` lists the buffs on any entity. The game keeps buffs on the server, so a joined client gets an empty
+list. The buff icon disappearing from a real player's HUD is not checked in a game yet.
+
 `PlaySequence` plays the game's actions (a swing, an emote) on a player, NPC or creature. A cast played this way shows its
 animation but doesn't fire the spell.
+
+## Where a player looks
+
+```csharp
+if (PlayerStates.AimOf(player) is { } aim)
+    await Abilities.RunImpact("Explosion_Player_Spell_Fireball_1", aim.At(20), new ImpactOptions { Root = player });
+```
+
+`PlayerStates.AimOf(player)` (new in 0.2.0-dev.27) says where a player's camera is and where it looks: `Origin`,
+`Direction`, and `At(metres)` for a point along that line. The server reads it from what the player's game sends. The
+camera sits behind the character, so a ray for "what is the player looking at" starts at the camera.
 
 ## Watch and adjust hits
 
 `ImpactDamageEvent`, `ImpactBuffEvent` and `ImpactSpawnEvent` report what spells did. `Abilities.OnDamage` can change one hit.
+To hear only the hits about one creature, filter the event by entity ([Events](/kiln/wiki/events#only-the-events-about-one-entity)).
 
 ## New gameplay logic
 

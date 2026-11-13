@@ -3,7 +3,7 @@ title: "Mods for other frameworks"
 nav: "Other frameworks"
 description: "Kiln runs mods made for EML, ShroudForge, EMF, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink, unchanged, next to Kiln mods."
 status: "partial"
-updated: "2026-11-11"
+updated: "2026-11-13"
 ---
 
 Kiln loads mods made for other Enshrouded mod frameworks without rewriting them. It supplies the runtimes listed
@@ -20,7 +20,7 @@ run on test servers. Where no player has seen it in the game yet, the table says
 |---|---|---|---|---|
 | **EML** (Enshrouded Mod Loader) 0.2.0 | data mods: stats, stacks, recipes, new items | runs EML's own code before the game starts. Installed by default | untested in game (works on test servers) | drop the mod in, or import it in the launcher. [EML and ShroudForge](/kiln/wiki/eml-shroudforge) |
 | **ShroudForge** | Lua mods, with settings | ships ShroudForge's runtime and runs it. Installed by default. Your own ShroudForge can be used instead | untested in game (works on test servers) | drop the mod in, or import it. [EML and ShroudForge](/kiln/wiki/eml-shroudforge) |
-| **EMF** 0.3.3 through 0.6.0 / API v27 | DLL and Lua mods, server tools, commands | gives EMF mods EMF's API on Kiln. Installed by default | 77 full / 13 partial C slots; client checks remain | drop the mod in, or import it, then switch it on. [EMF mods](/kiln/wiki/emf-mods) |
+| **EMF** 0.3.3 through 0.6.8 / API v40 | DLL and Lua mods, server tools, commands | gives EMF mods EMF's API on Kiln. Installed by default | 76 full / 17 partial C slots; 42 functions of EMF 0.6.3 to 0.6.8 not yet; client checks remain | drop the mod in, or import it, then switch it on. [EMF mods](/kiln/wiki/emf-mods) |
 | **SET** (Shrouded Engine Tweaks) 0.1.1 | Lua mods with windows and tweaks | runs SET's Lua API on Kiln, also on dedicated servers | server probe 39/0; API and client limits remain | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#set) |
 | **Greeneye Loader** 1.2.2 | client mods: The Worst Map Mod, Find, Quick Deposit, Town Portals | gives them Greeneye's whole API. Works on Linux too | untested in game | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#greeneye-loader) |
 | **Flame** | Creative Mode | starts Creative Mode without its loader, from the game's `mods` folder | untested in game | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#creative-mode-flame) |
@@ -45,7 +45,9 @@ a plain DLL. Since dev.22 mods are taken the way they are shared:
   first and drop the folder. A password-protected or split archive is refused the same way. A modpack must be a zip.
 - **Packages shaped like the game folder.** Many authors zip a mod as it sits in the game folder: a `mods` folder, with a
   loader DLL such as `dbghelp.dll` next to it. The launcher imports every mod in that `mods` folder. The loader in the
-  package is not installed, and that is one note in the result ("not needed, Kiln runs EML mods"), not an error. A tool
+  package is not installed, and that is one note in the result ("not needed, Kiln runs EML mods"), not an error. The
+  same goes for a mod whose zip carries its own loader (Find with Greeneye Loader's `dbgcore.dll`, Creative Mode with
+  Flame's): since 0.2.0-dev.27 the result says the loader is not needed. A tool
   that runs on its own next to Kiln (ReShade, a mod menu) is left out whole, with what to do: copy its files into the
   Enshrouded folder yourself.
 - **Ids with capitals or spaces.** An EML mod called `HoardersHelper` used to be refused as "not a valid mod id". Now the
@@ -169,9 +171,10 @@ mods in your [modpack](/kiln/wiki/modpacks).
   that start. The in-game Mods menu shows them as failed; the launcher's **Engines** view can still say they run.
 - **A loader that was already running.** Enshwick's own loader may see a mod copied while it was running only from the
   next start.
-- **EMF.** API v27 implements radial wheels, stamina/mana and right-click window events. Client-world programs/events
-  remain unsupported, and player-facing rendering/input and joined delivery remain unchecked. Mods requesting above
-  API v27 are refused. [Current differences](/kiln/wiki/emf-mods#what-doesnt-work-yet).
+- **EMF.** Kiln serves EMF 0.6.8's API v40, so mods built for EMF 0.6.3 and later start; 42 of the functions EMF added
+  since answer "not available" for now. Client-world programs/events remain unsupported, and player-facing
+  rendering/input and joined delivery remain unchecked. Mods requesting above API v40 are refused.
+  [Mods built for EMF 0.6.3 to 0.6.8](/kiln/wiki/emf-mods#mods-built-for-emf-063-to-068).
 - **SET.** SET itself only runs in worlds you host. Kiln's dedicated-server probe passes 39/0; game options, `Admin.send`,
   ImGui Debug and SET's `settings.ini` editor remain unavailable. Kiln's tool windows still need client drawing/input
   checks. If another tool's `powrprof.dll` is loaded (Enshwick's own, Shared XP), Kiln's SET part stays off.
@@ -195,7 +198,9 @@ mods in your [modpack](/kiln/wiki/modpacks).
 
 Many small mods are a single `dinput8.dll` (stat sliders, sprint toggles, HUD tweaks, shroudlink's client addon). Only
 one file can have that name. When you install Kiln, it moves the other `dinput8.dll` to `kiln/chain/` and loads it
-from there, listed in `kiln/chain.ini`. Kiln also reads the `dinput8-chain.ini` that EMF and other chain loaders write.
+from there, listed in `kiln/chain.ini`. Kiln also reads the `dinput8-chain.ini` that EMF and other chain loaders write,
+with quoted DLL names and a comment after a name, as EMF's chain spec describes (since 0.2.0-dev.27; before, such a line
+was dropped without a word).
 A mod with its own name (`iphlpapi.dll`, `powrprof.dll`, `dxgi.dll`) is left alone and runs next to Kiln.
 
 A `dinput8.dll` mod you drop on the launcher is kept with the files around it and added as a native mod, loaded from its
@@ -216,7 +221,7 @@ Add them in the launcher (they are listed on Play, and **Native and DLLs**, next
 load time), or drop them into `kiln/native/<folder>/`. One that crashes while loading is
 marked failed with a crash report, and the game carries on. DLL mods never unload, so changes need a restart.
 
-The official dev.25 launcher has no Nexus Catalog, account sign-in or Mod Manager Download handler.
+The official launcher has no Nexus Catalog, account sign-in or Mod Manager Download handler.
 [Download the archive in your browser and import it](/kiln/wiki/install#mods-from-nexus-mods), whatever framework it uses.
 
 ## Closed-source DLL mods
@@ -269,6 +274,13 @@ What loading late can't do:
 - **A disabled native mod's** late DLL doesn't load. An early or boot native mod can't require a late one.
 - **`disable` on a native mod** whose DLL already loaded at `dllmain` is reported as not applied. Start again from the
   launcher's **Play** to apply it.
+
+**Mods that hook the game before Kiln** (Auto Doors, through its own `powrprof.dll`), also next to Greeneye Loader or
+ShroudForge: in 0.2.0-dev.26 that could make Kiln miss the game's simulation step, and Kiln's mods did nothing. Since
+0.2.0-dev.27 Kiln recognises such redirected calls, and has second signatures for the game's functions (by rifters,
+GitHub pull request 27). Auto Doors itself checks the game's code and switches itself off when Kiln hooked the same
+functions first; its log then says "function bytes do not match". Which of the two is first is not fixed. Shown on the
+game's file with Auto Doors' hooks laid over it, not in a running game.
 
 Status: the switch, overlaps and rules were tested under Wine and on lab servers, and the launcher pages with tests and
 mock data. Nobody has tried them with XHL-Core in a real game yet.

@@ -2,7 +2,7 @@
 title: "Game UI"
 description: "Menu entries, your own screens, crafting tabs and panels, HUD lines, toasts and key bindings."
 status: "works"
-updated: "2026-11-08"
+updated: "2026-11-13"
 ---
 
 All client side. On a dedicated server `Ui.Available` is false and calls do nothing, so a `side: both` mod can call them freely.
@@ -22,6 +22,12 @@ Ui.Menus.Add(MenuLocation.PauseMenu, "Teleport home", () => Client.Post(GoHome))
 
 The game draws these above its Settings entry, with its look, sounds, and mouse, keyboard and gamepad navigation. Labels follow
 the game's language.
+
+Since 0.2.0-dev.27 the pause menu scrolls when mods add more entries than fit. Where a menu can't scroll (the main menu,
+or a game build where Kiln can't make the pause menu scroll) and has more than 3 mods' entries, they aren't drawn there:
+the player chooses them on Kiln's **Mods** page, under **Menu entries**, where your `OnClick` runs the same way. The
+player's setting `modEntries` decides ([Menu entries of mods](/kiln/wiki/profiles#menu-entries-of-mods)). Your code
+doesn't change. The capability `ui.menu_scroll` says whether the pause menu scrolls.
 
 ## Your own screens
 
@@ -62,7 +68,14 @@ KeyBindings.Register("mymod.toggle", "F8", () => screen.Toggle(), "Toggle my win
 Players remap keys in the Kiln menu. A key Kiln handles doesn't also reach the game. Letter keys fire during play only, so typing in
 chat doesn't trigger them.
 
+Since 0.2.0-dev.27 a binding can use the mouse: `Mouse4`, `Mouse5`, `MouseMiddle`, `WheelUp`, `WheelDown`, `WheelLeft`
+and `WheelRight`, with Ctrl, Shift and Alt (`"Ctrl+WheelUp"`, `"Shift+Mouse4"`; GitHub issue 29). One wheel notch is one
+press, and it fires nothing while a Kiln screen has the mouse. The left and right buttons can't be bound. On an older
+Kiln these names don't parse: check with `KeyChord.TryParse` if your mod should still load there. Mouse bindings were
+tested in unit tests and a test window under Wine, not yet in a real game.
+
 ## Also
 
-Every mod with a config gets a generated settings page in the Kiln menu. `Ui.Screens.Current` and `ScreenChangedEvent` tell you
+Every mod with a config gets a generated settings page in the Kiln menu. A slider there has a number field beside it, for
+values that are hard to reach by dragging on a wide `[Range]`. `Ui.Screens.Current` and `ScreenChangedEvent` tell you
 which screen is open. To draw shapes, text and markers over the game every frame, see [Drawing](/kiln/wiki/drawing).

@@ -3,7 +3,7 @@ title: "Kiln on a dedicated server"
 nav: "Dedicated servers"
 description: "Put Kiln on an Enshrouded dedicated server: a rented host over FTP, your own Windows PC, or a headless Linux machine."
 status: "partial"
-updated: "2026-11-12"
+updated: "2026-11-13"
 ---
 
 This page is for server owners. It shows how to put Kiln on an Enshrouded dedicated server, check that it runs, add
@@ -75,8 +75,9 @@ We haven't tried Kiln on a specific rented host yet. If you do, please tell us h
 The Kiln Launcher can do this too: its **Servers** page finds Steam's server, installs Kiln, starts and stops it, and
 has admin pages. See [Run a server](/kiln/wiki/servers).
 
-Honest note: Kiln's server side has been tested under Wine on Linux, not yet on a real Windows PC. It should behave
-the same. If it doesn't, please report it. One difference is known: on a native Windows server, a mod's new items and
+Honest note: Kiln's own tests of the server side run under Wine on Linux, not on a real Windows PC. A player has run
+0.2.0-dev.26 on Windows Server 2022 with Windows 11 games and reports that it works (GitHub issue 23). If something
+behaves differently for you, please report it. One difference is known: on a native Windows server, a mod's new items and
 recipes did not register (GitHub issue 14: Kiln found no free memory within reach of the game's item data). dev.22 fixes
 that. The fix was checked with replayed address-space layouts and under Wine, not yet on a Windows PC.
 
@@ -135,6 +136,20 @@ Kiln doesn't load, or mods don't? Save a support report and send that zip when y
 `kilnctl report myserver`, or `kilnctl report --dir <server folder>` for a folder kilnctl doesn't manage, or **Logs** on the
 launcher's server page. See [Save a support report](/kiln/wiki/debugging#save-a-support-report).
 
+### What a slow start is doing
+
+Since 0.2.0-dev.27 Kiln writes the step it is in to `kiln/state/progress.json` while the server starts: what it works
+on, how far it got, and what every finished step took. The file stops changing when the start is over: `state` is then
+`ready` (the world runs with the mods loaded), `idle` (safe idle; `why` says why) or `failed` (`why`). A file whose
+`pid` isn't the running server's is from an earlier start.
+
+```sh
+jq -r '"\(.state) after \(.atMs / 1000) s"' kiln/state/progress.json
+jq '.steps[]' kiln/state/progress.json    # the step without tookMs is the one running
+```
+
+Over FTP, download the file and open it in any text editor.
+
 ## Admin without a desktop
 
 | Way | Where it works | What you need |
@@ -161,6 +176,26 @@ it to `test.cmd`, so Kiln never reads a half-uploaded file.
 - Some commands take a while: their results can take up to 10 seconds. While one still runs, the result file says
   `"running": true`.
 
+### Kick and ban
+
+Since 0.2.0-dev.27 Kiln has commands of its own, for the Admin level or the permission nodes `kiln.command.kick`,
+`kiln.command.ban`, `kiln.command.unban` and `kiln.command.bans`:
+
+| Command | Does |
+|---|---|
+| `/kick <player> [reason]` | kicks a player who is in game; they can join again. A player with Kiln reads the reason, one without gets the game's "could not join" |
+| `/ban <player\|steamid> [30m\|12h\|7d] [reason]` | bans by Steam id, for a while or for good, and kicks the player if in game |
+| `/unban <steamid>` | takes a ban off |
+| `/bans` | lists the bans |
+
+The ban list is `kiln/data/kiln-players/bans.json`, kept for every world of the server and apart from the game's own
+ban list. A ban that can't be written to disk is refused instead of
+holding until the next restart. Tested with test connections on a test server, not yet with a real player's game.
+
+**NoClip is off until you allow it.** `/noclip` lets an admin fly through the ground and walls; set
+`"allowNoClip": true` in `kiln/config/rules.json` to allow it (edits apply within a second). See
+[NoClip](/kiln/wiki/player-rules#noclip).
+
 ## Mods on the server
 
 | Mod type | Where it goes |
@@ -185,22 +220,33 @@ yet, so tell your players or put them in your modpack. See [Servers and players]
 Some Kiln mods make files from the game's own files on each machine (`assets/cook.json`: player animations, models,
 sounds); the mod's archive doesn't carry them. A mod that gives weapons **their own attack animations** needs these files
 on the server too: without them the server leaves those animations out, and then refuses every player whose game has
-them. Since 0.2.0-dev.26 you can cook on the server:
+them. Cook it on the server:
 
 ```
-KILN_REPO=<a Kiln source checkout> kiln cook <server folder>/kiln/mods/<mod> --game <server folder>
+kiln cook <server folder>/kiln/mods/<mod> --game <server folder>
 ```
 
-This needs Python 3 and Kiln's source (the cook tools are its `tools/` folder), so it works on your own server, not on a
-rented one with only FTP. The cook makes what the server uses and skips the models, which only a player's game draws.
-Cook again after every game update.
+`kiln` is the command line tool in a release's `sdk/` folder ([download page](/kiln/download#authors)). Since
+0.2.0-dev.27 it carries the cook tools itself and unpacks them on first use: no Kiln source and no `KILN_REPO` are
+needed (a checkout still wins when `KILN_REPO` names one). It needs Python 3.10 or newer on the machine, and says what
+is missing; on Windows, set `KILN_PYTHON` to a `python.exe`. So this works on your own server, not on a rented one with
+only FTP. The cook makes what the server uses and skips the models, which only a player's game draws. Cook again after
+every game update.
+
+**Cook receipts.** Each cook records what it wrote, in the server's `kiln/state/cook-receipts`. A cooked file no
+receipt lists (copied from a PC, from a download, or cooked by 0.2.0-dev.26 or older) still loads, with a warning in
+kiln.log. After updating to 0.2.0-dev.27 you don't have to do anything, but run the `kiln cook` line once for each mod
+with a recipe: it writes the missing receipts and the warnings go. A later release will refuse cooked files without a
+receipt; `"cooked": "local"` in `kiln/kiln.json` does so now, and `"cooked": "any"` loads them without a word (for a
+development server).
 
 No Python on the server? Cook the mod on a PC with the game, then copy the mod's folder with its `assets/cooked` folder
 and `assets/assets.json` to the server. That works when the PC's game and the server run the same Enshrouded update.
+Those copied files have no receipt on the server, so they load with the warning above.
 
-The launcher doesn't cook mods yet, so your players have to cook such a mod too, the same way against their own game
-folder. A player who hasn't cooked the mod sees the plain weapon, and for a mod with attack animations the join is
-refused.
+Your players' launchers cook such a mod when they press **Play** ([Mods the launcher
+cooks](/kiln/wiki/install#mods-the-launcher-cooks)). A player who starts the game without it cooked sees the plain
+weapon, and for a mod with attack animations the join is refused.
 
 What players need depends on the mod. Its `kiln.mod.json` says it in `clients`:
 
@@ -262,7 +308,8 @@ settings, data and logs; delete it if you don't need them.
 
 ## Not tested yet
 
-- A real Windows PC: the server side ran under Wine only.
+- A real Windows PC in Kiln's own tests: they run the server side under Wine. One player reports 0.2.0-dev.26
+  working on Windows Server 2022.
 - Rented hosts: none tried yet. Hosts that run Windows servers under Wine need the `WINEDLLOVERRIDES` setting from the
   host.
 - A modpack built for a rented server from a local copy of its folder.

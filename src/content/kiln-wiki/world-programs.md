@@ -3,7 +3,7 @@ title: "ECS world programs"
 nav: "World programs"
 description: "Declare scheduler access before boot, then bind a C# worker callback when the mod loads."
 status: "pending"
-updated: "2026-11-08"
+updated: "2026-11-13"
 ---
 
 > **New in 0.2.0-dev.20.** `EcsPrograms` and `kiln.world` v2 require the dev.20 runtime and MDK or newer.
@@ -67,6 +67,28 @@ world and the owning mod lifetime when it runs.
 
 These boot declarations do not turn `OnLoad` into early boot, add a client-world EMF program path, or make old callback
 handles usable after reload.
+
+## Tracked writes from the tick thread
+
+```csharp
+WorldWriteResult r = await World.Write(can, new Ecs.Fuel { /* ... */ });
+if (!r.Ok) Log.Info(r.ToString());
+await World.WriteField(entity, "ScaleComponent", "uniformScale", 1.5f);
+```
+
+New in 0.2.0-dev.27, no program needed. `World.Write`, `World.Update`, `World.WriteField` and `World.WriteAt` change a
+component of an entity through the game's own write tracking: the change is saved with the world and is still there
+after a restart. List the component types your mod writes under `"writes"` in [kiln.mod.json](/kiln/wiki/manifest)
+(Kiln.Sdk adds the types your code writes). The write runs in the next simulation step, and the result says what became
+of it. Capability `world.tracked_writes`; `ComponentWrittenEvent` follows a change.
+
+- A write goes to the entity its id named at the call, never to another entity that got the id since.
+- A value something else writes every step is written over one step later: the result says so (`Kept` is false) and
+  names a Kiln water refill when one did it (`WrittenOverBy`).
+- 512 writes run per step; all mods together share 91 component types. Tracked writes work in a server world only (a
+  dedicated server or a hosting game).
+- `World.TryWrite` still works and is obsolete: it is `World.WriteRaw` now, a raw store the game neither saves nor
+  sends, for inputs the game reads in the coming step.
 
 ## Hooks around game systems
 

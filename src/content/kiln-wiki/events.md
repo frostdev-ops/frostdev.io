@@ -2,7 +2,7 @@
 title: "Events"
 description: "One event bus for every mod and service: subscribe, cancel, decide, post your own. About 110 event types."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-13"
 ---
 
 Kiln has one event bus, `Events`, like Forge's `EVENT_BUS`. Kiln's services post about 110 event types on it: players,
@@ -34,6 +34,22 @@ public sealed class MyMod : Mod
 - A handler for a base class gets every event derived from it.
 - Every subscription of a mod ends when it unloads, so hot reload needs no clean-up.
 - A handler that throws is logged and the others still run. After 5 faults it's removed.
+- `Events.On<T>(handler, default)` no longer compiles since 0.2.0-dev.27: the second argument can be a priority or a
+  [filter](#only-the-events-about-one-entity). Write `EventPriority.Normal`, or leave it out. A built mod isn't affected.
+
+## Only the events about one entity
+
+```csharp
+var sub = Events.On<EntityHurtEvent>(e => { if (e.Target == dummy) Count(e); }, EventFilter.ForEntity(dummy));
+```
+
+`EventFilter.ForEntity(entity)` (or `ForEntities`, new in 0.2.0-dev.27) delivers only the events about that entity. It
+works for every event that names its entities (`IEntityEvent`; the combat events do). For hits it also saves work: Kiln
+holds a hit for mods only when a handler could want it, so a mod that watches one training dummy no longer has every
+hit in the world held for it. A handler without a filter gets every hit, as before.
+
+A hit is about an entity when it is the target, the part hit, the attacker or the source. So `ForEntity(creature)` also
+delivers the hits the creature deals; test `e.Target == creature` for only the hits it takes.
 
 ## Cancel and decide
 
@@ -72,9 +88,14 @@ The main types. Each service's page or the API reference has the rest.
 | Quests and dialogue | `QuestStartedEvent`, `QuestStepEvent`, `QuestCompletedEvent`, `QuestFailedEvent`, `QuestObjectiveProgressEvent`, `ConversationOptionEvent`, `DialogueLineEvent`, `KnowledgeChangedEvent` | quest steps, a conversation option; knowledge results |
 | [World progress](/kiln/wiki/world-progress) | `FlameLevelChangedEvent`, `SpireUnlockedEvent`, `ShrineFoundEvent`, `ShroudRootDestroyedEvent`, `BossKilledEvent`, `ChestLootedEvent`, `QuestStatusChangedEvent` | reports only |
 | Creatures | `CreatureStateEvent`, `CreatureTargetEvent`, `CreatureVariantAppliedEvent`, `VillagerStateEvent` | |
-| Rules, time, settings | `PlayerRulesChangedEvent`, `TimeSetEvent`, `DayStartedEvent`, `NightStartedEvent`, `SettingChangedEvent`, `PermissionsChangedEvent` | |
+| Rules, time, settings | `PlayerRulesChangedEvent`, `PlayerNoClipEndedEvent`, `TimeSetEvent`, `TimeSpeedChangedEvent`, `WeatherChangedEvent`, `DayStartedEvent`, `NightStartedEvent`, `SettingChangedEvent`, `PermissionsChangedEvent` | |
 | Network and content | `NetPeerReadyEvent`, `NetPeerLeftEvent`, `NetVanillaClientEvent`, `NetClientHandshakeEvent`, `ContentReadyEvent`, `ContentSyncedEvent`, `ConfigSyncedEvent` | a handshake |
 | Client UI | `ScreenChangedEvent`, `RenderFrameEvent` (every frame, on the render thread: [Drawing](/kiln/wiki/drawing)) | |
+
+**Every change Kiln makes has an event** (since 0.2.0-dev.27), among them `CombatChangedEvent`, `ImpactVariableChangedEvent`,
+`PlayerProgressionChangedEvent`, `BuffRemovedEvent`, `EquipChangedEvent`, `ComponentWrittenEvent` and the players'
+`PlayerKickedEvent`, `PlayerBannedEvent` and `PlayerLoginEvent` (cancelable). A change made inside the handler of its
+own event arrives first thing in the next step instead of looping.
 
 Many events cost nothing until someone subscribes: Kiln starts watching the game for them only then. Subscribe to what
 you need, not to `KilnEvent`.

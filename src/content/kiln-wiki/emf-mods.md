@@ -1,16 +1,18 @@
 ---
 title: "EMF mods"
 nav: "EMF mods"
-description: "Install EMF DLL and Lua mods with API v27 support, current differences and server/client evidence limits."
+description: "Install EMF DLL and Lua mods with API v40 (EMF 0.6.8) support, current differences and server/client evidence limits."
 status: "partial"
-updated: "2026-11-11"
+updated: "2026-11-13"
 ---
 
-**0.2.0-dev.22** runs mods made for EMF (the Enshrouded Modding Framework), including EMF 0.6.0 / API v27 and
-older DLL/Lua mods. You do not need EMF's `dinput8.dll` or its core. Kiln's EMF part is installed by default.
+Kiln runs mods made for EMF (the Enshrouded Modding Framework), DLL and Lua mods, up to EMF 0.6.8 / API v40 since
+**0.2.0-dev.27**. You do not need EMF's `dinput8.dll` or its core. Kiln's EMF part is installed by default.
 
-The C table has **90 slots: 77 full, 13 partial, none missing**. That describes implemented contracts, not a claim that
-every mod or player-facing feature has been tested. [Remaining differences](#what-doesnt-work-yet) and client checks are below.
+The C table has **135 slots: 76 full, 17 partial, and 42 that answer "not available" for now** (functions EMF added
+between 0.6.3 and 0.6.8). That describes implemented contracts, not a claim that every mod or player-facing feature has
+been tested. [What that means for a mod](#mods-built-for-emf-063-to-068), [remaining differences](#what-doesnt-work-yet)
+and client checks are below.
 
 ## Install a mod
 
@@ -27,7 +29,39 @@ file: Kiln rewrites EMF's copy at each start.
 Which mods load:
 - A mod marked `client` doesn't load on a dedicated server.
 - A mod whose required mod is missing, off or too old doesn't load, and the log says why.
-- A mod that needs an EMF API newer than v27 is refused, with the version it needs.
+- A mod that needs an EMF API newer than v40 is refused, with the version it needs.
+
+## Mods built for EMF 0.6.3 to 0.6.8
+
+A mod built with EMF's SDK doesn't start on a host whose table is smaller than the one it was built with. Kiln served
+EMF 0.6.0's table until 0.2.0-dev.26, so every EMF DLL built since 0.6.3, and with EMF's `lua` mod every Lua mod of a
+current EMF (Beastmaster, Necromancer, Bounty Board and the others), stayed off unless EMF itself was installed. Since
+0.2.0-dev.27 the table is EMF 0.6.8's and they start.
+
+Kiln doesn't carry every function EMF added since. Chat lines without a speaker (`chat_tell_ex`, `chat_broadcast_ex`)
+and `world_to_screen` work. Player join, leave and death events, item and character names, hits and hit rules, buffs,
+markers, map actions, canvases, `remove_building`, paths, doors, enemy orders and move orders answer "not available",
+as EMF does on a game build it doesn't know: the rest of the mod runs. `kiln.log` says once per mod and function
+`... not supported (not available on Kiln yet)`, and `kiln/state/emf.json` lists the calls under `unsupported`.
+
+What that means for EMF 0.6.8's own mods, read from their source (not seen with a player):
+
+- **minimap** draws nothing.
+- **Beastmaster**: its markers sent to players, its buff reads and removals and its move reads do nothing; the rest runs.
+- **teleports**: the map action (Shift and hold on the map) isn't offered; its commands work.
+- On Kiln an EMF mod's chat line always shows without a speaker's name, also a plain `chat_tell`.
+
+On a lab server with no players, EMF 0.6.8's own mods, built from EMF's source, started on Kiln with no EMF installed:
+`lua` 1.33.0 with eight Lua mods (Beastmaster 1.17.1 among them), and big_stacks, event_log, herald, raids, sleep and
+teleports.
+
+**EMF's mod check.** An EMF server can check a joining game's EMF mods and refuse games without its mods. A Kiln game
+now answers that check, so such a server no longer kicks a Kiln player after a minute. When your game lacks a mod the
+server needs, one note says which. Two limits: Kiln's list has no content mods yet, so a server set to refuse that also
+requires content mods still refuses a Kiln game; and after leaving one server and joining another without restarting
+the game, the check (and EMF mod messages) can be missing for that session when EMF's greeting arrives before the world
+has loaded. Rejoining fixes it. A Kiln server answers an EMF game's check with its own list and logs the difference
+(`EMF mods check: player ...`); it never refuses a join.
 
 ## Settings and commands
 
@@ -103,9 +137,10 @@ commands and joined-player synchronization still need hosted and joined game che
 
 ## What doesn't work yet
 
-These are the current API v27 differences and evidence limits, replacing the older dev.19 gap list.
+These are the current differences and evidence limits, replacing the older dev.19 gap list. For the functions EMF
+added in 0.6.3 to 0.6.8, see [above](#mods-built-for-emf-063-to-068).
 
-| What | In dev.21 |
+| What | Now |
 |---|---|
 | Mod programs and event listeners | server world only, including a world you host; not the game client's own world |
 | HUD and notifications | client overlay; on a server, HUD lines are retained and notes logged. Only the older clock display has been seen in game |
@@ -124,5 +159,7 @@ call can succeed in the wrong world, without its dependencies or without a welco
 
 The final source has host/ABI/adapter checks, the dedicated-server conformance probe and the two mixed-server boots above.
 Earlier compatibility checks loaded all 13 DLL mods shipped with EMF 0.3.3, and its Lua host ran eight Lua mods. The clock
-mod's time display was seen in game. dev.21's hook and chat changes were tested under Wine and on lab servers. No new physical-client session has verified API v27 networking, wheels, windows,
+mod's time display was seen in game. dev.21's hook and chat changes were tested under Wine and on lab servers. dev.27's
+v40 table and the mod check were tested on a lab server and with host tests against EMF's own wire code. No
+physical-client session has verified EMF networking, the mod check, wheels, windows,
 portraits, E prompts, taming or multiplayer behaviour. Install matching Lua/dependency versions on every side the mod requires.

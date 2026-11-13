@@ -3,7 +3,7 @@ title: "Run a server"
 nav: "Run a server"
 description: "Install, update and run dedicated servers with Kiln, from the launcher or kilnctl on Linux."
 status: "works"
-updated: "2026-11-10"
+updated: "2026-11-13"
 ---
 
 > Rented server with only FTP, or a server without the launcher? See
@@ -75,6 +75,9 @@ refused when:
 - `modSync` is `refuse` and the server has required mods.
 
 Otherwise they join, without entities of new templates. If nothing is at stake, nothing is held.
+
+To keep a player out for good or for a while, Kiln has `/kick`, `/ban`, `/unban` and `/bans`, with a ban list of its own
+next to the game's ([Kick and ban](/kiln/wiki/dedicated-servers#kick-and-ban)).
 
 **Known limit:** a vanilla client carrying Kiln items can crash on a server that lets it in, and may lose those items elsewhere.
 

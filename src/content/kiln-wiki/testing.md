@@ -1,8 +1,8 @@
 ---
 title: "Testing"
-description: "Tests that run inside the server with Kiln.Testing: real game state, waits in server steps, JSON reports."
+description: "Tests that run inside the server with Kiln.Testing, and unit tests with no game under dotnet test with Kiln.TestKit."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-13"
 ---
 
 Kiln.Testing runs tests in a running server, on the tick thread, so they can touch game state. It's Kiln's take on Forge's GameTest.
@@ -58,3 +58,35 @@ In `kiln.log`, and with each test's time, message and stack in `kiln/logs/tests/
 
 Spawn creatures far away, use chests and villagers in the world, read values before and after. List what only a player can confirm
 (what the screen shows, real hits) and check those by hand.
+
+## Tests without the game
+
+`Kiln.TestKit` runs your mod under `dotnet test`, with no game and no server: a `KilnHarness` loads the mod with Kiln's
+own loader, steps it, runs console commands and joins fake players. Your `[KilnTest]` methods run there as xunit tests
+too.
+
+```sh
+dotnet new kiln-unit-test -n MyMod.Tests --mod ../MyMod/MyMod.csproj
+dotnet test MyMod.Tests
+```
+
+```csharp
+[Fact]
+public void The_mod_loads_and_sees_a_player()
+{
+    using var kiln = new KilnHarness();
+    var mod = kiln.Load<MyMod.MyModMod>();
+    kiln.Step();
+    Assert.True(mod.IsLoaded, mod.Error ?? kiln.DumpLogs());
+    kiln.Players.Join("Ada");
+    kiln.Step();
+    Assert.Equal(1, kiln.Run(() => Players.Count));
+}
+```
+
+Since 0.2.0-dev.27 the kit fakes spawning, chat, items, combat, time and a world of entities: your mod's own calls run,
+and the test reads what the mod did (`kiln.Spawned`, `player.Chat`, `player.Say`, `player.Inventory`,
+`kiln.Combat.Hit`, `kiln.Time`, `kiln.Entities`). The fakes answer as Kiln's services do, also with a refusal. Quests
+and talent trees your mod defines run on fake players. What the kit doesn't model (weather, equip, moves between
+inventories, the game's journal and skill tree) says it is offline instead of pretending. The fakes were checked against
+the services' code, not against a running game, so keep the in-server tests above for what only the game can show.

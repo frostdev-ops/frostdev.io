@@ -2,7 +2,7 @@
 title: "The manifest"
 description: "kiln.mod.json: id and version, where the mod runs, what players need, dependencies and load order."
 status: "works"
-updated: "2026-11-10"
+updated: "2026-11-13"
 ---
 
 Every mod folder has a `kiln.mod.json`. Kiln.Sdk writes it from your project file, or add your own. The build checks it
@@ -23,6 +23,7 @@ with the code that loads it, so a manifest that builds is one Kiln accepts.
   "loadAfter": ["some-mod"],
   "incompatible": { "rival": "<3" },
   "entryAssembly": "MyMod.dll",
+  "writes": ["Fuel"],             // components written through the game's write tracking
   "tests": { "autoRun": true }
 }
 ```
@@ -52,9 +53,15 @@ doesn't, since many `both` mods work for everyone. A Kiln player missing a state
 which mods; `modSync` set to `warn` or `off` lets them in. Needs `side: both`. These rules pass on test servers, not yet in
 the real game. See [Who can join](/kiln/wiki/multiplayer#who-can-join).
 
+## Tracked writes: `writes`
+
+Since 0.2.0-dev.27 a mod that changes components with `World.Write` and its kin lists their types in `writes`
+([Tracked writes](/kiln/wiki/world-programs#tracked-writes-from-the-tick-thread)). Kiln.Sdk adds the types your code
+writes. A `writes` list Kiln can't read still lets the mod load, with a warning; only its tracked writes are refused.
+
 ## Versions
 
-`apiVersion` is the mod API you built against (0.2 today). Older APIs of the same major version load.
+`apiVersion` is the mod API you built against (0.2 today; 0.2.0-dev.27 ships mod API 0.2.2, additive over 0.2.1). Older APIs of the same major version load.
 
 | Range | Means |
 |---|---|

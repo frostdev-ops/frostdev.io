@@ -2,7 +2,7 @@
 title: "Building blocks"
 description: "Say what you mean: a spell, a sword, a potion, a status, a creature. Kiln picks the game data, the ids and the programs."
 status: "works"
-updated: "2026-11-08"
+updated: "2026-11-13"
 ---
 
 > **Works** since 0.2.0-dev.14: on test servers, and much of it seen in the game (spells, abilities, items, creature rules,
@@ -292,7 +292,8 @@ var sparks = Blocks.Define("frost_sparks", new VfxBlock
 ```
 
 Attach it with a `Vfx` field on a cast, a projectile, an effect, an area or a status, or name one of the game's with
-`"game:<name>"`. A VFX in a data file is there from the first start; one from code from the next. Kiln-built bursts
+`"game:<name>"`. A VFX in a data file is there from the first start; one from code too since 0.2.0-dev.27, when the build
+[bakes](/kiln/wiki/dev-kit#definitions-baked-at-build) it into the mod (without baking: from the next start). Kiln-built bursts
 and the game's VFX by name have been seen in the game; frost VFX on hits haven't yet.
 
 New, not yet seen in the game:

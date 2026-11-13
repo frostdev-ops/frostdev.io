@@ -1,8 +1,8 @@
 ---
 title: "Multiplayer"
-description: "What players need, who can join, per-character progress, synced configs, your own network messages and client code."
+description: "What players need, who can join, kicks and bans, per-character progress, synced configs, your own network messages and client code."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-13"
 ---
 
 ## Decide what players need
@@ -34,6 +34,27 @@ own framework (Enshwick has its own join check). A server's modpack can carry th
 
 **Known limit:** only entities are withheld. A vanilla client carrying Kiln items can crash on a server that lets it in, and may lose
 those items elsewhere. A mod that adds items should state `clients`.
+
+## Kick, ban and who may log in
+
+```csharp
+KickResult k = await Players.Kick((PlayerRef)player, "Back in five minutes.");
+Bans.Add((PlayerRef)player, "griefing", TimeSpan.FromDays(7));     // or by Steam id; no duration: for good
+
+[Subscribe]
+private void OnLogin(PlayerLoginEvent e)                          // a whitelist
+{
+    if (!_allowed.Contains(e.SteamId)) { e.Reason = "This server is invite only."; e.Cancel(); }
+}
+```
+
+New in 0.2.0-dev.27, on the server. `Players.Kick` (or `Network.Kick(peer, reason)`) refuses a connection with a reason:
+a player with Kiln reads it, one without gets the game's own "could not join". A kick is not a ban; the player can join
+again. `Bans` is Kiln's own ban list (`Add`, `Remove`, `Find`, `All`), kept with the server's Kiln data and enforced
+whenever a connection names its account. `PlayerLoginEvent` is posted once for each connection when it first names its
+player; cancel it to refuse the player. `PlayerKickedEvent`, `PlayerBannedEvent` and `PlayerUnbannedEvent` report the
+changes. Admins have the same as commands ([Kick and ban](/kiln/wiki/dedicated-servers#kick-and-ban)). Tested with test
+connections on a test server, not yet with a real player's game.
 
 ## What reaches Kiln players by itself
 

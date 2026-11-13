@@ -2,7 +2,7 @@
 title: "Install Kiln"
 description: "Install Kiln for Enshrouded, import downloaded mod archives, and play with or without mods."
 status: "works"
-updated: "2026-11-11"
+updated: "2026-11-13"
 ---
 
 > **Early access.** Download the launcher: [Windows installer](/kiln/download/windows), [Linux AppImage](/kiln/download/linux)
@@ -27,7 +27,8 @@ tested under Wine with such paths, not on a Windows PC.
 3. Drop a mod's archive (zip, 7z or rar), folder or DLL anywhere on the launcher window, or choose it with **Add mods**.
    It shows up in the list on Play, switched on; **Undo** takes it out again. A rar needs a tool that is already on your
    PC (unrar, 7-Zip, bsdtar or Windows' tar); without one the launcher says to extract it first.
-4. Press **Play**.
+4. Press **Play**. The launcher shows what the start is doing until the game's main menu
+   ([When you press Play](#when-you-press-play)).
 
 <!-- shot: launcher-play | The launcher's Play page: every mod in one list, with Just once above it -->
 
@@ -45,13 +46,45 @@ like the game folder (a `mods` folder with a loader DLL beside it). Already have
 another framework installed? Kiln keeps it, and copies your profile's mods for that framework's own loader. See
 [Mods for other frameworks](/kiln/wiki/other-mods) and [Adding mods in the launcher](/kiln/wiki/other-mods#adding-mods-in-the-launcher).
 
+## When you press Play
+
+A progress bar shows the step that runs: cooking a mod, Steam, each of Kiln's own steps, loading the mods and their
+content, until the game's main menu. It is in the window, in the top bar and on the Steam Deck. **Running** shows once
+the main menu is there.
+
+From the second start with the same mods, it says how long is left, learned from your own earlier starts on this PC.
+The first start says it is timing itself instead of guessing, and a step that takes much longer than usual says so.
+The times are kept in the launcher's data folder (`state/start-times.json`); deleting that file only resets the
+estimates. A game that still has an older Kiln shows what it showed before.
+
+## Mods the launcher cooks
+
+Some mods make their models, animations or sounds from your own game's files (a cook recipe, `assets/cook.json`). The
+launcher cooks them when you press its **Play**: it says **Cooking** with the mod's name, shows the cook tool's lines,
+and starts the game after. You don't need Kiln's source.
+
+- **Cook again** in a mod's menu repeats it (Y on the mod in the Steam Deck's
+  **Mods** screen).
+- **Cancel** stops a cook, and a cook that hangs is stopped. A mod that could not be cooked runs on the files it has.
+- **Python.** On Windows the launcher brings its own (python.org's embeddable Python, in the launcher's folder):
+  nothing is installed and a Python you have is not touched. On Linux it uses the system's `python3`, 3.10 or newer;
+  when something is missing, the message says what to install.
+- A mod that is being cooked is not replaced or removed while you change its version or switch it off: the launcher
+  asks you to wait.
+- The launcher doesn't cook mods you put into the game folder by hand, nor the mods of a server it runs. Use
+  `kiln cook` for those ([cooking on a server](/kiln/wiki/dedicated-servers#mods-with-a-cook-recipe)).
+
+Cooking on Windows was compile-checked for this release, not yet run on a Windows PC.
+
 ## Steam Deck
 
 On a Steam Deck the launcher opens in **Deck mode**: a controller-friendly screen (D-pad or stick to move, A to choose,
-B to go back, L1/R1 for tabs). Download the AppImage in Desktop Mode, then add it to Steam as a non-Steam game
+B to go back, L1/R1 for tabs, L2 to select mods and R2 to act on the selection). Download the AppImage in Desktop Mode, then add it to Steam as a non-Steam game
 (right-click it, **Add to Steam**) to start it from Game Mode. **Add mods** lists the mods in your Downloads folder: `.zip`, `.7z` and `.rar` files, DLLs and mod folders. A `.rar`
 needs a tool on the Deck; without one, extract it first. **Mods** is the same list of every mod as on the desktop: A
-switches a mod on or off, X removes it. Profiles are in Deck **Settings**, **Profile**.
+switches a mod on or off, X removes it, Y cooks it again when it has a cook recipe. **Editor** is the save editor,
+used with the controller alone, with a number pad for amounts and levels ("Open a save file…" is desktop only for now).
+Profiles are in Deck **Settings**, **Profile**.
 If Kiln doesn't load with your Proton, set the launch option below; Deck mode's **Help** shows the steps and whether it's
 set. Switch to the desktop screen in **Settings**, or start the launcher with `--desktop`.
 
@@ -114,7 +147,7 @@ which shows **Vanilla**. On a Steam Deck, Home shows a **Kiln is not loading** b
 
 ## Mods from Nexus Mods
 
-The official **0.2.0-dev.25** launcher ships with Nexus integration disabled, as every one since dev.20 did. There is no **Catalog**,
+The official launcher ships with Nexus integration disabled, as every one since dev.20 did. There is no **Catalog**,
 **Nexus Mods** account/settings page or Mod Manager Download (`nxm://`) handler in this build, on desktop or Deck.
 
 It cleans up what dev.19 left behind:
@@ -160,8 +193,16 @@ From Steam: `KILN_DISABLE=1 %command%`. Uninstalling on the Runtime page restore
 
 ## Your saves
 
-Kiln never writes your saves. The **Saves** page backs them up and restores them (never while the game runs). Its save
-editor changes a save only when you use it.
+Kiln never writes your saves. The **Saves** page backs them up and restores them (never while the game runs); its list
+says which backups are the game's and which are Kiln's. The **Editor** page changes a save only when you use it:
+
+- Your changes stay when you leave the page. The editor asks before it drops them, for another character and for
+  **Discard**. (Closing the desktop window with unsaved changes doesn't ask yet.)
+- If the game wrote the save after the editor read it, the editor doesn't overwrite it: it offers **Read again**. When
+  you changed nothing, it reads the save again by itself after you played.
+- An item that stacks takes any amount up to 65,535, which is what the save holds, with a note when that is above the
+  game's stack size (a mod can raise stack sizes).
+- A save with items from a mod that is gone opens read-only.
 
 ## Steam and the game
 

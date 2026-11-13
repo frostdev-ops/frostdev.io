@@ -3,7 +3,7 @@ title: "The kiln command"
 nav: "The kiln command"
 description: "One command for a mod's whole life: create, build, cook, deploy, run, reload, test, debug, lint, pack and read logs."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-13"
 ---
 
 `kiln` is for mod authors, on Linux and Windows. (`kilnctl` [runs servers](/kiln/wiki/servers).) It drives Kiln.Sdk, so
@@ -23,7 +23,7 @@ kiln pack                             # my-items-0.1.0.zip, never with cooked ga
 | `kiln new --list` | the templates and their options |
 | `kiln new <template> <Name> [--server S] [--feed F] [--set opt=value]` | a project from a [template](/kiln/wiki/dev-kit) |
 | `kiln build [-c CONFIG] [--no-cook] [-- args]` | cooks if needed, then builds; C# or native |
-| `kiln cook [--check] [--game DIR]` | every `cook.json`: models, Impact, sounds. `--check` exits 1 when a cook is needed |
+| `kiln cook [--check] [--force] [--game DIR]` | every `cook.json`: models, Impact, sounds. `--check` exits 1 when a cook is needed; `--force` cooks every recipe again |
 | `kiln deploy [--server S] [-r\|--reload]` | copies into the server; hot reloads |
 | `kiln pack [-o DIR]` | `<id>-<version>.zip` |
 | `kiln run [--server S] [--stop\|--restart\|--status] [--wait SECONDS]` | starts a server and follows its log until it's up |

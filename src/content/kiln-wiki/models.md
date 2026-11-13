@@ -2,7 +2,7 @@
 title: "3D models"
 description: "Give an item a new mesh, or a new item its own model: model in Blender, ship glTF and a recipe, cook on the player's machine."
 status: "partial"
-updated: "2026-11-07"
+updated: "2026-11-13"
 ---
 
 > **Partly built.** Rigid weapon models work in game. Skinned models, worn looks and animations cook from glTF and run on a
@@ -31,13 +31,26 @@ MyWeapons/
 ```
 
 `kiln cook` reads the game read-only, writes `assets/cooked/`, and checks the result: valid ranges, materials that exist, the base
-model's vertex format. Later the launcher will cook at install time.
+model's vertex format. Players don't run it: since 0.2.0-dev.27 their launcher cooks the mod when they press **Play**
+([Mods the launcher cooks](/kiln/wiki/install#mods-the-launcher-cooks)), and a server owner runs `kiln cook` from a
+release's `sdk/` folder ([Mods with a cook recipe](/kiln/wiki/dedicated-servers#mods-with-a-cook-recipe)).
+
+Each cook records what it wrote in the game's `kiln/state/cook-receipts`. A cooked file no receipt of that game lists
+(shipped inside a mod, copied in, or changed afterwards) loads with a warning for now, and a later release will refuse
+it. So ship recipes and sources, never `assets/cooked`: `kiln pack` leaves it out. `kiln cook --force` cooks every recipe
+again. A mod's assets are read from its own folder only: a link that leads out of it, or to another mod's cooked file,
+is an error.
 
 ## A new item with its own model
 
 1. In `cook.json`, add a model with a new, fixed GUID, and a visual template copied from the base item.
 2. Define the item in a data pack ([New items](/kiln/wiki/new-items)) and point its references at those GUIDs.
 3. Render an icon with Kiln's `render-icon.py`.
+
+An [item block](/kiln/wiki/blocks#items-and-weapons) whose look has a `Model` of your own lies on the ground as that
+model too (since 0.2.0-dev.27; before, it took the ground model of the item it was made like). The look's `Dropped`
+names another item whose ground model it takes. Items written for earlier releases change their look on the ground with
+this release unless they set `Dropped`.
 
 The ModelSample mod has a Bronze Sword made of cubes and a Tower Sword with its own model.
 

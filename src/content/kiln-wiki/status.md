@@ -1,17 +1,60 @@
 ---
 title: "What works today"
 description: "What Kiln does in the current build, what awaits a game test, what's being built and what isn't, as of November 2026."
-updated: "2026-11-12"
+updated: "2026-11-13"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.26**, the current development release; check the download's version before using its new APIs.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.27**, the current development release; check the download's version before using its new APIs.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026, or, for dev.24 and later, in the one real game the release's notes name (Linux,
 Proton, one client). Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
+
+## New in 0.2.0-dev.27
+
+NoClip, asked for on GitHub (issue 25), the launcher cooking the mods that need it, several mods switched at once, and
+the calls mods were missing: take a buff off, see where a player looks, kick and ban, hear only the hits you care about,
+put an item on a player, choose the weather, roll affixes onto an item. EMF mods built for EMF 0.6.3 and later start
+again. **Seen in a real game (13 November, a hosting game on Linux and Proton):** NoClip switched on and off as a player,
+and the scrolling pause menu with 10 mods' entries. The rest ran on test servers with stand-ins for players, in Kiln's
+tests and in the launcher's browser test bench; what a player's own game shows waits for the guided client pass.
+
+| Area | Included in dev.27; evidence and remaining limits |
+|---|---|
+| [What Play is doing](/kiln/wiki/install#when-you-press-play) | a progress bar with the step that runs, until the game's main menu; from the second start with the same mods, the time left. Launcher tests |
+| [The launcher cooks](/kiln/wiki/install#mods-the-launcher-cooks) | mods with a cook recipe are cooked when you press Play, with no Kiln source; **Cook again** in a mod's menu. On Windows the launcher brings its own Python. The Windows cook is compile-checked only; the tools were run on Linux |
+| [Several mods at once](/kiln/wiki/profiles#several-mods-at-once) | tick boxes, Shift+click, Ctrl+A; switch on, off or remove in one go. **All on** and **All off** with Undo. L2 and R2 on the Steam Deck. Tests and the browser test bench, not the installed launcher |
+| [Changed on disk](/kiln/wiki/profiles#changed-on-disk) | a mod you edited in its own folder shows **Changed on disk** with **Use the changed files**, instead of "library hash mismatch" at Play. Tests and the browser test bench |
+| [Save editor](/kiln/wiki/install#your-saves) | an **Editor** tab on the Steam Deck; changes stay when you leave the page; **Read again** instead of overwriting a save the game wrote; amounts up to 65,535 (GitHub issue 23). Browser test bench only |
+| [NoClip](/kiln/wiki/player-rules#noclip) | `/noclip` for admins, off on every server until `"allowNoClip": true`. Switching it on and off: seen in a real game. Ending it inside the ground, death, other players' view and a dedicated server: not tried in a game |
+| [Menu entries](/kiln/wiki/profiles#menu-entries-of-mods) | the pause menu scrolls when mods add more entries than fit; every entry is also on Kiln's Mods page. Tried in one real game at one resolution |
+| [Mouse key bindings](/kiln/wiki/game-ui#hud-toasts-and-keys) | Mouse4, Mouse5, the middle button and the wheel, with Ctrl, Shift or Alt (GitHub issue 29). Unit tests and a test window under Wine, not a real game |
+| [Mod settings in the game](/kiln/wiki/profiles#mod-settings) | Apply shows the new values at once, and a slider has a number field beside it (GitHub issue 28) |
+| [EMF 0.6.3 to 0.6.8](/kiln/wiki/emf-mods#mods-built-for-emf-063-to-068) | EMF's newer DLL and Lua mods start again; a Kiln game answers an EMF server's mod check. Some of EMF's newer functions answer "not available" for now. A lab server with EMF 0.6.8's mods, no players |
+| [ShroudForge](/kiln/wiki/eml-shroudforge#shroudforge-mods) | what **Waiting** means; a mods folder on another drive under Proton; the launcher says when ShroudForge's own loader cannot write its mods; Kiln's **MODS** entry is back in the main menu with ShroudForge mods on |
+| [Kick and ban](/kiln/wiki/dedicated-servers#kick-and-ban) | `/kick`, `/ban`, `/unban`, `/bans` and a ban list of Kiln's own. Test connections on a test server, not a real player's game |
+| [A slow server start](/kiln/wiki/dedicated-servers#what-a-slow-start-is-doing) | `kiln/state/progress.json` says what the start is doing. Test servers |
+| [Cooking on a server](/kiln/wiki/dedicated-servers#mods-with-a-cook-recipe) | `kiln cook` from a release's `sdk/` folder alone, no `KILN_REPO`. Each cook records what it wrote; a cooked file no cook of this game made loads with a warning |
+| For mod authors | mod API 0.2.2, additive. [NoClip](/kiln/wiki/player-rules#noclip), [buffs taken off and listed](/kiln/wiki/abilities#run-effects-buffs-and-animations), [where a player looks](/kiln/wiki/abilities#where-a-player-looks), [kick, bans and the login event](/kiln/wiki/multiplayer#kick-ban-and-who-may-log-in), [event filters by entity](/kiln/wiki/events#only-the-events-about-one-entity), [equip and unequip](/kiln/wiki/inventory#equip-and-unequip), [item data in players' games](/kiln/wiki/inventory#item-data-and-saves), [affixes](/kiln/wiki/affixes), [tracked world writes](/kiln/wiki/world-programs#tracked-writes-from-the-tick-thread), [weather](/kiln/wiki/code-mods#weather), [one contract for every service](/kiln/wiki/code-mods#when-a-call-cannot-work), [KILN120 and KILN121](/kiln/wiki/lint#c-analyzers), [definitions baked at build](/kiln/wiki/dev-kit#definitions-baked-at-build), [new fakes for unit tests](/kiln/wiki/testing#tests-without-the-game), [new samples and templates](/kiln/wiki/dev-kit#templates). Proven on a test server with stand-ins for players |
+| Fixes | starts with many mod materials are much faster; Kiln's mods load again next to mods that hook the game first (Auto Doors), also with Greeneye Loader or ShroudForge beside them; the game no longer hangs at its start next to other loaders, and Kiln finds the game's functions after another loader changed them (both by rifters, GitHub pull request 27); the Mods page at high Windows scaling; a mod item lies on the ground as its own model; quoted names in `dinput8-chain.ini`; a quest whose completion a mod cancelled no longer gives its reward |
+
+### Known limits (dev.27)
+
+- NoClip was tried in one real game. It does not work while the Creative Mode mod runs, and a player who leaves inside
+  the ground is saved there (the game's Unstuck frees them).
+- The launcher does not cook mods you put into the game folder by hand, nor the mods of a local server it runs: run
+  `kiln cook` for those.
+- The scrolling pause menu was tried at one resolution, with mouse and keyboard; other UI scales and a gamepad were not.
+  The main menu does not scroll: there, more than 3 mods' entries go to the Mods page.
+- Kicking, banning, equip, the weather, tracked writes, item data in players' games and affixes were proven on a test
+  server with stand-ins for players. A weather hold does not outlast a server restart.
+- EMF: the minimap draws nothing, Beastmaster's markers, buff reads and move reads do nothing, and teleports has no map
+  action. An EMF server that also requires content mods still refuses a Kiln game.
+- "Changed on disk", All on and All off, the save editor's Deck tab and the menu entries on the Mods page ran in tests and
+  the browser test bench only.
 
 ## New in 0.2.0-dev.26
 
@@ -28,7 +71,7 @@ on dedicated test servers under Wine and in Kiln's tests. Nothing ran on native 
 | [ShroudForge settings](/kiln/wiki/eml-shroudforge#shroudforge-mods) | a ShroudForge mod you had in ShroudForge's mods folder before Kiln can have its settings changed in the launcher: Kiln writes only the setting you change. Changing a setting in ShroudForge's own in-game menu no longer makes Kiln treat its copy of the mod as yours (that kept the folder at every change and locked its settings). Kiln's tests; the menu's behaviour follows ShroudForge's source |
 | Data on one item | a mod can keep a value on one particular item (kills on one sword) through moves, saves, crashes and restored backups. When Kiln can't tell two identical items apart, the value waits instead of jumping to the wrong item. Backpack and chest items through a restart and a rejoin: seen in the game. The action bar, worn items, a crash and crafting with such an item wait for a game test |
 | Weapons with their own attacks | a mod's weapons can have player animation states of their own (attacks, guards, casts), timing and chains, and parts that move while held. The server and every player's game need the mod, cooked ([below](/kiln/wiki/dedicated-servers#mods-with-a-cook-recipe)); the join check compares both sides. The join and the sample weapons' states: seen in the game. How the states blend, a second player seeing them, hit timing and root motion wait for a game test |
-| Cooking on a dedicated server | `kiln cook` works against a server's files: it cooks the animations a server needs and skips the models, which only a player's game draws. It needs Python and Kiln's source; the launcher doesn't cook yet, so a player who adds such a mod sees the plain weapon, and a mod with player animation states is refused at join until the player's game cooked it too. Tested against a test server's files |
+| Cooking on a dedicated server | `kiln cook` works against a server's files: it cooks the animations a server needs and skips the models, which only a player's game draws. It needs Python and Kiln's source; the launcher doesn't cook yet, so a player who adds such a mod sees the plain weapon, and a mod with player animation states is refused at join until the player's game cooked it too. Tested against a test server's files. Since dev.27 the launcher cooks such mods at Play, and `kiln cook` needs no Kiln source |
 | Mod creatures | creatures a mod defines keep their own friends and foes again (dev.24 dropped them at the first server step). Seen in the game |
 | What works on this game build | `kiln/state/capabilities.json` lists what works on your game build and side and why something is off; a mod that doesn't load because the build lacks something says what and why in kiln.log and in the mod list. Test servers |
 | For mod authors | mod API 0.2.1 (additive; a mod built with this MDK needs dev.26 or newer). About 120 lab and test helpers are now a build error unless a project opts in (`KILNX001`). Typed reads of every game component, tests under `dotnet test` with no game (`Kiln.TestKit`), guided client checks, one error rule. The [release notes](https://github.com/frostdev-ops/kiln/releases/tag/v0.2.0-dev.26) have the list |
@@ -274,7 +317,7 @@ Historical release notes. The dev.24, dev.22, dev.21 and dev.20 features and lim
 |---|---|
 | [EML](/kiln/wiki/eml-shroudforge#eml-mods) | game test pending. Mods patch the game data on test servers; a broken mod is switched off instead of stopping the game. dev.21's faster starts: measured on a lab server under Wine. dev.22: the first start no longer reads all game files (lab server and a synthetic data set under Wine; not a real install), and your profile's EML mods run under EML's own `dbghelp.dll` through copies the launcher places. dev.24: EML mods run when a ShroudForge mod is on too (Linux hosts and test servers) |
 | [ShroudForge](/kiln/wiki/eml-shroudforge#shroudforge-mods) | game test pending. Kiln's bundled copy and a player's own copy both run mods on test servers, with live settings. dev.24, seen in a real game: Kiln's main-menu entries with ShroudForge mods on, and W and S steering with Unlimited Flight |
-| [EMF](/kiln/wiki/emf-mods) | EMF 0.6.0 / API v27, 77 full and 13 partial C slots. Client-world programs/events remain unsupported; player-facing rendering/input and joined-game checks remain open. The older clock mod was seen in game |
+| [EMF](/kiln/wiki/emf-mods) | EMF 0.6.8 / API v40 since dev.27: of 135 C slots, 76 full, 17 partial, and 42 functions EMF added since 0.6.3 answer "not available" for now. EMF 0.6.8's own mods start on a lab server. Client-world programs/events remain unsupported; player-facing rendering/input and joined-game checks remain open. The older clock mod was seen in game |
 | [SET](/kiln/wiki/more-frameworks#set) | dev.24: SET's tools seen in a real game. Server probe 39/0; game options, `Admin.send`, ImGui Debug and the `settings.ini` editor remain unavailable. Kiln tool-window drawing/input needs a client |
 | [Greeneye Loader](/kiln/wiki/more-frameworks#greeneye-loader) | game test pending. The whole API, tested on Linux under Wine |
 | [Creative Mode (Flame)](/kiln/wiki/more-frameworks#creative-mode-flame) | game test pending. Started on a test server. dev.24: runs from the game's `mods` folder |
@@ -345,7 +388,7 @@ Nothing below has been seen in the game yet. The new features are listed under
 | Game UI: menus, screens, crafting tabs, HUD, keys, gamepad | |
 | Content and config sync to Kiln players | |
 | Kiln DLL mods and stand-alone `dinput8.dll` mods | |
-| [EMF mods](/kiln/wiki/emf-mods) | older mods and current Lua/Beastmaster paths on test servers; the older clock mod seen in game. Current API v27 limits: [above](#mods-for-other-frameworks) |
+| [EMF mods](/kiln/wiki/emf-mods) | older mods and EMF 0.6.8's DLL and Lua mods on test servers; the older clock mod seen in game. Current API v40 limits: [above](#mods-for-other-frameworks) |
 | The launcher: install, profiles, library, saves, save editor | Linux and Windows. Windows: checked on a Windows PC by a tester. dev.24's new main screen (one list, profiles in Settings): tested in a browser against a stand-in backend, not in the installed app |
 | Simpler first run | finds the game, installs Kiln, makes a "My mods" profile; drop a mod on the window to add it |
 | Linux builds | glibc 2.35 or newer: Steam Deck (SteamOS), Ubuntu 22.04 and later |

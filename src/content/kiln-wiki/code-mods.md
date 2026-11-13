@@ -1,8 +1,8 @@
 ---
 title: "Code mods"
-description: "The Mod class, the tick thread, events, configs, commands, permissions, saved data and other mods."
+description: "The Mod class, the tick thread, events, configs, commands, permissions, saved data, other mods, and what a call does when it cannot work."
 status: "works"
-updated: "2026-11-10"
+updated: "2026-11-13"
 ---
 
 ## The mod
@@ -140,7 +140,41 @@ Each part of the game is a service. List the ones you use in `KilnServices`:
 | Ui, Client, Network | [game UI](/kiln/wiki/game-ui), [multiplayer](/kiln/wiki/multiplayer) |
 | Assets, Audio | [icons and textures](/kiln/wiki/assets), [sounds](/kiln/wiki/sounds) |
 
-A service can be unavailable on a build Kiln doesn't fully support. Check `Players.Available` (and the like) and do less.
+## When a call cannot work
+
+Since 0.2.0-dev.27 every service answers the same way (mod API 0.2.2):
+
+| What happened | What you get |
+|---|---|
+| the game refused (the player left, the slot is full) | a result with `Ok == false` and a `Reason` |
+| your argument is wrong (unknown id, out of range) | an `ArgumentException` |
+| the capability is off (service not loaded, this game build lacks it, wrong side) | a `KilnUnavailableException` naming the capability |
+
+```csharp
+if (!Capabilities.Is("items.equip")) return "not on this server";
+EquipResult r = await Items.Equip(player, from);
+if (!r.Ok) return $"not equipped: {r.Reason}";
+```
+
+`KilnUnavailableException` is still a `NotSupportedException`, so an existing `catch` keeps working. Capability rows
+are there from the first tick: session rows are pending until a server world runs, and a service whose native part is
+missing lowers its features and takes that back when the part appears. `kiln/state/capabilities.json` lists them.
+Results are kiln results (`IKilnResult`, with `Ok` and `Reason`), and the analyzers warn about one nobody reads and a
+capability nobody checks ([KILN120 and KILN121](/kiln/wiki/lint#c-analyzers)). Members carry what they need
+(`[RequiresCapability]`, `[ServerOnly]`, `[TickThreadOnly]`, `[AnyThread]`).
+
+## Weather
+
+```csharp
+WeatherResult w = await Time.SetWeather("rain", TimeSpan.FromMinutes(10));   // no duration: until ReleaseWeather
+await Time.ReleaseWeather();
+```
+
+New in 0.2.0-dev.27 (service Time). `Time.SetWeather` starts a weather phenomenon by its name, on every weather layer
+that has one of that name, or on one layer; `"none"` is a clear sky. The game runs the change, with its fades, and tells
+every player's game. `Time.WeatherPhenomena` lists the names, `Time.Weather` the layers, and `WeatherChangedEvent`
+reports every change, the game's own rolls too (`ByKiln` tells them apart). Capability `time.weather_choose`. A hold
+doesn't outlast a server restart. The sample `SkyControl` uses it.
 
 ## The advanced tier
 

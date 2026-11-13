@@ -2,7 +2,7 @@
 title: "Talents"
 description: "Add nodes to the game's own skill tree, or give your mod a whole talent tree of its own."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-13"
 ---
 
 > **Two fixes await a client retest:** keeping unlocks when a mod list moves a node, and German labels on a Kiln tree's screen. A Kiln
@@ -36,8 +36,9 @@ from the same files. Start with `kiln new talents MyTalents`.
   that node does: `0xcfa5985b` raises Intelligence.
 - `from` and `to` are links. `position`, or `near` + `offset`, place it.
 - `cost` is per level. `maxLevel` is 0 (one unlock) to 7.
-- Also `program`, `iconFile`, `unlocksAbility`. From code: `GameTree.Define(...)`, which on a dedicated server counts from the
-  next start.
+- Also `program`, `iconFile`, `unlocksAbility`. From code: `GameTree.Define(...)`. Since 0.2.0-dev.27 Kiln.Sdk
+  [bakes](/kiln/wiki/dev-kit#definitions-baked-at-build) such nodes into the mod at build, so they count from the first
+  start; with `KilnBake=false`, a dedicated server counts them from the next start.
 
 The game's tree has room for only a few more nodes. Past that, Kiln keeps the extras in a shadow table (up to 4096 in all). The
 screen shows them and the game's rules apply, but they stay out of the character save, so a character stays valid on servers

@@ -14,6 +14,7 @@ export const kilnWikiSections = [
       'blocks',
       'new-items',
       'inventory',
+      'affixes',
       'creatures',
       'creature-ai',
       'abilities',

@@ -3,7 +3,7 @@ title: "Profiles and mods"
 nav: "Profiles and mods"
 description: "Every mod in one list on Play, saved sets of mods as profiles in Settings, the mods in your game folder, the library, and mod settings in the launcher or in game."
 status: "works"
-updated: "2026-11-12"
+updated: "2026-11-13"
 ---
 
 ## Profiles
@@ -31,6 +31,9 @@ Each profile shows how many mods it has (of every kind) and the server it is for
 makes a profile named **Server: &lt;name&gt;**, listed here too. When a profile other than **My mods** is loaded, Play
 names it in one small link at the top ("Profile: Ember run"), which opens Settings, Profiles.
 
+**A mod dropped while no profile is loaded** asks which profile to add it to; **New profile…** there makes an empty
+one under the name you give, and the message after it has **Load it**.
+
 A broken profile file means **no mods at all**, with the reason in the log. Kiln never silently loads another set.
 
 The launcher no longer has a **Profiles** page, a profile picker on Play, a profile's Mods, Native, EMF, Engines, Configs
@@ -53,15 +56,39 @@ its version, and a short note only when there is something to say ("Starts with 
 
 - **The switch.** Off keeps the mod in your list with its version and settings.
 - **The menu** (the three dots, or a right click on the row): Switch on/off, **Settings** (for mods that have them, such as
-  ShroudForge's and Shroudtopia's), **Configs** (when the mod wrote a config file), **Use &lt;version&gt;** (another
+  ShroudForge's and Shroudtopia's), **Configs** (when the mod wrote a config file), **Cook again** (a Kiln mod with a
+  cook recipe: [Mods the launcher cooks](/kiln/wiki/install#mods-the-launcher-cooks)), **Use &lt;version&gt;** (another
   version you have), **Open folder**, **Remove &lt;version&gt;** (one of several versions) and **Remove**.
-- **Above the list:** **Filter** and **Kind** (with more than six rows), **Load order**, **Engines** and **Add mods**.
-  Dropping a file anywhere on the window adds a mod too, switched on. Settings' **Switch new mods on** (on by default)
-  decides that; switched off, new mods are added off.
+- **Above the list:** **Filter** and **Kind** (with more than six rows), **All on** and **All off**, **Notes**, **Load
+  order**, **Engines** and **Add mods** (zip, 7z, rar and DLL files). Dropping a file anywhere on the window adds a mod
+  too, switched on. Settings' **Switch new mods on** (on by default) decides that; switched off, new mods are added off.
+- **All on** and **All off** switch every mod the list shows, in one go. Narrow the list with **Filter** or **Kind**
+  first, and the buttons say **Shown on** and **Shown off**. **Undo** in the message after it (shown for 20 seconds) puts
+  the switches back; it leaves a mod you switched yourself since, and says so when the profile was changed or another one loaded
+  in between.
 - **Load order** shows every mod that is on, in the order a start brings them up, then the ones that are on but don't
   load (with the reason) and the ones that are off. Its neighbours are **Native and DLLs**, **Engines** and **Configs**.
 - **Engines** shows which loader runs which kind of mod, how each did at the last start, and the other loaders found next
   to the game.
+
+### Several mods at once
+
+Each row has a tick box. Shift+click ticks a range, Ctrl+A every mod the list shows, Esc none. A bar above the list then
+has **Switch on**, **Switch off**, **Remove…** and **Clear** for the ticked mods. Removing asks once, naming them all and
+the other profiles that list them; a mod that can't go (a running server uses it) stays, with the reason, while the
+others go. On the Steam Deck, L2 selects a mod and R2 acts on the selection.
+
+### Changed on disk
+
+A mod you edit in its own folder (its menu, **Open folder**, then its `mod.json` or its files) shows **Changed on disk**,
+with **Use the changed files**. One click makes your edit the mod's files, and the list shows its new name. **Play** and
+**Load** name the changed mod and offer the same; before 0.2.0-dev.27 they said "library hash mismatch" and the mod had
+to be zipped and added again.
+
+- Extra files you put in the folder (a settings file beside a plugin) come along.
+- When the library already holds a file of the same name with other contents, it stops and deletes nothing.
+- A mod that is already copied into the game (an EML mod in the game's `mods` folder) runs with the old files until it
+  is placed again.
 
 ## In the game folder
 
@@ -177,7 +204,9 @@ Each mod has a commented JSON file in the profile's config folder. Change it:
   **Configs** view next to **Load order**. ShroudForge and Shroudtopia mods also have **Settings** in their menu;
 - in game, in the **Kiln menu**: press **Insert**, or choose **Mods** in the main or pause menu, then **Config**.
 
-Kiln checks every value. Most apply at once; the form says which need a restart.
+Kiln checks every value. Most apply at once; the form says which need a restart. In the game, **Apply** shows the
+applied values at once, and a slider has a number field beside it: type the value (on a wide range, a value such as 2.5
+is hard to reach by dragging).
 
 ## The Kiln menu
 
@@ -187,7 +216,7 @@ Kiln checks every value. Most apply at once; the form says which need a restart.
 |---|---|
 | Mods | the mods of every framework: version, state, errors and settings |
 | Network | the server's Kiln version, mods and warnings |
-| Keys | key bindings: click one, press the new key |
+| Keys | key bindings: click one, then press the new key, a mouse side or middle button, or turn the wheel |
 | Overlay | display scale and a test message |
 
 It works with gamepad, mouse and keyboard.
@@ -205,6 +234,24 @@ Since dev.24 each ShroudForge mod has a page there with its switch, its settings
 ShroudForge does not run says why. With ShroudForge mods on, Kiln's entries are in the main menu again (ShroudForge wraps
 the game's menu entries, and Kiln's were lost behind it); that was seen in a real game (Linux, Proton). A ShroudForge mod that does all its work at startup shows "applied" instead of "Waiting".
 Next to ReShade or another overlay the page is no longer empty; when Kiln still can't draw, kiln.log says why.
+
+A ShroudForge mod that shows **Waiting** says what it waits for in its details. SF Unlimited Flight, for one, waits
+whenever you are not gliding, and works only in a world your own game hosts.
+
+### Menu entries of mods
+
+Mods can add entries to the game's main menu and pause menu. When they add more than fit, the pause menu scrolls (mouse
+wheel, arrow keys, gamepad), so **Quit** stays reachable. The main menu doesn't scroll: there a menu shows mods'
+entries while there are 3 or fewer and leaves the rest to the Mods page. The same goes for the pause menu on a game build
+where it can't scroll.
+
+Every mod's entry is also on Kiln's **Mods** page under **Menu entries**, each doing what its row in the menu does.
+**Kiln settings** on that page has the choice, `modEntries`: **Auto** (the default: every entry where the pause menu
+scrolls, else as Few), **Few** (only while a menu has 3 or fewer), **Always** or **Never**.
+
+The scrolling was tried in one real game before 0.2.0-dev.27 shipped. Should it ever end the game, Kiln switches it off
+for that Kiln version and game build by itself and says so at the next start; delete `kiln/state/menu-scroll.off` to try
+again.
 
 ## Logs
 

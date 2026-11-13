@@ -3,7 +3,7 @@ title: "EML and ShroudForge mods"
 nav: "EML and ShroudForge"
 description: "Kiln runs EML data mods and ShroudForge's Lua mods unchanged, with no extra loader and no Wine settings."
 status: "pending"
-updated: "2026-11-12"
+updated: "2026-11-13"
 ---
 
 EML (the Enshrouded Mod Loader) and ShroudForge are the frameworks with the most Enshrouded mods. Both come with Kiln
@@ -127,12 +127,17 @@ as `[sf] ...` lines. On Linux and the Steam Deck you need no Wine setting beyond
 **Shortcuts** of ShroudForge mods work with the ShroudForge that Kiln brings along since dev.24; you no longer need
 ShroudForge installed for them. This is what broke steering with W and S on the glider with ShroudForge's Unlimited
 Flight; that steering was seen working in a real game (Linux, Proton). With ShroudForge mods on, Kiln's **Mods** entry
-is in the game's main menu again (also seen in a real game). Kiln brings ShroudForge 1.7.9; 1.8.0 is not released yet,
+is in the game's main menu again (also seen in a real game). In 0.2.0-dev.26 that entry was missing in every start in
+which Kiln ran ShroudForge; 0.2.0-dev.27 brings it back, with Kiln's ShroudForge and with **Use my installed
+ShroudForge**. Kiln brings ShroudForge 1.7.9; 1.8.0 is not released yet,
 and Kiln will support it when it is out.
 
 How the launcher places the mods: it puts a profile's ShroudForge package in ShroudForge's mods folder as `<name>/`.
 ShroudForge drops every package whose id it finds twice, so when a folder there (your own copy) holds the same package
-id already, Kiln leaves its copy out and yours runs. Since dev.22, with the **ShroudForge mods** drop-in on, Kiln hosts
+id already, Kiln leaves its copy out and yours runs. A mods folder set to another drive in ShroudForge's settings
+(`paths.mods`, for example `C:\sfmods` under Proton) is found the way ShroudForge finds it, through the game's Wine
+prefix; before 0.2.0-dev.27 the launcher copied the mods into the game's own `mods` folder there, where ShroudForge
+didn't look. Since dev.22, with the **ShroudForge mods** drop-in on, Kiln hosts
 ShroudForge for the packages you put in its mods folder by hand too, not only for a ShroudForge mod in the profile. Once
 ShroudForge runs, it runs the whole folder, switch or not.
 
@@ -156,6 +161,11 @@ If ShroudForge is installed already, keep it.
 - If ShroudForge starts by itself next to Kiln (through its own `dbghelp.dll`), Kiln lets it and starts nothing twice.
   The launcher puts the profile's ShroudForge mods, and the profile's EML mods, into ShroudForge's mods folder for it. Without a
   DLL override under Proton that `dbghelp.dll` doesn't run, and Kiln runs the mods itself.
+- **On Linux and the Steam Deck, with `dbghelp=n,b` and `winmm=n,b` in Steam's launch options**, ShroudForge 1.7.9's
+  own loader runs and can't write its mods into the game data (it fails at every start under Proton). The launcher says
+  so on the Deck's Home, in the desktop's **Engines** view and in the support report, and names the mods that didn't
+  load. Take those two out of `WINEDLLOVERRIDES` (keep `dinput8=n,b`) and Kiln's own ShroudForge runs the mods. Kiln
+  doesn't take over from a loader the launch options start.
 
 **Engine hooks (dev.21).** When Kiln hosts ShroudForge, ShroudForge's six engine hooks go through Kiln's
 [hook registry](/kiln/wiki/hooks). Another DLL's hook on one of them (XHL, a closed-source mod) no longer switches
@@ -189,6 +199,9 @@ other. So Kiln lets only one write per start:
 - **One failing EML mod stops the whole pass.** When one EML mod fails inside ShroudForge, ShroudForge drops its whole
   startup pass and none of its data mods apply that start. The in-game Mods menu shows them as failed; the launcher's
   **Engines** view can still say they run.
+- **An EML mod you put into the game's `mods` folder yourself** runs from your folder while ShroudForge runs the EML
+  mods. The launcher says so, and when ShroudForge has it switched off, where to switch it on: Kiln's in-game menu,
+  **Mods**, **ShroudForge**, or ShroudForge's own Modloader. Kiln doesn't write into folders you installed.
 - With no ShroudForge mod in use, Kiln's EML part applies every EML mod, as before.
 
 ## On a server

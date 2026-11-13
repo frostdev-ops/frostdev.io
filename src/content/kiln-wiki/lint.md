@@ -3,7 +3,7 @@ title: "Lint and analyzers"
 nav: "Lint and analyzers"
 description: "kiln lint checks your mod's JSON before the game has to. The analyzers catch thread and hot-reload mistakes in your C#."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-13"
 ---
 
 ## kiln lint
@@ -40,7 +40,7 @@ A Kiln.Sdk project's manifest is read from its build output, so build once first
 
 ## C# analyzers
 
-Kiln.Sdk runs these over every mod, in `dotnet build` and live in your editor. Six have code fixes.
+Kiln.Sdk runs these over every mod, in `dotnet build` and live in your editor. The main ones:
 
 | Id | Catches |
 |---|---|
@@ -52,6 +52,8 @@ Kiln.Sdk runs these over every mod, in `dotnet build` and live in your editor. S
 | `KILN106` | a thread, timer, watcher, socket or subscription never released |
 | `KILN107` | **error**: an advanced API without `KilnAdvanced` |
 | `KILN108` | a service used but not listed in `KilnServices` |
+| `KILN120` | a Kiln result (`IKilnResult`, for example from `Items.Equip` or `NoClip.Set`) that nobody reads |
+| `KILN121` | a call that needs a capability, with no check of it first and no `catch` of `KilnUnavailableException` |
 
 ```csharp
 Task.Run(async () =>
@@ -62,6 +64,12 @@ Task.Run(async () =>
 ```
 
 The fix: `Context.Scheduler.Post(() => Chat.Broadcast(json));`.
+
+**KILN120 and KILN121** (new in 0.2.0-dev.27) follow [the contract](/kiln/wiki/code-mods#when-a-call-cannot-work). For
+KILN120, check `result.Ok`, or write `_ = ...` to drop a result on purpose; the code fix offers both. For KILN121, ask
+`Capabilities.Is("row")` (or the service's own guard property) before the call, catch `KilnUnavailableException`, or
+mark the calling member `[RequiresCapability("row")]`. A check inside a helper of your own isn't followed. Switch the
+rule off with `dotnet_diagnostic.KILN121.severity = none`.
 
 Adjust rules in `.editorconfig` (`dotnet_diagnostic.KILN105.severity = error`, or `none`), or with
 `#pragma warning disable KILN101`. `<KilnAnalyzers>false</KilnAnalyzers>` turns them off. They can't see everything, so
