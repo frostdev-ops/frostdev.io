@@ -1237,8 +1237,15 @@
           "held": "all"
         },
         {
-          "title": "Content list and type names",
-          "text": "Mods can find game types by the names Impact scripts use, and list every content file the game serves and where it comes from (on players' games after its game test).",
+          "title": "List of content files",
+          "text": "Mods can list every content file the game serves, the game's own and every mod's, and where each comes from.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Game types by script name",
+          "text": "Mods can find game types by the names Impact scripts use.",
           "area": "api"
         },
         {
