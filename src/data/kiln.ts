@@ -31,7 +31,7 @@ export const kilnWikiSections = [
   },
   { id: 'looks', title: 'Looks and sound', pages: ['game-ui', 'ui-blocks', 'drawing', 'assets', 'models', 'shaders', 'sounds'] },
   { id: 'devkit', title: 'Dev kit', pages: ['dev-kit', 'cli', 'lint', 'vscode', 'catalogs', 'testing', 'hot-reload', 'debugging'] },
-  { id: 'reference', title: 'Reference', pages: ['forge', 'status'] },
+  { id: 'reference', title: 'Reference', pages: ['forge', 'dinput8-chain', 'status'] },
 ] as const;
 
 // 'pending': built and passing on a test server, but not fully tried in a real game yet.

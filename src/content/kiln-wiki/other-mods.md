@@ -3,7 +3,7 @@ title: "Mods for other frameworks"
 nav: "Other frameworks"
 description: "Kiln runs mods made for EML, ShroudForge, EMF, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink, unchanged, next to Kiln mods."
 status: "partial"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 Kiln loads mods made for other Enshrouded mod frameworks without rewriting them. It supplies the runtimes listed
@@ -199,7 +199,7 @@ mods in your [modpack](/kiln/wiki/modpacks).
 Many small mods are a single `dinput8.dll` (stat sliders, sprint toggles, HUD tweaks, shroudlink's client addon). Only
 one file can have that name. When you install Kiln, it moves the other `dinput8.dll` to `kiln/chain/` and loads it
 from there, listed in `kiln/chain.ini`. Kiln also reads the `dinput8-chain.ini` that EMF and other chain loaders write,
-with quoted DLL names and a comment after a name, as EMF's chain spec describes (since 0.2.0-dev.27; before, such a line
+with quoted DLL names and a comment after a name, as [the shared chain spec](/kiln/wiki/dinput8-chain) describes (since 0.2.0-dev.27; before, such a line
 was dropped without a word).
 A mod with its own name (`iphlpapi.dll`, `powrprof.dll`, `dxgi.dll`) is left alone and runs next to Kiln.
 
