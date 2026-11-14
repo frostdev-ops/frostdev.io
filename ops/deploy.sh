@@ -36,7 +36,7 @@ const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'glaze/privacy'
   'guides/rimeward-first-workspace', 'guides/crosspane-two-computers',
   'guides/rimewire-agent-handoffs', 'guides/frostsim-first-simulation',
   'guides/loothing-raid-loot', 'guides/glaze-safari', 'guides/glaze-chrome',
-  'kiln', 'kiln/wiki', 'kiln/wiki/install', 'kiln/wiki/first-mod', 'kiln/wiki/status', 'kiln/agents',
+  'kiln', 'kiln/wiki', 'kiln/wiki/install', 'kiln/wiki/first-mod', 'kiln/wiki/status', 'kiln/agents', 'kiln/roadmap',
   'kiln/download', ...['windows', 'linux', 'deb', 'server', 'runtime'].map((target) => `kiln/download/${target}`),
   ...['install', 'features', 'privacy', 'agents', 'mods-api', 'mods-widgets', 'relay', 'development', 'firefox-android'].map((doc) => `guides/glaze-${doc}`)];
 for (const page of pages) assert(statSync(`dist/${page ? page + '/' : ''}index.html`).size > 0);

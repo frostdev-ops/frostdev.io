@@ -1,0 +1,37 @@
+---
+// One feature of the Kiln roadmap: in a release on the timeline, or (with `release`) in the by-area view, where a chip
+// links to its release. The data-* attributes are what the page's filters read; the page works without them.
+import { areaLabel, kindLabel, searchText, type RoadmapArea, type RoadmapRelease } from '../lib/kilnRoadmap';
+
+interface Props {
+  feature: { title: string; text: string; area: RoadmapArea; kind?: 'new' | 'improved' | 'fix'; gamePending?: boolean; groundwork?: boolean; note?: string };
+  /** shipped, coming (a next or planned release) or later (no release yet). */
+  status: 'shipped' | 'coming' | 'later';
+  /** In the by-area view: the release it belongs to (a chip that links there). */
+  release?: RoadmapRelease;
+  /** The words the search also matches: the release's names. */
+  where: string;
+}
+const { feature, status, release, where } = Astro.props;
+const kind = feature.kind ?? 'new';
+---
+
+<li class="kiln-rm-feature" data-feature data-area={feature.area} data-kind={kind} data-status={status} data-pending={feature.gamePending ? '' : undefined} data-search={searchText(feature, where)}>
+  <span class="kiln-rm-tag" data-area={feature.area}>{areaLabel[feature.area]}</span>
+  <div class="kiln-rm-feature-body">
+    <p class="kiln-rm-feature-title">
+      {kind !== 'new' && <span class="kiln-rm-kind" data-kind={kind}>{kindLabel[kind]}</span>}
+      <strong data-hl>{feature.title}</strong>
+    </p>
+    <p class="kiln-rm-feature-text" data-hl>{feature.text}</p>
+    {(feature.gamePending || feature.groundwork || feature.note) && (
+      <p class="kiln-rm-feature-badges">
+        {feature.gamePending && <span class="kiln-badge" data-status="pending">Game test pending</span>}
+        {feature.groundwork && <span class="kiln-badge" data-status="partial">Groundwork</span>}
+        {feature.note && <span class="kiln-rm-note">{feature.note}</span>}
+      </p>
+    )}
+  </div>
+  {release && <a class="kiln-rm-chip" href={`#${release.id}`} data-status={release.status} data-goto={release.id}>{release.short}</a>}
+  {!release && status === 'later' && <span class="kiln-rm-chip" data-status="later">Later</span>}
+</li>

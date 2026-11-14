@@ -74,6 +74,18 @@ checkout>` copies it into `src/content/kiln-skill/`. Production nginx needs the 
 of the product-page location from `ops/public-site.nginx.conf`. Every Kiln page ends with "Enshrouded is a trademark of
 Keen Games GmbH. Kiln is unofficial."
 
+`/kiln/roadmap` is Kiln's roadmap: every release with what it brought (new, improved, fixes), the next release, the
+planned ones after it, the 1.0 milestone and planned features with no release yet. Its data is
+`src/data/kilnRoadmap.json`, read and checked by `src/lib/kilnRoadmap.ts` (an unknown area, kind or status, a release
+listed twice, released releases out of order or a released one without a date fail the build). Without JavaScript the
+page is the timeline, each release a disclosure. With it, a toolbar adds search (`/` focuses it, matches are
+highlighted), area chips (several at once), Shipped / Coming up, fixes on or off, "game test pending" only, a by-area
+view, upcoming-first or oldest-first order, expand and collapse; the address keeps the state (`?q=`, `?area=`,
+`?show=`, `?fixes=0`, `?pending=1`, `?view=areas`, `?order=oldest`) and `#dev-27` opens that release. The rail at the
+top links every release, oldest to newest, and starts at the current one. `/kiln` has a roadmap section with the next
+release and the planned ones. Future items name no dates, no internal plan sizes and nothing that is not public; dates
+of releases are their GitHub publish time as a New York date, as `kilnRelease.json` has it.
+
 Kiln releases. The release folder from Kiln's release tooling (`kiln-<version>/`) is served at
 `/kiln/downloads/<version>/` without its `nexus/` and `updates/` folders (see "Kiln Launcher self-update" in
 `ops/public-site.nginx.conf`). `src/data/kilnRelease.json` describes the current release, and `/kiln`, `/kiln/download`
@@ -88,7 +100,10 @@ and the stable links all read it through `src/lib/kilnDownloads.ts`. To publish 
    name, and a file the web server cannot read (not world-readable) is reported.
 3. Review `git diff src/data/kilnRelease.json`, then `npm run check && npm run build`. The build warns when a file in
    the data has no size or SHA-256 (the data was not generated from a real folder yet).
-4. Update the wiki and the Nexus-off note on `/kiln` for the release, commit and deploy.
+4. Update the wiki and the Nexus-off note on `/kiln` for the release, and the roadmap: move the release from
+   `upcoming` to `released` in `src/data/kilnRoadmap.json` with its date and what actually shipped (until then the page
+   shows it as released, on `kilnRelease.json`'s date, with its planned list), and mark the following release `next`.
+   Commit and deploy.
 
 `/kiln/stats` is not a public page: the owner's download statistics, read from Cloudflare's request data once an hour
 by `stats/kiln-downloads.mjs` on the server and shown only to someone signed in to the gallery dashboard (it redirects

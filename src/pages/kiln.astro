@@ -2,6 +2,7 @@
 import KilnLayout from '../layouts/KilnLayout.astro';
 import { kilnSource } from '../data/kiln';
 import { fileHref, release } from '../lib/kilnDownloads';
+import { latestRelease, nextRelease, upcomingReleases } from '../lib/kilnRoadmap';
 
 // Kiln is in early access: the downloads come from /kiln/downloads/<version>/ (src/data/kilnRelease.json, written from the
 // release folder by scripts/kiln-release-data.mjs), also on GitHub and Nexus Mods. The #download section below shows the
@@ -130,6 +131,29 @@ const download = fileHref;
           <p>Templates, one command, hot reload, in-server tests, a linter and VS Code.</p>
           <span class="product-text-link">Your first mod <span aria-hidden="true">→</span></span>
         </a>
+      </div>
+    </section>
+
+    <section class="product-section" aria-labelledby="roadmap-title">
+      <div class="product-section-heading">
+        <p class="product-eyebrow">Roadmap</p>
+        <h2 id="roadmap-title">Where Kiln goes next.</h2>
+        <p>Every release so far with what it brought, and the plan after {latestRelease.short}. Search it, or filter it by area.</p>
+      </div>
+      <div class="kiln-roadmap-teaser">
+        {nextRelease && (
+          <a class="product-card kiln-card-link" href={`/kiln/roadmap#${nextRelease.id}`}>
+            <span class="kiln-card-number" aria-hidden="true">Next · {nextRelease.short}</span>
+            <h3>{nextRelease.title}</h3>
+            <p>{nextRelease.summary}</p>
+            <span class="product-text-link">What it brings <span aria-hidden="true">→</span></span>
+          </a>
+        )}
+        <div class="product-card">
+          <span class="kiln-card-number" aria-hidden="true">After that</span>
+          <ul>{upcomingReleases.filter((r) => r.status === 'planned').map((r) => <li><span>{r.short}</span>{r.title}</li>)}</ul>
+          <a class="product-text-link" href="/kiln/roadmap">The whole roadmap <span aria-hidden="true">→</span></a>
+        </div>
       </div>
     </section>
 

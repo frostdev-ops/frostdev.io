@@ -40,6 +40,7 @@ const kiln = path === '/kiln' || path.startsWith('/kiln/');
         {glaze && <a href="/glaze/mods" aria-current={path === '/glaze/mods' ? 'page' : undefined}>Mods</a>}
         {kiln && <a href="/kiln/download" aria-current={path === '/kiln/download' || path.startsWith('/kiln/download/') ? 'page' : undefined}>Download</a>}
         {kiln && <a href="/kiln/wiki" aria-current={path === '/kiln/wiki' || path.startsWith('/kiln/wiki/') ? 'page' : undefined}>Wiki</a>}
+        {kiln && <a href="/kiln/roadmap" aria-current={path === '/kiln/roadmap' ? 'page' : undefined}>Roadmap</a>}
         {kiln && <a href="/kiln/agents" aria-current={path === '/kiln/agents' ? 'page' : undefined}>Agent skill</a>}
         <a href={glaze ? "/glaze" : "/login"}>{glaze ? "Get Glaze" : "Sign in"} <span aria-hidden="true">↗</span></a>
       </nav>
