@@ -1,10 +1,10 @@
 ---
 // One feature of the Kiln roadmap: in a release on the timeline, or (with `release`) in the by-area view, where a chip
 // links to its release. The data-* attributes are what the page's filters read; the page works without them.
-import { areaLabel, kindLabel, searchText, type RoadmapArea, type RoadmapRelease } from '../lib/kilnRoadmap';
+import { areaLabel, heldLabel, kindLabel, searchText, type Held, type RoadmapArea, type RoadmapRelease } from '../lib/kilnRoadmap';
 
 interface Props {
-  feature: { title: string; text: string; area: RoadmapArea; kind?: 'new' | 'improved' | 'fix'; gamePending?: boolean; groundwork?: boolean; note?: string };
+  feature: { title: string; text: string; area: RoadmapArea; kind?: 'new' | 'improved' | 'fix'; gamePending?: boolean; held?: Held; groundwork?: boolean; note?: string };
   /** shipped, coming (a next or planned release) or later (no release yet). */
   status: 'shipped' | 'coming' | 'later';
   /** In the by-area view: the release it belongs to (a chip that links there). */
@@ -27,6 +27,7 @@ const kind = feature.kind ?? 'new';
     {(feature.gamePending || feature.groundwork || feature.note) && (
       <p class="kiln-rm-feature-badges">
         {feature.gamePending && <span class="kiln-badge" data-status="pending">Game test pending</span>}
+        {feature.gamePending && feature.held && <span class="kiln-rm-note">{heldLabel[feature.held]}</span>}
         {feature.groundwork && <span class="kiln-badge" data-status="partial">Groundwork</span>}
         {feature.note && <span class="kiln-rm-note">{feature.note}</span>}
       </p>

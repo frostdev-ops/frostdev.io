@@ -156,11 +156,9 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
                     </span>
                   </summary>
                   <div class="kiln-rm-body">
-                    {r.status === 'next' ? (
-                      <p class="kiln-rm-body-note">Built and in its last round of fixes and checks. Features marked “game test pending” ship switched off until they pass in a real game. Groundwork ships too, with no feature promised yet.</p>
-                    ) : (
-                      <p class="kiln-rm-body-note">Planned. What is ready when this release is cut ships; the rest moves on.</p>
-                    )}
+                    <p class="kiln-rm-body-note">
+                      {r.note ?? (r.status === 'next' ? 'The release being built now. What is ready when it is cut ships; the rest moves on, and this plan can still change.' : 'Planned, and this plan can still change: what is ready when this release is cut ships; the rest moves on.')}
+                    </p>
                     <ul class="kiln-rm-features">{r.features.map((f) => <KilnRoadmapFeature feature={f} status="coming" where={where(r)} />)}</ul>
                     <p class="kiln-rm-body-foot"><span>Kiln {r.version}</span><a href={`#${r.id}`}>Link to this release</a></p>
                   </div>

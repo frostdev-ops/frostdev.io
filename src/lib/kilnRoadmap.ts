@@ -3,7 +3,9 @@
 // here, so a typo in an area or a status fails the build instead of showing an empty filter.
 // A release published since the file was written is shown as released: when src/data/kilnRelease.json names a version
 // the roadmap still lists as next or planned, that release counts as out, on kilnRelease.json's date. Its list is then
-// still the plan; replace it with what shipped (docs/public-pages.md, "Kiln roadmap").
+// still the plan; replace it with what shipped (docs/public-pages.md, "Kiln roadmap"). The released entry of the release
+// kilnRelease.json names may leave out its date: it then takes that file's date (the release data and the roadmap move
+// in the same site push).
 import data from '../data/kilnRoadmap.json';
 import { release as currentRelease } from './kilnDownloads';
 
@@ -23,6 +25,9 @@ export type FeatureKind = 'new' | 'improved' | 'fix';
 export const kindLabel: Record<FeatureKind, string> = { new: 'New', improved: 'Improved', fix: 'Fix' };
 export type ReleaseStatus = 'released' | 'next' | 'planned';
 export const statusLabel: Record<ReleaseStatus, string> = { released: 'Released', next: 'Next', planned: 'Planned' };
+/** Where a feature that waits for its game test is switched off until then. */
+export type Held = 'all' | 'hosted';
+export const heldLabel: Record<Held, string> = { all: 'Switched off until then', hosted: 'Only on dedicated servers until then' };
 
 export interface RoadmapFeature {
   title: string;
@@ -31,6 +36,8 @@ export interface RoadmapFeature {
   kind: FeatureKind;
   /** Built, but not yet confirmed in a real game. */
   gamePending: boolean;
+  /** Ships switched off until that game test: everywhere, or everywhere but on dedicated servers. */
+  held?: Held;
   /** Ships as groundwork: in the release, nothing promised with it yet. */
   groundwork: boolean;
 }
@@ -45,6 +52,8 @@ export interface RoadmapRelease {
   date?: string;
   title: string;
   summary: string;
+  /** An upcoming release's state in a sentence or two, when the page's default does not say it. */
+  note?: string;
   features: RoadmapFeature[];
 }
 export interface RoadmapLater {
@@ -66,6 +75,7 @@ interface RawFeature {
   area: string;
   kind?: string;
   gamePending?: boolean;
+  held?: string;
   groundwork?: boolean;
 }
 interface RawRelease {
@@ -73,6 +83,7 @@ interface RawRelease {
   date?: string;
   title: string;
   summary: string;
+  note?: string;
   features: RawFeature[];
 }
 interface RawRoadmap {
@@ -84,6 +95,7 @@ interface RawRoadmap {
 
 const areas = new Set<string>(roadmapAreas.map((area) => area.id));
 const kinds = new Set<string>(['new', 'improved', 'fix']);
+const helds = new Set<string>(['all', 'hosted']);
 function fail(message: string): never {
   throw new Error(`src/data/kilnRoadmap.json: ${message}`);
 }
@@ -98,12 +110,15 @@ function area(value: string, where: string) {
 function feature(raw: RawFeature, where: string): RoadmapFeature {
   const kind = raw.kind ?? 'new';
   if (!kinds.has(kind)) fail(`${where}: unknown kind "${kind}"`);
+  if (raw.held !== undefined && !helds.has(raw.held)) fail(`${where}: held "${raw.held}" (all or hosted)`);
+  if (raw.held !== undefined && raw.gamePending !== true) fail(`${where}: held needs gamePending`);
   return {
     title: text(raw.title, where),
     text: text(raw.text, where),
     area: area(raw.area, where),
     kind: kind as FeatureKind,
     gamePending: raw.gamePending === true,
+    held: raw.held as Held | undefined,
     groundwork: raw.groundwork === true,
   };
 }
@@ -120,7 +135,14 @@ function short(version: string) {
 }
 function release(raw: RawRelease, status: ReleaseStatus, where: string): RoadmapRelease {
   const version = text(raw.version, where);
-  if (status === 'released' && !realDate(raw.date)) fail(`${version} needs a real date (YYYY-MM-DD), not "${raw.date ?? ''}"`);
+  // The release the download data names may take its date from there.
+  const date = status === 'released' && raw.date === undefined && version === currentRelease.version ? currentRelease.released : raw.date;
+  if (status === 'released' && !realDate(date))
+    fail(
+      raw.date === undefined
+        ? `${version} is released without a date: give it one, or write the release data (src/data/kilnRelease.json) for it first`
+        : `${version} needs a real date (YYYY-MM-DD), not "${raw.date}"`,
+    );
   if (!Array.isArray(raw.features) || raw.features.length === 0) fail(`${version} lists no features`);
   const name = short(version);
   return {
@@ -128,9 +150,10 @@ function release(raw: RawRelease, status: ReleaseStatus, where: string): Roadmap
     short: name,
     id: name.replace('.', '-'),
     status,
-    date: status === 'released' ? raw.date : undefined,
+    date: status === 'released' ? date : undefined,
     title: text(raw.title, `${version} title`),
     summary: text(raw.summary, `${version} summary`),
+    note: raw.note === undefined ? undefined : text(raw.note, `${version} note`),
     features: raw.features.map((f, i) => feature(f, `${version} feature ${i + 1}`)),
   };
 }

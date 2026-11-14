@@ -77,7 +77,10 @@ Keen Games GmbH. Kiln is unofficial."
 `/kiln/roadmap` is Kiln's roadmap: every release with what it brought (new, improved, fixes), the next release, the
 planned ones after it, the 1.0 milestone and planned features with no release yet. Its data is
 `src/data/kilnRoadmap.json`, read and checked by `src/lib/kilnRoadmap.ts` (an unknown area, kind or status, a release
-listed twice, released releases out of order or a released one without a date fail the build). Without JavaScript the
+listed twice, released releases out of order or a released one without a date fail the build). A feature that waits
+for its game test has `gamePending`, and `held` when it ships switched off until then: `all` (everywhere) or `hosted`
+(only on dedicated servers until then); the page says which. An upcoming release may carry a `note` that replaces the
+page's default sentence about its state. Without JavaScript the
 page is the timeline, each release a disclosure. With it, a toolbar adds search (`/` focuses it, matches are
 highlighted), area chips (several at once), Shipped / Coming up, fixes on or off, "game test pending" only, a by-area
 view, upcoming-first or oldest-first order, expand and collapse; the address keeps the state (`?q=`, `?area=`,
@@ -101,9 +104,10 @@ and the stable links all read it through `src/lib/kilnDownloads.ts`. To publish 
 3. Review `git diff src/data/kilnRelease.json`, then `npm run check && npm run build`. The build warns when a file in
    the data has no size or SHA-256 (the data was not generated from a real folder yet).
 4. Update the wiki and the Nexus-off note on `/kiln` for the release, and the roadmap: move the release from
-   `upcoming` to `released` in `src/data/kilnRoadmap.json` with its date and what actually shipped (until then the page
-   shows it as released, on `kilnRelease.json`'s date, with its planned list), and mark the following release `next`.
-   Commit and deploy.
+   `upcoming` to `released` in `src/data/kilnRoadmap.json` with what actually shipped (until then the page shows it as
+   released, on `kilnRelease.json`'s date, with its planned list), and mark the following release `next`. The released
+   entry may leave out `date` while it is the release `kilnRelease.json` names: it takes that date, and the build fails
+   if the release data does not name it yet. Commit and deploy.
 
 `/kiln/stats` is not a public page: the owner's download statistics, read from Cloudflare's request data once an hour
 by `stats/kiln-downloads.mjs` on the server and shown only to someone signed in to the gallery dashboard (it redirects

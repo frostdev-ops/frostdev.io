@@ -1144,18 +1144,28 @@
       "status": "next",
       "title": "OnBoot",
       "summary": "Mods can put their content and their changes to the game's own data in place before the game reads them, on the very first start.",
+      "note": "Built and in its last round of fixes and checks. Some features wait for a test in a real game: each says whether it is switched off until then or only on dedicated servers. Groundwork ships too, with no feature promised yet.",
       "features": [
         {
           "title": "Content on the first start",
-          "text": "Mods can add items, spells, statuses, effects and talents that exist from a server's first start, with no second restart. Dedicated servers have it now.",
+          "text": "Mods can add items, spells, statuses, effects and talents that exist from a server's first start, with no second restart. Until the game test, players' games do not load such mods, so a server whose players need one refuses Kiln players.",
           "area": "api",
-          "gamePending": true
+          "gamePending": true,
+          "held": "hosted"
         },
         {
           "title": "Change the game's own data",
           "text": "Boot mods can change values the game reads once at start, such as experience per level or how many Flame Altars a base may have.",
           "area": "content",
-          "gamePending": true
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Settings in OnBoot",
+          "text": "A boot mod can read its own settings in OnBoot, so a level cap or an altar count can come from them. KilnBoot in the SDK makes a project a boot mod.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
         },
         {
           "title": "Mod update checks",
@@ -1171,37 +1181,43 @@
           "title": "Questions about the world",
           "text": "Server mods can cast rays, find the ground, check line of sight and find nearby entities, and creature brains can stop seeing through walls.",
           "area": "api",
-          "gamePending": true
+          "gamePending": true,
+          "held": "hosted"
         },
         {
           "title": "Path search",
           "text": "Server mods can ask the game's own path search for a walking route, or only whether a place can be reached.",
           "area": "api",
-          "gamePending": true
+          "gamePending": true,
+          "held": "hosted"
         },
         {
           "title": "Terrain overlays",
           "text": "Mods can add ore veins, mounds, tunnels and small landforms that stay after a restart and that players without the mod also see.",
           "area": "content",
-          "gamePending": true
+          "gamePending": true,
+          "held": "hosted"
         },
         {
           "title": "Weapon follow-up moves",
           "text": "A weapon's moves can lead into each other, for example a block that goes on into the weapon's own parry.",
           "area": "content",
-          "gamePending": true
+          "gamePending": true,
+          "held": "all"
         },
         {
           "title": "Tool wear",
-          "text": "Mods can make an axe or pickaxe wear faster, slower or not at all. Dedicated servers have it now; hosted worlds follow.",
+          "text": "Mods can make an axe or pickaxe wear faster, slower or not at all.",
           "area": "content",
-          "gamePending": true
+          "gamePending": true,
+          "held": "hosted"
         },
         {
           "title": "Values in the game's UI",
           "text": "Client mods can show their own numbers and bars in the game's item details, inventory slots and health, stamina and mana display.",
           "area": "content",
-          "gamePending": true
+          "gamePending": true,
+          "held": "all"
         },
         {
           "title": "Block kinds of your own",
@@ -1214,14 +1230,20 @@
           "area": "api"
         },
         {
-          "title": "Scale, content list, type names",
-          "text": "Mods can resize props per axis and keep that size after a restart, list every content file the game serves, and find game types by script name.",
+          "title": "Prop scale that lasts",
+          "text": "Mods can resize props per axis, and the size stays after a restart. It changes how big a prop looks, not its collision.",
           "area": "api",
-          "gamePending": true
+          "gamePending": true,
+          "held": "all"
+        },
+        {
+          "title": "Content list and type names",
+          "text": "Mods can find game types by the names Impact scripts use, and list every content file the game serves and where it comes from (on players' games after its game test).",
+          "area": "api"
         },
         {
           "title": "Join check at the door",
-          "text": "A server can hold a joining player for at most 25 s while its mods check their game, then let them in or say why not.",
+          "text": "A joining player can be held at the door for up to 25 s while the server checks their game, then let in or refused with a reason. Kiln's own services use it now; mods get it through later ones.",
           "area": "servers"
         },
         {
@@ -1241,14 +1263,20 @@
           "kind": "fix"
         },
         {
-          "title": "NoClip descent",
+          "title": "Beside other hook engines",
+          "text": "Kiln recognises the hooks other engines put into the game's code, such as greeneye plugins and XHL mods, and keeps working beside them. By rifters (pull request 31).",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "NoClip descent and return",
           "text": "In NoClip and character flight, holding sneak always sinks; a player who left inside the ground returns at their last free position.",
           "area": "core",
           "kind": "fix"
         },
         {
           "title": "Key bindings",
-          "text": "Keys with no name of their own keep their binding after a restart, and punctuation keys work on non-US keyboard layouts.",
+          "text": "Keys with no name of their own keep their binding after a restart, and punctuation keys work on non-US keyboard layouts. The restart fix is by bisdat (pull request 34).",
           "area": "core",
           "kind": "fix"
         },
@@ -1265,9 +1293,39 @@
           "kind": "fix"
         },
         {
+          "title": "Required boot mods stop on a bad entry",
+          "text": "A required boot mod with a bad entry in its own files stops the start and names the file and the entry, instead of loading a world without it.",
+          "area": "api",
+          "kind": "fix"
+        },
+        {
           "title": "EML mod message",
           "text": "If ShroudForge keeps an EML mod you copied in by hand switched off, Kiln now says so and how to switch it on.",
           "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Play once with boot mods",
+          "text": "Play once makes the game-data snapshot too, so a boot mod that reads the game's data finds it ready.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Data folder move",
+          "text": "Moving the data folder, or using an existing one, is no longer refused now and then as if another launcher were using it.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Long prerelease numbers",
+          "text": "Update checks compare very long prerelease numbers by their value.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "kiln lint patterns",
+          "text": "kiln lint no longer rejects every publish tag and two folder-name fields.",
+          "area": "tools",
           "kind": "fix"
         },
         {
