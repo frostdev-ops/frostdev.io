@@ -52,9 +52,9 @@ creative.dll
 - **Lines:** blank lines are skipped. A line starting with `;`, `#` or `//` is a comment. `; ` in front of a DLL's line
   switches that DLL off, so players can turn one off without deleting the line. A comment may follow a name after a
   space or tab (`mymod.dll ; my mod`), and a name may stand in double quotes.
-- **Sections** (names are not case-sensitive): `[Chain]` is shared: every loader that follows this spec starts its
-  DLLs. Any other section belongs to one tool, which names it after itself (`[EMF]`, `[Kiln]`): other loaders must
-  ignore it. Lines before any section count as `[Chain]` (older files have no section at all).
+- **Sections** (names are not case-sensitive): `[Chain]` is shared: every loader that follows this spec starts its DLLs. Any other section belongs
+  to one tool, which names it after itself (`[EMF]`, `[Kiln]`): other loaders must ignore it. Lines before any
+  section count as `[Chain]` (older files have no section at all).
 - **`key=value` lines:** a line `name=value` counts as a DLL entry when its value names a `.dll`. Other keys are
   settings of the tool that wrote them; other loaders ignore them.
 
@@ -108,8 +108,8 @@ Tell us when your tool reads the file, or reads it differently, and we will upda
 
 Kiln's own `dinput8.dll` starts DLLs from three lists, in this order:
 
-1. `kiln/chain.ini` `[chain]`: other `dinput8.dll` files the Kiln installer moved into `kiln/chain/` (EMF's loader, a
-   stand-alone dinput8 mod).
+1. `kiln/chain.ini` `[chain]`: other `dinput8.dll` files the Kiln installer moved (EMF's loader, a stand-alone
+   dinput8 mod).
 2. `dinput8-chain.ini` next to the game's exe: `[Chain]`, the lines before any section and `[EMF]`, in file order, by
    the rules above.
 3. The native mods of your profile that load in `dllmain` ([Kiln DLL mods](/kiln/wiki/other-mods#kiln-dll-mods)).
@@ -124,7 +124,10 @@ Where Kiln differs from the spec:
 - It reads `[EMF]`, EMF's own section, for DLLs that EMF's older installers renamed into it.
 - A line that names no `.dll` is skipped, but `proxy.log` does not mention it.
 - Kiln's installer lists the `dinput8.dll` it moves in its own file, `kiln/chain.ini`, not in a section of
-  `dinput8-chain.ini`. It never deletes one, and uninstalling puts it back.
+  `dinput8-chain.ini`. It moves it into `kiln/chain/`; Ultimate ASI Loader goes next to the game's exe as
+  `xinput9_1_0.dll`, the name it works under. It never deletes one. Uninstalling puts it back, unless the file at
+  `dinput8.dll` changed outside Kiln since: then that file stays and the original waits in Kiln's backup.
 - You can start a chained DLL later, after Kiln's own hooks, with `[late]` in `kiln/chain.ini`
-  ([Closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods)). EMF's loader is never started late.
+  ([Closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods)). EMF's loader, when Kiln's installer moved
+  it, is never started late.
 - **Without mods** in the launcher starts Kiln but none of the chain. **Vanilla** starts neither.
