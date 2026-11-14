@@ -96,6 +96,13 @@ test('nexus/, updates/ and the .sig signatures are left out, and no .rpm is inve
   assert.equal(paths(data).some((path) => path.endsWith('.rpm')), false);
 });
 
+test('sdk/feed/ and sdk/api/ are left out without a warning for each file SHA256SUMS lists there', () => {
+  const { data, stderr, status } = run(makeRelease({ extra: ['sdk/feed/index.json', 'sdk/feed/registration/kiln.api/index.json', 'sdk/api/index.html'] }));
+  assert.equal(status, 0);
+  assert.deepEqual(paths(data).filter((path) => /^sdk\/(feed|api)\//.test(path)), []);
+  assert.doesNotMatch(stderr, /which is not in the folder/);
+});
+
 test('an .rpm in the folder is listed and named in files.rpm', () => {
   const { data } = run(makeRelease({ extra: ['linux/kiln-launcher-0.2.0.dev.22-1.x86_64.rpm'] }));
   assert.equal(data.files.rpm, 'linux/kiln-launcher-0.2.0.dev.22-1.x86_64.rpm');
