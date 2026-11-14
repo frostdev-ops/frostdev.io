@@ -1,0 +1,578 @@
+---
+import KilnLayout from '../../layouts/KilnLayout.astro';
+import KilnRoadmapFeature from '../../components/KilnRoadmapFeature.astro';
+import { release } from '../../lib/kilnDownloads';
+import {
+  counts,
+  laterFeatures,
+  latestRelease,
+  milestones,
+  nextRelease,
+  railDate,
+  releasedReleases,
+  roadmapAreas,
+  shortDate,
+  statusLabel,
+  upcomingReleases,
+  type RoadmapRelease,
+} from '../../lib/kilnRoadmap';
+
+// Kiln's roadmap: every release with what it brought, the next release, the planned ones and the features with no
+// release yet (src/data/kilnRoadmap.json through src/lib/kilnRoadmap.ts). Without JavaScript the page is the timeline,
+// each release a <details>; the script below adds search, area and status filters, a by-area view, the order switch and
+// links that keep the filters (?q=, ?area=, ?show=, ?fixes=, ?view=, ?order=). docs/public-pages.md: "Kiln roadmap".
+const where = (r: RoadmapRelease) => `${r.short} ${r.version} ${r.title} ${statusLabel[r.status]}`.toLowerCase();
+const statusOf = (r: RoadmapRelease) => (r.status === 'released' ? 'shipped' : 'coming');
+const featureCount = (r: RoadmapRelease) => r.features.filter((f) => f.kind !== 'fix').length;
+const fixCount = (r: RoadmapRelease) => r.features.filter((f) => f.kind === 'fix').length;
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const github = (r: RoadmapRelease) => `https://github.com/frostdev-ops/kiln/releases/tag/v${r.version}`;
+const after = (r: RoadmapRelease) => milestones.filter((m) => m.after === r.version);
+const looseMilestones = milestones.filter((m) => m.after === null);
+// The rail: oldest on the left, the future on the right.
+const rail = [...releasedReleases].reverse().concat(upcomingReleases);
+const firstDate = releasedReleases[releasedReleases.length - 1]?.date;
+const sortedForArea = [...upcomingReleases, ...releasedReleases];
+---
+
+<KilnLayout
+  title="Kiln roadmap: every release and what comes next"
+  description="Kiln's roadmap: every early access release of the Enshrouded mod framework with the features it brought, the next release, and the features planned after it."
+  path="/kiln/roadmap"
+>
+  <div class="kiln-rm" data-roadmap>
+    <header class="kiln-rm-hero">
+      <div class="kiln-rm-intro">
+        <p class="product-eyebrow"><a href="/kiln">Kiln</a> · Roadmap</p>
+        <h1>Every release.<br /><span>And what comes next.</span></h1>
+        <p class="lead">What each Kiln release brought, what the next one brings, and everything planned after it. Plans after the next release can change, and the roadmap has no dates for them.</p>
+        <dl class="kiln-rm-stats">
+          <div><dt>Releases</dt><dd>{counts.released}</dd></div>
+          <div><dt>Features</dt><dd>{counts.shipped}</dd></div>
+          <div><dt>Fixes</dt><dd>{counts.fixes}</dd></div>
+          <div><dt>Planned</dt><dd>{counts.planned}</dd></div>
+        </dl>
+        {firstDate && <p class="product-meta">Early access since {shortDate(firstDate)} · current release {latestRelease.short}, {shortDate(latestRelease.date!)}</p>}
+      </div>
+      {nextRelease && (
+        <a class="kiln-rm-next" href={`#${nextRelease.id}`} data-goto={nextRelease.id}>
+          <span class="kiln-rm-next-label">Next release · {nextRelease.short}</span>
+          <strong>{nextRelease.title}</strong>
+          <span class="kiln-rm-next-theme">{nextRelease.summary}</span>
+          <ul>{nextRelease.features.filter((f) => !f.groundwork && f.kind !== 'fix').slice(0, 4).map((f) => <li>{f.title}</li>)}</ul>
+          <span class="kiln-rm-next-go">{plural(nextRelease.features.length, 'item')} <span aria-hidden="true">→</span></span>
+        </a>
+      )}
+    </header>
+
+    <nav class="kiln-rm-rail" aria-label="Releases, oldest to newest">
+      <ol>
+        {rail.map((r) => (
+          <li data-status={r.status} data-rail={r.id} data-now={r === latestRelease ? '' : undefined}>
+            <a href={`#${r.id}`} data-goto={r.id}>
+              <span class="kiln-rm-rail-dot" aria-hidden="true"></span>
+              <span class="kiln-rm-rail-v">{r.short}</span>
+              <span class="kiln-rm-rail-d">{r === latestRelease ? 'Now' : r.date ? railDate(r.date) : statusLabel[r.status]}</span>
+            </a>
+          </li>
+        ))}
+        {milestones.map((m, i) => (
+          <li data-status="milestone">
+            <a href={`#milestone-${i}`} data-goto={`milestone-${i}`}>
+              <span class="kiln-rm-rail-dot" aria-hidden="true"></span>
+              <span class="kiln-rm-rail-v">{m.title}</span>
+              <span class="kiln-rm-rail-d">Milestone</span>
+            </a>
+          </li>
+        ))}
+        {laterFeatures.length > 0 && (
+          <li data-status="later">
+            <a href="#later" data-goto="later">
+              <span class="kiln-rm-rail-dot" aria-hidden="true"></span>
+              <span class="kiln-rm-rail-v">Later</span>
+              <span class="kiln-rm-rail-d">{laterFeatures.length} more</span>
+            </a>
+          </li>
+        )}
+      </ol>
+    </nav>
+
+    <div class="kiln-rm-tools" data-tools hidden>
+      <div class="kiln-rm-tools-row">
+        <div class="kiln-rm-search">
+          <label class="sr-only" for="kiln-rm-q">Search the roadmap</label>
+          <input id="kiln-rm-q" type="search" placeholder="Search features" autocomplete="off" spellcheck="false" data-q />
+          <kbd aria-hidden="true">/</kbd>
+        </div>
+        <div class="kiln-rm-seg" role="group" aria-label="Show">
+          <button type="button" data-show="all" aria-pressed="true">All</button>
+          <button type="button" data-show="shipped" aria-pressed="false">Shipped</button>
+          <button type="button" data-show="coming" aria-pressed="false">Coming up</button>
+        </div>
+        <div class="kiln-rm-seg" role="group" aria-label="View">
+          <button type="button" data-view="timeline" aria-pressed="true">Timeline</button>
+          <button type="button" data-view="areas" aria-pressed="false">By area</button>
+        </div>
+      </div>
+      <div class="kiln-rm-areas-filter" role="group" aria-label="Areas">
+        <button type="button" data-area-all aria-pressed="true">All areas</button>
+        {roadmapAreas.map((a) => (
+          <button type="button" data-area={a.id} aria-pressed="false" title={a.about}><span class="kiln-rm-dot" data-area={a.id} aria-hidden="true"></span>{a.label}</button>
+        ))}
+      </div>
+      <div class="kiln-rm-tools-row small">
+        <label class="kiln-rm-check"><input type="checkbox" data-fixes checked /> Fixes</label>
+        <label class="kiln-rm-check"><input type="checkbox" data-pending /> Only “game test pending”</label>
+        <span class="kiln-rm-tools-gap"></span>
+        <div class="kiln-rm-seg" role="group" aria-label="Order" data-order-group>
+          <button type="button" data-order="upcoming" aria-pressed="true">Upcoming first</button>
+          <button type="button" data-order="oldest" aria-pressed="false">Oldest first</button>
+        </div>
+        <button type="button" class="kiln-rm-plain" data-expand>Expand all</button>
+        <button type="button" class="kiln-rm-plain" data-collapse>Collapse all</button>
+      </div>
+      <p class="kiln-rm-count" aria-live="polite" data-count></p>
+    </div>
+
+    <div class="kiln-rm-timeline" data-panel="timeline">
+      <section class="kiln-rm-part" aria-labelledby="kiln-rm-coming" data-part="coming">
+        <h2 id="kiln-rm-coming">Coming up</h2>
+        <ol class="kiln-rm-releases" data-releases>
+          {upcomingReleases.map((r) => (
+            <>
+              <li class="kiln-rm-item" data-item>
+                <details class="kiln-rm-release" id={r.id} data-release data-status={r.status} open={r.status === 'next'} data-default-open={r.status === 'next' ? '' : undefined}>
+                  <summary>
+                    <span class="kiln-rm-node" aria-hidden="true"></span>
+                    <span class="kiln-rm-when"><span class="kiln-rm-version">{r.short}</span><span class="kiln-rm-date">{statusLabel[r.status]}</span></span>
+                    <span class="kiln-rm-head">
+                      <h3>{r.title}</h3>
+                      <span class="kiln-rm-summary">{r.summary}</span>
+                      <span class="kiln-rm-meta">
+                        <span class="kiln-badge" data-status={r.status === 'next' ? 'partial' : 'pending'}>{r.status === 'next' ? 'Next release' : 'Planned'}</span>
+                        <span>{plural(r.features.length, 'item')}</span>
+                        <span class="kiln-rm-match" data-match hidden></span>
+                      </span>
+                    </span>
+                  </summary>
+                  <div class="kiln-rm-body">
+                    <p class="kiln-rm-body-note">
+                      {r.note ?? (r.status === 'next' ? 'The release being built now. What is ready when it is cut ships; the rest moves on, and this plan can still change.' : 'Planned, and this plan can still change: what is ready when this release is cut ships; the rest moves on.')}
+                    </p>
+                    <ul class="kiln-rm-features">{r.features.map((f) => <KilnRoadmapFeature feature={f} status="coming" where={where(r)} />)}</ul>
+                    <p class="kiln-rm-body-foot"><span>Kiln {r.version}</span><a href={`#${r.id}`}>Link to this release</a></p>
+                  </div>
+                </details>
+              </li>
+              {after(r).map((m) => (
+                <li class="kiln-rm-item kiln-rm-milestone" id={`milestone-${milestones.indexOf(m)}`} data-item data-milestone>
+                  <span class="kiln-rm-node" aria-hidden="true"></span>
+                  <div><span class="kiln-rm-version">Milestone</span><h3>{m.title}</h3><p>{m.text}</p></div>
+                </li>
+              ))}
+            </>
+          ))}
+          {looseMilestones.map((m) => (
+            <li class="kiln-rm-item kiln-rm-milestone" id={`milestone-${milestones.indexOf(m)}`} data-item data-milestone>
+              <span class="kiln-rm-node" aria-hidden="true"></span>
+              <div><span class="kiln-rm-version">Milestone</span><h3>{m.title}</h3><p>{m.text}</p></div>
+            </li>
+          ))}
+          {laterFeatures.length > 0 && (
+            <li class="kiln-rm-item" data-item>
+              <details class="kiln-rm-release" id="later" data-release data-status="later">
+                <summary>
+                  <span class="kiln-rm-node" aria-hidden="true"></span>
+                  <span class="kiln-rm-when"><span class="kiln-rm-version">Later</span><span class="kiln-rm-date">No release yet</span></span>
+                  <span class="kiln-rm-head">
+                    <h3>Planned, not scheduled</h3>
+                    <span class="kiln-rm-summary">Features that are planned but not in a release yet.</span>
+                    <span class="kiln-rm-meta"><span>{plural(laterFeatures.length, 'item')}</span><span class="kiln-rm-match" data-match hidden></span></span>
+                  </span>
+                </summary>
+                <div class="kiln-rm-body">
+                  <ul class="kiln-rm-features">{laterFeatures.map((f) => <KilnRoadmapFeature feature={f} status="later" where="later planned not scheduled" />)}</ul>
+                </div>
+              </details>
+            </li>
+          )}
+        </ol>
+      </section>
+
+      <div class="kiln-rm-now" data-now-marker>
+        <span class="kiln-rm-node" aria-hidden="true"></span>
+        <p><strong>You are here.</strong> Kiln {latestRelease.short} is the current release, out since {shortDate(latestRelease.date!)}. <a href="/kiln/download">Download {release.version}</a></p>
+      </div>
+
+      <section class="kiln-rm-part" aria-labelledby="kiln-rm-released" data-part="released">
+        <h2 id="kiln-rm-released">Released</h2>
+        <ol class="kiln-rm-releases" data-releases>
+          {releasedReleases.map((r, i) => (
+            <li class="kiln-rm-item" data-item>
+              <details class="kiln-rm-release" id={r.id} data-release data-status="released" open={i === 0} data-default-open={i === 0 ? '' : undefined}>
+                <summary>
+                  <span class="kiln-rm-node" aria-hidden="true"></span>
+                  <span class="kiln-rm-when"><span class="kiln-rm-version">{r.short}</span><span class="kiln-rm-date"><time datetime={r.date}>{shortDate(r.date!)}</time></span></span>
+                  <span class="kiln-rm-head">
+                    <h3>{r.title}</h3>
+                    <span class="kiln-rm-summary">{r.summary}</span>
+                    <span class="kiln-rm-meta">
+                      {i === 0 && <span class="kiln-badge">Current</span>}
+                      {featureCount(r) > 0 && <span>{plural(featureCount(r), 'feature')}</span>}
+                      {fixCount(r) > 0 && <span>{plural(fixCount(r), 'fix', 'fixes')}</span>}
+                      <span class="kiln-rm-match" data-match hidden></span>
+                    </span>
+                  </span>
+                </summary>
+                <div class="kiln-rm-body">
+                  <ul class="kiln-rm-features">{r.features.map((f) => <KilnRoadmapFeature feature={f} status="shipped" where={where(r)} />)}</ul>
+                  <p class="kiln-rm-body-foot"><span>Kiln {r.version}</span><a href={github(r)}>Release notes on GitHub <span aria-hidden="true">↗</span></a></p>
+                </div>
+              </details>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </div>
+
+    <div class="kiln-rm-byarea" data-panel="areas" hidden>
+      {roadmapAreas.map((a) => {
+        const coming = sortedForArea.filter((r) => r.status !== 'released').flatMap((r) => r.features.filter((f) => f.area === a.id).map((f) => ({ f, r })));
+        const later = laterFeatures.filter((f) => f.area === a.id);
+        const shipped = releasedReleases.flatMap((r) => r.features.filter((f) => f.area === a.id).map((f) => ({ f, r })));
+        return (
+          <section class="kiln-rm-area" aria-labelledby={`kiln-rm-area-${a.id}`} data-area-section={a.id}>
+            <h2 id={`kiln-rm-area-${a.id}`}><span class="kiln-rm-dot" data-area={a.id} aria-hidden="true"></span>{a.label}<span>{a.about}</span></h2>
+            <div class="kiln-rm-area-cols">
+              <div data-area-group>
+                <h3>Coming up <span data-group-count>{coming.length + later.length}</span></h3>
+                <ul class="kiln-rm-features">
+                  {coming.map(({ f, r }) => <KilnRoadmapFeature feature={f} status="coming" release={r} where={where(r)} />)}
+                  {later.map((f) => <KilnRoadmapFeature feature={f} status="later" where="later planned not scheduled" />)}
+                </ul>
+              </div>
+              <div data-area-group>
+                <h3>Shipped <span data-group-count>{shipped.length}</span></h3>
+                <ul class="kiln-rm-features">{shipped.map(({ f, r }) => <KilnRoadmapFeature feature={f} status="shipped" release={r} where={where(r)} />)}</ul>
+              </div>
+            </div>
+          </section>
+        );
+      })}
+    </div>
+
+    <div class="kiln-rm-empty" data-empty hidden>
+      <p>Nothing on the roadmap matches.</p>
+      <button type="button" class="product-button secondary" data-clear>Clear the filters</button>
+    </div>
+
+    <p class="kiln-rm-foot">What works today, feature by feature, is on the wiki’s <a href="/kiln/wiki/status">status page</a>. Ideas and requests: <a href="https://github.com/frostdev-ops/kiln/issues">GitHub issues</a>.</p>
+  </div>
+</KilnLayout>
+
+<script>
+  // Search, filters, the by-area view, the order switch and links that keep them. Everything is in the page already;
+  // this only hides, shows, opens and reorders it.
+  const root = document.querySelector<HTMLElement>('[data-roadmap]');
+  if (root) {
+    const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel);
+    const $$ = <T extends Element>(sel: string) => [...root.querySelectorAll<T>(sel)];
+    const tools = $<HTMLElement>('[data-tools]')!;
+    const q = $<HTMLInputElement>('[data-q]')!;
+    const fixes = $<HTMLInputElement>('[data-fixes]')!;
+    const pendingOnly = $<HTMLInputElement>('[data-pending]')!;
+    const count = $<HTMLElement>('[data-count]')!;
+    const empty = $<HTMLElement>('[data-empty]')!;
+    const panels = { timeline: $<HTMLElement>('[data-panel="timeline"]')!, areas: $<HTMLElement>('[data-panel="areas"]')! };
+    const areaIds = $$<HTMLButtonElement>('[data-area]').filter((b) => b.tagName === 'BUTTON').map((b) => b.dataset.area!);
+    const total = $$('[data-panel="timeline"] [data-feature]').length;
+
+    type View = 'timeline' | 'areas';
+    const state = {
+      q: '',
+      areas: new Set<string>(),
+      show: 'all' as 'all' | 'shipped' | 'coming',
+      fixes: true,
+      pending: false,
+      view: 'timeline' as View,
+      order: 'upcoming' as 'upcoming' | 'oldest',
+    };
+
+    // The state from the address: ?q=&area=api,tools&show=coming&fixes=0&pending=1&view=areas&order=oldest
+    const readUrl = () => {
+      const params = new URLSearchParams(location.search);
+      state.q = (params.get('q') ?? '').trim().slice(0, 80);
+      state.areas.clear();
+      for (const a of (params.get('area') ?? '').split(',')) if (areaIds.includes(a)) state.areas.add(a);
+      const show = params.get('show');
+      state.show = show === 'shipped' || show === 'coming' ? show : 'all';
+      state.fixes = params.get('fixes') !== '0';
+      state.pending = params.get('pending') === '1';
+      state.view = params.get('view') === 'areas' ? 'areas' : 'timeline';
+      state.order = params.get('order') === 'oldest' ? 'oldest' : 'upcoming';
+    };
+    readUrl();
+    // The release a #fragment names; a malformed one names nothing.
+    const fragment = () => {
+      try {
+        return decodeURIComponent(location.hash.slice(1));
+      } catch {
+        return '';
+      }
+    };
+
+    const saveUrl = () => {
+      const p = new URLSearchParams();
+      if (state.q) p.set('q', state.q);
+      if (state.areas.size) p.set('area', [...state.areas].join(','));
+      if (state.show !== 'all') p.set('show', state.show);
+      if (!state.fixes) p.set('fixes', '0');
+      if (state.pending) p.set('pending', '1');
+      if (state.view !== 'timeline') p.set('view', state.view);
+      if (state.order !== 'upcoming') p.set('order', state.order);
+      const search = p.toString();
+      history.replaceState(history.state, '', `${location.pathname}${search ? `?${search}` : ''}${location.hash}`);
+    };
+
+    // Highlighting: the original text of every [data-hl], then <mark> around each match.
+    const original = new Map<HTMLElement, string>();
+    for (const el of $$<HTMLElement>('[data-hl]')) original.set(el, el.textContent ?? '');
+    const escape = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+    const highlight = (words: string[]) => {
+      for (const [el, text] of original) {
+        if (!words.length) {
+          if (el.querySelector('mark')) el.textContent = text;
+          continue;
+        }
+        const lower = text.toLowerCase();
+        const marks: [number, number][] = [];
+        for (const w of words) {
+          for (let i = lower.indexOf(w); i !== -1; i = lower.indexOf(w, i + w.length)) marks.push([i, i + w.length]);
+        }
+        if (!marks.length) {
+          el.textContent = text;
+          continue;
+        }
+        marks.sort((a, b) => a[0] - b[0]);
+        let html = '';
+        let at = 0;
+        for (const [s, e] of marks) {
+          if (e <= at) continue;
+          const from = Math.max(s, at);
+          html += `${escape(text.slice(at, from))}<mark>${escape(text.slice(from, e))}</mark>`;
+          at = e;
+        }
+        el.innerHTML = html + escape(text.slice(at));
+      }
+    };
+
+    const filtering = () => state.q !== '' || state.areas.size > 0 || state.show !== 'all' || !state.fixes || state.pending;
+
+    const matches = (li: HTMLElement, words: string[]) => {
+      const d = li.dataset;
+      if (state.areas.size && !state.areas.has(d.area!)) return false;
+      if (state.show === 'shipped' && d.status !== 'shipped') return false;
+      if (state.show === 'coming' && d.status === 'shipped') return false;
+      if (!state.fixes && d.kind === 'fix') return false;
+      if (state.pending && d.pending === undefined) return false;
+      return words.every((w) => d.search!.includes(w));
+    };
+
+    const apply = () => {
+      const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
+      const active = filtering();
+      let shown = 0;
+      // The timeline: features, then their releases.
+      for (const details of $$<HTMLDetailsElement>('[data-panel="timeline"] [data-release]')) {
+        const items = [...details.querySelectorAll<HTMLElement>('[data-feature]')];
+        let n = 0;
+        for (const li of items) {
+          const ok = matches(li, words);
+          li.hidden = !ok;
+          if (ok) n++;
+        }
+        shown += n;
+        const item = details.closest<HTMLElement>('[data-item]')!;
+        item.hidden = active && n === 0;
+        const badge = details.querySelector<HTMLElement>('[data-match]');
+        if (badge) {
+          badge.hidden = !active || n === 0;
+          badge.textContent = `${n} of ${items.length} match`;
+        }
+        if (active && n > 0) details.open = true;
+        const rail = root.querySelector<HTMLElement>(`[data-rail="${details.id}"]`);
+        if (rail) rail.toggleAttribute('data-dim', active && n === 0);
+      }
+      for (const m of $$<HTMLElement>('[data-milestone]')) m.hidden = active;
+      // The by-area view.
+      for (const section of $$<HTMLElement>('[data-area-section]')) {
+        let inSection = 0;
+        for (const group of section.querySelectorAll<HTMLElement>('[data-area-group]')) {
+          let n = 0;
+          for (const li of group.querySelectorAll<HTMLElement>('[data-feature]')) {
+            const ok = matches(li, words);
+            li.hidden = !ok;
+            if (ok) n++;
+          }
+          group.hidden = n === 0;
+          group.querySelector('[data-group-count]')!.textContent = String(n);
+          inSection += n;
+        }
+        section.hidden = inSection === 0;
+      }
+      highlight(words);
+      count.textContent = active ? `${shown} of ${total} items match.` : `${total} items: every feature and fix on the roadmap.`;
+      empty.hidden = shown > 0;
+      // The controls.
+      q.value !== state.q && (q.value = state.q);
+      fixes.checked = state.fixes;
+      pendingOnly.checked = state.pending;
+      $<HTMLButtonElement>('[data-area-all]')!.setAttribute('aria-pressed', String(state.areas.size === 0));
+      for (const b of $$<HTMLButtonElement>('button[data-area]')) b.setAttribute('aria-pressed', String(state.areas.has(b.dataset.area!)));
+      for (const b of $$<HTMLButtonElement>('[data-show]')) b.setAttribute('aria-pressed', String(b.dataset.show === state.show));
+      for (const b of $$<HTMLButtonElement>('[data-view]')) b.setAttribute('aria-pressed', String(b.dataset.view === state.view));
+      for (const b of $$<HTMLButtonElement>('[data-order]')) b.setAttribute('aria-pressed', String(b.dataset.order === state.order));
+      panels.timeline.hidden = state.view !== 'timeline';
+      panels.areas.hidden = state.view !== 'areas';
+      for (const el of $$<HTMLElement>('[data-order-group], [data-expand], [data-collapse]')) el.hidden = state.view !== 'timeline';
+      root.toggleAttribute('data-filtering', active);
+    };
+
+    // Order: upcoming first (the page's own order), or oldest first (the whole timeline reversed).
+    const timeline = panels.timeline;
+    const parts = { coming: $<HTMLElement>('[data-part="coming"]')!, now: $<HTMLElement>('[data-now-marker]')!, released: $<HTMLElement>('[data-part="released"]')! };
+    const lists = { coming: parts.coming.querySelector<HTMLElement>('[data-releases]')!, released: parts.released.querySelector<HTMLElement>('[data-releases]')! };
+    const initial = { coming: [...lists.coming.children], released: [...lists.released.children] };
+    const order = () => {
+      const oldest = state.order === 'oldest';
+      for (const part of oldest ? [parts.released, parts.now, parts.coming] : [parts.coming, parts.now, parts.released]) timeline.append(part);
+      lists.released.append(...(oldest ? [...initial.released].reverse() : initial.released));
+      lists.coming.append(...initial.coming);
+    };
+
+    const update = (save = true) => {
+      apply();
+      if (save) saveUrl();
+    };
+    const restoreOpen = () => {
+      for (const d of $$<HTMLDetailsElement>('[data-panel="timeline"] [data-release]')) d.open = d.dataset.defaultOpen !== undefined;
+    };
+
+    let typing = 0;
+    q.addEventListener('input', () => {
+      clearTimeout(typing);
+      typing = window.setTimeout(() => {
+        const was = filtering();
+        state.q = q.value.trim().slice(0, 80);
+        update();
+        if (was && !filtering()) restoreOpen();
+      }, 120);
+    });
+    q.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && q.value) {
+        e.preventDefault();
+        q.value = '';
+        state.q = '';
+        update();
+        if (!filtering()) restoreOpen();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      const t = e.target as HTMLElement;
+      if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && !t.isContentEditable) {
+        e.preventDefault();
+        q.focus();
+      }
+    });
+    tools.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
+      if (!b) return;
+      const was = filtering();
+      if (b.hasAttribute('data-area-all')) state.areas.clear();
+      else if (b.dataset.area) state.areas.has(b.dataset.area) ? state.areas.delete(b.dataset.area) : state.areas.add(b.dataset.area);
+      else if (b.dataset.show) state.show = b.dataset.show as typeof state.show;
+      else if (b.dataset.view) state.view = b.dataset.view as View;
+      else if (b.dataset.order) {
+        state.order = b.dataset.order as typeof state.order;
+        order();
+      } else if (b.hasAttribute('data-expand')) {
+        for (const d of $$<HTMLDetailsElement>('[data-panel="timeline"] [data-release]')) d.open = true;
+        return;
+      } else if (b.hasAttribute('data-collapse')) {
+        for (const d of $$<HTMLDetailsElement>('[data-panel="timeline"] [data-release]')) d.open = false;
+        return;
+      } else return;
+      update();
+      if (was && !filtering()) restoreOpen();
+    });
+    fixes.addEventListener('change', () => {
+      state.fixes = fixes.checked;
+      update();
+    });
+    pendingOnly.addEventListener('change', () => {
+      const was = filtering();
+      state.pending = pendingOnly.checked;
+      update();
+      if (was && !filtering()) restoreOpen();
+    });
+    $<HTMLButtonElement>('[data-clear]')!.addEventListener('click', () => {
+      Object.assign(state, { q: '', show: 'all', fixes: true, pending: false });
+      state.areas.clear();
+      update();
+      restoreOpen();
+    });
+
+    // A link to a release (the rail, the next-release card, a chip in the by-area view): the timeline, that release
+    // open, and shown even when the filters hide it.
+    const reveal = (id: string, scroll: 'smooth' | 'instant' | false) => {
+      const target = document.getElementById(id);
+      if (!target) return;
+      if (state.view !== 'timeline') {
+        state.view = 'timeline';
+        update();
+      }
+      const item = target.closest<HTMLElement>('[data-item]');
+      if (item?.hidden) {
+        Object.assign(state, { q: '', show: 'all', fixes: true, pending: false });
+        state.areas.clear();
+        update();
+      }
+      if (target instanceof HTMLDetailsElement) target.open = true;
+      if (scroll) target.scrollIntoView({ block: 'start', behavior: scroll === 'smooth' && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'instant' });
+    };
+    root.addEventListener('click', (e) => {
+      const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-goto]');
+      if (!a) return;
+      e.preventDefault();
+      history.pushState(history.state, '', `${location.pathname}${location.search}#${a.dataset.goto}`);
+      reveal(a.dataset.goto!, 'smooth');
+    });
+    addEventListener('hashchange', () => reveal(fragment(), 'instant'));
+    // Back and Forward: the filters of that entry.
+    addEventListener('popstate', () => {
+      readUrl();
+      order();
+      update(false);
+      if (!filtering()) restoreOpen();
+      const id = fragment();
+      if (id) reveal(id, false);
+    });
+
+    // A release scrolled to sits below the toolbar while the toolbar sticks to the top (wider screens).
+    const offset = () => {
+      const sticky = getComputedStyle(tools).position === 'sticky';
+      root.style.setProperty('--kiln-rm-offset', `${sticky ? tools.offsetHeight + 24 : 24}px`);
+    };
+    new ResizeObserver(offset).observe(tools);
+
+    tools.hidden = false;
+    offset();
+    if (state.order === 'oldest') order();
+    update(false);
+    if (location.hash) requestAnimationFrame(() => reveal(fragment(), 'instant'));
+    // The rail starts at "now".
+    const rail = root.querySelector<HTMLElement>('.kiln-rm-rail');
+    const now = rail?.querySelector<HTMLElement>('[data-now]');
+    if (rail && now) rail.scrollLeft = now.offsetLeft - rail.clientWidth / 2 + now.clientWidth / 2;
+  }
+</script>

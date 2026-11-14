@@ -1,0 +1,1691 @@
+{
+  "released": [
+    {
+      "version": "0.2.0-dev.28",
+      "title": "OnBoot",
+      "summary": "Mods put their content, and their changes to the game's own data, in place before the game reads them: on a dedicated server's very first start now, in players' games after its game test. Also questions about the world and paths, terrain overlays, weapon follow-ups, tool wear, block kinds of your own, creature control, mod update checks and kiln publish.",
+      "features": [
+        {
+          "title": "Content on the first start",
+          "text": "Mods can add items, spells, statuses, effects and talents that exist from a server's first start, with no second restart. Until the game test, players' games do not load such mods, so a server whose players need one refuses Kiln players.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Change the game's own data",
+          "text": "Boot mods can change values the game reads once at start, such as experience per level or how many Flame Altars a base may have.",
+          "area": "content",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Settings in OnBoot",
+          "text": "A boot mod can read its own settings in OnBoot, so a level cap or an altar count can come from them. KilnBoot in the SDK makes a project a boot mod.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Mod update checks",
+          "text": "Players can check for newer versions of their mods in the launcher, by hand or once a day. Nothing is downloaded or installed for you.",
+          "area": "launcher"
+        },
+        {
+          "title": "Publish with kiln publish",
+          "text": "Mod authors can release a packed mod as a GitHub release: the zip is checked first, and nothing is sent until you confirm.",
+          "area": "tools"
+        },
+        {
+          "title": "Questions about the world",
+          "text": "Server mods can cast rays, find the ground, check line of sight and find nearby entities, and creature brains can stop seeing through walls.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Path search",
+          "text": "Server mods can ask the game's own path search for a walking route, or only whether a place can be reached.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Terrain overlays",
+          "text": "Mods can add ore veins, mounds, tunnels and small landforms that stay after a restart and that players without the mod also see.",
+          "area": "content",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Weapon follow-up moves",
+          "text": "A weapon's moves can lead into each other, for example a block that goes on into the weapon's own parry.",
+          "area": "content",
+          "gamePending": true,
+          "held": "all"
+        },
+        {
+          "title": "Tool wear",
+          "text": "Mods can make an axe or pickaxe wear faster, slower or not at all.",
+          "area": "content",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Values in the game's UI",
+          "text": "Client mods can show their own numbers and bars in the game's item details, inventory slots and health, stamina and mana display.",
+          "area": "content",
+          "gamePending": true,
+          "held": "all"
+        },
+        {
+          "title": "Block kinds of your own",
+          "text": "A mod can add a kind of block of its own that other mods then write in C# or JSON.",
+          "area": "api"
+        },
+        {
+          "title": "Creature control",
+          "text": "Server mods can take over a creature's movement from the game's AI and give it back afterwards.",
+          "area": "api"
+        },
+        {
+          "title": "Prop scale that lasts",
+          "text": "Mods can resize props per axis, and the size stays after a restart. It changes how big a prop looks, not its collision.",
+          "area": "api",
+          "gamePending": true,
+          "held": "all"
+        },
+        {
+          "title": "List of content files",
+          "text": "Mods can list every content file the game serves, the game's own and every mod's, and where each comes from.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Game types by script name",
+          "text": "Mods can find game types by the names Impact scripts use.",
+          "area": "api"
+        },
+        {
+          "title": "Join check at the door",
+          "text": "A joining player can be held at the door for up to 25 s while the server checks their game, then let in or refused with a reason. Kiln's own services use it now; mods get it through later ones.",
+          "area": "servers"
+        },
+        {
+          "title": "Newer EMF mods load",
+          "text": "EMF mods made for EMF 0.6.9 to 0.6.11 start on Kiln, also those that ask for the newer EMF versions.",
+          "area": "compat"
+        },
+        {
+          "title": "Held features and preview",
+          "text": "Features that still need a real-game test ship switched off and say so; a preview setting switches them on for testing.",
+          "area": "core"
+        },
+        {
+          "title": "Beside in-place patches",
+          "text": "Kiln mods keep working when another loader changed the game's code before Kiln started; before, some Kiln features switched off.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Beside other hook engines",
+          "text": "Kiln recognises the hooks other engines put into the game's code, such as greeneye plugins and XHL mods, and keeps working beside them. By rifters (pull request 31).",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "NoClip descent and return",
+          "text": "In NoClip and character flight, holding sneak always sinks; a player who left inside the ground returns at their last free position.",
+          "area": "core",
+          "kind": "fix"
+        },
+        {
+          "title": "Key bindings",
+          "text": "Keys with no name of their own keep their binding after a restart, and punctuation keys work on non-US keyboard layouts. The restart fix is by bisdat (pull request 34).",
+          "area": "core",
+          "kind": "fix"
+        },
+        {
+          "title": "Temporary terrain",
+          "text": "Temporary terrain from mods no longer stays in your save when it was made inside a base or in a second world.",
+          "area": "content",
+          "kind": "fix"
+        },
+        {
+          "title": "Creature brains walk",
+          "text": "A creature run by a mod's own brain now walks; before, the game's steering kept it standing still.",
+          "area": "content",
+          "kind": "fix"
+        },
+        {
+          "title": "Required boot mods stop on a bad entry",
+          "text": "A required boot mod with a bad entry in its own files stops the start and names the file and the entry, instead of loading a world without it.",
+          "area": "api",
+          "kind": "fix"
+        },
+        {
+          "title": "EML mod message",
+          "text": "If ShroudForge keeps an EML mod you copied in by hand switched off, Kiln now says so and how to switch it on.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Start bar while the game data is made",
+          "text": "The start bar no longer sticks at Starting while the launcher makes the game data for boot mods (once per game update, about a minute): that step shows its own progress now.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Play once with boot mods",
+          "text": "Play once makes the game-data snapshot too, so a boot mod that reads the game's data finds it ready.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Data folder move",
+          "text": "Moving the data folder, or using an existing one, is no longer refused now and then as if another launcher were using it.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Long prerelease numbers",
+          "text": "Update checks compare very long prerelease numbers by their value.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "kiln lint patterns",
+          "text": "kiln lint no longer rejects every publish tag and two folder-name fields.",
+          "area": "tools",
+          "kind": "fix"
+        },
+        {
+          "title": "Game systems by name",
+          "text": "A directory of the game's ECS programs, for program wraps in a later release.",
+          "area": "api",
+          "groundwork": true
+        },
+        {
+          "title": "Typed hooks",
+          "text": "Hooks whose signature is checked against the game's code at load.",
+          "area": "api",
+          "groundwork": true
+        },
+        {
+          "title": "Owner cleanup notices",
+          "text": "Native services are told when a mod's ownership of something ends.",
+          "area": "core",
+          "groundwork": true
+        },
+        {
+          "title": "Network inspector",
+          "text": "The start of a tool that shows what a server sends each player.",
+          "area": "servers",
+          "groundwork": true
+        },
+        {
+          "title": "Capacity budgets",
+          "text": "One shared way for Kiln to report how much room is left under a limit.",
+          "area": "core",
+          "groundwork": true
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.27",
+      "date": "2026-11-13",
+      "title": "NoClip and EMF v40",
+      "summary": "NoClip arrives as a rule of its own, and mods get the calls they were missing: buffs, kicks and bans, equipment, weather, item bonuses and more. EMF mods made for EMF 0.6.3 and later start on Kiln again.",
+      "features": [
+        {
+          "title": "NoClip for admins",
+          "text": "Admins can use /noclip to fly through the ground and walls. It is off until the server allows it, and ends on death or teleport.",
+          "area": "servers"
+        },
+        {
+          "title": "NoClip rule for mods",
+          "text": "Mods can switch NoClip on for a player. When it ends inside something, the character is put back where it was last free.",
+          "area": "api"
+        },
+        {
+          "title": "Kick and ban commands",
+          "text": "Servers get Kiln's own /kick, /ban (with an optional duration), /unban and /bans commands, and mods can refuse a player at login.",
+          "area": "servers",
+          "gamePending": true
+        },
+        {
+          "title": "Remove and list buffs",
+          "text": "Mods can take a buff off a player, creature or NPC, and list the buffs an entity has.",
+          "area": "api",
+          "gamePending": true
+        },
+        {
+          "title": "Where a player looks",
+          "text": "Mods can read where a player's camera is and the direction it looks, on the server.",
+          "area": "api"
+        },
+        {
+          "title": "Equip and unequip items",
+          "text": "Mods can put an item from a player's backpack on, or take one off, using the game's own equip checks.",
+          "area": "api",
+          "gamePending": true
+        },
+        {
+          "title": "Choose the weather",
+          "text": "Mods can start a weather type such as rain for a set time or hold it, and follow every weather change.",
+          "area": "api",
+          "gamePending": true
+        },
+        {
+          "title": "Rolled item bonuses",
+          "text": "Mods can define affixes and roll them onto single items. All 39 of the game's stats work while the item is held or worn.",
+          "area": "content",
+          "gamePending": true
+        },
+        {
+          "title": "Item data in players' games",
+          "text": "A value a mod keeps on one item can now be sent to the player holding it, or to players nearby.",
+          "area": "api",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "Saved world writes",
+          "text": "Mods can change an entity's component so the change is saved with the world and kept after a restart.",
+          "area": "api"
+        },
+        {
+          "title": "Events for one entity",
+          "text": "Mods can listen to the events of one entity only, so a mod watching one dummy no longer holds every hit in the world.",
+          "area": "api",
+          "kind": "improved"
+        },
+        {
+          "title": "Mouse key bindings",
+          "text": "Key bindings can use the side buttons, the middle button and the wheel, with Ctrl, Shift or Alt.",
+          "area": "api",
+          "gamePending": true
+        },
+        {
+          "title": "Scrolling pause menu",
+          "text": "The pause menu scrolls when mods add many entries, and every mod's entry is also on Kiln's Mods page.",
+          "area": "core"
+        },
+        {
+          "title": "EMF 0.6.3 to 0.6.8 mods",
+          "text": "EMF mods made for EMF 0.6.3 to 0.6.8 start on Kiln again, including Lua mods. Kiln serves EMF API v40.",
+          "area": "compat",
+          "kind": "improved"
+        },
+        {
+          "title": "EMF server mod check",
+          "text": "A Kiln game answers an EMF server's mod check, so such servers no longer kick Kiln players after a minute.",
+          "area": "compat"
+        },
+        {
+          "title": "Start progress on Play",
+          "text": "Pressing Play shows each step of the start until the main menu, and from the second start, how long is left.",
+          "area": "launcher"
+        },
+        {
+          "title": "Launcher cooks mods",
+          "text": "Mods with a cook recipe are cooked when you press Play. The launcher brings the cook tools, and on Windows its own Python.",
+          "area": "launcher"
+        },
+        {
+          "title": "Act on several mods",
+          "text": "You can tick several mods and switch them on, off or remove them at once. All on and All off come with Undo.",
+          "area": "launcher"
+        },
+        {
+          "title": "Edited mod folders",
+          "text": "A mod you edited in its own folder shows as changed on disk, and one click keeps your edit as the mod's files.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "Save editor on Steam Deck",
+          "text": "The save editor works with the controller alone on the Steam Deck, keeps unsaved changes and no longer overwrites newer saves.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "ShroudForge loader warnings",
+          "text": "When ShroudForge's own loader cannot write its mods into the game data, the launcher names the mods and says what to change.",
+          "area": "compat",
+          "kind": "improved"
+        },
+        {
+          "title": "Definitions baked at build",
+          "text": "Quests, NPCs, dialogues, VFX and materials defined in code are written into the mod at build, so they exist from the first start.",
+          "area": "tools"
+        },
+        {
+          "title": "Cook records",
+          "text": "Kiln records what each cook wrote and warns about cooked files a mod shipped instead of cooking them on the machine.",
+          "area": "tools"
+        },
+        {
+          "title": "One answer style everywhere",
+          "text": "Every service now reports results and unavailable features the same way, with an event for each change Kiln makes.",
+          "area": "api",
+          "kind": "improved"
+        },
+        {
+          "title": "Test kit fakes more",
+          "text": "Mods can test spawning, chat, items, combat, time, quests and talent trees under dotnet test, without the game.",
+          "area": "tools",
+          "kind": "improved"
+        },
+        {
+          "title": "New samples and templates",
+          "text": "New sample mods and dotnet new templates cover saved data, admin tools, events, rules, networking, hooks, shaders and more.",
+          "area": "tools"
+        },
+        {
+          "title": "New analyzer warnings",
+          "text": "The analyzers warn about a Kiln result nobody reads, and about a capability-dependent call with no check first.",
+          "area": "tools"
+        },
+        {
+          "title": "Server start progress",
+          "text": "A dedicated server writes the start step it is in, with what each step took, to a progress file.",
+          "area": "servers"
+        },
+        {
+          "title": "Faster material loading",
+          "text": "Starts with many mod materials are much faster, and unchanged materials are reused from the last start.",
+          "area": "core",
+          "kind": "fix"
+        },
+        {
+          "title": "Save editor stack amounts",
+          "text": "The save editor no longer stops item amounts at the game's stack size when a mod raises stack sizes.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "No hang with other loaders",
+          "text": "The game no longer hangs at start when other loaders load their libraries at the same time. A community contribution.",
+          "area": "core",
+          "kind": "fix"
+        },
+        {
+          "title": "Mods next to early hooks",
+          "text": "Kiln's mods load again next to mods that hook the game before Kiln, such as Auto Doors with Greeneye Loader or ShroudForge.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "MODS entry with ShroudForge",
+          "text": "The game's main menu has its MODS entry again when Kiln runs ShroudForge.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Mod settings sliders",
+          "text": "Applied mod settings show at once in the game, and sliders have a number field to type a value.",
+          "area": "core",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.26",
+      "date": "2026-11-12",
+      "title": "Item data and weapon moves",
+      "summary": "The first of the releases that complete the mod API: data on single items, weapons with their own attacks, typed game data and offline tests. Players can move Kiln's data folder to another drive.",
+      "features": [
+        {
+          "title": "Data on one item",
+          "text": "Mods can keep a value on one particular item, such as kills on one sword, through moves, saves and restarts.",
+          "area": "api"
+        },
+        {
+          "title": "Weapons with their own moves",
+          "text": "Mods can give weapons their own attacks, blocks and casts, with timing and chains, and held models that animate.",
+          "area": "content",
+          "gamePending": true
+        },
+        {
+          "title": "Player animation states",
+          "text": "Mods can add player animation states, placed like the game's attacks, dodges or casts, to the player's animation graph.",
+          "area": "content"
+        },
+        {
+          "title": "Capabilities table",
+          "text": "Mods can ask what works on the current game build and side, and why not. A list is also written for support.",
+          "area": "api"
+        },
+        {
+          "title": "Typed game data",
+          "text": "Mods can read every game component and event through typed structs, checked against the running game before use.",
+          "area": "api",
+          "gamePending": true
+        },
+        {
+          "title": "Unit tests without the game",
+          "text": "A new test template loads a mod through Kiln's real loader under dotnet test, with fake players and saved data.",
+          "area": "tools"
+        },
+        {
+          "title": "Guided client checks",
+          "text": "Mod authors can write checks a tester plays in the game, with keys to record pass, fail or skip.",
+          "area": "tools",
+          "gamePending": true
+        },
+        {
+          "title": "Stable mod API 0.2.1",
+          "text": "The mod API is 0.2.1. Kiln's build now fails if shipped API is removed or changed, and lab-only helpers are hidden.",
+          "area": "api",
+          "kind": "improved"
+        },
+        {
+          "title": "SDK feed and API site",
+          "text": "The SDK is published as a NuGet feed, and the API reference and modder's guide are published as a site.",
+          "area": "tools"
+        },
+        {
+          "title": "Move the data folder",
+          "text": "The launcher can move everything Kiln keeps to another folder or drive, checking the copy before it switches.",
+          "area": "launcher",
+          "gamePending": true
+        },
+        {
+          "title": "Quieter mod folder notices",
+          "text": "Notices about mod folders come once instead of at every change, and a Notes view shows them again.",
+          "area": "launcher",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "Cooking for servers",
+          "text": "kiln cook works against a dedicated server's files and cooks what the server needs, skipping models.",
+          "area": "tools",
+          "kind": "improved"
+        },
+        {
+          "title": "Mod creature factions",
+          "text": "Mod creatures keep their own friends and foes again, instead of fighting by the game's normal factions.",
+          "area": "content",
+          "kind": "fix"
+        },
+        {
+          "title": "Attacks in a second world",
+          "text": "Mods' own attack sequences keep working after quitting to the menu and loading another world.",
+          "area": "content",
+          "kind": "fix"
+        },
+        {
+          "title": "Clips on game skeletons",
+          "text": "Animations made on a game skeleton no longer tear the character's body apart while they play.",
+          "area": "tools",
+          "kind": "fix"
+        },
+        {
+          "title": "Item data after rejoin",
+          "text": "Data a mod keeps on an item in your inventory comes back when you rejoin while wearing gear.",
+          "area": "api",
+          "kind": "fix"
+        },
+        {
+          "title": "Other DLL loaders",
+          "text": "Kiln no longer mistakes another tool's proxy DLL for Shrouded Engine Tweaks, and no longer starts a Shroudtopia mod twice.",
+          "area": "compat",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.25",
+      "date": "2026-11-12",
+      "title": "ShroudForge and XHL hotfix",
+      "summary": "A hotfix for dev.24: ShroudForge and EML mods together, XHL mods, a missing search box, and a launcher window that stayed black on some Linux machines.",
+      "features": [
+        {
+          "title": "Black window fallback",
+          "text": "When the launcher's page does not come up, it starts again without the GPU. A setting turns this on or off.",
+          "area": "launcher",
+          "gamePending": true
+        },
+        {
+          "title": "XHL-Core 2.x recognised",
+          "text": "The launcher recognises XHL-Core 2.x as one mod that updates in place, instead of adding a new mod per download.",
+          "area": "compat",
+          "kind": "improved"
+        },
+        {
+          "title": "ShroudForge data mods next to EML",
+          "text": "ShroudForge's data mods apply again when EML mods are on too, such as Unlock Blueprints with More Gliders.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "XHL mods import",
+          "text": "XHL mods that carry a small mod.json import again and are placed where XHL-Core loads them.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "XHL-Core starts its mods",
+          "text": "XHL-Core now starts its plugins under Kiln, so XHL mods and their settings appear.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Skill Search box",
+          "text": "Skill Search's search box shows again: Kiln now loads the Shroudtopia module in folders that also hold an EML part.",
+          "area": "compat",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.24",
+      "date": "2026-11-11",
+      "title": "One list of all mods",
+      "summary": "Mostly built from player reports: the launcher shows every mod in one list, mods of other loaders really run, and nothing of yours is deleted along the way.",
+      "features": [
+        {
+          "title": "One list of all mods",
+          "text": "The main screen lists every mod you added, for any loader, plus hand-installed ones, each with an on/off switch.",
+          "area": "launcher",
+          "gamePending": true
+        },
+        {
+          "title": "Profiles in Settings",
+          "text": "Kiln keeps your mods in one profile by itself. Several named profiles are still available in Settings.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "One-click remove",
+          "text": "Removing a mod is one click. Typing the mod's name to confirm is now an option in Settings.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "Your mod files are kept",
+          "text": "Files a mod wrote into its folder are carried over at updates and kept when the mod is switched off or Kiln is removed.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "DLL mod updates replace",
+          "text": "An update of a DLL mod replaces the old version instead of becoming a second entry.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "ShroudForge mods in game",
+          "text": "Kiln's in-game Mods menu has a page for each ShroudForge mod, with its switch, settings and buttons.",
+          "area": "compat"
+        },
+        {
+          "title": "ShroudForge mod shortcuts",
+          "text": "Shortcuts of ShroudForge mods work with the ShroudForge that Kiln brings along.",
+          "area": "compat",
+          "kind": "improved"
+        },
+        {
+          "title": "EML mods with ShroudForge",
+          "text": "EML mods run when a ShroudForge mod is on too, and the launcher says why when one does not.",
+          "area": "compat",
+          "kind": "improved"
+        },
+        {
+          "title": "Other loaders' own folders",
+          "text": "Flame, Greeneye, XHL and SET 0.2 mods run from the folders where they keep their files and settings.",
+          "area": "compat",
+          "kind": "improved"
+        },
+        {
+          "title": "Steered creative glider",
+          "text": "In creative mode, S raises the glider's nose and W lowers it. Server owners can switch this off.",
+          "area": "servers"
+        },
+        {
+          "title": "Enshwick packs import",
+          "text": "Data packs written like Enshwick's own examples import instead of being refused as invalid.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Play with Steam closed",
+          "text": "On the Linux AppImage, Play works when Steam was closed, instead of every start ending within seconds.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Adding mods on Steam Deck",
+          "text": "Adding mods on a Steam Deck with ShroudForge installed works again.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Mods entry with ShroudForge",
+          "text": "Kiln's Mods entry is back in the main menu when ShroudForge mods are on.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Mods page next to overlays",
+          "text": "The in-game Mods page is no longer empty next to ReShade or another graphics overlay.",
+          "area": "core",
+          "kind": "fix",
+          "gamePending": true
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.23",
+      "date": "2026-11-10",
+      "title": "Server page and Shroudlink fixes",
+      "summary": "Launcher fixes for dedicated servers, a Shroudlink client fix and an Enshwick update.",
+      "features": [
+        {
+          "title": "Shroudlink modules apart",
+          "text": "Shroudlink's singleplayer zip imports each module (Storage, Assistants, Chestsort and others) as its own Library entry.",
+          "area": "compat",
+          "kind": "improved"
+        },
+        {
+          "title": "Enshwick alpha.14",
+          "text": "The bundled runtime uses Enshwick 1.0.0-alpha.14.",
+          "area": "compat",
+          "kind": "improved"
+        },
+        {
+          "title": "Two admin mods warning",
+          "text": "Kiln.Admin warns in the log when another admin mod answers the same folder.",
+          "area": "servers"
+        },
+        {
+          "title": "Servers page after start",
+          "text": "The Servers page no longer fails after a start on a server that runs another admin Lua mod.",
+          "area": "servers",
+          "kind": "fix"
+        },
+        {
+          "title": "No rewrite loop after update",
+          "text": "An old launcher left running after an update no longer rewrites the game's profile in turns with the new one.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Shroudlink MODS tab",
+          "text": "Kiln no longer fights Shroudlink's client addon over the game window, which could lose the game's window.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.22",
+      "date": "2026-11-10",
+      "title": "Mods that did not load",
+      "summary": "Built around reports of other frameworks' mods being refused, hidden or never run. Adds a mod manager inside the game, a support report, and a much faster first start.",
+      "features": [
+        {
+          "title": "In-game mod manager",
+          "text": "MODS in the game's main menu opens a page listing the mods of every framework, their state and reasons, with search.",
+          "area": "core",
+          "gamePending": true
+        },
+        {
+          "title": "Support report",
+          "text": "The Logs page saves one zip with logs and a plain summary, with names, paths, ids and tokens removed.",
+          "area": "launcher",
+          "gamePending": true
+        },
+        {
+          "title": "Mods as they are shared",
+          "text": "The Library accepts other frameworks' mods with their own ids and files as they are, instead of refusing them.",
+          "area": "launcher",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "7z and rar archives",
+          "text": "The launcher reads 7z archives, and rar archives when a tool such as 7-Zip or unrar is installed.",
+          "area": "launcher",
+          "gamePending": true
+        },
+        {
+          "title": "Game-folder packages",
+          "text": "Packages shaped like the game folder, and DLL mods with their data files, import as the right mods.",
+          "area": "launcher",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "Mods in the game folder",
+          "text": "The launcher lists mods you extracted into the game folder, whether they load, and adds them in one click.",
+          "area": "launcher",
+          "gamePending": true
+        },
+        {
+          "title": "Drop-in switch per framework",
+          "text": "Profile settings have a drop-in folder switch for EML, ShroudForge, Greeneye, Flame, Shroudtopia, Enshwick and shroudlink.",
+          "area": "compat",
+          "gamePending": true
+        },
+        {
+          "title": "Mods load with any loader",
+          "text": "When another framework's own loader is installed, the launcher copies profile mods where it reads them. A mod never runs twice.",
+          "area": "compat",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "Data-only mods",
+          "text": "A Kiln mod can be data only, with a manifest and content files and no code to run.",
+          "area": "api",
+          "gamePending": true
+        },
+        {
+          "title": "Faster first start",
+          "text": "The first start with EML mods no longer reads all game data, and a small window shows progress for long steps.",
+          "area": "compat",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "Lighter launcher",
+          "text": "The launcher uses far less CPU next to a running game, and its first status check is much faster.",
+          "area": "launcher",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "Non-ASCII paths",
+          "text": "Cyrillic, Chinese or accented user names and game folders no longer crash quests or stop SET mods loading.",
+          "area": "core",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Windows server item registration",
+          "text": "New items and recipes register again on native Windows dedicated servers.",
+          "area": "servers",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Reinstall keeps your profile",
+          "text": "After uninstalling and reinstalling Kiln, the profile you used is active again.",
+          "area": "launcher",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "SET mods with C# mods",
+          "text": "SET mods load again when C# mods are on.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "shroudlink MODS tab",
+          "text": "shroudlink's client addon is now added as a mod of its own, so its in-game MODS tab can appear.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.21",
+      "date": "2026-11-09",
+      "title": "Hook registry and faster EML",
+      "summary": "Stops the launcher removing mods while the game runs, makes EML mods start much faster, puts every hook in one registry, and helps closed-source DLL mods work next to Kiln.",
+      "features": [
+        {
+          "title": "One hook registry",
+          "text": "Every hook Kiln places goes through one registry, with ordered chains of handlers that other loaders' mods share.",
+          "area": "core",
+          "gamePending": true
+        },
+        {
+          "title": "Load DLL mods late",
+          "text": "Closed-source DLL mods such as XHL-Core can load after Kiln and ShroudForge, with a one-click switch for hook overlaps.",
+          "area": "compat",
+          "gamePending": true
+        },
+        {
+          "title": "Compatibility rules",
+          "text": "Compatibility rules can warn about, load late, or switch off a DLL or mod known to clash.",
+          "area": "compat",
+          "gamePending": true
+        },
+        {
+          "title": "Faster EML starts",
+          "text": "EML mods read far less game data at start: unchanged files are not read again.",
+          "area": "compat",
+          "kind": "improved"
+        },
+        {
+          "title": "Faster managed hooks",
+          "text": "Hooks from managed mods cost much less per call than in dev.20.",
+          "area": "api",
+          "kind": "improved"
+        },
+        {
+          "title": "Smoother play",
+          "text": "Mod status lines never stall the menu, tick or frame, and EMF portraits are drawn off the boot thread.",
+          "area": "core",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "Mods safe while playing",
+          "text": "The launcher no longer removes a Library version while Enshrouded runs.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Chat next to EMF hooks",
+          "text": "Kiln's chat commands no longer hide players' lines when an EMF mod hooks chat in front of Kiln.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Linked home folders",
+          "text": "Mod installs no longer refuse a folder on systems where the home folder is a link, such as Fedora Atomic and Bazzite.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Unreadable EML mods",
+          "text": "An EML mod that cannot be read is switched off with a reason, and the other mods still run.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Unsafe file names refused",
+          "text": "File names that Windows would change are refused in mod zips, runtime bundles and modpacks.",
+          "area": "launcher",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.20",
+      "date": "2026-11-09",
+      "title": "Windows profiles and EMF 0.6",
+      "summary": "Fixes profile activation on Windows, updates EMF support to 0.6, and adds many building blocks for mod authors.",
+      "features": [
+        {
+          "title": "EMF 0.6 support",
+          "text": "Kiln supports EMF 0.6 (API 27), including its hidden-chat networking and portrait generation.",
+          "area": "compat",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "More building blocks",
+          "text": "Mods get new and extended loot, quest and dialogue, furniture, crafting station, menu, screen effect and UI blocks.",
+          "area": "content"
+        },
+        {
+          "title": "World programs",
+          "text": "Mods can run declarative world programs with checked component access and cleanup when the mod unloads.",
+          "area": "api"
+        },
+        {
+          "title": "Inventory transfers and loot",
+          "text": "Inventory transfers and saved default loot keep stable identities through saves, renames and restarts.",
+          "area": "api",
+          "kind": "improved"
+        },
+        {
+          "title": "Server flame progression",
+          "text": "Mods can work with server flame progression, localisation, resource reflection and SET integration.",
+          "area": "api"
+        },
+        {
+          "title": "Smoother pacing",
+          "text": "Frame and tick pacing and mod cleanup across unloads and world changes are better.",
+          "area": "core",
+          "kind": "improved"
+        },
+        {
+          "title": "Windows profile activation",
+          "text": "Profile activation no longer fails on Windows with an \"Incorrect function\" error.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "ShroudForge startup on Windows",
+          "text": "ShroudForge's startup no longer fails on Windows over open archives or failed file replacements.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Portraits on mounted drives",
+          "text": "EMF portrait generation works under Wine and Proton with game libraries on mounted drives.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Saved mod attachments kept",
+          "text": "Saved mod attachments are kept when their template details are briefly unavailable.",
+          "area": "core",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.19",
+      "date": "2026-11-07",
+      "title": "Frame rate and update fixes",
+      "summary": "A fix release for dev.18: a large frame rate drop with an active profile, and updates that skipped new parts.",
+      "features": [
+        {
+          "title": "Missing parts on Runtime page",
+          "text": "The Runtime page's Parts card shows parts that are missing and lets you add them.",
+          "area": "launcher"
+        },
+        {
+          "title": "Frame rate with profiles",
+          "text": "The game no longer drops to about 10 fps when a profile is active. SET support checked every file each frame.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Updates install new parts",
+          "text": "Updates now install parts that are new or became default, such as EMF, EML and ShroudForge support. Parts you turned off stay off.",
+          "area": "launcher",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.18",
+      "date": "2026-11-07",
+      "title": "Other frameworks' mods run",
+      "summary": "Mods made for other Enshrouded frameworks run on Kiln, unchanged, without their own loader installed. Creative mode grows, and dedicated servers get a server pack.",
+      "features": [
+        {
+          "title": "EML and ShroudForge mods",
+          "text": "EML mods, including ShroudForge mods, run on Kiln. ShroudForge comes with Kiln, or you can use your own.",
+          "area": "compat",
+          "gamePending": true
+        },
+        {
+          "title": "EMF mods",
+          "text": "EMF mods made for EMF 0.3.3 up to 0.5.1 run on Kiln, and EMF support is installed by default.",
+          "area": "compat",
+          "gamePending": true
+        },
+        {
+          "title": "SET, Enshwick and more",
+          "text": "SET Lua mods, Enshwick mods, Greeneye, Shroudtopia, Creative Mode (Flame) and shroudlink server mods run on Kiln.",
+          "area": "compat",
+          "gamePending": true
+        },
+        {
+          "title": "Kiln steps aside",
+          "text": "If another loader is installed too, Kiln steps aside or chains it. Installing Kiln never switches another loader off.",
+          "area": "compat",
+          "gamePending": true
+        },
+        {
+          "title": "Manage every framework's mods",
+          "text": "The launcher manages mods of every framework like Kiln mods: profiles, server sync and modpacks.",
+          "area": "launcher"
+        },
+        {
+          "title": "Bigger creative mode",
+          "text": "Creative mode adds a creative menu with items, day and night control, free crafting, map reveal, gear upgrades and more.",
+          "area": "servers",
+          "kind": "improved"
+        },
+        {
+          "title": "Glider pitch control",
+          "text": "The creative glider pitches up with S and dives with W, and the mouse stays free to look around.",
+          "area": "servers",
+          "kind": "improved"
+        },
+        {
+          "title": "Dedicated server pack",
+          "text": "A server pack unzips into a server folder, also on rented FTP-only hosts, with a new guide and Linux systemd units.",
+          "area": "servers"
+        },
+        {
+          "title": "Faster, shared hooks",
+          "text": "Kiln finds game functions even when another framework hooked them first, and boots about twice as fast.",
+          "area": "core",
+          "kind": "improved"
+        },
+        {
+          "title": "Faults switch off a part",
+          "text": "A fault in Kiln's own code is caught and that part is switched off until the next start.",
+          "area": "core",
+          "kind": "improved"
+        },
+        {
+          "title": "Safer mod imports",
+          "text": "Mod imports have size limits and refuse links, and a file inside a mod can no longer fake ownership.",
+          "area": "launcher",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.17",
+      "date": "2026-11-07",
+      "title": "Steam Deck white window fix",
+      "summary": "Fixes the game hanging on a white window on Steam Deck, and makes Kiln's overlay attach to the graphics more carefully everywhere.",
+      "features": [
+        {
+          "title": "Careful overlay attach",
+          "text": "Kiln's overlay checks each graphics function on its own and never hooks over its own or another program's hooks.",
+          "area": "core",
+          "kind": "improved"
+        },
+        {
+          "title": "Steam Deck white window",
+          "text": "The game no longer hangs on a white window when it starts with Kiln on a Steam Deck.",
+          "area": "core",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.16",
+      "date": "2026-11-07",
+      "title": "Nexus in the launcher",
+      "summary": "Brings Nexus Mods browsing into the launcher, Steam Deck fixes, and many new tools for mod authors: drawing, creature AI and particle shaders.",
+      "features": [
+        {
+          "title": "Nexus Mods catalog",
+          "text": "The launcher could browse, search, install and update mods from Nexus. It is switched off since dev.20, while Nexus approval is pending.",
+          "area": "launcher"
+        },
+        {
+          "title": "No Kiln notice",
+          "text": "When Steam starts the game without Kiln, the launcher says so and shows what to do instead of waiting forever.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "Drawing from mods",
+          "text": "Mods get a per-frame event and can draw lines, boxes, text and images on screen and in the world.",
+          "area": "api"
+        },
+        {
+          "title": "New blocks",
+          "text": "Blocks for status and perk icons, tools, piercing projectiles, props with glTF models and colliders, and cooked sounds.",
+          "area": "content"
+        },
+        {
+          "title": "Creature AI and behaviour",
+          "text": "Mods can set faction relations, sense filters and behaviour rules that heal, summon, cast and apply effects.",
+          "area": "content"
+        },
+        {
+          "title": "Animation retargeting",
+          "text": "Mods can retarget animations from one creature's rig to another.",
+          "area": "content"
+        },
+        {
+          "title": "Safe particle shaders",
+          "text": "Particle shaders from mods work again, as small checked hook functions with loop, memory and time limits.",
+          "area": "content",
+          "kind": "improved"
+        },
+        {
+          "title": "Material reskins",
+          "text": "Material reskins are back, and they come off when their mod unloads.",
+          "area": "content",
+          "kind": "improved"
+        },
+        {
+          "title": "Safer dropped mods",
+          "text": "Dropped mods and archives are checked more carefully, and every dropped modpack asks before it installs.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "Steam Deck mode fixes",
+          "text": "In Steam Deck mode, focus no longer gets lost after dialogs, B always closes a dialog, and long text scrolls.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Creative mode fixes",
+          "text": "Edited creative presets are no longer overwritten, and the glider respects its speed cap.",
+          "area": "servers",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.15",
+      "date": "2026-11-07",
+      "title": "Nexus build updates",
+      "summary": "The launcher downloaded from Nexus Mods now gets new versions from the Nexus page instead of updating itself.",
+      "features": [
+        {
+          "title": "Nexus build updates",
+          "text": "The Nexus launcher build points to the Nexus page for new versions. frostdev.io and GitHub builds still update themselves.",
+          "area": "launcher",
+          "kind": "improved"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.14",
+      "date": "2026-11-06",
+      "title": "Steam Deck mode and /creative",
+      "summary": "Adds a controller-friendly Steam Deck mode, a simpler first start, admin creative mode, and world progress and player rules for mod authors. Linux builds start again on most systems.",
+      "features": [
+        {
+          "title": "Steam Deck mode",
+          "text": "A controller-friendly launcher starts by itself on a Steam Deck, with Play, your mods, adding mods and installing Kiln.",
+          "area": "launcher"
+        },
+        {
+          "title": "Simpler first start",
+          "text": "The launcher finds the game, puts Install Kiln on Play, makes a My mods profile, and takes dropped mods with Undo.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "Creative mode for admins",
+          "text": "Admins can use /creative to fly, build anywhere, mine instantly and have unlimited vitals, with a plane-like glider.",
+          "area": "servers"
+        },
+        {
+          "title": "World progress for mods",
+          "text": "Mods can read world progress such as flame level, bosses, shrines and each character's quests, with events.",
+          "area": "api"
+        },
+        {
+          "title": "Per-player rules",
+          "text": "Mods can set per-player rules for flying, building, costs, mining, vitals, water refill and gliding.",
+          "area": "api"
+        },
+        {
+          "title": "Water container data",
+          "text": "Mods can read, set and fill water containers, and the values are saved.",
+          "area": "api"
+        },
+        {
+          "title": "Linux builds start again",
+          "text": "The AppImage and .deb start again on Steam Deck and most distributions. Linux builds need glibc 2.35 or newer.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Camera freeze with creatures",
+          "text": "The game no longer freezes for minutes per frame when its camera breaks with creatures nearby.",
+          "area": "core",
+          "kind": "fix"
+        },
+        {
+          "title": "Windows server stop",
+          "text": "On Windows, stopping a dedicated server no longer closes the launcher, and Start finishes when the world is up.",
+          "area": "servers",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.13",
+      "date": "2026-11-06",
+      "title": "New server fix",
+      "summary": "A launcher hotfix for creating dedicated servers.",
+      "features": [
+        {
+          "title": "New server works again",
+          "text": "New server works again in the released launcher, instead of stopping with a path error.",
+          "area": "servers",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.12",
+      "date": "2026-11-06",
+      "title": "Water containers",
+      "summary": "Adds water container items for mods and small launcher and server improvements.",
+      "features": [
+        {
+          "title": "Water containers",
+          "text": "Mods can make watering cans and water pouches with their own capacity, up to 1,023 charges, and fill speed.",
+          "area": "content"
+        },
+        {
+          "title": "Install Kiln on servers",
+          "text": "The server Overview offers Install Kiln when a server has none, and Update Kiln once it has.",
+          "area": "servers"
+        },
+        {
+          "title": "Player health for admins",
+          "text": "The admin Players page shows players' health.",
+          "area": "servers"
+        },
+        {
+          "title": "Accurate running clock",
+          "text": "The launcher's running clock counts from the game's real start, also when Steam started the game.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "Update leftovers cleaned",
+          "text": "The launcher removes the Windows updater's leftover temp folders and says when an install kept a changed file.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "Versioned SDK packages",
+          "text": "The SDK packages carry their release version, so mod builds use the right one.",
+          "area": "tools",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.11",
+      "date": "2026-11-06",
+      "title": "Windows start fix",
+      "summary": "Fixes a Windows crash right after Kiln starts and gets the in-game overlay working on Windows.",
+      "features": [
+        {
+          "title": "Windows crash at start",
+          "text": "On Windows, the game no longer crashes right after Kiln starts.",
+          "area": "core",
+          "kind": "fix"
+        },
+        {
+          "title": "Overlay on Windows",
+          "text": "On Windows, the Kiln overlay works: Insert opens it, and the Mods entries appear on the main and pause menus.",
+          "area": "core",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.10",
+      "date": "2026-11-06",
+      "title": "First public build",
+      "summary": "The first published build, collecting everything since the start of the project: content blocks for mods, a launcher with self-update and a save editor, and many fixes.",
+      "features": [
+        {
+          "title": "Launcher self-update",
+          "text": "The launcher can update itself.",
+          "area": "launcher"
+        },
+        {
+          "title": "Save editor",
+          "text": "The launcher has a save editor, styled in the launcher's own look.",
+          "area": "launcher"
+        },
+        {
+          "title": "World and NPC blocks",
+          "text": "Mods get world, NPC, cosmetic, ability and building blocks, plus VFX and player state.",
+          "area": "content"
+        },
+        {
+          "title": "Terrain and NPCs",
+          "text": "Mods can add terrain materials, NPC reactions, first-start NPCs and furniture texts.",
+          "area": "content"
+        },
+        {
+          "title": "Runtime version notices",
+          "text": "Kiln names mods that need a newer runtime, and its logs are quieter and more accurate.",
+          "area": "core",
+          "kind": "improved"
+        },
+        {
+          "title": "Faster content loading",
+          "text": "Mod content loads faster.",
+          "area": "core",
+          "kind": "improved"
+        },
+        {
+          "title": "World-load deadlock",
+          "text": "A deadlock while loading a world is fixed.",
+          "area": "core",
+          "kind": "fix"
+        },
+        {
+          "title": "Build menu crash",
+          "text": "A crash in the build menu is fixed, along with a hot-load race and creature rule problems.",
+          "area": "core",
+          "kind": "fix"
+        },
+        {
+          "title": "Content fixes",
+          "text": "Stations, on-hit statuses, item texts, VFX colours and client creature loading work correctly.",
+          "area": "content",
+          "kind": "fix"
+        }
+      ]
+    }
+  ],
+  "upcoming": [
+    {
+      "version": "0.2.0-dev.29",
+      "status": "next",
+      "title": "Hooks, events and limits",
+      "summary": "Deeper ways for mods to change the game's own systems, events mods can cancel, and higher limits.",
+      "features": [
+        {
+          "title": "Wrap the game's systems",
+          "text": "Mods can run code before, after or instead of the game's own systems, for each entity, without patching the game's code.",
+          "area": "api"
+        },
+        {
+          "title": "Typed function hooks",
+          "text": "Advanced mods can hook game functions with typed arguments, including floats and structs, and Kiln checks each hook against the game at load.",
+          "area": "api"
+        },
+        {
+          "title": "Cancelable events",
+          "text": "Mods can refuse a death, a walk-over pickup or an equipment change, and watch health, stamina, mana and inventory change step by step.",
+          "area": "api"
+        },
+        {
+          "title": "Faster Impact natives",
+          "text": "A mod's own Impact natives can answer in the same step and attach to the game's own scripts without copying them.",
+          "area": "api"
+        },
+        {
+          "title": "Programs in the client world",
+          "text": "Client mods can run programs in the player's own game world, on a hosted or a joined game.",
+          "area": "api"
+        },
+        {
+          "title": "Equipment set swaps",
+          "text": "Mods can swap a player's gear as one set: every slot changes or none does.",
+          "area": "content"
+        },
+        {
+          "title": "More buffs and world programs",
+          "text": "Mods together get room for far more cloned buffs and world programs, and can ask how much room is left.",
+          "area": "core"
+        },
+        {
+          "title": "More room for VFX",
+          "text": "A Kiln game gets much more room for VFX, so mods' effects stop running out of space.",
+          "area": "core"
+        },
+        {
+          "title": "Larger NPC roster",
+          "text": "Mods together get room for many more roster NPCs than today.",
+          "area": "core"
+        },
+        {
+          "title": "Material sets for new shapes",
+          "text": "Mods can give a new building shape its own set of materials in the build menu.",
+          "area": "content"
+        },
+        {
+          "title": "More of EMF's API",
+          "text": "EMF mods get more of EMF's API from Kiln, including its programs and events in the player's own game world.",
+          "area": "compat"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.30",
+      "status": "planned",
+      "title": "Values, UI, markers and tools",
+      "summary": "Mods' own character values and richer UI, map markers, a debugger for the game client, and better support for more loaders' mods.",
+      "features": [
+        {
+          "title": "Mods' own character values",
+          "text": "Mods can give characters their own counters, currencies and experience with levels, saved with the character.",
+          "area": "content"
+        },
+        {
+          "title": "Richer UI windows",
+          "text": "UI windows can have text fields, tables, tabs, trees and images, show live game values, and run commands on the server.",
+          "area": "content"
+        },
+        {
+          "title": "Map markers and labels",
+          "text": "Mods can put markers on the game's map, on a compass strip and as labels in the world; servers can send them to players.",
+          "area": "content"
+        },
+        {
+          "title": "Station menu tabs",
+          "text": "A mod's crafting station can have its own menu tabs, headings and recipe layout.",
+          "area": "content"
+        },
+        {
+          "title": "Cloth and chains on models",
+          "text": "Modded models can have cloth and bone chains that the game itself simulates.",
+          "area": "content"
+        },
+        {
+          "title": "Debugger in the game client",
+          "text": "Mod authors can attach a debugger to mods running in the game client and on a Windows dedicated server.",
+          "area": "tools"
+        },
+        {
+          "title": "Better SET support",
+          "text": "SET mods' game-options calls work again, and the SET tools window gets a settings.ini editor.",
+          "area": "compat"
+        },
+        {
+          "title": "Better Shroudlink support",
+          "text": "Storage mods can mark inventory slots with a rim or a dim and react to keys pressed over a slot.",
+          "area": "compat"
+        },
+        {
+          "title": "Better EML support",
+          "text": "EML and Kiln mods can decode and encode game textures in code, for 14 texture formats.",
+          "area": "compat"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.31",
+      "status": "planned",
+      "title": "Replication, survivors and NPCs",
+      "summary": "Control over what the server sends each player, survivors and bases, and friendly NPCs with bodies and routines of their own.",
+      "features": [
+        {
+          "title": "Network inspector",
+          "text": "Mod authors and admins can see what the server sends each player: counters per player and channel, and watches on single entities.",
+          "area": "servers"
+        },
+        {
+          "title": "Mod data on the network",
+          "text": "Mods can send small data of their own with entities to Kiln players, and players without Kiln see safe stand-ins for Kiln-only items.",
+          "area": "servers"
+        },
+        {
+          "title": "Survivor recruiting",
+          "text": "Mods can recruit survivors, give their summon tool, move them into a base and assign their beds.",
+          "area": "content"
+        },
+        {
+          "title": "Larger bases",
+          "text": "Mods can raise the number of Flame Altars a base may have and the build-zone size per altar level.",
+          "area": "content"
+        },
+        {
+          "title": "NPC bodies of your own",
+          "text": "A friendly roster NPC can have a model and animations of the mod's own and still be a real villager.",
+          "area": "content"
+        },
+        {
+          "title": "Villager routines",
+          "text": "Mods can give villagers a daily plan, such as roaming, sitting and sleeping, that stays after a restart.",
+          "area": "content"
+        },
+        {
+          "title": "Better Enshwick support",
+          "text": "Enshwick mods and Kiln mods that use Kiln's own progress and survivor features run side by side.",
+          "area": "compat"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.32",
+      "status": "planned",
+      "title": "Camera, pets and taming",
+      "summary": "Camera control for mods, pets that follow and fight for their owner, and taming.",
+      "features": [
+        {
+          "title": "Camera control",
+          "text": "Mods can play camera paths for cutscenes, set a follow camera, field of view and shake, and lock a player's camera mode for a time.",
+          "area": "api"
+        },
+        {
+          "title": "Pets that follow you",
+          "text": "Mods can add pets that follow their owner, fight hostile creatures and can be revived instead of dying.",
+          "area": "content"
+        },
+        {
+          "title": "Taming creatures",
+          "text": "Players can tame creatures step by step, by feeding, weakening or using a tool, to make them their pet.",
+          "area": "content"
+        },
+        {
+          "title": "Cooked terrain tiles",
+          "text": "Tools and tests for cooked terrain tiles; nothing reaches mods yet.",
+          "area": "content",
+          "groundwork": true
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.33",
+      "status": "planned",
+      "title": "Mounts",
+      "summary": "Creatures players can ride, fly and drive.",
+      "features": [
+        {
+          "title": "Riding creatures",
+          "text": "Mods can make creatures rideable: players mount with E, ride at walk, run and sprint, and get off without fall damage.",
+          "area": "content"
+        },
+        {
+          "title": "Flying mounts",
+          "text": "Mounts can fly: take off, fly with the keys and mouse, and land with a controlled descent.",
+          "area": "content"
+        },
+        {
+          "title": "Vehicles and carts",
+          "text": "Mods can add vehicles with seats and decks, such as a cart a friend can ride in, that stay in the world after a restart.",
+          "area": "content"
+        }
+      ]
+    }
+  ],
+  "later": [
+    {
+      "title": "Nexus catalog back",
+      "area": "launcher",
+      "text": "The launcher's Nexus catalog, sign-in and Mod Manager Download links come back once Nexus Mods approves Kiln's sign-in.",
+      "note": "Waiting for Nexus Mods"
+    },
+    {
+      "title": "Fog and light",
+      "text": "Mods could set fog and light; today only the weather can be chosen.",
+      "area": "content",
+      "note": "Not in a release yet"
+    },
+    {
+      "title": "Weather in one place",
+      "text": "Mods could place a weather phenomenon where they want it, not only start it in its region.",
+      "area": "content",
+      "note": "Not in a release yet"
+    },
+    {
+      "title": "Animations from code",
+      "text": "Mods could play an animation from code and cancel a sequence as it starts.",
+      "area": "api",
+      "note": "Not in a release yet"
+    },
+    {
+      "title": "Player animation states from C#",
+      "text": "Mods could define their own player animation states in C#, not only in a data file.",
+      "area": "api",
+      "note": "Not in a release yet"
+    },
+    {
+      "title": "Writes in the client world",
+      "text": "Mods could make tracked writes in the player's own game world, as they already can on the server.",
+      "area": "api",
+      "note": "Not in a release yet"
+    },
+    {
+      "title": "More event filters",
+      "text": "Mods could filter events by template or component, not only by entity.",
+      "area": "api",
+      "note": "Not in a release yet"
+    },
+    {
+      "title": "Loot and icons sent to players",
+      "text": "Servers could send loot tables and mods' PNG icons to joined players, so fewer mods need to be installed on both sides.",
+      "area": "servers",
+      "note": "Not in a release yet"
+    },
+    {
+      "title": "Item data between worlds",
+      "text": "Data a mod keeps on one item could travel with the character to another world.",
+      "area": "api",
+      "note": "Not scheduled yet"
+    },
+    {
+      "title": "More affix kinds",
+      "text": "Rolled item modifiers could get the kinds they do not have yet.",
+      "area": "content",
+      "note": "Not scheduled yet"
+    },
+    {
+      "title": "Custom surface shaders",
+      "text": "Mods could draw models with shaders of their own: transparent shaders first, opaque ones after.",
+      "area": "content",
+      "note": "Researched, not built"
+    },
+    {
+      "title": "Screen effects under the UI",
+      "text": "Screen effects could draw under the game's UI, or as a pass with depth, several mods in a chain.",
+      "area": "content",
+      "note": "If there is demand"
+    },
+    {
+      "title": "Particles that draw models",
+      "text": "A mod's particles could draw a model, not only a sprite.",
+      "area": "content",
+      "note": "Not built yet"
+    },
+    {
+      "title": "Chests and doors of your own",
+      "text": "Mods' chests could come with contents and lids, and doors on a mod's own model could open.",
+      "area": "content",
+      "note": "Not built yet"
+    },
+    {
+      "title": "New regions in world generation",
+      "text": "Mods could add whole generated regions; terrain overlays placed over the world come first.",
+      "area": "content",
+      "note": "Not scheduled yet"
+    },
+    {
+      "title": "Ragdoll deaths",
+      "text": "Creatures could fall as ragdolls; today a creature has a death state only.",
+      "area": "content",
+      "note": "Needs physics in the game client"
+    }
+  ],
+  "milestones": [
+    {
+      "title": "Kiln 1.0",
+      "after": null,
+      "text": "The planned releases lead to Kiln 1.0. At 1.0 the C# modding API is frozen as API 1.0.0."
+    }
+  ]
+}
