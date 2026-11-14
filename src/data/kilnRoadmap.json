@@ -1,6 +1,238 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.28",
+      "title": "OnBoot",
+      "summary": "Mods put their content, and their changes to the game's own data, in place before the game reads them: on a dedicated server's very first start now, in players' games after its game test. Also questions about the world and paths, terrain overlays, weapon follow-ups, tool wear, block kinds of your own, creature control, mod update checks and kiln publish.",
+      "features": [
+        {
+          "title": "Content on the first start",
+          "text": "Mods can add items, spells, statuses, effects and talents that exist from a server's first start, with no second restart. Until the game test, players' games do not load such mods, so a server whose players need one refuses Kiln players.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Change the game's own data",
+          "text": "Boot mods can change values the game reads once at start, such as experience per level or how many Flame Altars a base may have.",
+          "area": "content",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Settings in OnBoot",
+          "text": "A boot mod can read its own settings in OnBoot, so a level cap or an altar count can come from them. KilnBoot in the SDK makes a project a boot mod.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Mod update checks",
+          "text": "Players can check for newer versions of their mods in the launcher, by hand or once a day. Nothing is downloaded or installed for you.",
+          "area": "launcher"
+        },
+        {
+          "title": "Publish with kiln publish",
+          "text": "Mod authors can release a packed mod as a GitHub release: the zip is checked first, and nothing is sent until you confirm.",
+          "area": "tools"
+        },
+        {
+          "title": "Questions about the world",
+          "text": "Server mods can cast rays, find the ground, check line of sight and find nearby entities, and creature brains can stop seeing through walls.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Path search",
+          "text": "Server mods can ask the game's own path search for a walking route, or only whether a place can be reached.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Terrain overlays",
+          "text": "Mods can add ore veins, mounds, tunnels and small landforms that stay after a restart and that players without the mod also see.",
+          "area": "content",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Weapon follow-up moves",
+          "text": "A weapon's moves can lead into each other, for example a block that goes on into the weapon's own parry.",
+          "area": "content",
+          "gamePending": true,
+          "held": "all"
+        },
+        {
+          "title": "Tool wear",
+          "text": "Mods can make an axe or pickaxe wear faster, slower or not at all.",
+          "area": "content",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Values in the game's UI",
+          "text": "Client mods can show their own numbers and bars in the game's item details, inventory slots and health, stamina and mana display.",
+          "area": "content",
+          "gamePending": true,
+          "held": "all"
+        },
+        {
+          "title": "Block kinds of your own",
+          "text": "A mod can add a kind of block of its own that other mods then write in C# or JSON.",
+          "area": "api"
+        },
+        {
+          "title": "Creature control",
+          "text": "Server mods can take over a creature's movement from the game's AI and give it back afterwards.",
+          "area": "api"
+        },
+        {
+          "title": "Prop scale that lasts",
+          "text": "Mods can resize props per axis, and the size stays after a restart. It changes how big a prop looks, not its collision.",
+          "area": "api",
+          "gamePending": true,
+          "held": "all"
+        },
+        {
+          "title": "List of content files",
+          "text": "Mods can list every content file the game serves, the game's own and every mod's, and where each comes from.",
+          "area": "api",
+          "gamePending": true,
+          "held": "hosted"
+        },
+        {
+          "title": "Game types by script name",
+          "text": "Mods can find game types by the names Impact scripts use.",
+          "area": "api"
+        },
+        {
+          "title": "Join check at the door",
+          "text": "A joining player can be held at the door for up to 25 s while the server checks their game, then let in or refused with a reason. Kiln's own services use it now; mods get it through later ones.",
+          "area": "servers"
+        },
+        {
+          "title": "Newer EMF mods load",
+          "text": "EMF mods made for EMF 0.6.9 to 0.6.11 start on Kiln, also those that ask for the newer EMF versions.",
+          "area": "compat"
+        },
+        {
+          "title": "Held features and preview",
+          "text": "Features that still need a real-game test ship switched off and say so; a preview setting switches them on for testing.",
+          "area": "core"
+        },
+        {
+          "title": "Beside in-place patches",
+          "text": "Kiln mods keep working when another loader changed the game's code before Kiln started; before, some Kiln features switched off.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Beside other hook engines",
+          "text": "Kiln recognises the hooks other engines put into the game's code, such as greeneye plugins and XHL mods, and keeps working beside them. By rifters (pull request 31).",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "NoClip descent and return",
+          "text": "In NoClip and character flight, holding sneak always sinks; a player who left inside the ground returns at their last free position.",
+          "area": "core",
+          "kind": "fix"
+        },
+        {
+          "title": "Key bindings",
+          "text": "Keys with no name of their own keep their binding after a restart, and punctuation keys work on non-US keyboard layouts. The restart fix is by bisdat (pull request 34).",
+          "area": "core",
+          "kind": "fix"
+        },
+        {
+          "title": "Temporary terrain",
+          "text": "Temporary terrain from mods no longer stays in your save when it was made inside a base or in a second world.",
+          "area": "content",
+          "kind": "fix"
+        },
+        {
+          "title": "Creature brains walk",
+          "text": "A creature run by a mod's own brain now walks; before, the game's steering kept it standing still.",
+          "area": "content",
+          "kind": "fix"
+        },
+        {
+          "title": "Required boot mods stop on a bad entry",
+          "text": "A required boot mod with a bad entry in its own files stops the start and names the file and the entry, instead of loading a world without it.",
+          "area": "api",
+          "kind": "fix"
+        },
+        {
+          "title": "EML mod message",
+          "text": "If ShroudForge keeps an EML mod you copied in by hand switched off, Kiln now says so and how to switch it on.",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Start bar while the game data is made",
+          "text": "The start bar no longer sticks at Starting while the launcher makes the game data for boot mods (once per game update, about a minute): that step shows its own progress now.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Play once with boot mods",
+          "text": "Play once makes the game-data snapshot too, so a boot mod that reads the game's data finds it ready.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Data folder move",
+          "text": "Moving the data folder, or using an existing one, is no longer refused now and then as if another launcher were using it.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Long prerelease numbers",
+          "text": "Update checks compare very long prerelease numbers by their value.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "kiln lint patterns",
+          "text": "kiln lint no longer rejects every publish tag and two folder-name fields.",
+          "area": "tools",
+          "kind": "fix"
+        },
+        {
+          "title": "Game systems by name",
+          "text": "A directory of the game's ECS programs, for program wraps in a later release.",
+          "area": "api",
+          "groundwork": true
+        },
+        {
+          "title": "Typed hooks",
+          "text": "Hooks whose signature is checked against the game's code at load.",
+          "area": "api",
+          "groundwork": true
+        },
+        {
+          "title": "Owner cleanup notices",
+          "text": "Native services are told when a mod's ownership of something ends.",
+          "area": "core",
+          "groundwork": true
+        },
+        {
+          "title": "Network inspector",
+          "text": "The start of a tool that shows what a server sends each player.",
+          "area": "servers",
+          "groundwork": true
+        },
+        {
+          "title": "Capacity budgets",
+          "text": "One shared way for Kiln to report how much room is left under a limit.",
+          "area": "core",
+          "groundwork": true
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.27",
       "date": "2026-11-13",
       "title": "NoClip and EMF v40",
@@ -1140,236 +1372,8 @@
   ],
   "upcoming": [
     {
-      "version": "0.2.0-dev.28",
-      "status": "next",
-      "title": "OnBoot",
-      "summary": "Mods can put their content and their changes to the game's own data in place before the game reads them, on the very first start.",
-      "note": "Built and in its last round of fixes and checks. Some features wait for a test in a real game: each says whether it is switched off until then or only on dedicated servers. Groundwork ships too, with no feature promised yet.",
-      "features": [
-        {
-          "title": "Content on the first start",
-          "text": "Mods can add items, spells, statuses, effects and talents that exist from a server's first start, with no second restart. Until the game test, players' games do not load such mods, so a server whose players need one refuses Kiln players.",
-          "area": "api",
-          "gamePending": true,
-          "held": "hosted"
-        },
-        {
-          "title": "Change the game's own data",
-          "text": "Boot mods can change values the game reads once at start, such as experience per level or how many Flame Altars a base may have.",
-          "area": "content",
-          "gamePending": true,
-          "held": "hosted"
-        },
-        {
-          "title": "Settings in OnBoot",
-          "text": "A boot mod can read its own settings in OnBoot, so a level cap or an altar count can come from them. KilnBoot in the SDK makes a project a boot mod.",
-          "area": "api",
-          "gamePending": true,
-          "held": "hosted"
-        },
-        {
-          "title": "Mod update checks",
-          "text": "Players can check for newer versions of their mods in the launcher, by hand or once a day. Nothing is downloaded or installed for you.",
-          "area": "launcher"
-        },
-        {
-          "title": "Publish with kiln publish",
-          "text": "Mod authors can release a packed mod as a GitHub release: the zip is checked first, and nothing is sent until you confirm.",
-          "area": "tools"
-        },
-        {
-          "title": "Questions about the world",
-          "text": "Server mods can cast rays, find the ground, check line of sight and find nearby entities, and creature brains can stop seeing through walls.",
-          "area": "api",
-          "gamePending": true,
-          "held": "hosted"
-        },
-        {
-          "title": "Path search",
-          "text": "Server mods can ask the game's own path search for a walking route, or only whether a place can be reached.",
-          "area": "api",
-          "gamePending": true,
-          "held": "hosted"
-        },
-        {
-          "title": "Terrain overlays",
-          "text": "Mods can add ore veins, mounds, tunnels and small landforms that stay after a restart and that players without the mod also see.",
-          "area": "content",
-          "gamePending": true,
-          "held": "hosted"
-        },
-        {
-          "title": "Weapon follow-up moves",
-          "text": "A weapon's moves can lead into each other, for example a block that goes on into the weapon's own parry.",
-          "area": "content",
-          "gamePending": true,
-          "held": "all"
-        },
-        {
-          "title": "Tool wear",
-          "text": "Mods can make an axe or pickaxe wear faster, slower or not at all.",
-          "area": "content",
-          "gamePending": true,
-          "held": "hosted"
-        },
-        {
-          "title": "Values in the game's UI",
-          "text": "Client mods can show their own numbers and bars in the game's item details, inventory slots and health, stamina and mana display.",
-          "area": "content",
-          "gamePending": true,
-          "held": "all"
-        },
-        {
-          "title": "Block kinds of your own",
-          "text": "A mod can add a kind of block of its own that other mods then write in C# or JSON.",
-          "area": "api"
-        },
-        {
-          "title": "Creature control",
-          "text": "Server mods can take over a creature's movement from the game's AI and give it back afterwards.",
-          "area": "api"
-        },
-        {
-          "title": "Prop scale that lasts",
-          "text": "Mods can resize props per axis, and the size stays after a restart. It changes how big a prop looks, not its collision.",
-          "area": "api",
-          "gamePending": true,
-          "held": "all"
-        },
-        {
-          "title": "List of content files",
-          "text": "Mods can list every content file the game serves, the game's own and every mod's, and where each comes from.",
-          "area": "api",
-          "gamePending": true,
-          "held": "hosted"
-        },
-        {
-          "title": "Game types by script name",
-          "text": "Mods can find game types by the names Impact scripts use.",
-          "area": "api"
-        },
-        {
-          "title": "Join check at the door",
-          "text": "A joining player can be held at the door for up to 25 s while the server checks their game, then let in or refused with a reason. Kiln's own services use it now; mods get it through later ones.",
-          "area": "servers"
-        },
-        {
-          "title": "Newer EMF mods load",
-          "text": "EMF mods made for EMF 0.6.9 to 0.6.11 start on Kiln, also those that ask for the newer EMF versions.",
-          "area": "compat"
-        },
-        {
-          "title": "Held features and preview",
-          "text": "Features that still need a real-game test ship switched off and say so; a preview setting switches them on for testing.",
-          "area": "core"
-        },
-        {
-          "title": "Beside in-place patches",
-          "text": "Kiln mods keep working when another loader changed the game's code before Kiln started; before, some Kiln features switched off.",
-          "area": "compat",
-          "kind": "fix"
-        },
-        {
-          "title": "Beside other hook engines",
-          "text": "Kiln recognises the hooks other engines put into the game's code, such as greeneye plugins and XHL mods, and keeps working beside them. By rifters (pull request 31).",
-          "area": "compat",
-          "kind": "fix"
-        },
-        {
-          "title": "NoClip descent and return",
-          "text": "In NoClip and character flight, holding sneak always sinks; a player who left inside the ground returns at their last free position.",
-          "area": "core",
-          "kind": "fix"
-        },
-        {
-          "title": "Key bindings",
-          "text": "Keys with no name of their own keep their binding after a restart, and punctuation keys work on non-US keyboard layouts. The restart fix is by bisdat (pull request 34).",
-          "area": "core",
-          "kind": "fix"
-        },
-        {
-          "title": "Temporary terrain",
-          "text": "Temporary terrain from mods no longer stays in your save when it was made inside a base or in a second world.",
-          "area": "content",
-          "kind": "fix"
-        },
-        {
-          "title": "Creature brains walk",
-          "text": "A creature run by a mod's own brain now walks; before, the game's steering kept it standing still.",
-          "area": "content",
-          "kind": "fix"
-        },
-        {
-          "title": "Required boot mods stop on a bad entry",
-          "text": "A required boot mod with a bad entry in its own files stops the start and names the file and the entry, instead of loading a world without it.",
-          "area": "api",
-          "kind": "fix"
-        },
-        {
-          "title": "EML mod message",
-          "text": "If ShroudForge keeps an EML mod you copied in by hand switched off, Kiln now says so and how to switch it on.",
-          "area": "compat",
-          "kind": "fix"
-        },
-        {
-          "title": "Play once with boot mods",
-          "text": "Play once makes the game-data snapshot too, so a boot mod that reads the game's data finds it ready.",
-          "area": "launcher",
-          "kind": "fix"
-        },
-        {
-          "title": "Data folder move",
-          "text": "Moving the data folder, or using an existing one, is no longer refused now and then as if another launcher were using it.",
-          "area": "launcher",
-          "kind": "fix"
-        },
-        {
-          "title": "Long prerelease numbers",
-          "text": "Update checks compare very long prerelease numbers by their value.",
-          "area": "launcher",
-          "kind": "fix"
-        },
-        {
-          "title": "kiln lint patterns",
-          "text": "kiln lint no longer rejects every publish tag and two folder-name fields.",
-          "area": "tools",
-          "kind": "fix"
-        },
-        {
-          "title": "Game systems by name",
-          "text": "A directory of the game's ECS programs, for program wraps in a later release.",
-          "area": "api",
-          "groundwork": true
-        },
-        {
-          "title": "Typed hooks",
-          "text": "Hooks whose signature is checked against the game's code at load.",
-          "area": "api",
-          "groundwork": true
-        },
-        {
-          "title": "Owner cleanup notices",
-          "text": "Native services are told when a mod's ownership of something ends.",
-          "area": "core",
-          "groundwork": true
-        },
-        {
-          "title": "Network inspector",
-          "text": "The start of a tool that shows what a server sends each player.",
-          "area": "servers",
-          "groundwork": true
-        },
-        {
-          "title": "Capacity budgets",
-          "text": "One shared way for Kiln to report how much room is left under a limit.",
-          "area": "core",
-          "groundwork": true
-        }
-      ]
-    },
-    {
       "version": "0.2.0-dev.29",
-      "status": "planned",
+      "status": "next",
       "title": "Hooks, events and limits",
       "summary": "Deeper ways for mods to change the game's own systems, events mods can cancel, and higher limits.",
       "features": [
