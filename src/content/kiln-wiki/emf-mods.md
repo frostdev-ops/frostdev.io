@@ -1,13 +1,14 @@
 ---
 title: "EMF mods"
 nav: "EMF mods"
-description: "Install EMF DLL and Lua mods with API v40 (EMF 0.6.8) support, current differences and server/client evidence limits."
+description: "Install EMF DLL and Lua mods with API v42 (EMF 0.6.11) support, current differences and server/client evidence limits."
 status: "partial"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
-Kiln runs mods made for EMF (the Enshrouded Modding Framework), DLL and Lua mods, up to EMF 0.6.8 / API v40 since
-**0.2.0-dev.27**. You do not need EMF's `dinput8.dll` or its core. Kiln's EMF part is installed by default.
+Kiln runs mods made for EMF (the Enshrouded Modding Framework), DLL and Lua mods, up to EMF 0.6.11 / API v42 since
+**0.2.0-dev.28** (0.6.8 / v40 since dev.27). You do not need EMF's `dinput8.dll` or its core. Kiln's EMF part is
+installed by default.
 
 The C table has **135 slots: 76 full, 17 partial, and 42 that answer "not available" for now** (functions EMF added
 between 0.6.3 and 0.6.8). That describes implemented contracts, not a claim that every mod or player-facing feature has
@@ -29,7 +30,7 @@ file: Kiln rewrites EMF's copy at each start.
 Which mods load:
 - A mod marked `client` doesn't load on a dedicated server.
 - A mod whose required mod is missing, off or too old doesn't load, and the log says why.
-- A mod that needs an EMF API newer than v40 is refused, with the version it needs.
+- A mod that needs an EMF API newer than v42 is refused, with the version it needs.
 
 ## Mods built for EMF 0.6.3 to 0.6.8
 
@@ -37,6 +38,12 @@ A mod built with EMF's SDK doesn't start on a host whose table is smaller than t
 EMF 0.6.0's table until 0.2.0-dev.26, so every EMF DLL built since 0.6.3, and with EMF's `lua` mod every Lua mod of a
 current EMF (Beastmaster, Necromancer, Bounty Board and the others), stayed off unless EMF itself was installed. Since
 0.2.0-dev.27 the table is EMF 0.6.8's and they start.
+
+EMF 0.6.10 (API v41) and 0.6.11 (v42) added no function, only two fields: `stuck_seconds` on move orders, with the
+flag `EMF_MOVE_PEACEFUL_ALL`, and the door each point of a path goes through (`EmfPathResult.doors`). Since
+0.2.0-dev.28 Kiln says version 42, so a mod whose `mod.json` says `"emf": 41` or `42` loads instead of being refused,
+and `emf::has_v41()` and `has_v42()` answer true. `enemy_move` and `path_find`, the functions those fields belong to,
+still answer "not available on Kiln yet".
 
 Kiln doesn't carry every function EMF added since. Chat lines without a speaker (`chat_tell_ex`, `chat_broadcast_ex`)
 and `world_to_screen` work. Player join, leave and death events, item and character names, hits and hit rules, buffs,

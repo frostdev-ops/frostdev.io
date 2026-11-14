@@ -1,8 +1,8 @@
 ---
 title: "Code mods"
-description: "The Mod class, the tick thread, events, configs, commands, permissions, saved data, other mods, and what a call does when it cannot work."
+description: "The Mod class, the tick thread, events, configs, commands, permissions, saved data, other mods, what a call does when it cannot work, and what waits for a game test."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 ## The mod
@@ -28,6 +28,9 @@ dev.20+ [world programs](/kiln/wiki/world-programs) keep inert scheduler declara
 are drained on unload.
 
 `Context` has `Info`, `Log`, `Tick`, `GameLog`, `Scheduler`, `Messages` and `DataDirectory`.
+
+Since 0.2.0-dev.28 a mod can also override `OnBoot`, which runs once before the game starts, for content the game must
+have on its first start: [OnBoot](/kiln/wiki/onboot).
 
 ## The tick thread
 
@@ -81,6 +84,12 @@ var homes = _config.Value.MaxHomes;        // always current
 
 Kiln writes a commented file, keeps the player's values, fixes bad ones and reloads on change. `[RequiresRestart]` applies
 at the next load. `[Synced]` sends the server's value to players.
+
+**A file that can't be written (0.2.0-dev.28).** A read-only folder or a full disk is never reported as saved.
+`ConfigFile.TrySet` is all or nothing: it returns false with "cannot write" and the reason, and changes nothing; before,
+it returned true. `Set` and `Save` don't throw for it, as before: the value applies for this session and the failure is
+logged. `ConfigFile.LastWriteError` says why the last write failed and is null after one that succeeded: read it after
+`Set` or `Save` before you tell a player "saved".
 
 **New in 0.2.0-dev.20:** `Config.RegisterWorld<MyConfig>()` keeps one config beside each world's sidecar. Values switch
 before `WorldLoadedEvent`; with no world, they are defaults. `[RequiresRestart]` changes apply when that world next opens.
@@ -136,7 +145,8 @@ Each part of the game is a service. List the ones you use in `KilnServices`:
 | Content | [data packs](/kiln/wiki/data-packs), [game data](/kiln/wiki/game-data) |
 | Creatures, Abilities | [creatures](/kiln/wiki/creatures), [abilities](/kiln/wiki/abilities) |
 | Skills, Quests | [talents](/kiln/wiki/talents), [quests](/kiln/wiki/quests), [NPCs](/kiln/wiki/npcs) |
-| Build | [world edits](/kiln/wiki/world-edits) |
+| Build, Terrain, Queries | [world edits, terrain overlays and questions about the world](/kiln/wiki/world-edits) |
+| CreatureControl | [who drives a creature's body](/kiln/wiki/creature-ai#creature-control) |
 | Ui, Client, Network | [game UI](/kiln/wiki/game-ui), [multiplayer](/kiln/wiki/multiplayer) |
 | Assets, Audio | [icons and textures](/kiln/wiki/assets), [sounds](/kiln/wiki/sounds) |
 
@@ -162,6 +172,22 @@ missing lowers its features and takes that back when the part appears. `kiln/sta
 Results are kiln results (`IKilnResult`, with `Ok` and `Reason`), and the analyzers warn about one nobody reads and a
 capability nobody checks ([KILN120 and KILN121](/kiln/wiki/lint#c-analyzers)). Members carry what they need
 (`[RequiresCapability]`, `[ServerOnly]`, `[TickThreadOnly]`, `[AnyThread]`).
+
+### Built, waiting for a game test
+
+Since 0.2.0-dev.28 some of what a release builds can only be confirmed in a real game, and ships switched off until it
+has been. Such a capability reads `unavailable` with the reason `policy` and the text `game test pending:` followed by
+the guided checks that open it. `Capabilities.IsHeld(name)` and `Capability.IsHeld` tell "built, not tested yet" from
+"does not work here". [What works today](/kiln/wiki/status#built-game-test-pending) lists the held capabilities.
+
+`"preview"` in `kiln.json` switches them on before then: `true` for all of them, or a list of names.
+
+```json
+{ "preview": ["camera.fov"] }
+```
+
+Use it on a test server or in your own game, not on a server other people play on. A name in the list that nothing
+holds is a warning in kiln.log.
 
 ## Weather
 

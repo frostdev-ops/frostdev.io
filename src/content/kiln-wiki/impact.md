@@ -2,7 +2,7 @@
 title: "Impact programs"
 description: "Read the game's spell programs as text, clone and change them, write new ones, and call your own C#."
 status: "partial"
-updated: "2026-11-05"
+updated: "2026-11-14"
 ---
 
 > **Partly built.** Reading, writing, checking and cooking work for all of the game's programs, and a changed program has run
@@ -60,6 +60,19 @@ A program calls it as `mymod.Chill`. Declare it in `impact/natives.json`.
 
 Query results include a creature's child entities: weak spots and VFX links. The game keeps one hit per root target and impact, so a
 hit kept on a VFX link is lost. Filter to what has health with `fetchOptionalAttribute`.
+
+## Game types by their Impact name
+
+Since 0.2.0-dev.28. Impact scripts name a type in their own way: `ecs.Health` for `keen::ecs::Health`, `float32` for
+`keen::float32`. `GameType.ImpactName` gives that name, and `GameTypes.ByImpactName` and `FindAllByImpactName` find a
+type by it:
+
+```csharp
+string? impact = GameTypes.Find("keen::ecs::Health")!.ImpactName;     // "ecs.Health"
+GameType? one = GameTypes.ByImpactName("float32");                     // keen::float32
+```
+
+Capability `types.impact_names`.
 
 ## Rules the checker enforces
 

@@ -2,7 +2,7 @@
 title: "The dev kit"
 description: "Kiln.Sdk, project templates, the kiln command, a linter, analyzers, a VS Code extension, a debugger and game-id constants."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 | Part | For |
@@ -22,11 +22,11 @@ is the local package "feed"; pass it to `kiln new` with `--feed <folder>` or set
 
 ## Kiln.Sdk
 
-Use the full version from your MDK pack (`0.2.0-dev.27` for this release, mod API 0.2.2); local packs have their own
+Use the full version from your MDK pack (`0.2.0-dev.28` for this release, mod API 0.2.3); local packs have their own
 version.
 
 ```xml
-<Project Sdk="Kiln.Sdk/0.2.0-dev.27">
+<Project Sdk="Kiln.Sdk/0.2.0-dev.28">
   <PropertyGroup>
     <KilnModId>my-mod</KilnModId>
     <Version>1.0.0</Version>
@@ -51,6 +51,8 @@ mod. Without a `kiln.mod.json`, the build writes one from the properties; with o
 | `KilnModFolders` | data folders to ship; default `content;assets;skills;quests;blocks;icons;impact;audio;vfx;models` |
 | `KilnAnalyzers`, `KilnGameIds` | [analyzers](/kiln/wiki/lint), [game-id constants](/kiln/wiki/catalogs) |
 | `KilnBake` | bake what the code defines into the mod at build ([below](#definitions-baked-at-build)); on by default with `Quests`, `Skills`, `Blocks` or `Vfx` |
+| `KilnBoot` | `true` or `required`: the mod has [boot content](/kiln/wiki/onboot), and `"boot"` goes into its `kiln.mod.json` |
+| `KilnUpdatesRepository` | the GitHub repository players' [update checks](/kiln/wiki/manifest#update-checks-updates) look at |
 
 Items: `KilnDependency`, `KilnLoadBefore`, `KilnLoadAfter`, `KilnIncompatible`.
 
@@ -63,8 +65,12 @@ the server and in every player's game; before, the first start after an install 
 turns it off.
 
 - Statuses, effects, items, spells and talent blocks aren't baked yet (the build prints "not baked" for them), so most
-  [blocks](/kiln/wiki/blocks) mods still get those from the second start.
+  [blocks](/kiln/wiki/blocks) mods still get those from the second start, unless a boot mod stages them in
+  [OnBoot](/kiln/wiki/onboot) (0.2.0-dev.28, dedicated servers).
 - When a baked file and the code differ, the baked file wins at every start until you build again; kiln.log warns.
+- **A boot mod** (0.2.0-dev.28): its `OnBoot` runs first in the bake, as a start runs it. When it throws, or a
+  definition it stages would not lower, the build fails (`KILN032`). What `OnBoot` stages isn't baked: it is in the game
+  from the first start anyway.
 - A build bakes again when a file the mod copies to its output changed. A baked file over 4 MiB isn't written: the build
   warns, and those definitions come from the next start, as without baking.
 
@@ -117,5 +123,11 @@ interaction offer and a game setting changed for a while), `QuietServer` (pacing
 (`Items.Equip` and `Items.Unequip`), `SkyControl` (the weather), `AffixSword` ([affixes](/kiln/wiki/affixes)),
 `ItemData` (data on one item), and for the advanced tier `EngineRoom` (the game's systems listed, profiled and hooked).
 Kiln's sample mods answer "not on this server" when a feature is off on a game build, instead of failing.
+
+New in 0.2.0-dev.28: `boot-gallery` ([OnBoot](/kiln/wiki/onboot), with a resource patch), `OreVein`
+([terrain overlays](/kiln/wiki/world-edits#terrain-overlays)), `TransformScale`, `CreatureControlSample`
+([creature control](/kiln/wiki/creature-ai#creature-control)), `ValueBars` ([values in the game's UI](/kiln/wiki/game-ui#values-in-the-games-own-ui)),
+`BlockKinds` ([block kinds](/kiln/wiki/blocks#block-kinds-of-your-own)) and `BlobCatalog` ([content blobs](/kiln/wiki/assets#every-content-blob)).
+`NpcSample` now has a brain that walks a path found with `Queries.FindPath`.
 
 If you rebuild Kiln's packages without changing their version, clear `~/.nuget/packages/kiln.*` first.

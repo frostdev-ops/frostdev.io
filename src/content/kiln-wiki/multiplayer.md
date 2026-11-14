@@ -1,8 +1,8 @@
 ---
 title: "Multiplayer"
-description: "What players need, who can join, kicks and bans, per-character progress, synced configs, your own network messages and client code."
+description: "What players need, who can join, a short hold at the door, kicks and bans, per-character progress, synced configs, your own network messages and client code."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 ## Decide what players need
@@ -35,6 +35,19 @@ own framework (Enshwick has its own join check). A server's modpack can carry th
 **Known limit:** only entities are withheld. A vanilla client carrying Kiln items can crash on a server that lets it in, and may lose
 those items elsewhere. A mod that adds items should state `clients`.
 
+### Held at the door
+
+Since 0.2.0-dev.28 Kiln's own services can hold a joining player with Kiln at the door, before the world is theirs,
+while they finish something with that player's game. For the player it is a little longer on the loading screen: at
+most 25 s, with Kiln's messages flowing both ways while they wait, and then they join or get a message saying why not.
+Mods don't use this directly; it is for the services built on it in later releases (capabilities `net.admission` and
+`net.gate.hold_all`).
+
+When the game's own refusal of a player fails, a dedicated server falls back to the game's admin kick (capability
+`net.disconnect`), so a refused player never stays connected half-way. Without it, on a world a player hosts, such a
+player stays connected but gets no world data until they leave. What a real player's game shows while held is a guided
+check of the game test, not yet run.
+
 ## Kick, ban and who may log in
 
 ```csharp
@@ -60,6 +73,11 @@ connections on a test server, not yet with a real player's game.
 
 The server sends its changes to items, recipes and game data at join. Stack sizes, ingredients, crafting times and
 tooltips match, and go back at leave. No code, and your mod needn't be on their game.
+
+Not so for a [resource patch](/kiln/wiki/onboot#resource-patches): it changes data the game read at its own start, so
+both sides need the mod. In this release a boot mod doesn't load in a player's game yet, so a server whose boot mod
+states `"clients": "mod"` refuses Kiln players for it unless they set `"preview"` in `kiln.json`
+([Where it runs](/kiln/wiki/onboot#where-it-runs)).
 
 ## Per-character progress
 
@@ -112,6 +130,9 @@ channel.SendToAll(message);                                       // on the serv
 
 Channels use the game's connection: no extra port. Register messages in the same order on both sides. Players without Kiln
 never receive them. A channel closes when its mod unloads.
+
+`NetPeer.FramesIn` and `NetPeer.FramesOut` (0.2.0-dev.28) count the frames each player's game and the server have sent
+on Kiln's channel; a player without Kiln sends none.
 
 ## Code in the game client
 

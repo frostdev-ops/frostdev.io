@@ -1,17 +1,72 @@
 ---
 title: "What works today"
 description: "What Kiln does in the current build, what awaits a game test, what's being built and what isn't, as of November 2026."
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.27**, the current development release; check the download's version before using its new APIs.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.28**, the current development release; check the download's version before using its new APIs.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026, or, for dev.24 and later, in the one real game the release's notes name (Linux,
 Proton, one client). Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
+
+## New in 0.2.0-dev.28
+
+OnBoot: a mod's content, and its changes to the game's own data, are in place before the game reads them, on the very
+first start. A boot mod can raise the number of Flame Altars a base may have, or change the experience each level
+needs, and the game uses the new values from the first start. Also new: questions about the world and paths, terrain
+overlays, follow-up moves for weapons, tool wear, values in the game's own UI, block kinds of your own, creature control,
+update checks in the launcher, and `kiln publish`. Kiln mods keep working next to another loader that patched the
+game's code first. **Evidence:** OnBoot and resource patches ran on dedicated test servers: a mod built outside Kiln's
+repository with the SDK patched 21 values of the game's balancing table before the game read it. The rest ran on
+dedicated test servers, in Kiln's tests and against recorded answers. **Nothing of dev.28 has been seen in a player's
+real game yet.** What only a real game can confirm ships switched off in a player's game, some of it on servers too,
+until its game test ([below](#held-until-a-game-test-dev28)); `"preview"` in `kiln.json` switches it on for a test.
+
+| Area | Included in dev.28; evidence and remaining limits |
+|---|---|
+| [OnBoot](/kiln/wiki/onboot) | `"boot": true` or `"required"` in `kiln.mod.json` (`<KilnBoot>` in a project). Statuses, effects, items, spells and talents staged in `OnBoot` are in the game from the first start, with the same ids; a broken boot mod is left out and named, a required one (also for one bad entry in its own files) stops the start with exit code 0x4B01 and a last kiln.log line that names the file. `Blocks.Find` sees boot blocks from `OnLoad` on; a boot mod whose files or `OnBoot` settings changed loads again only after a restart. Settings are readable in `OnBoot`. Dedicated test servers. In a player's game, hosted or joined, a boot mod doesn't load until its game test, so a server whose boot mod states `"clients": "mod"` refuses Kiln players unless they set `"preview"` ([Where it runs](/kiln/wiki/onboot#where-it-runs)) |
+| [Resource patches](/kiln/wiki/onboot#resource-patches) | fields of the game's data changed before the game reads them: experience per level, Flame Altars per flame level (`"altarsPerFlameLevel[*]": { "min": 16 }`). A mod built outside the repository with the SDK patched 21 values of the balancing table on a dedicated test server. Both sides need the mod; the game itself caps Flame Altars at 16. Off in a player's game until its game test |
+| [Game data in OnBoot](/kiln/wiki/onboot#the-games-data-in-onboot) | `IReadOnlyGameData` reads the game's items, templates, skills and materials from the boot snapshot, which the launcher makes when it starts the game with an enabled mod that boots: about 30 to 45 s and 200 MB, once per game update. `kiln boot-snapshot` for a server you start yourself |
+| [Mod updates](/kiln/wiki/profiles#mod-updates) | **Check for updates** above your mods, a daily check in Settings (off by default), **Updates…** in a mod's menu, and `kiln updates check`. A notice is only a link: nothing is downloaded, installed or switched. Authors name a GitHub repository in [`updates`](/kiln/wiki/manifest#update-checks-updates). Tested against recorded answers, not against GitHub itself |
+| [`kiln publish`](/kiln/wiki/cli#publishing-a-release) | a packed mod as a GitHub release: a plan you read, an apply you confirm, a draft you make public. The token stays in your system's credential store. Tested against recorded answers only: make your first release to a repository you can delete |
+| [Questions about the world](/kiln/wiki/world-edits#questions-about-the-world) | voxel rays, the ground below a point, voxel line of sight, entities in a sphere or a box; an answer is a hit, a miss or "unknown". 64 rays and 500 microseconds a server step for all mods together. Dedicated test servers; off on hosted worlds until its game test |
+| [Paths](/kiln/wiki/world-edits#paths) | the game's own path search for a walking route up to 200 m: `Queries.FindPath`, `Queries.CanReach`. Nothing is moved. Dedicated test servers; off on hosted worlds until its game test |
+| [Terrain overlays](/kiln/wiki/world-edits#terrain-overlays) | an ore vein, a mound, a tunnel, written once per world as ordinary world edits that players without Kiln see; players' changes win, also after a lost record (Kiln keeps a second one in `kiln/data/kiln.terrain`); transient edits are gone after the next restart, also in a base. Dedicated test servers; off on hosted worlds until its game test |
+| [Brains that walk](/kiln/wiki/creature-ai#a-brain-of-your-own) and [creature control](/kiln/wiki/creature-ai#creature-control) | a creature run by a mod's brain now walks; mods take a lease on a creature's body. A brain's body walked on a dedicated test server; that a player sees it walk is open |
+| [Block kinds of your own](/kiln/wiki/blocks#block-kinds-of-your-own) | `Blocks.RegisterKind`: other mods write your block, Kiln turns it into items, weapons, spells, statuses and effects. Dedicated test servers; a joined player without the provider is not checked in a game |
+| [Weapon move follow-ups](/kiln/wiki/blocks#items-and-weapons) | `MoveBlock.FollowUps`: a block that goes on into the weapon's own parry. All moves or none, written in one step and taken back whole on a failure; `Blocks.MovesStatus`. A lab server; off everywhere, servers too, until its game test |
+| [Tool wear](/kiln/wiki/blocks#items-and-weapons) | `ToolBlock.WearPerDebit`, `Items.SetToolWearPerDebit`: an axe or pickaxe wears faster, slower or not at all. Dedicated servers; hosted worlds after the game test |
+| [Values in the game's own UI](/kiln/wiki/game-ui#values-in-the-games-own-ui) | `Ui.Values`: a mod's numbers and bars in the game's item details, slots and HUD, and lines in Kiln's Item details window. The picture only. Every part is off until its game test |
+| [Held at the door](/kiln/wiki/multiplayer#held-at-the-door) | a server may keep a joining player on the loading screen while its mods check their game: at most 25 s, then they join or are told why not. A refused player whose refusal fails gets the game's admin kick on a dedicated server. The lab's own transport; what a real player's game shows is open |
+| [Held capabilities](/kiln/wiki/code-mods#built-waiting-for-a-game-test) | what waits for its game test reads `unavailable`, `game test pending: …`; `Capabilities.IsHeld` tells it from "doesn't work here"; `"preview"` in `kiln.json` switches it on for a test |
+| For mod authors | mod API 0.2.3, additive: no public member of dev.27 was removed or changed. [OnBoot under `dotnet test`](/kiln/wiki/testing#onboot-under-dotnet-test), [write only if unchanged](/kiln/wiki/world-edits#shapes), [an entity's scale](/kiln/wiki/world-edits#props), [game types by Impact name](/kiln/wiki/impact#game-types-by-their-impact-name), [every content blob](/kiln/wiki/assets#every-content-blob), [`ConfigFile.TrySet` false when the file can't be written, and `LastWriteError`](/kiln/wiki/code-mods#configs), [KILN034 and KILN035](/kiln/wiki/lint#c-analyzers), [EMF 0.6.11 / API v42](/kiln/wiki/emf-mods#mods-built-for-emf-063-to-068), [frame counters per player](/kiln/wiki/multiplayer#your-own-messages), [new samples](/kiln/wiki/dev-kit#samples). Some groundwork for later releases is in it too, marked experimental (`KILNX001`, `KILNX028`); it promises no feature yet |
+| [Server operators](/kiln/wiki/dedicated-servers#world-queries) | `kiln/config/kiln.queries.json` sets the rays all mods may cast in a server step. [Boot mods](/kiln/wiki/dedicated-servers#boot-mods) on a server: a required one with a bad file stops the start (exit code 0x4B01) and kiln.log's last line names it. Keep `kiln/data` in your backups: terrain records, the journal of temporary edits and the sizes mods set on props are there |
+| Fixes | [Kiln mods next to a loader that patched the game's code in place](/kiln/wiki/other-mods#closed-source-dll-mods): Creative Mode 3.2.0 and The Worst Map Mod switched off up to 22 of Kiln's features (moving items, chat, mod screens, player rules); Kiln now reads the game's functions from the exe file then, and kiln.log names the patched places. Tested on the client exe with the four patched places and on test servers; not yet seen in a player's game (guided check `00-sigdb.in-place-patches`: Creative Mode 3.2.0 with Multi Planter). A creature with a mod's brain walks instead of standing still. [NoClip and character flight](/kiln/wiki/player-rules#noclip): holding sneak always sinks and letting go stops, also in the game's sneak mode (GitHub issue 25), and a player who leaves inside the ground is put back at their last free position. [Key bindings](/kiln/wiki/game-ui#hud-toasts-and-keys): a key saved as `Key223` is no longer lost at the next start, and punctuation keys work on non-US layouts (GitHub issue 33; the round-trip fix by bisdat, pull request 34). Props a mod resized keep their size after a restart. Temporary terrain no longer stays in the save inside a base, or is recorded under an earlier world of the same session. [An EML mod copied into ShroudForge's folder by hand](/kiln/wiki/eml-shroudforge#shroudforge-mods) and switched off there: Kiln says so and how to switch it on. A single start with another profile makes the boot snapshot too. `kiln lint` no longer rejects every value of the publish tag. Update checks order very long numeric prerelease versions by value. Moving the data folder is no longer refused now and then right after another step. Kiln recognises the relays other hook engines use (greeneye plugins, XHL mods) as hooks (by rifters, pull request 31) |
+
+### Known limits (dev.28)
+
+- Nothing of dev.28 has been seen in a player's real game yet. In a player's game (a world they host, or a game that
+  joins a server), OnBoot and resource patches are off until their game tests; on a world a player hosts, so are the
+  world questions, paths, terrain overlays and tool wear. Weapon move follow-ups and an entity's scale are off on
+  servers too, and values in the game's UI (a client feature) are off everywhere.
+- **OnBoot in a player's game:** a mod with `"boot"` doesn't load there yet, and a game with an enabled
+  `"boot": "required"` mod doesn't start (exit code 0x4B01). A server whose boot mod states `"clients": "mod"` refuses
+  Kiln players unless they set `"preview"` in `kiln.json` ([Where it runs](/kiln/wiki/onboot#where-it-runs)). Don't
+  ship `"required"` to players yet.
+- **OnBoot:** only statuses, effects, items, spells and talents can be staged; other kinds answer `NotInBootKinds` and
+  work as runtime blocks in `OnLoad`. On a game client, a required mod with VFX or materials, or with a texture
+  override, stops the start when that part can't be built or applied; this is proven only by its guided check. A
+  dedicated server builds no VFX (each player's game does), so that never stops a server.
+- **Terrain overlays:** if all of `kiln/data` is lost, or a world is moved without it, a plan with no record is a first
+  install again. Removing a mod leaves its ground.
+- **NoClip:** a player who is still connecting when they are put back may fall a few steps inside the rock first.
+- **Weapon follow-ups:** when a failed take-back can't be verified, every change of that mod is taken off, not only the
+  weapon's; its other weapons and rules come back at the next content pass.
+- `kiln publish` and the update checks were tested against recorded answers, not against GitHub itself.
 
 ## New in 0.2.0-dev.27
 
@@ -39,7 +94,7 @@ tests and in the launcher's browser test bench; what a player's own game shows w
 | [A slow server start](/kiln/wiki/dedicated-servers#what-a-slow-start-is-doing) | `kiln/state/progress.json` says what the start is doing. Test servers |
 | [Cooking on a server](/kiln/wiki/dedicated-servers#mods-with-a-cook-recipe) | `kiln cook` from a release's `sdk/` folder alone, no `KILN_REPO`. Each cook records what it wrote; a cooked file no cook of this game made loads with a warning |
 | For mod authors | mod API 0.2.2, additive. [NoClip](/kiln/wiki/player-rules#noclip), [buffs taken off and listed](/kiln/wiki/abilities#run-effects-buffs-and-animations), [where a player looks](/kiln/wiki/abilities#where-a-player-looks), [kick, bans and the login event](/kiln/wiki/multiplayer#kick-ban-and-who-may-log-in), [event filters by entity](/kiln/wiki/events#only-the-events-about-one-entity), [equip and unequip](/kiln/wiki/inventory#equip-and-unequip), [item data in players' games](/kiln/wiki/inventory#item-data-and-saves), [affixes](/kiln/wiki/affixes), [tracked world writes](/kiln/wiki/world-programs#tracked-writes-from-the-tick-thread), [weather](/kiln/wiki/code-mods#weather), [one contract for every service](/kiln/wiki/code-mods#when-a-call-cannot-work), [KILN120 and KILN121](/kiln/wiki/lint#c-analyzers), [definitions baked at build](/kiln/wiki/dev-kit#definitions-baked-at-build), [new fakes for unit tests](/kiln/wiki/testing#tests-without-the-game), [new samples and templates](/kiln/wiki/dev-kit#templates). Proven on a test server with stand-ins for players |
-| Fixes | starts with many mod materials are much faster; Kiln's mods load again next to mods that hook the game first (Auto Doors), also with Greeneye Loader or ShroudForge beside them; the game no longer hangs at its start next to other loaders, and Kiln finds the game's functions after another loader changed them (both by rifters, GitHub pull request 27); the Mods page at high Windows scaling; a mod item lies on the ground as its own model; quoted names in `dinput8-chain.ini`; a quest whose completion a mod cancelled no longer gives its reward |
+| Fixes | starts with many mod materials are much faster; Kiln's mods load again next to mods that hook the game first (Auto Doors), also with Greeneye Loader or ShroudForge beside them; the game no longer hangs at its start next to other loaders, and Kiln finds the game's functions after another loader changed them (both by rifters, GitHub pull request 27; since dev.28 also when a loader patched them in place); the Mods page at high Windows scaling; a mod item lies on the ground as its own model; quoted names in `dinput8-chain.ini`; a quest whose completion a mod cancelled no longer gives its reward |
 
 ### Known limits (dev.27)
 
@@ -317,10 +372,10 @@ Historical release notes. The dev.24, dev.22, dev.21 and dev.20 features and lim
 |---|---|
 | [EML](/kiln/wiki/eml-shroudforge#eml-mods) | game test pending. Mods patch the game data on test servers; a broken mod is switched off instead of stopping the game. dev.21's faster starts: measured on a lab server under Wine. dev.22: the first start no longer reads all game files (lab server and a synthetic data set under Wine; not a real install), and your profile's EML mods run under EML's own `dbghelp.dll` through copies the launcher places. dev.24: EML mods run when a ShroudForge mod is on too (Linux hosts and test servers) |
 | [ShroudForge](/kiln/wiki/eml-shroudforge#shroudforge-mods) | game test pending. Kiln's bundled copy and a player's own copy both run mods on test servers, with live settings. dev.24, seen in a real game: Kiln's main-menu entries with ShroudForge mods on, and W and S steering with Unlimited Flight |
-| [EMF](/kiln/wiki/emf-mods) | EMF 0.6.8 / API v40 since dev.27: of 135 C slots, 76 full, 17 partial, and 42 functions EMF added since 0.6.3 answer "not available" for now. EMF 0.6.8's own mods start on a lab server. Client-world programs/events remain unsupported; player-facing rendering/input and joined-game checks remain open. The older clock mod was seen in game |
+| [EMF](/kiln/wiki/emf-mods) | EMF 0.6.11 / API v42 since dev.28 (0.6.8 / v40 since dev.27; 0.6.10 and 0.6.11 added no function): of 135 C slots, 76 full, 17 partial, and 42 functions EMF added since 0.6.3 answer "not available" for now. EMF 0.6.8's own mods start on a lab server. Client-world programs/events remain unsupported; player-facing rendering/input and joined-game checks remain open. The older clock mod was seen in game |
 | [SET](/kiln/wiki/more-frameworks#set) | dev.24: SET's tools seen in a real game. Server probe 39/0; game options, `Admin.send`, ImGui Debug and the `settings.ini` editor remain unavailable. Kiln tool-window drawing/input needs a client |
-| [Greeneye Loader](/kiln/wiki/more-frameworks#greeneye-loader) | game test pending. The whole API, tested on Linux under Wine |
-| [Creative Mode (Flame)](/kiln/wiki/more-frameworks#creative-mode-flame) | game test pending. Started on a test server. dev.24: runs from the game's `mods` folder |
+| [Greeneye Loader](/kiln/wiki/more-frameworks#greeneye-loader) | game test pending. The whole API, tested on Linux under Wine. dev.28: Kiln mods keep working next to The Worst Map Mod, which patches the game's code in place |
+| [Creative Mode (Flame)](/kiln/wiki/more-frameworks#creative-mode-flame) | game test pending. Started on a test server. dev.24: runs from the game's `mods` folder. dev.28: Kiln mods keep working next to Creative Mode 3.2.0, which patches the game's code in place |
 | [Shroudtopia](/kiln/wiki/more-frameworks#shroudtopia) | game test pending. The whole API; Shroudweave's mods untried |
 | [Enshwick](/kiln/wiki/more-frameworks#enshwick) | game test pending. Enshwick's own loader, shipped with Kiln; its mods ran on a test server |
 | [shroudlink](/kiln/wiki/more-frameworks#shroudlink) | works on a test server (shroudlink's self-test). With players joined: pending. dev.22: the client addon (MODS tab) imports as a mod of its own; not seen in a real client |
@@ -381,19 +436,19 @@ Nothing below has been seen in the game yet. The new features are listed under
 | [Friendly NPCs](/kiln/wiki/npcs) | directory, trades, hand-ins, whistle, bed, follow, stay |
 | [Sounds and voice](/kiln/wiki/sounds) | heard in game. Server sounds on a joined player: open |
 | [Who can join](/kiln/wiki/multiplayer#who-can-join) | seen in the game: players without Kiln refused by servers whose mods they need, a Kiln player without a required mod refused with a message, modSync off letting players without Kiln in without Kiln-only things |
-| [Player rules and creative mode](/kiln/wiki/player-rules) | `/creative` seen in the game: flying and building outside bases, the Shroud timer frozen, gliding. The plane-style glide: not flown yet. dev.24's steered glider: with an analog stick, with the game's other pitch mode and seen from a second game, not checked in a game |
+| [Player rules and creative mode](/kiln/wiki/player-rules) | `/creative` seen in the game: flying and building outside bases, the Shroud timer frozen, gliding. The plane-style glide: not flown yet. dev.24's steered glider: with an analog stick, with the game's other pitch mode and seen from a second game, not checked in a game. dev.27's [NoClip](/kiln/wiki/player-rules#noclip): switching it on and off seen in a real game |
 | [World progress](/kiln/wiki/world-progress) | flame level, difficulty, spires, shrines, Shroud Roots, bosses, chests and a character's quests, with events. Flame-level writes and restoration also pass server checks; client UI/fog/placement effects remain open |
 | Water in containers | seen in the game: a larger watering can from a mod |
 | [Per-character progress](/kiln/wiki/multiplayer#per-character-progress) | talents follow the character; quests stay with the world |
-| Game UI: menus, screens, crafting tabs, HUD, keys, gamepad | |
+| Game UI: menus, screens, crafting tabs, HUD, keys, gamepad | dev.27's scrolling pause menu with 10 mods' entries: seen in one real game at one resolution |
 | Content and config sync to Kiln players | |
 | Kiln DLL mods and stand-alone `dinput8.dll` mods | |
-| [EMF mods](/kiln/wiki/emf-mods) | older mods and EMF 0.6.8's DLL and Lua mods on test servers; the older clock mod seen in game. Current API v40 limits: [above](#mods-for-other-frameworks) |
-| The launcher: install, profiles, library, saves, save editor | Linux and Windows. Windows: checked on a Windows PC by a tester. dev.24's new main screen (one list, profiles in Settings): tested in a browser against a stand-in backend, not in the installed app |
+| [EMF mods](/kiln/wiki/emf-mods) | older mods and EMF 0.6.8's DLL and Lua mods on test servers; the older clock mod seen in game. Current API v42 limits: [above](#mods-for-other-frameworks) |
+| The launcher: install, profiles, library, saves, save editor | Linux and Windows. Windows: checked on a Windows PC by a tester. dev.24's new main screen (one list, profiles in Settings): tested in a browser against a stand-in backend, not in the installed app. dev.27's cooking at Play, several mods at once, Changed on disk and the save editor's Deck tab: tests and the browser test bench. dev.28's [update checks](/kiln/wiki/profiles#mod-updates): against recorded answers |
 | Simpler first run | finds the game, installs Kiln, makes a "My mods" profile; drop a mod on the window to add it |
 | Linux builds | glibc 2.35 or newer: Steam Deck (SteamOS), Ubuntu 22.04 and later |
 | Nexus Mods build | no self-update: updates come from the Nexus page |
-| Servers: install, run, console, backups, modpacks, admin pages | Linux and Windows. Windows dedicated servers checked end to end on a Windows PC by a tester: import, install Kiln, start, join, admin pages |
+| Servers: install, run, console, backups, modpacks, admin pages | Linux and Windows. Windows dedicated servers checked end to end on a Windows PC by a tester: import, install Kiln, start, join, admin pages. dev.27's [kick and ban](/kiln/wiki/dedicated-servers#kick-and-ban): test connections on a test server. dev.28's [boot mods](/kiln/wiki/dedicated-servers#boot-mods): dedicated test servers |
 | Dev kit: `kiln`, templates, linter, analyzers, VS Code, debugger, catalogs, tests | debugger: dedicated servers on Linux and Wine |
 
 ## Open in the game
@@ -440,9 +495,35 @@ These pass offline or on a test server. What's missing is a player looking at th
 | A remote server with server mods | local test servers so far |
 | [Mods for other frameworks](/kiln/wiki/other-mods) | new. EML, ShroudForge, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink: tested on test servers and in Kiln's own tests; not yet seen in a player's game |
 | [The server pack](/kiln/wiki/dedicated-servers#the-server-pack) | new. Holds the same files `kilnctl` installs; not yet tried on a rented host |
+| [dev.27](#new-in-020-dev27): the launcher's cooking at Play, several mods at once, Changed on disk, the save editor's Deck tab, mouse key bindings, kick and ban, equip, the weather, tracked writes, item data in players' games, affixes, EMF 0.6.8's mods | test servers with stand-ins for players, Kiln's tests and the launcher's browser test bench; the Windows cook compile-checked only. See [Known limits (dev.27)](#known-limits-dev27) |
 | [dev.24](#new-in-020-dev24): the one list, profiles in Settings, EML next to ShroudForge, Flame from `mods`, kept mod files, the steered glider, the graphics device takeover | new. Linux hosts, Wine without a display and dedicated test servers; the launcher's main screen in a browser against a stand-in backend. Not on Windows or a Steam Deck. See [Known limits (dev.24)](#known-limits-dev24) |
 | [Mod loading in dev.22](#new-in-020-dev22) | new. Copies for another framework's own loader, the game-folder list, the drop-in switches, 7z and rar, the EML first start, the in-game mod manager and the support report: unit tests, Wine host tests with stand-in loader DLLs and lab servers; not on Windows, a Steam Deck or a real client. The [client checklist](#client-checklist-dev22) is open |
 | [The hook registry](/kiln/wiki/hooks), late DLL loading, the Library guard | new in dev.21. The registry and late loading: tested under Wine and on lab servers. The launcher's new pages: tests and mock data, not a real install. The [client checklist](#client-checklist-dev21) is open |
+
+### Held until a game test (dev.28)
+
+These ship switched off because only a real game can confirm them. Each reads `unavailable`, `game test pending:` with
+the guided checks that open it ([Built, waiting for a game test](/kiln/wiki/code-mods#built-waiting-for-a-game-test)).
+`"preview"` in `kiln.json` switches one on by name before then. "In a player's game" covers a world a player hosts and,
+for the `mods.boot` rows, a game that joins a server too; a dedicated server has those.
+
+| Capability | Held | Opened by |
+|---|---|---|
+| `mods.boot.client`: [OnBoot](/kiln/wiki/onboot) | in a player's game | first-start content and rehosting; other loaders' order |
+| `mods.boot.resource_patches`: [resource patches](/kiln/wiki/onboot#resource-patches) | in a player's game | first-start content and rehosting |
+| `mods.boot.vfx`: VFX and materials of boot mods | in a player's game | first-start content and rehosting |
+| `queries.voxel_ray`, `queries.ground`, `queries.line_of_sight`, `queries.overlap_origins`: [questions about the world](/kiln/wiki/world-edits#questions-about-the-world) | in a player's game | ground, wall and query-only safety |
+| `queries.path`, `queries.reachability`: [paths](/kiln/wiki/world-edits#paths) | in a player's game | paths around a wall, cleaned up, and again after a reload |
+| `terrain.overlays`: [terrain overlays](/kiln/wiki/world-edits#terrain-overlays) | in a player's game | an overlay as a hosting and a joined player see it |
+| `items.tool_wear_debit`: [tool wear](/kiln/wiki/blocks#items-and-weapons) | in a player's game | a pickaxe worn 7 per debit, and its durability bar |
+| `assets.blob_catalog`: [every content blob](/kiln/wiki/assets#every-content-blob) | in a player's game | the catalog in a game client |
+| `blocks.move_followups`: [weapon move follow-ups](/kiln/wiki/blocks#items-and-weapons) | everywhere, servers too | a block hands over to the weapon's own parry and light attack; held block, parry timing and shield recovery |
+| `world.transform_scale`: [an entity's scale](/kiln/wiki/world-edits#props) | everywhere, servers too | drawn scale against collision and the save |
+| `ui.values.detail`, `ui.values.slot`: [values in the game's UI](/kiln/wiki/game-ui#values-in-the-games-own-ui) | in a player's game (client only) | detail numbers and slot bars |
+| `ui.values.hud` | in a player's game (client only) | HUD values kept after the game's own update |
+| `ui.values.held` | in a player's game (client only) | held water and stamina |
+| `ui.values.tooltip_lines` | in a player's game (client only) | Kiln's Item details window |
+| `ui.slots.inspect` | in a player's game (client only) | cursor, gamepad, geometry and chest transfer |
 
 ## Being built
 

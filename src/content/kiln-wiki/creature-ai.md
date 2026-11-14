@@ -1,9 +1,9 @@
 ---
 title: "Creature AI and behaviour"
 nav: "Creature AI"
-description: "Who a creature fights, how it sees, hears, roams and flees, and rules that heal, summon, cast and apply statuses in a fight."
+description: "Who a creature fights, how it sees, hears, roams and flees, rules that heal, summon, cast and apply statuses in a fight, brains of your own that walk, and creature control."
 status: "pending"
-updated: "2026-11-07"
+updated: "2026-11-14"
 ---
 
 > **New in 0.2.0-dev.16, not yet seen in the game.** Tested on a lab server without players: creatures find, ignore and
@@ -100,6 +100,59 @@ runs. A rule can mix the game's conditions and actions with Kiln's.
 Kiln's conditions are checked every half second on the tick thread. Its actions run on the tick thread in the next
 step. JSON takes the same: `{ "summonsBelow": 2 }`, `{ "summon": { "creature": "imp", "count": 2 } }`,
 `{ "cast": { "type": "projectile", "speed": 25, "onHit": [ ... ] } }`, `{ "heal": 0.1 }`, `{ "flee": true }`.
+
+## A brain of your own
+
+A brain replaces the game's AI for one creature with your C#: `Brain = () => new MyBrain()` in its behaviour, or
+`"brain": "name"` in a block file with `Blocks.Brain("name", () => new MyBrain())`. Its `Tick` runs on the tick thread
+every step, with `NpcControl`: `Seen` and `Target` (who it sees), `MoveTo`, `Stop`, `Face`, `Attack(name)`.
+
+```csharp
+sealed class Sentinel : NpcBrain
+{
+    public override void Tick(NpcControl npc)
+    {
+        if (npc.Target.IsNone) { npc.Stop(); return; }
+        if (npc.TargetDistance < 2.8) npc.Attack("slam");
+        else npc.MoveTo(World.Position(npc.Target)!.Value, run: true);
+    }
+}
+```
+
+**Brains walk since 0.2.0-dev.28.** Before, the game's own steering overwrote `MoveTo` and the creature stood still. Now
+Kiln.Blocks takes the body from the game's AI while the brain runs, through [creature control](#creature-control):
+`MoveTo`, `Stop` and `Face` act only while it has the body, and it gives the body back when the brain stops or its mod
+unloads.
+
+- **`MoveTo` is not pathfinding.** It walks straight at a point, into a wall if one is in the way. For a route around
+  terrain and buildings, ask the game's path search with [`Queries.FindPath`](/kiln/wiki/world-edits#paths) and give the
+  brain the points one after another with `MoveTo`. Ask again when the creature stops getting closer. The sample
+  `NpcSample` has a brain that walks a path found this way.
+- **Walls.** By default a brain sees through them. With
+  `Perception = new NpcPerceptionPolicy { Occlusion = NpcOcclusionMode.Voxels }` (in a block file
+  `"perception": { "occlusion": "voxels" }`), what is behind terrain or a building is not in `Seen`, and what could not
+  be checked is not seen either. `npc.PerceptionStats` says why. These checks share the
+  [rays of a step](/kiln/wiki/world-edits#questions-about-the-world) with every other mod.
+
+On a dedicated test server a brain's body walks under its lease. That a player sees it walk is the guided check of the
+game test, not yet run.
+
+## Creature control
+
+New in 0.2.0-dev.28 (service CreatureControl, server). A mod that drives a creature's body itself takes a **lease** on
+it. While the lease drives, the game's AI is off and the steering that overwrote movement input is removed; both come
+back on release.
+
+- `CreatureControl.Acquire(body, role, CreatureControl.NewRequestId())` asks; `WaitActive(lease)` waits until it may
+  drive; `Release(lease)` gives the body back. A refusal comes back as a result with its reason.
+- **Roles decide who wins** when two leases want one body: a ridden creature over a pet in a fight over a pet that
+  follows, for example. The lower lease waits and resumes after.
+- Leases go with their mod: they are released when it unloads.
+- **A body the broker can't give back is removed**, and if the broker itself stops, every body it holds is removed at
+  the next step. That includes creatures run by a mod's brain.
+
+The sample `CreatureControlSample` has `/hold` (a lease on a spawned Vukah: it stands while held and is itself again
+after) and `/pacer` (a creature whose brain walks).
 
 ## Limits
 

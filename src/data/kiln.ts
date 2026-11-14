@@ -6,7 +6,7 @@ export const kilnSource = 'https://github.com/frostdev-ops/kiln';
 export const kilnWikiSections = [
   { id: 'players', title: 'Players', pages: ['install', 'profiles', 'modpacks', 'other-mods', 'eml-shroudforge', 'emf-mods', 'more-frameworks'] },
   { id: 'servers', title: 'Server admins', pages: ['dedicated-servers', 'servers', 'admin-pages'] },
-  { id: 'modding', title: 'Modding', pages: ['first-mod', 'code-mods', 'hooks', 'events', 'world-programs', 'manifest', 'multiplayer', 'data-packs', 'game-data'] },
+  { id: 'modding', title: 'Modding', pages: ['first-mod', 'code-mods', 'hooks', 'events', 'world-programs', 'manifest', 'multiplayer', 'data-packs', 'game-data', 'onboot'] },
   {
     id: 'gameplay',
     title: 'Gameplay',

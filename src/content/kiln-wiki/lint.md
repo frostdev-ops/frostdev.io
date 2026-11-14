@@ -3,7 +3,7 @@ title: "Lint and analyzers"
 nav: "Lint and analyzers"
 description: "kiln lint checks your mod's JSON before the game has to. The analyzers catch thread and hot-reload mistakes in your C#."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 ## kiln lint
@@ -54,6 +54,8 @@ Kiln.Sdk runs these over every mod, in `dotnet build` and live in your editor. T
 | `KILN108` | a service used but not listed in `KilnServices` |
 | `KILN120` | a Kiln result (`IKilnResult`, for example from `Items.Equip` or `NoClip.Set`) that nobody reads |
 | `KILN121` | a call that needs a capability, with no check of it first and no `catch` of `KilnUnavailableException` |
+| `KILN034` | **error**: an `OnBoot` that never runs (no `"boot"` in kiln.mod.json and no `<KilnBoot>`), or the run-time `Blocks.Define` in boot code |
+| `KILN035` | a tick, world or service API in boot code (`OnBoot`) |
 
 ```csharp
 Task.Run(async () =>
@@ -70,6 +72,12 @@ KILN120, check `result.Ok`, or write `_ = ...` to drop a result on purpose; the 
 `Capabilities.Is("row")` (or the service's own guard property) before the call, catch `KilnUnavailableException`, or
 mark the calling member `[RequiresCapability("row")]`. A check inside a helper of your own isn't followed. Switch the
 rule off with `dotnet_diagnostic.KILN121.severity = none`.
+
+**KILN034 and KILN035** (0.2.0-dev.28) are for [boot mods](/kiln/wiki/onboot). For KILN034, add `"boot": true` to
+kiln.mod.json or `<KilnBoot>true</KilnBoot>` to a project without its own kiln.mod.json, or move the code to `OnLoad`;
+stage blocks with `BootDefinitions.For(boot).Define(...)` instead of `Blocks.Define`. KILN035 leaves
+`Config.Register<T>()` and reading its `Value` alone, and reports writing a setting (`Set`, `TrySet`, `Save`), `Reload`,
+a `Changed` handler and `Config.RegisterWorld` there.
 
 Adjust rules in `.editorconfig` (`dotnet_diagnostic.KILN105.severity = error`, or `none`), or with
 `#pragma warning disable KILN101`. `<KilnAnalyzers>false</KilnAnalyzers>` turns them off. They can't see everything, so

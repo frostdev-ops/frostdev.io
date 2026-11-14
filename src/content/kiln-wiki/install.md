@@ -2,7 +2,7 @@
 title: "Install Kiln"
 description: "Install Kiln for Enshrouded, import downloaded mod archives, and play with or without mods."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 > **Early access.** Download the launcher: [Windows installer](/kiln/download/windows), [Linux AppImage](/kiln/download/linux)
@@ -75,6 +75,18 @@ and starts the game after. You don't need Kiln's source.
   `kiln cook` for those ([cooking on a server](/kiln/wiki/dedicated-servers#mods-with-a-cook-recipe)).
 
 Cooking on Windows was compile-checked for this release, not yet run on a Windows PC.
+
+### Game data for OnBoot mods
+
+Since 0.2.0-dev.28 some mods put their content in before the game reads its data ([OnBoot](/kiln/wiki/onboot)), and
+some of those read the game's own data while they do. For them, **Play** copies that data from your game's files once
+after the cook: "Game data for OnBoot mods (about 200 MB, once per game build)". It takes about 30 to 45 seconds and
+200 MB in the game folder, once per game update. Without such a mod nothing runs. If the step fails, the game starts
+anyway and the launcher says so in one line.
+
+Starting from Steam doesn't make it; one start through the launcher with the mod on does. In this release OnBoot itself is still switched
+off in a player's game until its game test ([Where it runs](/kiln/wiki/onboot#where-it-runs)); dedicated servers have
+it.
 
 ## Steam Deck
 
@@ -190,6 +202,8 @@ The warning: a character carrying Kiln items can crash on a server that lets van
 servers. Use another character.
 
 From Steam: `KILN_DISABLE=1 %command%`. Uninstalling on the Runtime page restores the files Kiln replaced, unchanged.
+Then remove the launcher. On Linux, delete the AppImage (or remove the .deb package); to leave nothing of Kiln behind,
+also delete `~/.local/share/kiln`, `~/.config/kiln`, `~/.local/state/kiln` and `~/.local/share/io.frostdev.kiln.launcher`.
 
 ## Your saves
 

@@ -3,7 +3,7 @@ title: "Kiln on a dedicated server"
 nav: "Dedicated servers"
 description: "Put Kiln on an Enshrouded dedicated server: a rented host over FTP, your own Windows PC, or a headless Linux machine."
 status: "partial"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 This page is for server owners. It shows how to put Kiln on an Enshrouded dedicated server, check that it runs, add
@@ -264,6 +264,49 @@ Modpack), upload the zip anywhere players can download over https, and enter the
 who is refused for a missing mod, and their launcher installs it after they agree. The launcher builds the modpack from
 the server's own mod folders, so on a rented host you'd work from a copy of the server folder, which we haven't tested
 yet. See [Modpacks](/kiln/wiki/modpacks).
+
+### Boot mods
+
+Since 0.2.0-dev.28 a Kiln mod with `"boot"` in its `kiln.mod.json` puts its content, and its changes to the game's own
+data, in place before the game reads them ([OnBoot](/kiln/wiki/onboot)). On a dedicated server that works from the
+very first start: no second restart for new items, spells or talents, and a mod that changes experience per level or
+Flame Altars per base works at once.
+
+- **Restart after changes.** A boot mod you add, enable or update while the server runs loads at the next start.
+- **A required boot mod** (`"boot": "required"`) whose content can't be applied stops the start before any world or
+  save is loaded, also for one bad entry in its own files. The process ends with exit code `0x4B01` (1 under Wine), the
+  last kiln.log line says which file of which mod to fix, and `kiln/state/boot.json` has the same. A boot mod that
+  isn't required is left out instead, and named in kiln.log; a bad entry in its files is left out on its own.
+- **Game data for OnBoot.** A boot mod that reads the game's data needs a snapshot of the server's game files. Make it
+  once per game update, with the `kiln` tool from a release's `sdk/` folder (it needs Python, as the cook does):
+
+  ```
+  kiln boot-snapshot --game <server folder>
+  ```
+
+  It takes about a minute and 200 MB the first time. Without it such a mod finds the game's data "not ready" and does
+  without, or is left out; kiln.log says which.
+- Players who join need a mod that [changes the game's data](/kiln/wiki/onboot#resource-patches) too: put it in your
+  modpack. In this release a boot mod doesn't load in a player's game yet, so if it states `"clients": "mod"` the
+  server refuses Kiln players for it, unless they set `"preview"` in their `kiln.json` or you set `modSync` to `warn`
+  in `network.json` ([Where it runs](/kiln/wiki/onboot#where-it-runs)).
+- **Keep `kiln/data` in your backups.** It holds the terrain records that stop a terrain mod from rebuilding its ground
+  over your players' changes (`kiln/data/kiln.terrain`), the journal of temporary edits
+  (`kiln/data/kiln.build/transient`), and the sizes mods set on props. If you remove the mod that set a size, those
+  props go back to normal size.
+
+### World queries
+
+Mods can ask the world where the ground is, whether a wall stands between two creatures and how to walk somewhere
+([Questions about the world](/kiln/wiki/world-edits#questions-about-the-world)). All mods together share a budget of
+rays each server step. `kiln/config/kiln.queries.json` sets it, read once at the start:
+
+```json
+{ "format": 1, "maxRaysPerStep": 64, "maxRayMicrosecondsPerStep": 500 }
+```
+
+`maxRaysPerStep` is 1 to 4096, `maxRayMicrosecondsPerStep` 1 to 10000. A file that is wrong gives both defaults and a
+warning in kiln.log.
 
 ## Game updates
 

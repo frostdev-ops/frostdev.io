@@ -3,7 +3,7 @@ title: "Greeneye, Enshwick, SET and more"
 nav: "More frameworks"
 description: "How Kiln runs mods for SET, Greeneye Loader, Creative Mode's Flame, Shroudtopia, Enshwick, shroudlink and Ember."
 status: "pending"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 Kiln has a part for each of these frameworks. All of them come with Kiln, so you don't install the framework. Each
@@ -69,6 +69,9 @@ Hollow Halls Progression.
 - **Linux and Steam Deck:** Greeneye Loader doesn't start under Wine or Proton. Kiln runs its mods there.
 - **Mod authors:** Greeneye's hot reload works the same way.
 - Greeneye's whole API is there. Its log file `kiln/logs/greeneye-loader.log` is kept for bug reports.
+- **The Worst Map Mod** patches the game's code in place. Up to 0.2.0-dev.27 that switched off several of Kiln's
+  features, so Kiln mods next to it did nothing; since 0.2.0-dev.28 they keep working
+  ([Mods that patch the game's code](/kiln/wiki/other-mods#closed-source-dll-mods)).
 
 Status: untested in game.
 
@@ -86,6 +89,9 @@ Creative Mode (Nexus mod 146) brings its own small loader, Flame. Kiln starts Cr
 - Creative Mode changes building cost, flight and time of day, like Kiln's own creative mode. Use one or the other.
   While it runs, Kiln's [NoClip](/kiln/wiki/player-rules#noclip) doesn't work: Creative Mode flies the character itself.
 - Its server version hasn't been tried.
+- Creative Mode 3.2.0 patches the game's code in place. Up to 0.2.0-dev.27 that switched off up to 22 of Kiln's
+  features (moving items, chat, mod screens, player rules), so Kiln mods next to it did nothing. Since 0.2.0-dev.28
+  they keep working ([Mods that patch the game's code](/kiln/wiki/other-mods#closed-source-dll-mods)).
 
 Status: untested in game. Creative Mode 3.2.0 started on a test server.
 

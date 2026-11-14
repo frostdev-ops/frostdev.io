@@ -2,7 +2,7 @@
 title: "Testing"
 description: "Tests that run inside the server with Kiln.Testing, and unit tests with no game under dotnet test with Kiln.TestKit."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 Kiln.Testing runs tests in a running server, on the tick thread, so they can touch game state. It's Kiln's take on Forge's GameTest.
@@ -90,3 +90,28 @@ and the test reads what the mod did (`kiln.Spawned`, `player.Chat`, `player.Say`
 and talent trees your mod defines run on fake players. What the kit doesn't model (weather, equip, moves between
 inventories, the game's journal and skill tree) says it is offline instead of pretending. The fakes were checked against
 the services' code, not against a running game, so keep the in-server tests above for what only the game can show.
+
+### OnBoot under dotnet test
+
+Since 0.2.0-dev.28 `KilnHarness.BootPhase` runs a boot mod's [`OnBoot`](/kiln/wiki/onboot) as a start does: once, on
+an instance of its own, with the same staging and the same checks.
+
+```csharp
+using var kiln = new KilnHarness();
+kiln.BootPhase.SetRecord("item:Material_T1_Wood_Logs", """{"maxStackSize": 250}""");   // what boot.GameData reads
+var run = kiln.BootPhase.Run(modFolder);
+// run.Staged: what OnBoot staged; run.Definitions: what lowered; run.Reason and run.Issues: why it failed
+kiln.LoadFolder(modFolder);    // then loads the mod with its boot content counted as committed
+```
+
+A key you didn't script reads as not found. The kit doesn't model the game's side of the boot phase: the boot
+generation's items and nodes don't reach the kit's other fakes. The SDK's build runs `OnBoot` the same way and fails
+with `KILN032` when it throws or a definition would not lower.
+
+The kit also fakes [questions about the world](/kiln/wiki/world-edits#questions-about-the-world) (`kiln.Queries`): a
+test says what a voxel ray or a path search answers, since there are no voxels offline.
+
+Also since 0.2.0-dev.28: `kiln.Capabilities.Override(name, false)` switches off rows a Kiln service builds from others
+(`queries.ground`) too, and rows built on a switched row follow it at once. A harness no longer sees capability rows
+left over from an earlier test. When one of the kit's fakes throws while a harness is disposed, the harness still
+cleans up and the next one can start; `Dispose` then throws that error.

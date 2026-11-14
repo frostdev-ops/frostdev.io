@@ -3,7 +3,7 @@ title: "Player rules and creative mode"
 nav: "Player rules, creative"
 description: "Let players fly and build anywhere, fly through walls with NoClip, change building costs and digging, keep health or water full, freeze the Shroud timer. /creative is one preset."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 Some things the game decides for itself: where a player may fly and build, what building costs, how fast tools dig, how
@@ -58,18 +58,25 @@ from a second game are not checked in a game yet.
 - **The player's game needs this release too.** A player without Kiln, or with an older Kiln, never gets it.
 - It flies as character flight does: jump climbs, sneak sinks, sprint is faster. It takes off at once, also from the
   ground and from water, and never lands. It grants nothing else: no invulnerability.
+- Since 0.2.0-dev.28 holding sneak always sinks and letting go stops, also in the game's own sneak mode and whether
+  the sneak key is set to toggle or to hold (GitHub issue 25). The same goes for character flight.
 - It ends when you die or teleport; ask for it again after. Turned off inside something, you are first put back at the
   last place where you were in open space, and only then does collision return.
 
 Limits: it was tried in one real game (a hosting game on Linux and Proton), switching on and off. It doesn't work while
 the Creative Mode mod runs, which flies the character itself; `/noclip status` says so. Inside a prop (a rock, a chest)
-the game's own collision decides. A player who leaves the game while inside the ground is saved there; the game's
-**Unstuck** frees the character.
+the game's own collision decides. Since 0.2.0-dev.28 a player who leaves, or whose world closes, while inside the
+ground in NoClip is put back at their last free position when they are next in the world (a rejoin, a server
+restart, a hosted world's next load). Kiln keeps that position with the world's save. A player who is still
+connecting when they are put back may fall a few steps inside the rock first. The game's **Unstuck** frees a character
+in any case.
 
 From a mod: `PlayerRules.NoClip` is a rule like the others (`NoClip = true` in a rule set), and `NoClip.Set(player, on)`
 is Kiln's own switch for a player, with a result (`Ok`, `On`, `Reason`, a message). `NoClip.Of(player)` says how it
 stands, `NoClip.Available` and the capability `rules.noclip` whether this game build can do it, and
-`PlayerNoClipEndedEvent` why it ended (`RuleEnded`, `Death`, `Teleport`).
+`PlayerNoClipEndedEvent` why it ended (`RuleEnded`, `Death`, `Teleport`, and since 0.2.0-dev.28 `Left`: the player
+left or their world closed while in NoClip; it comes when they are next in the world, with `RestoredTo` when Kiln
+moved them).
 
 ## Rules from a mod
 

@@ -1,9 +1,9 @@
 ---
 title: "Profiles and mods"
 nav: "Profiles and mods"
-description: "Every mod in one list on Play, saved sets of mods as profiles in Settings, the mods in your game folder, the library, and mod settings in the launcher or in game."
+description: "Every mod in one list on Play, saved sets of mods as profiles in Settings, the mods in your game folder, the library, update notices, and mod settings in the launcher or in game."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 ## Profiles
@@ -89,6 +89,23 @@ to be zipped and added again.
 - When the library already holds a file of the same name with other contents, it stops and deletes nothing.
 - A mod that is already copied into the game (an EML mod in the game's `mods` folder) runs with the old files until it
   is placed again.
+
+### Mod updates
+
+New in 0.2.0-dev.28. The launcher can tell you when a mod has a newer version: press **Check for updates** above your
+mods, or switch on **Check for mod updates once a day** in Settings, Launcher (off by default). A mod with a newer
+version shows **Update 1.1.0** in its row; **New upload** means the same version was published again as another file.
+
+- **A notice is only a link** to the mod's page. Nothing is downloaded, installed or switched for you, and the version
+  your profile uses stays the one you chose.
+- **Updates…** in a mod's menu shows what the last check said, in words, or lets you tell Kiln where a mod is published.
+  Kiln looks where you said, then where its author said (`updates` in the [manifest](/kiln/wiki/manifest#update-checks-updates));
+  it never guesses from a name. A mod with neither shows "No update source".
+- **What a check sends:** for a GitHub source, a request for the repository's public release list, with no account and
+  nothing about you, your PC or your other mods. A check never downloads a mod.
+- "Update unknown" and "Update check is stale" mean the check could not tell; they never mean up to date.
+
+Mod authors: `kiln updates check` runs the same check from a terminal ([The kiln command](/kiln/wiki/cli)).
 
 ## In the game folder
 

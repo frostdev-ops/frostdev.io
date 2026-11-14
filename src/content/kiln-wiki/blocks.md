@@ -2,7 +2,7 @@
 title: "Building blocks"
 description: "Say what you mean: a spell, a sword, a potion, a status, a creature. Kiln picks the game data, the ids and the programs."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-14"
 ---
 
 > **Works** since 0.2.0-dev.14: on test servers, and much of it seen in the game (spells, abilities, items, creature rules,
@@ -20,6 +20,10 @@ The older ways still work and stay there for what blocks don't cover yet: [new i
 **New in 0.2.0-dev.20:** standalone loot tables/recipes, [quest and dialogue blocks](/kiln/wiki/quests#quest-and-dialogue-blocks-dev20),
 [world-block fields](/kiln/wiki/world-blocks), and [UI blocks](/kiln/wiki/ui-blocks). These require the dev.20 runtime and MDK or newer;
 see the [release and test boundary](/kiln/wiki/status#new-in-020-dev20).
+
+**New in 0.2.0-dev.28:** statuses, effects, items, spells and talents staged in a boot mod's `OnBoot` are there on a
+server's first start ([OnBoot](/kiln/wiki/onboot)), [tool wear](#items-and-weapons), weapon move follow-ups,
+[block kinds of your own](#block-kinds-of-your-own), and creature brains that walk.
 
 ## Setup
 
@@ -200,6 +204,24 @@ Blocks.Define("ember-sword", new WeaponBlock
   `Power` and `Range`, a hook's `Range`, a rod's `Fishing { Strength, Endurance }`, a torch's `Durability` (seconds it
   burns), and `BreaksInto` (what it becomes when worn out, like the game's burnt torch). A field a tool has no number
   for is an error that says why.
+- **Tool wear (0.2.0-dev.28):** `WearPerDebit` makes each of the game's wear debits of an axe or pickaxe cost `n`
+  instead of 1 (0 to 32767; 0: it doesn't wear). It counts per debit, not per swing: two debits spend twice, and a swing
+  the game doesn't debit spends nothing. From code, `Items.SetToolWearPerDebit(tool, n)`; `Items.ToolWearStatus`,
+  `ToolWearRuleChangedEvent` and `ToolDurabilityChangedEvent` say what is in effect and what changed;
+  `ToolWearRuleChangedEvent` comes once for every change, in order, also for rules a native plugin sets. Rules last while
+  the game runs and go with their mod. Dedicated servers have it; on a world a player hosts it is
+  [off until its game test](/kiln/wiki/code-mods#built-waiting-for-a-game-test).
+  For example `Tool = new ToolBlock { Harvests = Harvest.Stone, Power = 18, WearPerDebit = 7 }`.
+- **Weapon moves: follow-ups (0.2.0-dev.28).** A weapon's `Moves` can say where its follow-up windows lead.
+  `MoveBlock.FollowUps` points a window the motion already has (`Primary`, `Heavy`, `Block`, `Parried`) at another move
+  of the same weapon: a block that goes on into the weapon's own parry, for example. A weapon with follow-ups gets all
+  its moves or none of them; `Blocks.MovesStatus` says which, and `WeaponMovesApplicationChangedEvent` says when that
+  changes. Unloading the mod takes the moves off again. A weapon's moves are written in one step: if any part fails,
+  all of it is taken back and read back, also when they are written again after a world or pack reload (`Refused`,
+  with the reason, in `MovesStatus`). If the take-back can't be verified, Kiln takes every change of that mod off and
+  the status says so; its other weapons and rules come back at the next content pass. Capability
+  `blocks.move_followups`, switched off until its game test, on a server as well: what decides is what a player sees.
+  `"preview"` in `kiln.json` switches it on.
 - **A VFX on it (new):** `Visual = new VisualBlock { Vfx = ... }` shows a VFX on the item in the hand, at the grip;
   `Offset` moves it up the blade.
 - **Armour:** `Slot`, `Set`, `Physical`, `Magical`, `Bonus`; its look is a game item's or a model of your own.
@@ -253,7 +275,8 @@ Blocks.Define("vengeful-vukah", new CreatureBlock
 
 A game body with a new mind needs nothing on the players' side. **New:** who it fights (`Relations`, a `SenseFilter`, the
 world's faction table), more AI fields (night sight, hearing, roaming, fleeing, calling for help) and rules that summon,
-cast, heal and apply statuses: see [Creature AI and behaviour](/kiln/wiki/creature-ai).
+cast, heal and apply statuses: see [Creature AI and behaviour](/kiln/wiki/creature-ai). A `Brain` of your own C# replaces
+the game's AI for one creature; since 0.2.0-dev.28 it walks ([A brain of your own](/kiln/wiki/creature-ai#a-brain-of-your-own)).
 
 A body and clips of your own are cooked from glTF and need every player to have the mod; they run on test servers but
 aren't yet confirmed in the game. `kiln new body MyGolem` starts one, and clips from another rig can be
@@ -330,6 +353,69 @@ Kiln works it out from your blocks and writes `clients` for you:
 | effects and triggers only | nothing |
 | new items, spells, statuses, perks, abilities | Kiln (they get the definitions from the server) |
 | your own sounds, icons, models or VFX, a key, talents | the mod |
+
+## Block kinds of your own
+
+New in 0.2.0-dev.28. A mod can add a kind of block (`Blocks.RegisterKind`): other mods then write that block in C# or
+in `blocks/*.json`, and Kiln turns it into its own items, weapons, spells, statuses and effects. The **provider**
+registers the kind in its `OnLoad` with a compiler; a **consumer** lists the provider in its `dependencies` and defines
+blocks of the kind.
+
+```csharp
+// the provider
+public sealed record LanternBlock : IBlock
+{
+    public string Name { get; init; } = "";
+    public double Seconds { get; init; }
+}
+
+public sealed class LanternKind : IBlockKind<LanternBlock>
+{
+    public BlockPlan Compile(BlockCompileContext context, LanternBlock b) =>
+        context.Plan("light",
+        [
+            context.Item("light", new ItemBlock
+            {
+                Name = b.Name,
+                Tool = new ToolBlock { Harvests = ToolClass.Torch, Durability = b.Seconds },
+                Recipe = new RecipeBlock { Needs = { ["Material_T1_Twigs"] = 2 } },
+            }),
+        ]);
+}
+
+Blocks.RegisterKind(new BlockKindDescriptor
+{
+    Id = "lanterns:lantern",            // "<your mod id>:<kind>"
+    JsonSection = "lanterns:lanterns",  // the section of blocks/*.json
+    SchemaJson = """{"type":"object","properties":{"name":{"type":"string"},"seconds":{"type":"number"}}}""",
+    Clients = ClientsLevel.Kiln,
+}, new LanternKind());                  // in OnLoad
+
+// a consumer
+var camp = Blocks.Define("camp", new LanternBlock { Name = "Camp lantern", Seconds = 600 });
+```
+
+- A kind is one primary block (an item, a weapon, a spell, a status or an effect) and up to 32 effects. It adds no new
+  engine pieces. `Compile` is pure: it reads the block and returns a plan, and calls nothing in the game.
+- **All or nothing.** A block that is refused part way leaves nothing behind. A plan with parts that wait for content
+  ready (every item plan has some) is `PendingContent`, with nothing published, until those parts are done; then it is
+  `Applied`. A part that fails refuses the plan with `ContentReadyFailed` and its reason, and what it registered is
+  taken back. `Blocks.Application(handle)` says where it stands.
+- **Asking first doesn't work yet.** Kiln.Blocks reports its capability rows at its first use: in `OnLoad`, before the
+  first call into `Blocks`, `Capabilities.Is("blocks.…")` still answers false. Make the call and catch
+  `KilnUnavailableException`.
+- **When the game applies its content again** (a pack reload, a mod reload, a new world), an applied plan is lowered
+  again from what it froze, without asking the provider, and gets a new `Generation`. A failure then refuses it and
+  takes back what it registered (`RelowerFailed`, `ContentReadyFailed`). A refused plan stays refused: apply it again,
+  or reload the mod.
+- **Limits.** A plan is refused, with the reason, when its effects would expand to more than 4096 effects or 16 MB of
+  programs, or nest more than 32 named effects deep. A block of a kind of your own is read strictly into the provider's
+  record type: a member the record doesn't have, or a value of the wrong type, is an error. `SchemaJson` is for editors;
+  Kiln doesn't check a block against it.
+- The server sends what the blocks became, not the provider's code. A player who joins without the provider is not yet
+  checked in a game.
+
+The sample `BlockKinds` has both halves: a provider, `Lanterns`, and a consumer in C# and in `blocks/camp.json`.
 
 ## Below a block
 
