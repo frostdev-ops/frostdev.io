@@ -107,6 +107,12 @@ function feature(raw: RawFeature, where: string): RoadmapFeature {
     groundwork: raw.groundwork === true,
   };
 }
+/** A YYYY-MM-DD that is a day of the calendar (2026-02-30 is not). */
+function realDate(date: string | undefined) {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+  const day = new Date(`${date}T12:00:00Z`);
+  return !Number.isNaN(day.getTime()) && day.toISOString().slice(0, 10) === date;
+}
 function short(version: string) {
   const match = /^\d+\.\d+\.\d+-(dev\.\d+)$/.exec(version) ?? /^(\d+\.\d+\.\d+)$/.exec(version);
   if (!match) fail(`"${version}" is not a Kiln version (0.2.0-dev.N or N.N.N)`);
@@ -114,7 +120,7 @@ function short(version: string) {
 }
 function release(raw: RawRelease, status: ReleaseStatus, where: string): RoadmapRelease {
   const version = text(raw.version, where);
-  if (status === 'released' && !/^\d{4}-\d{2}-\d{2}$/.test(raw.date ?? '')) fail(`${version} needs a date (YYYY-MM-DD)`);
+  if (status === 'released' && !realDate(raw.date)) fail(`${version} needs a real date (YYYY-MM-DD), not "${raw.date ?? ''}"`);
   if (!Array.isArray(raw.features) || raw.features.length === 0) fail(`${version} lists no features`);
   const name = short(version);
   return {

@@ -76,9 +76,9 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
             </a>
           </li>
         ))}
-        {milestones.map((m) => (
+        {milestones.map((m, i) => (
           <li data-status="milestone">
-            <a href="#milestones">
+            <a href={`#milestone-${i}`} data-goto={`milestone-${i}`}>
               <span class="kiln-rm-rail-dot" aria-hidden="true"></span>
               <span class="kiln-rm-rail-v">{m.title}</span>
               <span class="kiln-rm-rail-d">Milestone</span>
@@ -87,7 +87,7 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
         ))}
         {laterFeatures.length > 0 && (
           <li data-status="later">
-            <a href="#later">
+            <a href="#later" data-goto="later">
               <span class="kiln-rm-rail-dot" aria-hidden="true"></span>
               <span class="kiln-rm-rail-v">Later</span>
               <span class="kiln-rm-rail-d">{laterFeatures.length} more</span>
@@ -167,7 +167,7 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
                 </details>
               </li>
               {after(r).map((m) => (
-                <li class="kiln-rm-item kiln-rm-milestone" id="milestones" data-item data-milestone>
+                <li class="kiln-rm-item kiln-rm-milestone" id={`milestone-${milestones.indexOf(m)}`} data-item data-milestone>
                   <span class="kiln-rm-node" aria-hidden="true"></span>
                   <div><span class="kiln-rm-version">Milestone</span><h3>{m.title}</h3><p>{m.text}</p></div>
                 </li>
@@ -175,7 +175,7 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
             </>
           ))}
           {looseMilestones.map((m) => (
-            <li class="kiln-rm-item kiln-rm-milestone" id="milestones" data-item data-milestone>
+            <li class="kiln-rm-item kiln-rm-milestone" id={`milestone-${milestones.indexOf(m)}`} data-item data-milestone>
               <span class="kiln-rm-node" aria-hidden="true"></span>
               <div><span class="kiln-rm-version">Milestone</span><h3>{m.title}</h3><p>{m.text}</p></div>
             </li>
@@ -301,15 +301,27 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
     };
 
     // The state from the address: ?q=&area=api,tools&show=coming&fixes=0&pending=1&view=areas&order=oldest
-    const params = new URLSearchParams(location.search);
-    state.q = (params.get('q') ?? '').slice(0, 80);
-    for (const a of (params.get('area') ?? '').split(',')) if (areaIds.includes(a)) state.areas.add(a);
-    const show = params.get('show');
-    if (show === 'shipped' || show === 'coming') state.show = show;
-    state.fixes = params.get('fixes') !== '0';
-    state.pending = params.get('pending') === '1';
-    if (params.get('view') === 'areas') state.view = 'areas';
-    if (params.get('order') === 'oldest') state.order = 'oldest';
+    const readUrl = () => {
+      const params = new URLSearchParams(location.search);
+      state.q = (params.get('q') ?? '').trim().slice(0, 80);
+      state.areas.clear();
+      for (const a of (params.get('area') ?? '').split(',')) if (areaIds.includes(a)) state.areas.add(a);
+      const show = params.get('show');
+      state.show = show === 'shipped' || show === 'coming' ? show : 'all';
+      state.fixes = params.get('fixes') !== '0';
+      state.pending = params.get('pending') === '1';
+      state.view = params.get('view') === 'areas' ? 'areas' : 'timeline';
+      state.order = params.get('order') === 'oldest' ? 'oldest' : 'upcoming';
+    };
+    readUrl();
+    // The release a #fragment names; a malformed one names nothing.
+    const fragment = () => {
+      try {
+        return decodeURIComponent(location.hash.slice(1));
+      } catch {
+        return '';
+      }
+    };
 
     const saveUrl = () => {
       const p = new URLSearchParams();
@@ -331,7 +343,7 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
     const highlight = (words: string[]) => {
       for (const [el, text] of original) {
         if (!words.length) {
-          if (el.innerHTML !== escape(text)) el.textContent = text;
+          if (el.querySelector('mark')) el.textContent = text;
           continue;
         }
         const lower = text.toLowerCase();
@@ -464,7 +476,7 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
         q.value = '';
         state.q = '';
         update();
-        restoreOpen();
+        if (!filtering()) restoreOpen();
       }
     });
     document.addEventListener('keydown', (e) => {
@@ -537,12 +549,29 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
       history.pushState(history.state, '', `${location.pathname}${location.search}#${a.dataset.goto}`);
       reveal(a.dataset.goto!, 'smooth');
     });
-    addEventListener('hashchange', () => reveal(location.hash.slice(1), false));
+    addEventListener('hashchange', () => reveal(fragment(), 'instant'));
+    // Back and Forward: the filters of that entry.
+    addEventListener('popstate', () => {
+      readUrl();
+      order();
+      update(false);
+      if (!filtering()) restoreOpen();
+      const id = fragment();
+      if (id) reveal(id, false);
+    });
+
+    // A release scrolled to sits below the toolbar while the toolbar sticks to the top (wider screens).
+    const offset = () => {
+      const sticky = getComputedStyle(tools).position === 'sticky';
+      root.style.setProperty('--kiln-rm-offset', `${sticky ? tools.offsetHeight + 24 : 24}px`);
+    };
+    new ResizeObserver(offset).observe(tools);
 
     tools.hidden = false;
+    offset();
     if (state.order === 'oldest') order();
     update(false);
-    if (location.hash) requestAnimationFrame(() => reveal(decodeURIComponent(location.hash.slice(1)), 'instant'));
+    if (location.hash) requestAnimationFrame(() => reveal(fragment(), 'instant'));
     // The rail starts at "now".
     const rail = root.querySelector<HTMLElement>('.kiln-rm-rail');
     const now = rail?.querySelector<HTMLElement>('[data-now]');

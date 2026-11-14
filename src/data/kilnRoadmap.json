@@ -609,7 +609,7 @@
       "version": "0.2.0-dev.21",
       "date": "2026-11-09",
       "title": "Hook registry and faster EML",
-      "summary": "Fixes the problems found in review of dev.20, stops the launcher removing mods while the game runs, makes EML mods start much faster, and helps closed-source DLL mods work next to Kiln.",
+      "summary": "Stops the launcher removing mods while the game runs, makes EML mods start much faster, puts every hook in one registry, and helps closed-source DLL mods work next to Kiln.",
       "features": [
         {
           "title": "One hook registry",
@@ -1345,12 +1345,12 @@
         },
         {
           "title": "More room for VFX",
-          "text": "A Kiln game can hold about twice as many VFX, which leaves much more room for mods' effects.",
+          "text": "A Kiln game gets much more room for VFX, so mods' effects stop running out of space.",
           "area": "core"
         },
         {
           "title": "Larger NPC roster",
-          "text": "Mods together can add about three times as many roster NPCs as today.",
+          "text": "Mods together get room for many more roster NPCs than today.",
           "area": "core"
         },
         {

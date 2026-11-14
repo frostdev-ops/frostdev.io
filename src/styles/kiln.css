@@ -384,7 +384,8 @@ body:has(.kiln-root) .skip-link { background: #0f0d0c; }
 .kiln-rm-release[data-status="planned"] .kiln-rm-node { background: var(--k-bg0); border: 2px solid var(--k-line-strong); }
 .kiln-rm-release[data-status="later"] .kiln-rm-node { background: var(--k-bg0); border: 2px dashed var(--k-line-strong); }
 @keyframes kiln-rm-glow { 0%, 100% { box-shadow: 0 0 0 4px var(--k-bg0), 0 0 0 4px rgb(249 199 79 / 0); } 50% { box-shadow: 0 0 0 4px var(--k-bg0), 0 0 16px 4px rgb(249 199 79 / 0.45); } }
-.kiln-rm-release { border: 1px solid var(--k-line); border-radius: 0.75rem; background: var(--k-bg1); transition: border-color 0.2s; scroll-margin-top: 1.5rem; }
+.kiln-rm-release { border: 1px solid var(--k-line); border-radius: 0.75rem; background: var(--k-bg1); transition: border-color 0.2s; }
+.kiln-rm-release, .kiln-rm-milestone { scroll-margin-top: var(--kiln-rm-offset, 1.5rem); }
 .kiln-rm-release:hover, .kiln-rm-release[open] { border-color: var(--k-line-strong); }
 .kiln-rm-release[data-status="next"] { border-color: rgb(249 199 79 / 0.4); background: radial-gradient(ellipse 40rem 12rem at 100% 0, rgb(255 106 26 / 0.08), transparent 70%), var(--k-bg1); }
 .kiln-rm-release > summary { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr) auto; gap: 1rem; align-items: start; padding: 1.1rem 1.25rem; cursor: pointer; list-style: none; }
