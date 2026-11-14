@@ -126,7 +126,8 @@
           "title": "Beside in-place patches",
           "text": "Kiln mods keep working when another loader changed the game's code before Kiln started; before, some Kiln features switched off.",
           "area": "compat",
-          "kind": "fix"
+          "kind": "fix",
+          "gamePending": true
         },
         {
           "title": "Beside other hook engines",
