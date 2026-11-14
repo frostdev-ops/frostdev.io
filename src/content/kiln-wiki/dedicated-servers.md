@@ -274,8 +274,10 @@ Flame Altars per base works at once.
 
 - **Restart after changes.** A boot mod you add, enable or update while the server runs loads at the next start.
 - **A required boot mod** (`"boot": "required"`) whose content can't be applied stops the start before any world or
-  save is loaded, also for one bad entry in its own files. The process ends with exit code `0x4B01` (1 under Wine), the
-  last kiln.log line says which file of which mod to fix, and `kiln/state/boot.json` has the same. A boot mod that
+  save is loaded, also for one bad entry in its own files. What only a loading world shows (a skill node the tree build
+  leaves out, an item, recipe or clone the world does not register) stops it while that world loads, before a player
+  is in it. The process ends with exit code `0x4B01` (1 under Wine), the last kiln.log line says which file of which
+  mod to fix, and `kiln/state/boot.json` has the same. A boot mod that
   isn't required is left out instead, and named in kiln.log; a bad entry in its files is left out on its own.
 - **Game data for OnBoot.** A boot mod that reads the game's data needs a snapshot of the server's game files. Make it
   once per game update, with the `kiln` tool from a release's `sdk/` folder (it needs Python, as the cook does):

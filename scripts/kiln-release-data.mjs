@@ -218,7 +218,9 @@ export async function buildRelease(folder, { released, verify = false } = {}) {
   const listed = new Set(files.map((file) => file.path));
   for (const path of sums.keys()) {
     const top = path.split('/')[0];
-    const underExcluded = [...EXCLUDED_PATHS].some((dir) => path.startsWith(`${dir}/`));
+    // sdk/feed and sdk/api stay out of the list on purpose; a file SHA256SUMS lists there must still exist.
+    const underExcluded = [...EXCLUDED_PATHS].some((dir) => path.startsWith(`${dir}/`))
+      && existsSync(join(root, path)) && lstatSync(join(root, path)).isFile();
     if (!listed.has(path) && !EXCLUDED_DIRS.has(top) && !underExcluded && !path.endsWith('.sig'))
       warnings.push(`SHA256SUMS lists ${path}, which is not in the folder.`);
   }

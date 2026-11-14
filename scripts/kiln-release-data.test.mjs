@@ -103,6 +103,15 @@ test('sdk/feed/ and sdk/api/ are left out without a warning for each file SHA256
   assert.doesNotMatch(stderr, /which is not in the folder/);
 });
 
+test('a file SHA256SUMS lists under sdk/feed/ or sdk/api/ that is missing still warns', () => {
+  const missing = ['sdk/feed/index.json', 'sdk/api/index.html'];
+  const folder = makeRelease({ extra: missing });
+  for (const path of missing) rmSync(join(folder, path));
+  const { stderr, status } = run(folder);
+  assert.equal(status, 0, stderr);
+  for (const path of missing) assert.match(stderr, new RegExp(`SHA256SUMS lists ${path.replace(/[.]/g, '\\.')}, which is not in the folder`));
+});
+
 test('an .rpm in the folder is listed and named in files.rpm', () => {
   const { data } = run(makeRelease({ extra: ['linux/kiln-launcher-0.2.0.dev.22-1.x86_64.rpm'] }));
   assert.equal(data.files.rpm, 'linux/kiln-launcher-0.2.0.dev.22-1.x86_64.rpm');
