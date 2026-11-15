@@ -41,9 +41,9 @@ returns payload copies for each declared input; multiple event inputs work. `Emi
 output with the exact reflected payload size (less than 256 bytes), stamps GameEvent timestamps, and returns false when full. `QueueAdd` / `QueueRemove` apply at the end of the step. A context/component span
 cannot escape its callback. Send ordinary service work back with `Context.Scheduler.Post` and recheck lifetime/world state.
 
-The file is strict JSON (no comments/trailing commas/duplicate keys), at most 64 KiB, 1..8 declarations per mod. Names,
+The file is strict JSON (no comments/trailing commas/duplicate keys), at most 64 KiB, 1..32 declarations per mod (1..8 before 0.2.0-dev.29). Names,
 access counts and system/query combinations are validated; an unknown declaration key or undeclared access fails.
-Programs share a 32-slot world-service limit and the game's remaining scheduler capacity. Changing declarations needs a server restart. Dispose on the tick thread. Disposing/unloading drains bound callbacks and makes the reserved entry
+Programs share a 64-slot world-service limit (32 before 0.2.0-dev.29; mods' declarations leave the last 8 to Kiln's services) and the game's remaining scheduler capacity. Changing declarations needs a server restart. Dispose on the tick thread. Disposing/unloading drains bound callbacks and makes the reserved entry
 inert; hot reload may bind the same declaration again, not add a new scheduler slot. The old load's callback must never
 be reused.
 

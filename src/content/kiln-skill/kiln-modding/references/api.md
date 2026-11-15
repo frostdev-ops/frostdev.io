@@ -497,7 +497,7 @@ and your mod. Your hook is a **link** in that function's chain. An address outsi
 - Dropping a hook object does not remove the link: `revoke()` or `revoke_owner(owner)`. Reordering links already installed is not
   atomic: a call in flight at that moment can skip a link or run one twice (no crash).
 - `kiln/state/hooks.json`: every function with its links in chain order, `foreignBefore`/`foreignOver` (other modules' hooks
-  found before or over Kiln), `overlaps`, `rules`, `linkSlots` `{used, cap}`. kiln.log: `hooks: <label> chained over <module>+0x...`.
+  found before or over Kiln), `overlaps`, `rules`, `linkSlots` `{used, cap}`. kiln.log: `hooks: <label> (<owner>) chained over <module>+0x...`.
 
 **Closed-source DLL mods** (XHL-Core, Auto Loot Plus, trainers) hook in their `DllMain`, before Kiln, and Kiln chains over them.
 If a hosted engine needs Kiln's hook first, load the DLL late:
