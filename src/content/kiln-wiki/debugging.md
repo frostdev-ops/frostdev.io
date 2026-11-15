@@ -2,7 +2,7 @@
 title: "Debugging"
 description: "Why a mod didn't load, the support report to send, the fault policy, crash reports, and breakpoints in a running server."
 status: "works"
-updated: "2026-11-11"
+updated: "2026-11-15"
 ---
 
 ## Start with kiln.log
@@ -63,6 +63,11 @@ launcher's **Logs** page and the admin **Crashes** page.
 | the in-game Mods page is empty next to ReShade or another overlay | since dev.24 Kiln takes the graphics device over when the game makes its swapchain, if the PC has one graphics device. When it can't, kiln.log says why |
 | Steam shows the game as running for about a minute after you quit (Linux) | Steam's networking library crashes while the game shuts down, and the system writes a crash dump of several gigabytes. No Kiln or mod code is in that crash |
 | a `.rar` is refused | no unrar, 7-Zip or bsdtar on the PC. Extract it and drop the folder |
+| the game slows down for seconds at each autosave, on a hard drive | fixed in 0.2.0-dev.29 (GitHub issue 39): Kiln's save data is no longer written and forced to disk when no mod data changed. If it still happens, send a support report: its `tick-stats.jsonl` tells a slow session from a stall at save time |
+| the game or server closes at its start and names mods | Kiln stopped the start on purpose, so a world doesn't lose its mods' progress: [When Kiln stops the start](/kiln/wiki/dedicated-servers#when-kiln-stops-the-start). Don't restart; fix the mod list |
+| the game crashes at its start with a frame generation mod (NVIDIA Streamline) | fixed in 0.2.0-dev.29: with Streamline installed Kiln leaves its overlay's drawing off (mod windows, on-screen drawing and screen effects), while key bindings, menu entries and mod loading keep working. `KILN_UI_OVERLAY=1` tries the drawing anyway, `KILN_UI_OVERLAY=0` switches it off. Not yet tried on a PC with such a mod |
+| the overlay stays off after a crash at start | if the game closes while Kiln's overlay starts, the next start leaves its drawing off and kiln.log says why; after a minute without it, the next start tries once more. Remove `kiln/state/overlay-start.guard`, or set `KILN_UI_OVERLAY=1`, to try again yourself |
+| a mod's settings page says its file couldn't be saved | a read-only folder or a full disk. Since 0.2.0-dev.29 the page says so until a later save works |
 
 ## Save a support report
 
@@ -84,6 +89,9 @@ It only reads. Nothing is written to the game folder, and the game may be runnin
   'My mods'", with the fix), then the system, the game, Kiln in the game, the profile and the last start;
 - `report.json`: the same findings for tools;
 - the end of `kiln.log`, `proxy.log` and `eml.log`, and the newest crash report;
+- since 0.2.0-dev.29, the end of `kiln/logs/tick-stats.jsonl`: Kiln's step times per minute and world, so a slow session
+  can be told apart from a stall at save time. It says how long the game's own wait for its world jobs, each Kiln
+  service or plugin and the slowest subscribers took, with a breakdown of each minute's worst step;
 - Kiln's state files, and `profile.json`, `chain.ini` and `kiln.json` as they are, after the removals below;
 - the launcher's log;
 - lists of the game folder, Kiln's folder and each framework's mods folder: names, sizes and dates only.

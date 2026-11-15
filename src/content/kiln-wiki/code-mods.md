@@ -2,7 +2,7 @@
 title: "Code mods"
 description: "The Mod class, the tick thread, events, configs, commands, permissions, saved data, other mods, what a call does when it cannot work, and what waits for a game test."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 ## The mod
@@ -175,19 +175,21 @@ capability nobody checks ([KILN120 and KILN121](/kiln/wiki/lint#c-analyzers)). M
 
 ### Built, waiting for a game test
 
-Since 0.2.0-dev.28 some of what a release builds can only be confirmed in a real game, and ships switched off until it
-has been. Such a capability reads `unavailable` with the reason `policy` and the text `game test pending:` followed by
-the guided checks that open it. `Capabilities.IsHeld(name)` and `Capability.IsHeld` tell "built, not tested yet" from
-"does not work here". [What works today](/kiln/wiki/status#built-game-test-pending) lists the held capabilities.
+In 0.2.0-dev.28 some of what the release built could only be confirmed in a real game, and shipped switched off until it
+had been ("held"). **Since 0.2.0-dev.29 nothing ships held:** every capability is on, subject to its normal
+dependencies, sides and faults, and `Capabilities.Is` and `KilnUnavailableException` no longer say "game test pending".
+What only a real game can confirm is listed in the release notes under "On, not yet confirmed in a real game", and on
+[What works today](/kiln/wiki/status#on-not-yet-confirmed-in-a-real-game). Report a problem with what you saw, kiln.log
+and, if you ran a guided check, its ledger.
 
-`"preview"` in `kiln.json` switches them on before then: `true` for all of them, or a list of names.
+The mechanism stays for a later release. A held capability would read `unavailable` with the reason `policy` and the
+text `game test pending:` followed by the guided checks that open it; `Capabilities.IsHeld(name)` and
+`Capability.IsHeld` tell "built, not tested yet" from "does not work here", and `"preview"` in `kiln.json` (`true`, or a
+list of names) switches one on for a test. None is needed now: if you added `"preview"` for dev.28, leaving it does no
+harm, and a name in it that nothing holds is a warning in kiln.log.
 
-```json
-{ "preview": ["camera.fov"] }
-```
-
-Use it on a test server or in your own game, not on a server other people play on. A name in the list that nothing
-holds is a warning in kiln.log.
+Two rows dev.28 held are not features of this build: `mods.boot.vfx` (staging VFX or materials in `OnBoot`) and
+`repl.client` (receiving replication has no implementation yet). Both read unavailable with the reason.
 
 ## Weather
 

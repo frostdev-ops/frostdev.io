@@ -2,7 +2,7 @@
 title: "Icons and textures"
 description: "Your own PNG icons, retextures of the game's images, and new or overridden resources, with no game file changed."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 Kiln serves your files to the game from memory, like a resource pack. No game file changes.
@@ -51,8 +51,8 @@ for (ulong at = 0; at < snapshot.Total;)
 ```
 
 `Assets.ReadBlob(hash)` gives the bytes the game reads for one hash. Capability `assets.blob_catalog`: a dedicated server
-has it; in a player's game it is [off until its game test](/kiln/wiki/code-mods#built-waiting-for-a-game-test). The
-sample `BlobCatalog` adds `/blobs`.
+has it, and since 0.2.0-dev.29 every player's game too (on, not yet confirmed in a real game). The sample `BlobCatalog`
+adds `/blobs`.
 
 ## Limits
 

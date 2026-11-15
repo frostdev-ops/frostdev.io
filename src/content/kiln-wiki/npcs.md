@@ -3,7 +3,7 @@ title: "Friendly NPCs"
 nav: "Friendly NPCs"
 description: "Place NPCs and make new ones, with a roster entry, vendor stock and voiced lines, in the game's own directory and menus."
 status: "works"
-updated: "2026-11-05"
+updated: "2026-11-15"
 ---
 
 > **One fix awaits a client retest:** the Survivors list now takes its row and text from the NPC, not its summon tool.
@@ -131,5 +131,29 @@ Removing a mod drops its objects at the next start. Quest progress stays in the 
 
 ## Limits
 
-64 roster NPCs in all (35 are the game's), 8 knowledge operations per line, 1 requirement per line. A vendor can't have a workshop
+The Survivors roster holds 128 NPCs in all since 0.2.0-dev.29 (35 are the game's, so 93 for all mods together; 64 and 29
+before). 8 knowledge operations per line, 1 requirement per line. A vendor can't have a workshop
 of its own yet. A marker has one place per step, so everyone goes to the same spot.
+
+### A roster of 128
+
+The game keeps its NPCs' unlock states in one 64-bit value. Past 64 entries Kiln keeps a second unlock page beside each
+world's NPC registry, installed only when a mod's roster needs it. A mod's NPCs are ordered by key name, not by file
+order. `NativeQuests` reads the roster and its unlock states (`GetServerRosterWorld`, `GetUnlock`, `GetRosterBudget`,
+`RosterUnlockChangedEvent`, and the client side's `GetClientRosterWorld` and `GetClientUnlock`).
+
+- **Everyone needs 0.2.0-dev.29.** A world whose mods add more than 29 roster NPCs needs Kiln 0.2.0-dev.29 or later on
+  the server and in every player's game: an older Kiln refuses those mods' NPCs and quests, and that world loses their
+  progress once it is saved. Update Kiln everywhere before such a mod is added.
+- **A roster that doesn't fit stops the start.** With 129 or more (or 65 or more where the second page can't be
+  installed), the game or server stops at its start, before any world loads, and names the mods: in kiln.log, in
+  `kiln/state/roster-refused.json`, and in a game client in a message box that closes after 60 seconds. The exit code is
+  0x4B02 (status 2 under Wine). No save is opened without the mods' NPCs and knowledge.
+- **When the whole build of the mods' NPCs and quests fails**, the start stops too (0x4B03, status 3 under Wine,
+  `kiln/state/content-refused.json`), and kiln.log names the mods and what failed. A mod whose own quests have an error
+  still loads without them. One mod with a field of the wrong type in `kiln.mod.json` (for example `"side": 5`) is now
+  left out alone and named, where before it took every mod's NPCs and quests with it.
+
+The 128-entry roster ran on a dedicated lab server only. In a game client, a hosted world included, a missing second
+page is not computed again, so locked NPCs from index 64 up are kept until the game's next evaluation; nothing unlocked
+is ever removed by it.

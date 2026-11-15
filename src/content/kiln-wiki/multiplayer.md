@@ -2,7 +2,7 @@
 title: "Multiplayer"
 description: "What players need, who can join, a short hold at the door, kicks and bans, per-character progress, synced configs, your own network messages and client code."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 ## Decide what players need
@@ -26,6 +26,9 @@ Set `clients` in your [manifest](/kiln/wiki/manifest):
 | no Kiln | no stated `clients`, no new templates | joins as normal |
 | Kiln, missing a stated `clients: "mod"` mod | `modSync` not set | refused, and told which mods are missing |
 | Kiln, missing that mod | `modSync` is `warn` or `off` | joins without that mod's entities |
+| Kiln, a boot mod in the same version with other boot content | `modSync` not set or `warn` | joins with a warning that names the mod; `refuse` turns them away, `off` doesn't compare |
+| Kiln, other building-material pools than the server's | a mod with pools | refused before any block data, with the pools named |
+| Kiln, less room for mod buffs than the server uses | a server with many mod buffs | refused, with how many the server uses and how much room the game has |
 
 The check on a Kiln client needs `side: both`. `optionalMods` exempts a mod. See [Run a server](/kiln/wiki/servers).
 
@@ -75,9 +78,9 @@ The server sends its changes to items, recipes and game data at join. Stack size
 tooltips match, and go back at leave. No code, and your mod needn't be on their game.
 
 Not so for a [resource patch](/kiln/wiki/onboot#resource-patches): it changes data the game read at its own start, so
-both sides need the mod. In this release a boot mod doesn't load in a player's game yet, so a server whose boot mod
-states `"clients": "mod"` refuses Kiln players for it unless they set `"preview"` in `kiln.json`
-([Where it runs](/kiln/wiki/onboot#where-it-runs)).
+both sides need the mod. Since 0.2.0-dev.29 a boot mod loads in a player's game too, and the join compares what it
+made on both sides: a player whose settings of the mod differ from the server's is told to take the server's and restart
+([Settings and joining players](/kiln/wiki/onboot#settings-and-joining-players)).
 
 ## Per-character progress
 

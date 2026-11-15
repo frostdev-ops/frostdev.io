@@ -3,7 +3,7 @@ title: "EMF mods"
 nav: "EMF mods"
 description: "Install EMF DLL and Lua mods with API v42 (EMF 0.6.11) support, current differences and server/client evidence limits."
 status: "partial"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 Kiln runs mods made for EMF (the Enshrouded Modding Framework), DLL and Lua mods, up to EMF 0.6.11 / API v42 since
@@ -126,8 +126,11 @@ handshake and gameplay remain unverified.
 
 Radial wheels, right-click window events, health/stamina/mana access, spawn-time extra components, program hooks,
 declared other-entity writes and multiple event inputs are implemented. The v27 table is 728 bytes with the unchanged
-688-byte v26 prefix. Client-world ECS programs and event listeners remain unsupported. Wheel drawing/input, window
-interaction and joined-client replication still need game checks.
+688-byte v26 prefix. Since 0.2.0-dev.29 `register_program`, `register_program_def` and `on_event` with
+`EMF_WORLD_CLIENT` run in the client world, hosted or joined, through Kiln's
+[client-world programs](/kiln/wiki/world-programs#in-the-players-client-world); a dedicated server refuses them as before.
+That path is built and not yet run in a real game. Wheel drawing/input, window interaction and joined-client replication
+still need game checks.
 
 **Beastmaster and ShroudForge together:** two dedicated-server checks loaded unmodified EMF Lua 1.19 and Beastmaster 1.13
 beside ShroudForge and the enabled bear 2.1 / beasts 2.2 asset packs. Each framework started once, and each API v27 probe
@@ -149,11 +152,11 @@ added in 0.6.3 to 0.6.8, see [above](#mods-built-for-emf-063-to-068).
 
 | What | Now |
 |---|---|
-| Mod programs and event listeners | server world only, including a world you host; not the game client's own world |
+| Mod programs and event listeners | the server world, including a world you host, and since 0.2.0-dev.29 the game client's own world with `EMF_WORLD_CLIENT` (not yet run in a real game) |
 | HUD and notifications | client overlay; on a server, HUD lines are retained and notes logged. Only the older clock display has been seen in game |
 | Attributes and progression | health, stamina and mana work. XP/level adapters retain queued progression timing, thread and request-limit differences |
 | Setting a player's level | queued for a later server step; a nonzero XP adjustment follows the level result and can take more steps |
-| Mod windows | left/right clicks implemented, with Kiln's plain ImGui look. Refused on dedicated servers, as in EMF; client interaction still needs verification |
+| Mod windows | left/right clicks implemented, with Kiln's plain ImGui look. Since 0.2.0-dev.29 a window grows with what is in it (the Beastmaster stable, for one), up to 85 % of the screen height, and scrolls past that, as under EMF's own loader; not looked at in a game yet. Refused on dedicated servers, as in EMF; client interaction still needs verification |
 | Spawn with an E prompt | the prompt appears a step or two after the spawn |
 | Images and portraits | decoded-pixel limits plus a 64 MB encoded-file limit. A portrait asked for from a tick or render thread is empty until its drawing finishes. Offline archive/cache proof does not establish in-game presentation |
 | Radial-wheel input, joined messages and replication | implemented paths with host/server checks; real-client checks remain open |

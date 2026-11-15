@@ -2,7 +2,7 @@
 title: "Building blocks"
 description: "Say what you mean: a spell, a sword, a potion, a status, a creature. Kiln picks the game data, the ids and the programs."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 > **Works** since 0.2.0-dev.14: on test servers, and much of it seen in the game (spells, abilities, items, creature rules,
@@ -125,6 +125,7 @@ the same effect works on a spell, a weapon, a status or a talent.
 | `Removes`, `Applies` | statuses taken off or put on: your blocks or the game's (`GameBuffs`) |
 | `Then` | more effects after this one, at the same target or place |
 | `Casts` | an ability the target casts, with its costs and cooldown |
+| `Run` | a mod's same-step native, called first ([below](#a-block-effect-that-runs-your-native)) |
 
 Where an effect runs and what its target is:
 
@@ -142,6 +143,24 @@ A hit an effect deals doesn't trigger these again, so an effect can't loop on it
 
 **New:** `ProjectileBlock.Pierce = 3` flies through three creatures, running `OnHit` on each once, and stops at the
 fourth or at anything that isn't a creature, where `OnImpact` runs.
+
+### A block effect that runs your native
+
+```csharp
+var frost = new EffectBlock { Run = Natives.OnHit, Damage = Damage.Ice(10) };   // JSON: "run": "mymod.OnHit"
+```
+
+New in 0.2.0-dev.29, server only. `EffectBlock.Run` names an `[ImpactNative]` method
+([Natives that answer in the same step](/kiln/wiki/impact#natives-that-answer-in-the-same-step)), or a native from a
+mod's `impact/natives.json` declared with `"sync": true`. The effect's program calls it first, in the same step, with its
+parameters bound by name: `self`, `target`, `attacker`, `caster`, `position`, `attackMod` and `damage`. So a weapon's or a
+perk's additional hit can change its own `attackMod` before that effect's damage is dealt. `attackMod` and `damage`
+belong to the hit this effect deals itself, not to the weapon's own strike. When the native returns false, the rest of
+the effect, `Then` included, doesn't happen.
+
+`damage` needs damage in the effect, and `attackMod` needs damage or knockback, unless the parameter is `Optional`. A
+parameter that binds to nothing is refused when the block loads, and `kiln lint` reports it as KL340. The sample
+`FrostMark` is a sword whose added Ice hit deals 1.5 times its damage when the target is below a quarter of its health.
 
 ## Statuses
 
@@ -209,19 +228,22 @@ Blocks.Define("ember-sword", new WeaponBlock
   the game doesn't debit spends nothing. From code, `Items.SetToolWearPerDebit(tool, n)`; `Items.ToolWearStatus`,
   `ToolWearRuleChangedEvent` and `ToolDurabilityChangedEvent` say what is in effect and what changed;
   `ToolWearRuleChangedEvent` comes once for every change, in order, also for rules a native plugin sets. Rules last while
-  the game runs and go with their mod. Dedicated servers have it; on a world a player hosts it is
-  [off until its game test](/kiln/wiki/code-mods#built-waiting-for-a-game-test).
+  the game runs and go with their mod. Dedicated servers have it, and since 0.2.0-dev.29 a world a player hosts too
+  (on, not yet confirmed in a real game). Its hooks go in when a mod first sets a valid rule, not at the start.
   For example `Tool = new ToolBlock { Harvests = Harvest.Stone, Power = 18, WearPerDebit = 7 }`.
 - **Weapon moves: follow-ups (0.2.0-dev.28).** A weapon's `Moves` can say where its follow-up windows lead.
   `MoveBlock.FollowUps` points a window the motion already has (`Primary`, `Heavy`, `Block`, `Parried`) at another move
   of the same weapon: a block that goes on into the weapon's own parry, for example. A weapon with follow-ups gets all
   its moves or none of them; `Blocks.MovesStatus` says which, and `WeaponMovesApplicationChangedEvent` says when that
-  changes. Unloading the mod takes the moves off again. A weapon's moves are written in one step: if any part fails,
+  changes. Unloading the mod takes the moves off again. In a world you host, a weapon's routed moves are applied once the
+  hosting game has them too (up to about eight seconds; then the weapon is refused with the reason and keeps its own
+  moves). A player without your mod who gets the weapon through content sync and can't play its moves keeps the base
+  weapon's moves on their side. A weapon's moves are written in one step: if any part fails,
   all of it is taken back and read back, also when they are written again after a world or pack reload (`Refused`,
   with the reason, in `MovesStatus`). If the take-back can't be verified, Kiln takes every change of that mod off and
   the status says so; its other weapons and rules come back at the next content pass. Capability
-  `blocks.move_followups`, switched off until its game test, on a server as well: what decides is what a player sees.
-  `"preview"` in `kiln.json` switches it on.
+  `blocks.move_followups`: held in 0.2.0-dev.28, on since 0.2.0-dev.29 on servers and in every game, not yet confirmed
+  in a real game.
 - **A VFX on it (new):** `Visual = new VisualBlock { Vfx = ... }` shows a VFX on the item in the hand, at the grip;
   `Offset` moves it up the blade.
 - **Armour:** `Slot`, `Set`, `Physical`, `Magical`, `Bonus`; its look is a game item's or a model of your own.
@@ -301,6 +323,38 @@ lists only them, titled with its name. Its menu's title and list are still
 the box around the model, or `Collider = new BoxCollider { Size = ... }`. `OnInteract` works as for furniture. A
 `Visual.Vfx` on a placed thing stays on it while it stands, like a lamp's light.
 
+### Building-material pools
+
+```json
+{
+  "format": 1,
+  "buildingMaterials": {"ice": {"name": "Ice Block"}, "frost_stone": {"name": "Frost Stone Block"}},
+  "buildingMaterialPools": {
+    "cold_walls": {"name": "Cold Walls", "materials": [{"material": "ice"}, {"material": "frost_stone"}]}
+  },
+  "blueprints": {"cold_wall": {"name": "Cold Wall", "cells": [["########"]], "materialPool": "cold_walls"}}
+}
+```
+
+New in 0.2.0-dev.29. A wall or roof shape of your own can have its own list of materials to pick from in the build
+menu. A `BuildingMaterialPoolBlock`, in `blocks/*.json` or in code, lists 1 to 64 building materials (yours, or the
+game's by `GameMaterials` name) in menu order, and `BlueprintBlock.MaterialPool` gives your shape that list. The game's
+own shapes keep their lists. While a pool is accepted, its own materials (and a dependency's) leave the game's lists, so
+they don't take the few free places there.
+
+- That matters because the build menu is tight: the game's walls have room for only 3 new materials across all mods
+  (roofs 50, placeable terrain 8). A pool and its shape spend no extra material ids.
+- A pool that names the same material twice or mixes roof and wall materials is refused, with the entries named;
+  `kiln lint` checks pools (KL334).
+- Pools are read at game or server start only: a pool defined later is stored for the next start, with a receipt, as
+  buffs and VFX are. They need `clients: mod`. A player whose pools differ from the server's is refused at the join,
+  before any block data is sent, with the pools named.
+- `WorldTables` budgets say how many material ids and pool entries are left. Stored pools are pruned when their mod no
+  longer defines them; `WorldTables.RemoveStoredMaterialPool` removes one by name.
+
+Pools ran on dedicated lab servers; no game client has shown one in the build menu yet. Try them in a world you can
+throw away.
+
 ## VFX
 
 `VfxBlock` makes particles and a light from nothing: no game data, no compiler.
@@ -335,6 +389,28 @@ New, not yet seen in the game:
 - **Your own particle code**, for the advanced: [Particle shaders](/kiln/wiki/shaders).
 
 Not yet: an effect's own sound, decals, fog, custom meshes, and particles that draw a model.
+
+### The VFX budget
+
+```csharp
+var budget = Vfx.ResourceBudget;                     // client, any thread
+if (budget.Ok) Log.Info($"{budget.Budget.Available} VFX left of {budget.Budget.Capacity}");
+
+var r = Blocks.Define("frost_burst", new VfxBlock { Particles = [ /* ... */ ] },
+    new DefinitionRegistrationOptions(DefinitionTiming.AllowNextStart));
+// r.State: Registered, AcceptedNextStart or Refused (r.Code and r.Reason say why)
+```
+
+New in 0.2.0-dev.29, in a player's game. The game holds a fixed number of VFX resources, and one more than that closes
+the game. On this game build it holds 2,048, of which the game's own leave 473 for all mods together.
+`Vfx.ResourceBudget` says how many the game holds, how many the game and Kiln's mods use and how many are left, read
+from the game's own table once a client world runs (`vfx.budget`). `Blocks.Define(name, VfxBlock, options)` answers
+registered, accepted for the next start, or refused with a code and a reason, and `Blocks.GetVfxRegistration(id)` reads
+the answer later (`blocks.vfx_registration`). The game's limit itself is unchanged.
+
+Kiln now counts VFX that come through asset files or native plugins against the same budget as its cooked VFX, refuses
+what doesn't fit and names the mod in kiln.log. Before, a set of mods whose VFX together went past the game's table
+could crash the game at its start. A VFX or material defined for the next start is saved whole or not at all.
 
 ## Materials
 

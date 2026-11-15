@@ -3,7 +3,7 @@ title: "Greeneye, Enshwick, SET and more"
 nav: "More frameworks"
 description: "How Kiln runs mods for SET, Greeneye Loader, Creative Mode's Flame, Shroudtopia, Enshwick, shroudlink and Ember."
 status: "pending"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 Kiln has a part for each of these frameworks. All of them come with Kiln, so you don't install the framework. Each
@@ -107,6 +107,12 @@ Mods for Shroudtopia 0.1.1 and its Enshrouded 1.0 release: minimaps, first-perso
 - **Hooks (dev.21):** a mod's `CreateDetour` on the game exe is a link in Kiln's [hook registry](/kiln/wiki/hooks), owned
   by `shroudtopia:<mod>`. Shroudtopia and EMF mod hooks on one function run newest first, before Kiln's own links, as
   layered hooks did before. Hooks outside the game exe still use plain safetyhook.
+- **A mod that is only a DLL** is switched on since 0.2.0-dev.29. Such a mod stayed off for good although your profile
+  had it on, because nothing wrote its entry in Shroudtopia's settings; Kiln now writes it at the mod's first start. A mod
+  you switched off there yourself stays off, and Kiln's in-game list says where an off Shroudtopia mod is switched off.
+- **A mod that never reports itself active** shows as "activating" with the reason (the mod may not support this game
+  version), instead of "inactive" with an `Activating:` line in kiln.log twice a second. Kiln calls its `Activate` on
+  every update, as Shroudtopia's own loader does, and says so once.
 
 Status: untested in game.
 
@@ -156,6 +162,10 @@ kit.
   the profile's shroudlink mods don't load through Kiln, and the state file and the launcher's engine row say so.
 - **Moving from shroudlink's own setup:** stop the server, delete `steam_api64.dll`, rename `steam_api64_o.dll` back to
   `steam_api64.dll` (or verify the files in Steam), keep `shroudlink_mods/`, install Kiln.
+
+- **Mods on without the addon** (0.2.0-dev.29). When your profile switches shroudlink mods on in a player's game but
+  doesn't load the client addon, the launcher's mod list says the mods still run and that the in-game MODS tab needs the
+  addon, and offers to switch the addon on when it is in the Library. A support report names it too.
 
 Status: works on a test server (shroudlink's own self-test passed). With players joined: untested. The MODS tab after
 dropping the addon on the launcher: not seen in a real client yet.

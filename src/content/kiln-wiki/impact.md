@@ -2,7 +2,7 @@
 title: "Impact programs"
 description: "Read the game's spell programs as text, clone and change them, write new ones, and call your own C#."
 status: "partial"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 > **Partly built.** Reading, writing, checking and cooking work for all of the game's programs, and a changed program has run
@@ -54,7 +54,50 @@ Abilities.Natives.Register("Chill", argc: 2, call =>
 });
 ```
 
-A program calls it as `mymod.Chill`. Declare it in `impact/natives.json`.
+A program calls it as `mymod.Chill`. Declare it in `impact/natives.json`. A native registered this way suspends the
+program for one step.
+
+### Natives that answer in the same step
+
+```csharp
+[ImpactNative("OnHit")]
+public static bool OnHit(in NativeContext ctx, EntityId target, ref float attackMod)
+{
+    attackMod *= 1.5f;            // written into the program's variable at once
+    return !target.IsNone;        // what the call pushes
+}
+```
+
+New in 0.2.0-dev.29, server only. Put `[ImpactNative]` on a static method with typed parameters and the build makes the
+rest: its registration as a same-step native, its typed `impact/natives.json` entry and a `Natives.<Name>` reference for
+your programs. Parameters are `int`, `uint`, `float`, `bool`, `TimeSpan`, `EntityId`, `Vector3` and `DamageSetup`; `ref`
+is in and out, `out` is out, `Optional<T>` may be left unconnected. A shape the generator can't make is a build error
+(KILN170 to KILN174).
+
+- `Abilities.Natives.RegisterSync` registers such a native by hand (`abilities.natives.sync`). A `natives.json` entry
+  with `"sync": true` binds its argument types: Kiln and the cook refuse a program that passes another type
+  (`E_ARGTYPE`), and every call is checked. `Natives.DeclareTyped` does the same from C#.
+- `Abilities.Natives.Attach(program, "getTransform", NativeStage.Before, handler, site, priority)` hooks a game native's
+  calls in one program at one call site (0: any), `Before`, `Instead` or `After`, without cloning the program
+  (`abilities.natives.attach`).
+  `Natives.Wrap` and `OnDamage` now run through it, unchanged. An attachment made in `OnLoad` is `Pending` until the
+  world's programs are in.
+- **Other entities.** Inside a same-step native, `NativeContext.TryRead<T>` and `TryWrite<T>` reach the components the
+  game's Impact program itself declares, on any entity (the caster's target, for example), in the same step. A write
+  raises `ComponentWrittenEvent` with `Writer = "<modid>/native:<name>"`, and writing an attribute runs the game's
+  formulas. `NativeContext.Post` hands work to the tick thread (`abilities.natives.ecs`).
+- **Threads.** A handler runs on the thread that runs the program (the world's or one of the game's workers): no
+  tick-thread API, no blocking. A mod's `OnUnload` waits for a call that is still inside, and kiln.log names a handler
+  still inside after a second.
+- **Room.** Kiln's two built-in natives and all mods' natives share 21 entries of the game's native registry, so 19 are
+  left for mods. A registration past that is refused with the reason, where before it was silently left out.
+  `Abilities.Natives.StateOf` and `NativeAttachment.State` say where a native or an attachment stands.
+
+A block effect can call such a native first: [`EffectBlock.Run`](/kiln/wiki/blocks#a-block-effect-that-runs-your-native).
+The sample `FrostMark` is a sword whose added Ice hit deals 1.5 times its damage on a target below a quarter of its
+health, with an attachment that counts the Fireball explosion's `applyDamage` calls. Kiln.TestKit's
+`kiln.ImpactNatives` runs your natives and attachments offline ([Tests without the game](/kiln/wiki/testing)). These ran
+on a dedicated lab server without a player; a real hit in a real game is not yet confirmed.
 
 ## Queries and hits
 

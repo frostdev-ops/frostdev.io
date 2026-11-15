@@ -1,9 +1,9 @@
 ---
 title: "Profiles and mods"
 nav: "Profiles and mods"
-description: "Every mod in one list on Play, saved sets of mods as profiles in Settings, the mods in your game folder, the library, update notices, and mod settings in the launcher or in game."
+description: "Every mod in one list on Play, saved sets of mods as profiles in Settings, the mods in your game folder, the library, update notices, rolling back an update, and mod settings in the launcher or in game."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 ## Profiles
@@ -58,7 +58,9 @@ its version, and a short note only when there is something to say ("Starts with 
 - **The menu** (the three dots, or a right click on the row): Switch on/off, **Settings** (for mods that have them, such as
   ShroudForge's and Shroudtopia's), **Configs** (when the mod wrote a config file), **Cook again** (a Kiln mod with a
   cook recipe: [Mods the launcher cooks](/kiln/wiki/install#mods-the-launcher-cooks)), **Use &lt;version&gt;** (another
-  version you have), **Open folder**, **Remove &lt;version&gt;** (one of several versions) and **Remove**.
+  version you have), **Roll back to &lt;version&gt;** ([after an update](#rolling-back-an-update)), **Replace DLL…** (a
+  native DLL mod: [below](#replace-dll)), **Open folder**, **Remove &lt;version&gt;** (one of several versions) and
+  **Remove**.
 - **Above the list:** **Filter** and **Kind** (with more than six rows), **All on** and **All off**, **Notes**, **Load
   order**, **Engines** and **Add mods** (zip, 7z, rar and DLL files). Dropping a file anywhere on the window adds a mod
   too, switched on. Settings' **Switch new mods on** (on by default) decides that; switched off, new mods are added off.
@@ -70,6 +72,26 @@ its version, and a short note only when there is something to say ("Starts with 
   load (with the reason) and the ones that are off. Its neighbours are **Native and DLLs**, **Engines** and **Configs**.
 - **Engines** shows which loader runs which kind of mod, how each did at the last start, and the other loaders found next
   to the game.
+- **Filter and search boxes** (the mod list, Logs, a server's Mods, its console and Kiln commands, the Catalog and the
+  item search) have a clear (X) button while they hold text, and Esc empties them. Esc in an empty box still closes the
+  dialog it is in.
+- **Notices in the list** (0.2.0-dev.29). When ShroudForge's own loader is in the game folder and your profile has
+  ShroudForge mods, the list shows one notice and the Engines view's ShroudForge row names the loader file
+  ([ShroudForge's own loader](/kiln/wiki/eml-shroudforge#shroudforges-own-loader-in-the-game-folder)). When Shroudlink
+  mods are on in your game but Shroudlink's client addon isn't, the list says the mods still run and that the in-game
+  MODS tab needs the addon, and offers to switch the addon on when it is in the Library.
+
+### When Kiln stops the start
+
+New in 0.2.0-dev.29. Kiln ends a start before any world loads when going on would cost a world its mods' progress: the
+mods' NPCs don't fit the Survivors roster, the mods' NPCs and quests couldn't be built at all, or a boot mod the profile
+requires failed. Where the launcher used to go back to Play as if you had quit, it now shows **Kiln stopped the start**
+with the reason, the mods by name and a button to the mod list filtered to them. Switch those mods off or update them,
+then press Play again. `kilnctl run`, `start` and `status` print the same reason.
+
+The launcher also no longer says "Kiln has said nothing for ... s" for a whole session while you play: a start whose
+main menu Kiln didn't see now ends at your first world, and kiln.log names what didn't come. A selection made right after
+switching profiles is no longer lost.
 
 ### Several mods at once
 
@@ -106,6 +128,47 @@ version shows **Update 1.1.0** in its row; **New upload** means the same version
 - "Update unknown" and "Update check is stale" mean the check could not tell; they never mean up to date.
 
 Mod authors: `kiln updates check` runs the same check from a terminal ([The kiln command](/kiln/wiki/cli)).
+
+### Rolling back an update
+
+New in 0.2.0-dev.29. When you update a mod (drop its new version on the launcher, add it from the Catalog, or pick
+another version with **Use &lt;version&gt;**), Kiln keeps the version you had in your Library, with a copy of the
+settings files that mod had written into its folder in the game. That works for every kind of mod Kiln holds.
+
+- **Roll back to &lt;version&gt;** in the mod's menu puts that version back into your profile, switched on or off as it
+  was. The message has **Undo**, and nothing is downloaded. A mod Kiln placed in the game folder gets its earlier
+  version back with the settings files Kiln could keep at the update. A Kiln mod's own profile settings stay as they are.
+- **A setting you change after a roll back stays yours:** Kiln only puts back a settings file that is still as it was
+  before the roll back.
+- **Roll back twice.** The version you rolled back from is kept now, so you can go back to it the same way.
+- **How many.** Settings, Launcher, **Earlier versions to keep**: 1 by default, up to 5 per mod and profile, 0 keeps
+  none. Kiln doesn't keep a version when your disk would get too full; the update says so and goes on. Settings,
+  **Library** lists every kept version with its size; **Clean up** never removes one.
+- **If the launcher or the PC stops** in the middle of an update or a roll back, the next start finishes or undoes what
+  it can still verify. If it can't, it keeps the recovery files and says what needs attention. A real power cut has not
+  been tested, only the order in which things are written. A mod whose folder you placed by hand is never taken over.
+- A roll back's settings wait when the game folder has moved since they were kept (the launcher says so). A 0.2.0-dev.28
+  launcher shows a kept version as one more version, and its Clean up may remove it.
+
+From a terminal: `kilnctl library rollback <profile> kind:id[@version]`.
+
+### Replace DLL…
+
+New in 0.2.0-dev.29. For a patched DLL you got from a mod's author or its forum. A native DLL mod from the Library that is
+in your profile has **Replace DLL…** in its menu: choose the DLL, and Kiln makes a new build of the same mod with that
+one file swapped. The mod keeps its place in your list, its switch and its settings.
+
+- **Which file is replaced:** the one with the same file name. When the mod has exactly one DLL and yours has another
+  name, Kiln asks first, and the file keeps the mod's name, because the loader finds it by that name. A different kind
+  of DLL than the one it replaces is asked about too.
+- **The build you had is kept** for **Roll back to … (earlier build)**, under the same Earlier versions to keep setting.
+  If keeping it is switched off or the disk check refuses, the result says so and the old build stays an ordinary
+  Library version.
+- **The version stays the author's.** The row shows it with "replaced DLL" and the date, and update notices still offer
+  a later release.
+- Adding a bare DLL as before still makes a new mod. Not run on Windows yet.
+
+From a terminal: `kilnctl library replace-dll native:<id> <file> --profile <profile-id>`.
 
 ## In the game folder
 

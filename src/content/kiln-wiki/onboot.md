@@ -2,14 +2,15 @@
 title: "OnBoot: content on the first start"
 nav: "OnBoot and boot mods"
 description: "Boot mods: statuses, effects, items, spells, talents and changes to the game's own data that are there before the game reads them, from the very first start."
-status: "pending"
-updated: "2026-11-14"
+status: "works"
+updated: "2026-11-15"
 ---
 
-> **New in 0.2.0-dev.28, on dedicated servers.** OnBoot and resource patches ran on dedicated test servers: a mod built
-> outside Kiln's repository with the SDK patched 21 values of the game's balancing table before the game read it.
-> Nobody has seen it in a player's game yet. In a player's game, a world they host or a game that joins a server, it is
-> switched off until its game test ([below](#where-it-runs)).
+> **New in 0.2.0-dev.28 on dedicated servers, and since 0.2.0-dev.29 in a player's game too** (a world they host and a
+> game that joins a server). On dedicated test servers a mod built outside Kiln's repository with the SDK patched 21
+> values of the game's balancing table before the game read it. In a real game, a hosted world on 0.2.0-dev.28, More
+> Flame Altars' `OnBoot` ran and 42 values of `altarsPerFlameLevel` were patched before the game read them
+> ([Where it runs](#where-it-runs)).
 
 The game reads some of its data once, when it starts: the programs behind statuses and spells, the skill tree, the
 balancing table. What a mod defines in `OnLoad` comes too late for that first start; it is there from the second one.
@@ -84,6 +85,31 @@ public override void OnBoot(BootContext boot)
 `Register` again in `OnLoad`: the running mod keeps that one, and it sees the same values `OnBoot` read. Writing a
 setting, `Reload` and `Changed` are for `OnLoad`; in `OnBoot` they say so. A file edited between the two is read again,
 and kiln.log says `OnBoot` used the earlier values.
+
+### Settings and joining players
+
+New in 0.2.0-dev.29. Each game and each server makes its boot content once, at its start, from its own settings, and
+nothing syncs it later. A player whose settings of your mod differ from the server's has other game data: the server's
+values decide, while the player's game shows and predicts its own (a server set to 8 Flame Altars, a player set to 4).
+So the join compares them. For each boot mod with side `both`, both sides send a fingerprint of what their boot content
+committed (the staged definitions and the mod's resource patches, also those in `blocks/*.json`), and the server treats a
+difference like another version of the mod:
+
+| `modSync` on the server | A player whose boot content differs |
+|---|---|
+| `refuse` | is turned away: "The boot content of More Flame Altars on your game differs from this server's ... Use this server's settings of More Flame Altars and restart the game." |
+| `warn`, or not set | joins, with that warning on the Kiln menu's Network page and in their kiln.log |
+| `off` | nothing is compared |
+
+The player takes the server's settings of the mod (its file in `kiln/config`, from the server's operator or its
+modpack) and restarts the game: a config sync or a reload can't change boot content. Not compared: an older Kiln on
+either side, a mod in `optionalMods`, a mod with side `client` or `server`, and another version that the server's
+`versionMatch` lets in.
+
+So read in `OnBoot` only settings a server and its players share, such as balance values the server sets for everyone,
+and say on your mod's page that players take the server's. A setting that may differ per player belongs in `OnLoad`.
+Stage the same content for every role too: content that depends on `boot.Roles` differs between a player's game and a
+dedicated server, and the join counts that as a difference. Not yet seen between a real server and a real game.
 
 ## The game's data in OnBoot
 
@@ -193,6 +219,10 @@ number, a bool or an enum; strings, references to other resources and the length
   file, files whose name starts with `.`, and what the mod and Kiln write into the mod's data folder. Don't write into
   your own mod folder while the game runs: such a file counts.
 - A boot mod enabled after the start loads at the next start.
+- **Icons** of staged items, statuses and game-tree talents are files in your mod's folder with a relative path, as in
+  `OnLoad` (`Visual = new VisualBlock { Icon = "icons/token.png" }`), and show from the first start since 0.2.0-dev.29;
+  before, a boot-staged item or talent kept the icon of the one it was made from. A missing file, or a path that leaves
+  the folder, costs only the icon: kiln.log says so once and the SDK's bake warns (KILN030).
 - Reading a boot mod's files costs a little time at the start, about 1 s per 300 MB.
 
 ## When a boot mod fails
@@ -212,21 +242,22 @@ number, a bool or an enum; strings, references to other resources and the length
 
 ## Where it runs
 
-Dedicated servers have OnBoot in this release. On a game client, a world a player hosts and a player's game that
-joins a server, it is [held until its game test](/kiln/wiki/code-mods#built-waiting-for-a-game-test):
-`mods.boot.client`, and with it `mods.boot.resource_patches` and `mods.boot.vfx`. While it is held a mod with `"boot"`
-doesn't load in a player's game (kiln.log: `RestartRequiredBoot: ... this process ran no boot phase`), and a game with
-an enabled `"required"` mod doesn't start (exit code `0x4B01`, the reason is the last line of kiln.log). Don't ship
-`"required"` to players yet. `"preview"` in `kiln.json` switches OnBoot on for a test.
+- **Dedicated servers** since 0.2.0-dev.28.
+- **A player's game**, a world they host and a game that joins a server, since 0.2.0-dev.29, with no setting: the rows
+  `mods.boot.client` and `mods.boot.resource_patches` are open. In 0.2.0-dev.28 a boot mod didn't load there unless
+  `"preview"` was set in `kiln/kiln.json`; that setting is no longer needed, and leaving it does no harm. A server that
+  runs a boot mod its players need no longer turns away players who have Kiln and the mod.
+- A player's game builds every mod's VFX and material files at its start, as it always did. Staging VFX or materials
+  in `OnBoot` is not in this build (`mods.boot.vfx` reads unavailable, "not in this build", on a client). A required
+  boot mod with a broken VFX or material file stops the start in a player's game too, and the stop line names the file;
+  an optional boot mod loses only that file, with a line in kiln.log.
+- A boot mod's resource patches are never lost without notice: if the game's resource service was up before the boot
+  content was ready, the mod is left out (or the start stops for a required one) and kiln.log says why.
+- A server where the boot phase doesn't run (safe idle, .NET off) doesn't load boot mods either; the row
+  `mods.boot.phase` says why.
 
-**What that means for a server.** A player's game tells the server which mods it has loaded, and a boot mod isn't
-among them. So when a server's boot mod has `"side": "both"` and states `"clients": "mod"` (as a mod with a resource
-patch does), the server refuses
-joining Kiln players for a missing mod, unless the player sets `"preview"` in their `kiln.json`, or the server sets
-`modSync` in `network.json` to `warn` or `off`.
-
-A server where the boot phase doesn't run (safe idle, .NET off) doesn't load boot mods either; the row
-`mods.boot.phase` says why.
+Next to other loaders' mods in a player's game, boot mods were confirmed in one hosted game; the guided check of both
+loader orders has not been played yet.
 
 ## Testing
 

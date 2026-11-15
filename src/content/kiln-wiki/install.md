@@ -2,7 +2,7 @@
 title: "Install Kiln"
 description: "Install Kiln for Enshrouded, import downloaded mod archives, and play with or without mods."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 > **Early access.** Download the launcher: [Windows installer](/kiln/download/windows), [Linux AppImage](/kiln/download/linux)
@@ -84,9 +84,10 @@ after the cook: "Game data for OnBoot mods (about 200 MB, once per game build)".
 200 MB in the game folder, once per game update. Without such a mod nothing runs. If the step fails, the game starts
 anyway and the launcher says so in one line.
 
-Starting from Steam doesn't make it; one start through the launcher with the mod on does. In this release OnBoot itself is still switched
-off in a player's game until its game test ([Where it runs](/kiln/wiki/onboot#where-it-runs)); dedicated servers have
-it.
+Starting from Steam doesn't make it; one start through the launcher with the mod on does. Since 0.2.0-dev.29 boot mods
+load in your game too (a world you host, and a server you join), with no setting: if you added `"preview"` to
+`kiln/kiln.json` for dev.28, it is no longer needed, and leaving it does no harm
+([Where it runs](/kiln/wiki/onboot#where-it-runs)).
 
 ## Steam Deck
 
@@ -122,6 +123,16 @@ WINEDLLOVERRIDES="dinput8=n,b" %command%
 
 It does no harm where it isn't needed, so set it if you're unsure. The launcher shows what to change. It never edits
 Steam's settings.
+
+**With Ultimate ASI Loader chained** next to Kiln, Wine also needs `xinput9_1_0` set to native, builtin:
+`WINEDLLOVERRIDES="dinput8,xinput9_1_0=n,b" %command%`. Since 0.2.0-dev.29 the launcher's launch option names it and says
+when only that part is missing; before, it showed "Already set" while Proton loaded its own `xinput9_1_0` and the
+loader's `.asi` plugins never started. When Wine loads its own copy of a DLL Kiln chains, `kiln/logs/proxy.log` now says
+so and names the override to set.
+
+**Without Kiln's launcher** (Bottles, Lutris or plain Wine), set `dinput8` to native, builtin
+(`WINEDLLOVERRIDES="dinput8=n,b"`, or in the runner's DLL overrides), and `xinput9_1_0` too with Ultimate ASI Loader.
+Without it the game starts without Kiln, and `kiln/logs/proxy.log` isn't written.
 
 ### A black launcher window
 

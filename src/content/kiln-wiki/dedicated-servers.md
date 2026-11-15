@@ -3,7 +3,7 @@ title: "Kiln on a dedicated server"
 nav: "Dedicated servers"
 description: "Put Kiln on an Enshrouded dedicated server: a rented host over FTP, your own Windows PC, or a headless Linux machine."
 status: "partial"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 This page is for server owners. It shows how to put Kiln on an Enshrouded dedicated server, check that it runs, add
@@ -150,6 +150,27 @@ jq '.steps[]' kiln/state/progress.json    # the step without tookMs is the one r
 
 Over FTP, download the file and open it in any text editor.
 
+### When Kiln stops the start
+
+Kiln ends a start on purpose, before any world loads, when going on would cost a world its mods' progress. The process
+then exits with a code that says why, and restarting gives the same stop every time. **Don't restart it: fix the mod
+list.** The last kiln.log lines and the file in `kiln/state/` name the mods.
+
+| Exit code (Windows) | Under Wine | Why | Says more |
+|---|---|---|---|
+| 0x4B01 (19201) | 1 | a required boot mod's content could not be applied | `kiln/state/boot.json` |
+| 0x4B02 (19202) | 2 | the mods add more NPCs to the [roster](/kiln/wiki/npcs#a-roster-of-128) than this server can hold | `kiln/state/roster-refused.json` |
+| 0x4B03 (19203) | 3 | the mods' NPCs and quests could not be built at all (since 0.2.0-dev.29) | `kiln/state/content-refused.json` |
+
+- The release's `kiln@.service` has `RestartPreventExitStatus=1 2 3` since 0.2.0-dev.29, so systemd doesn't restart on
+  these: install the new unit file from the [download page](/kiln/download#servers) and run
+  `systemctl --user daemon-reload`. A unit of your own with `Restart=on-failure` or `Restart=always` needs that line too.
+- Tell a hosting panel or a restart script the same: status 1, 2 or 3 (19201, 19202 or 19203 on Windows) is a
+  configuration error, not a crash.
+- Under Wine, statuses 1, 2 and 3 also come from ordinary failures, so a server kept down this way may have failed for
+  another reason: read `kiln.log` before you start it again. On Windows the whole code is Kiln's.
+- `kilnctl run`, `start` and `status` print the reason, and the launcher shows it.
+
 ## Admin without a desktop
 
 | Way | Where it works | What you need |
@@ -289,9 +310,11 @@ Flame Altars per base works at once.
   It takes about a minute and 200 MB the first time. Without it such a mod finds the game's data "not ready" and does
   without, or is left out; kiln.log says which.
 - Players who join need a mod that [changes the game's data](/kiln/wiki/onboot#resource-patches) too: put it in your
-  modpack. In this release a boot mod doesn't load in a player's game yet, so if it states `"clients": "mod"` the
-  server refuses Kiln players for it, unless they set `"preview"` in their `kiln.json` or you set `modSync` to `warn`
-  in `network.json` ([Where it runs](/kiln/wiki/onboot#where-it-runs)).
+  modpack. Since 0.2.0-dev.29 a boot mod loads in a player's game, so a server no longer turns away players who have
+  Kiln and the mod. At the join Kiln compares what each boot mod made on both sides: a player whose settings of the mod
+  differ from yours gets a warning that names the mod (or is turned away under `modSync: refuse`), and should take your
+  settings and restart the game ([Settings and joining players](/kiln/wiki/onboot#settings-and-joining-players)). Give
+  players your mod settings with the modpack.
 - **Keep `kiln/data` in your backups.** It holds the terrain records that stop a terrain mod from rebuilding its ground
   over your players' changes (`kiln/data/kiln.terrain`), the journal of temporary edits
   (`kiln/data/kiln.build/transient`), and the sizes mods set on props. If you remove the mod that set a size, those
@@ -309,6 +332,15 @@ rays each server step. `kiln/config/kiln.queries.json` sets it, read once at the
 
 `maxRaysPerStep` is 1 to 4096, `maxRayMicrosecondsPerStep` 1 to 10000. A file that is wrong gives both defaults and a
 warning in kiln.log.
+
+### Room for mods' content
+
+- **Buffs.** Since 0.2.0-dev.29 a server can carry up to 4,096 mods' buffs (1,024 before). Joining needs Kiln; a player
+  whose game has less room than the server uses is turned away at the join, with both numbers in the message.
+- **NPCs.** The Survivors roster holds 93 mod NPCs (29 before). A server whose mods add more than 29 needs Kiln
+  0.2.0-dev.29 or later on the server and in every player's game ([A roster of 128](/kiln/wiki/npcs#a-roster-of-128)).
+- **Terrain.** All mods' terrain work shares one budget per server step: 4,096 written and 32,768 read cells and 2 ms.
+  A large terrain patch now takes a few seconds instead of one long hitch.
 
 ## Game updates
 

@@ -2,7 +2,7 @@
 title: "Game UI"
 description: "Menu entries, your own screens, crafting tabs and panels, HUD lines, toasts, key bindings, and values in the game's own UI."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 All client side. On a dedicated server `Ui.Available` is false and calls do nothing, so a `side: both` mod can call them freely.
@@ -23,8 +23,12 @@ Ui.Menus.Add(MenuLocation.PauseMenu, "Teleport home", () => Client.Post(GoHome))
 The game draws these above its Settings entry, with its look, sounds, and mouse, keyboard and gamepad navigation. Labels follow
 the game's language.
 
-Since 0.2.0-dev.27 the pause menu scrolls when mods add more entries than fit. Where a menu can't scroll (the main menu,
-or a game build where Kiln can't make the pause menu scroll) and has more than 3 mods' entries, they aren't drawn there:
+Since 0.2.0-dev.27 the pause menu scrolls when mods add more entries than fit. Since 0.2.0-dev.29 it scrolls whenever
+its entries are taller than the screen, so Quit to Desktop stays reachable at every resolution, with Kiln's and other
+mods' entries (SET's tools and Creative pushed it off a 1280x720 or 1080p screen); a menu that fits is drawn as the game
+draws it. Auto, the default for mods' entries, now shows every mod's entry whenever the menu can scroll. Where a menu
+can't scroll (the main menu, or a game build where Kiln can't make the pause menu scroll) and has more than 3 mods'
+entries, they aren't drawn there:
 the player chooses them on Kiln's **Mods** page, under **Menu entries**, where your `OnClick` runs the same way. The
 player's setting `modEntries` decides ([Menu entries of mods](/kiln/wiki/profiles#menu-entries-of-mods)). Your code
 doesn't change. The capability `ui.menu_scroll` says whether the pause menu scrolls.
@@ -109,10 +113,10 @@ for the local player:
 - Extra lines don't go into the game's tooltip, which has no room for them: they show in Kiln's **Item details** window
   (the pause menu's "Item details" entry, or `OpenTooltipDetails()`).
 
-The sample `ValueBars` shows it. **Every part is switched off until its game test**
-([held capabilities](/kiln/wiki/code-mods#built-waiting-for-a-game-test): `ui.values.detail`, `ui.values.slot`,
-`ui.values.held`, `ui.values.hud`, `ui.values.tooltip_lines`, `ui.slots.inspect`); `"preview"` in `kiln.json` switches
-them on for a test.
+The sample `ValueBars` shows it. Every part was held in 0.2.0-dev.28 and is on since 0.2.0-dev.29, not yet confirmed in a
+real game (`ui.values.detail`, `ui.values.slot`, `ui.values.held`, `ui.values.hud`, `ui.values.tooltip_lines`,
+`ui.slots.inspect`). They exist only in a player's game, never on a dedicated server; hooks go in on first use by a
+mod, and after a game update these rows stay off until Kiln is updated for that build.
 
 ## Also
 

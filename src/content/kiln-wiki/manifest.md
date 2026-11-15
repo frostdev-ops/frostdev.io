@@ -2,7 +2,7 @@
 title: "The manifest"
 description: "kiln.mod.json: id and version, where the mod runs, what players need, boot content, update checks, dependencies and load order."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 Every mod folder has a `kiln.mod.json`. Kiln.Sdk writes it from your project file, or add your own. The build checks it
@@ -72,9 +72,16 @@ content. From a project, `<KilnBoot>true</KilnBoot>` writes it.
   reason in kiln.log and `kiln/state/boot.json`.
 - A boot mod loads only with its boot content: one enabled after the start, or whose files or `OnBoot` settings changed
   since, loads at the next start.
-- Dedicated servers only in this release. In a player's game, a world they host or a game that joins a server, a mod
-  with `boot` doesn't load until its game test. A server whose boot mod states `"clients": "mod"` therefore refuses
-  Kiln players unless they set `"preview"` ([Where it runs](/kiln/wiki/onboot#where-it-runs)).
+- Dedicated servers and, since 0.2.0-dev.29, a player's game (a world they host and a game that joins a server)
+  ([Where it runs](/kiln/wiki/onboot#where-it-runs)). With side `both`, the join compares what the boot content made on
+  each side ([Settings and joining players](/kiln/wiki/onboot#settings-and-joining-players)).
+
+## Program wraps: `systems`
+
+Since 0.2.0-dev.29 a mod can declare which of the game's programs it replaces, for tools to read:
+`"systems": { "replaces": ["fuel_setup"] }`. Nothing reads it yet; the wrap itself is code
+([Wrapping the game's programs](/kiln/wiki/world-programs#wrapping-the-games-programs)). `kiln lint` no longer calls
+`"writes"` an unknown key.
 
 ## Update checks: `updates`
 

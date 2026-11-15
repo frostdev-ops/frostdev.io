@@ -2,7 +2,7 @@
 title: "The dev kit"
 description: "Kiln.Sdk, project templates, the kiln command, a linter, analyzers, a VS Code extension, a debugger and game-id constants."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 | Part | For |
@@ -108,6 +108,11 @@ player data), `rules` (Kiln.Rules, NoClip through Kiln's switch), `network` (a c
 and `world-program` (a [program of your own](/kiln/wiki/world-programs) in the game's scheduler). `unit-test` makes a
 project for [tests with no game](/kiln/wiki/testing#tests-without-the-game).
 
+**New in 0.2.0-dev.29:** `system-wrap` (your code around one of the game's own programs, a typed wrap that makes wells
+refill faster: [Wrapping the game's programs](/kiln/wiki/world-programs#wrapping-the-games-programs)) and
+`client-program` (a program in the player's own client world:
+[In the player's client world](/kiln/wiki/world-programs#in-the-players-client-world)).
+
 Run `kiln cook` before the first build of `model`, `sound` and `ability` with Impact. `kiln build` does it when a recipe is out of
 date.
 
@@ -129,5 +134,13 @@ New in 0.2.0-dev.28: `boot-gallery` ([OnBoot](/kiln/wiki/onboot), with a resourc
 ([creature control](/kiln/wiki/creature-ai#creature-control)), `ValueBars` ([values in the game's UI](/kiln/wiki/game-ui#values-in-the-games-own-ui)),
 `BlockKinds` ([block kinds](/kiln/wiki/blocks#block-kinds-of-your-own)) and `BlobCatalog` ([content blobs](/kiln/wiki/assets#every-content-blob)).
 `NpcSample` now has a brain that walks a path found with `Queries.FindPath`.
+
+New in 0.2.0-dev.29: `Decisions` ([refusing a death, a pickup or an equip](/kiln/wiki/events#refusing-a-death-a-pickup-or-an-equip)),
+`WaterWorks` ([a typed program wrap](/kiln/wiki/world-programs#wrapping-the-games-programs): wells refill faster),
+`FrostMark` (a sword whose added hit runs a [same-step native](/kiln/wiki/impact#natives-that-answer-in-the-same-step)),
+`TypedHookVolume` ([a typed hook](/kiln/wiki/hooks#typed-hooks-and-calls) on an item's volume), `MaterialPools`
+([building-material pools](/kiln/wiki/blocks#building-material-pools)), `equipment-sets`
+([equipment sets](/kiln/wiki/inventory#equipment-sets)) and `Budgets` (the buff room and the program budget read
+before defining).
 
 If you rebuild Kiln's packages without changing their version, clear `~/.nuget/packages/kiln.*` first.

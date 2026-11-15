@@ -3,7 +3,7 @@ title: "Hooks and patches"
 nav: "Hooks"
 description: "The advanced tier: detours, mid hooks, memory patches and symbols on game code, from C# or a native plugin, through Kiln's one hook registry."
 status: "pending"
-updated: "2026-11-10"
+updated: "2026-11-15"
 ---
 
 > **Changed in 0.2.0-dev.21.** Every hook Kiln places on the game exe now goes through one registry, kiln.hooks v2.
@@ -44,7 +44,51 @@ h.Remove();                              // or let Kiln remove it when the mod u
 - `return someValue;` replaces the function. The rest of the chain and the original don't run.
 - The handler sees the first four integer or pointer arguments. Since dev.21 the original receives **every** argument
   the game passed, so a function with more than four arguments works. You can't read or change the fifth and later.
-- For float arguments, or to read every argument, use a mid hook or a native plugin (below).
+- For float arguments, or to read every argument, use a [typed hook](#typed-hooks-and-calls), a mid hook or a native
+  plugin (below).
+
+## Typed hooks and calls
+
+```csharp
+using Kiln.Sigs.Items;
+
+if (Capabilities.Is("hooks.typed") && Capabilities.Is(GetItemVolume.Capability))
+{
+    HookResult r = GetItemVolume.Detour((ref GetItemVolume.Call c) =>
+    {
+        c.CallOriginal();                                            // the game answers first
+        if (c.Item != 0 && c.Result.Has != 0) c.Result.Value *= 2;   // Result: a ref into the caller's buffer
+    });
+    if (!r.Ok) Log.Warn(r.Reason);                                   // a game update changed the function
+    OptS32 v = GetItemVolume.Invoke(0);                              // call the game's function yourself
+}
+```
+
+New in 0.2.0-dev.29 (`KilnServices` `Hooks;Sigs`, advanced mods only). A typed hook sees a game function as a
+function: integer, pointer, float and double arguments, stack arguments and struct returns. The classes in `Kiln.Sigs`
+are generated from descriptors that Kiln checks against the function's code at load, so a descriptor a game update no
+longer fits is refused with a reason that names the argument. Kiln.Sigs has ten of the game's functions (item volume,
+attributes, time scale and game time, weather, components, and more); a mod's own sigdb fragment can describe its own
+functions, which become classes `Kiln.Sigs.<ModId>.<Name>`.
+
+- **`Call`** has one typed property per argument, `Result`, `CallOriginal()` and `Skip()`. Without either, the
+  function runs after your handler with the arguments as it left them.
+- **When it goes in.** A typed hook is written into the game only after Kiln has checked every game thread. One asked
+  for during a step is pending until the next safe tick (`HookResult.Pending`, `HookHandle.State`,
+  `HookHandle.Reason`); if the threads can't be checked, Kiln tries at three safe ticks, then the handle says `Refused`
+  with the reason and `HookRefusedEvent` is posted. While a world runs, at most four first installations are admitted
+  in each 5 ms window (each first hook on a game function briefly stops the game's other threads for the check).
+- **`Invoke`** calls the game's function through its hook chain, after checking the descriptor it was compiled with
+  against the game it runs in. Some are for the tick thread only.
+- **Faults.** An exception in a handler is caught, and the game gets the original's result, also one returned in a
+  buffer. A null reference in your handler's own code is caught like any exception; any other access violation (in
+  native code your handler calls, or at another address) still ends the game, as anywhere in managed code.
+- **Cost.** On a lab server `GetItemVolume` through `Invoke` took about 0.6 microseconds a call, with a pass-through
+  hook adding about 10 ns.
+- The generator warns with KILN180 to KILN182 about a descriptor it can't use.
+
+Typed hooks ran on dedicated lab servers and under Wine; no managed typed hook has run in a game client yet (the
+sample's guided check is `06b-typed-hooks.client`).
 
 ## Mid hooks
 
@@ -147,9 +191,12 @@ before or over Kiln. Kiln writes it at boot end, at the first world, and when li
 kiln.log says when another DLL hooked first, or hooked over Kiln:
 
 ```
-[kiln] hooks: chat/ChatLogAdd chained over enshwick.dll+0x11ea80
-[kiln] hooks: xhl.dll+0x4410 hooked over Kiln's chat/ChatLogAdd (Kiln's detour stays armed; it is reached through their jump)
+[kiln] hooks: chat/ChatLogAdd (kiln-chat) chained over enshwick.dll+0x11ea80
+[kiln] hooks: xhl.dll+0x4410 hooked over Kiln's chat/ChatLogAdd (kiln-chat) (Kiln's detour stays armed; it is reached through their jump)
 ```
+
+Since 0.2.0-dev.29 these lines name Kiln's hook and its owner, for example `content/ItemRegistryFind (kiln-content)`,
+instead of another service's name for the same function.
 
 Kiln keeps working in both cases. When a DLL mod's hooks get in the way, see
 [closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods).

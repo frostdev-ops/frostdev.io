@@ -2,7 +2,7 @@
 title: "Testing"
 description: "Tests that run inside the server with Kiln.Testing, and unit tests with no game under dotnet test with Kiln.TestKit."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 Kiln.Testing runs tests in a running server, on the tick thread, so they can touch game state. It's Kiln's take on Forge's GameTest.
@@ -59,6 +59,32 @@ In `kiln.log`, and with each test's time, message and stack in `kiln/logs/tests/
 Spawn creatures far away, use chests and villagers in the world, read values before and after. List what only a player can confirm
 (what the screen shows, real hits) and check those by hand.
 
+## Guided checks in the game
+
+```csharp
+[ClientCheck("blocks.frost-flash", "Frost flash on hit", Tags = [ClientCheckTags.Visual], Needs = ClientCheckNeeds.Hosted)]
+public async Task Frost_flash(CheckContext c)
+{
+    var dummy = SpawnDummyInFrontOf(c.Player);
+    c.OnEnd(() => Despawn(dummy));                                // runs however the check ends
+    c.Instruct("Hit the dummy three times. Does a blue flash appear on each hit?");
+    await c.Until(() => Hits(dummy) >= 3, TimeSpan.FromMinutes(2), "three hits");
+    c.Expect(Hits(dummy) == 3, "three hits counted", $"counted {Hits(dummy)}");
+    await c.Verdict();                                            // pass, fail (with one line) or skip
+}
+```
+
+For what only a player can judge (a flash on a hit, a sound, a menu that opens), a guided check sets the scene, tells
+the player what to look for, asserts what code can read and waits for the player's verdict. Call
+`ClientChecks.Register(this)` in `OnLoad`. Every verdict goes into a ledger file, so a pass through the checks leaves a
+record. Kiln's own "On, not yet confirmed in a real game" list is a set of such checks.
+
+Since 0.2.0-dev.29 a failed `Expect` decides: a check whose assertion failed can no longer be recorded as passed.
+Answering Pass records Fail, the check says "this check cannot pass: N assertion(s) failed: …", and the ledger keeps your
+answer (`playerAnswer`), the count (`assertionFailureCount`) and the reason. A failure in the body or a clean-up after
+the answer counts too. To show a value without requiring it, pass `true` as the condition. An older entry that says Pass
+next to a failed assertion is counted as failed. Most of Kiln's own checks have not run in a real game yet.
+
 ## Tests without the game
 
 `Kiln.TestKit` runs your mod under `dotnet test`, with no game and no server: a `KilnHarness` loads the mod with Kiln's
@@ -90,6 +116,21 @@ and the test reads what the mod did (`kiln.Spawned`, `player.Chat`, `player.Say`
 and talent trees your mod defines run on fake players. What the kit doesn't model (weather, equip, moves between
 inventories, the game's journal and skill tree) says it is offline instead of pretending. The fakes were checked against
 the services' code, not against a running game, so keep the in-server tests above for what only the game can show.
+
+New fakes in 0.2.0-dev.29:
+
+- **Program wraps** (`kiln.Programs`). There is no game scheduler offline, so the test declares the game's programs
+  your mod wraps: `kiln.Programs.Add("fuel_setup", new FakeProgramLists { Read = ["CurrentTransform"], Write = ["Fuel"] }, slice => ...)`,
+  or `kiln.Programs.Add<Ecs.Programs.FuelSetup>()` for a typed view. Each step runs your stages over the fake world's
+  entities (Before, Replace or the update, After, per-entity views, `WhenArchetype`, `ComponentWrittenEvent`), times
+  each stage against the 1 ms budget and turns a stage off after ten overruns in a row, as the game side does. Not
+  modelled: `Systems.Define`, client-world wraps, the game's worker threads and native faults.
+- **Impact natives** (`kiln.ImpactNatives`). Your `[ImpactNative]` methods, `RegisterSync` natives and attachments run
+  offline. Nothing runs a program, so the test declares the game programs it attaches to (`AddProgram`) and makes each
+  call itself (`kiln.ImpactNatives.Call(new FakeImpactCall("frostmark.OnHit", FakeImpactArg.Entity(target), FakeImpactArg.Float(1f)))`).
+  Programs, attributes and their formulas stay offline.
+- **Component watches** (`KilnHarness.ComponentChanges`), **decisions**, **equipment sets**, and the **budgets** of
+  world tables and material pools, by the services' own rules.
 
 ### OnBoot under dotnet test
 

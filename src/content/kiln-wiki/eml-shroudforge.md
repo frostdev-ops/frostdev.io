@@ -3,7 +3,7 @@ title: "EML and ShroudForge mods"
 nav: "EML and ShroudForge"
 description: "Kiln runs EML data mods and ShroudForge's Lua mods unchanged, with no extra loader and no Wine settings."
 status: "pending"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 EML (the Enshrouded Mod Loader) and ShroudForge are the frameworks with the most Enshrouded mods. Both come with Kiln
@@ -44,6 +44,10 @@ How it behaves:
   older versions are moved to `kiln/eml/displaced` in the game folder, and the launcher names them (Logs, **Engines**,
   and the **Engines** view from the list on Play). When Kiln can't prove the data is its own, it leaves it and says why;
   Steam's **Verify integrity of game files** is the other way back.
+- **A failed start says why** (0.2.0-dev.29). When Kiln's EML part can't prepare the game's data, the log and each
+  mod's status name the step and the cause, for example a backup of the game's data that no longer matches what Kiln
+  recorded, with what to do: verify the game files in Steam, then start through Kiln again. Before, every EML mod said
+  only "the EML run failed (Failed to create AppState)".
 - **Kiln asset packs win.** If a Kiln mod's assets and an EML mod change the same game resource, the Kiln mod's
   version is the one you see.
 - **EML installed too.** When EML's own loader runs, Kiln stands aside: EML has already applied the mods. When EML's file
@@ -56,6 +60,38 @@ How it behaves:
   same mod in `mods/` under another folder name, Kiln adds no second copy (EML stops the game on a duplicate id) and
   yours runs. `kiln/state/eml.json` lists each profile mod as `own-loader` (EML runs Kiln's copy) or `not-loaded` with
   the reason, and kiln.log warns about each one that doesn't load. [Details](/kiln/wiki/other-mods#your-other-loader-is-installed-too).
+
+### Restore the game's data
+
+New in 0.2.0-dev.29. If Kiln's EML mods all fail because the game folder holds game data and backups another mod loader
+made, the launcher's **Engines** view (Logs, Engines) offers **Restore the game's data**:
+
+1. Verify the game files in Steam (the game's Properties, Installed Files, "Verify integrity of game files"). If Steam
+   repaired files, start the game once more: Kiln reads the list of leftover files at a start.
+2. **Restore the game's data** lists the leftover files and moves them into a folder under `kiln/eml/displaced`.
+   Nothing is deleted, and **Undo move** puts them back.
+
+It isn't offered while ShroudForge prepares the game's data for your profile, and it has not run on Windows or on a real
+game folder yet. If it doesn't appear or refuses, the manual way still works: move the extra `enshrouded_NNN.dat` files
+and the two `.bak` files out of the game folder.
+
+### EML mods that bring their own DLL
+
+Some EML mods come with a DLL that ShroudForge loads (Quiver & Spellbook, Auto Loot Plus, Endless Chests). Since
+0.2.0-dev.29 they run whole even when your profile has no ShroudForge mod: Kiln starts ShroudForge for them by itself.
+Before, only the mod's data was applied and its extra slots never appeared; the mod's own page warns that the game drops
+what is in those slots at the next save in that state. Where ShroudForge can't run (its part of Kiln isn't installed, or
+you switched it off), the mod is skipped entirely with the reason, never half. After updating, start once and check that
+the mod's slots are there before you save.
+
+With EML's own loader in the game folder (its `dbghelp.dll`, or in a DLL chain), ShroudForge can't start, so such a mod's
+DLL would never run. Activating the profile and **Play** then stop and name the mods and the loader: switch those mods
+off, or remove that loader. Mods that only patch game data are unchanged.
+
+On Windows, with ShroudForge mods in the profile, these mods now switch on: ShroudForge writes its folder as
+`\\?\C:\...`, and Kiln used to compare the two spellings letter by letter. An `extended.mod.json` you made by hand as a
+workaround can stay; Kiln takes it as its own switch. Kiln's in-game Mods page treats that folder as the same folder
+however ShroudForge spells it.
 
 EML mods change data that the server and every player need to agree on. Use the same EML mods on the server and in
 each player's game. A server with bigger stacks and a player without them can lose items.
@@ -154,6 +190,24 @@ has it switched off. Switch it on in Kiln's in-game menu (Mods > ShroudForge), o
 with Add mods." Kiln never writes into a folder it did not put there; a mod you add with Add mods runs from Kiln's own
 copy, which Kiln switches on for ShroudForge. The launcher's list of mods in the game folder no longer says such a mod
 loads. On a dedicated server, which has no in-game menu, only the second way is named.
+
+**Spawning mods** (SpiderHook's grapple, for one) did nothing under Kiln in earlier releases: Kiln changed the start of
+five of the game's building functions for every player, and ShroudForge reads one of them to find the game's spawn code.
+Since 0.2.0-dev.29 Kiln leaves those functions alone unless one of your Kiln mods uses build events or protection zones.
+With such a mod in your profile, the ShroudForge that Kiln ships should find that code anyway (frostdev-ops/shroudforge
+pull request 1 by AlexK-Notable, with a follow-up of ours, and pull request 2). That was seen in ShroudForge's own
+tests and under Wine, not in a game yet: SpiderHook itself hasn't been run beside a Kiln mod that uses building. kiln.log
+says which way ShroudForge's check went (`[sf] ... executable file accepted ...` or `refused: <reason>`). Other loaders'
+code patches (EMF's memory writes, SET, Flame) can still hide the spawn code from it.
+
+### ShroudForge's own loader in the game folder
+
+New in 0.2.0-dev.29: when ShroudForge's own loader is in the game folder, Kiln says so. The Engines view's ShroudForge
+row names the loader file, and the mod list shows one notice when your profile has ShroudForge mods. If that loader
+runs, Kiln's ShroudForge steps aside and ShroudForge reads its own mods folder: your profile's switches still update the
+ShroudForge mods Kiln placed there, while folders you put there yourself keep their own switches. The way out is in the
+notice: remove that file, or **Let Kiln manage ShroudForge**. kiln.log says at each start whether that loader actually
+ran. Nothing about what loads has changed.
 
 ### Your own ShroudForge
 

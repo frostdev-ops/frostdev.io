@@ -2,7 +2,7 @@
 title: "dinput8-chain.ini: a shared spec for loaders"
 nav: "dinput8 chain spec"
 description: "The shared rules for dinput8-chain.ini, which EMF, Kiln, ShroudForge, XHL-Core and Auto Loot Plus read: written for EMF, public domain, and how Kiln follows it."
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 Many Enshrouded mod loaders and DLL mods want to be the game's `dinput8.dll`, and only one file can have that name.
@@ -122,7 +122,11 @@ includes it.
 Where Kiln differs from the spec:
 
 - It reads `[EMF]`, EMF's own section, for DLLs that EMF's older installers renamed into it.
-- A line that names no `.dll` is skipped, but `proxy.log` does not mention it.
+- A line that names no `.dll` (a mistyped file name, an `.asi`) is skipped. Since 0.2.0-dev.29 `proxy.log` names it; a
+  `key = value` line whose value is no `.dll` is another tool's setting and is ignored without a line.
+- Under Wine or Proton, when Wine loads its own copy of a DLL in place of the chained one (Ultimate ASI Loader as
+  `xinput9_1_0.dll` is the known case), `proxy.log` says so since 0.2.0-dev.29 and names the override to set, for example
+  `WINEDLLOVERRIDES="xinput9_1_0=n,b"`. Before, it said "loaded" while the DLL never ran.
 - Kiln's installer lists the `dinput8.dll` it moves in its own file, `kiln/chain.ini`, not in a section of
   `dinput8-chain.ini`. It moves it into `kiln/chain/`; Ultimate ASI Loader goes next to the game's exe as
   `xinput9_1_0.dll`, the name it works under. It never deletes one. Uninstalling puts it back, unless the file at

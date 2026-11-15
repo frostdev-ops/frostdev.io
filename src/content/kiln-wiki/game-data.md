@@ -2,7 +2,7 @@
 title: "Game data"
 description: "Tune spells, creatures, attacks, buffs, perks and skill nodes with data packs, and clone them into new ones."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 Same rules as items: changes belong to your mod, come off when it unloads, and reach Kiln players through the server. They
@@ -72,6 +72,21 @@ in a real game, joined, with the mod on both sides. A perk runs only once its en
 yet: Kiln players without the mod.
 
 Players' games must know clones: set `"clients": "kiln"`.
+
+### Room for buff clones
+
+Since 0.2.0-dev.29 a game or server has room for 4,096 buff clones, all mods together (1,024 before).
+`Content.Buffs.GetBudget()` says how much is left. `Content.Buffs.Define(clone, new DefinitionRegistrationOptions(...))`
+answers Registered, AcceptedNextStart or Refused, with a code and a reason, instead of throwing, and
+`GetRegistration(id)` reads the answer later. A definition accepted for the next start is stored under
+`kiln/data/gamedata/pending/<mod>/` and registers at the next start once its mod is loaded again. Define many buffs in a
+data pack or before the world loads, so they are published together. New refusals with a reason: buff id 0, a game
+buff's id, another clone's id, room full. If the larger room can't be reserved next to the game's data, it stays 1,024
+and kiln.log says so (`gamedata.expanded_buff_room`).
+
+Joining a server with many mod buffs needs Kiln. A player whose game has less room than the server uses is turned away at
+the join, with how many the server uses and how much room their game has; before, they got in and saw wrong or missing
+buffs. The room ran on a dedicated lab server with 4,096 clones; a game client has not run it yet.
 
 ## From code
 

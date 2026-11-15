@@ -1,9 +1,9 @@
 ---
 title: "Inventory transfers"
 nav: "Inventory transfers"
-description: "Move gear with its state, put items on and take them off, read container names, keep items out of quick stack or move all, and keep data on one item."
+description: "Move gear with its state, put items on and take them off, swap whole sets of gear, read container names, keep items out of quick stack or move all, and keep data on one item."
 status: "pending"
-updated: "2026-11-13"
+updated: "2026-11-15"
 ---
 
 > **New in 0.2.0-dev.20.** These APIs require the dev.20 runtime and MDK or newer. Server evidence and pending client checks are tracked on
@@ -48,6 +48,37 @@ New in 0.2.0-dev.27. Both run the game's own equip on the server, with all its c
 their own. `EquipResult` says what moved where, or why not; `EquipOptions.DryRun` asks without changing anything, and
 `EquipChangedEvent` follows each change Kiln made. Check the capability `items.equip` first. Proven on a test server with
 stand-ins for players; what a player sees is not checked in a game yet. The sample `Loadouts` uses both.
+
+Since 0.2.0-dev.29 a player's equipment input can be refused before it happens with `PlayerEquippingEvent`
+([Refusing a death, a pickup or an equip](/kiln/wiki/events#refusing-a-death-a-pickup-or-an-equip)).
+
+### Equipment sets
+
+```csharp
+EquipmentSetCaptureResult day = Items.CaptureSet(player);         // all 20 slots
+var rings = day.Set! with { Entries = day.Set!.Entries.Where(e => e.Slot is EquipmentSlot.Ring0 or EquipmentSlot.Ring1).ToArray() };
+EquipmentSetResult r = await Items.EquipSet(player, rings);       // only the two ring slots change
+if (!r.Ok) Log.Info($"{r.Status}: {r.Reason}");                   // a refusal is a result: nothing changed
+using var plan = Items.PlanSet(player, rings).Plan;              // the steps, without changing anything
+```
+
+New in 0.2.0-dev.29 (`items.equip_sets`, server side). `Items.CaptureSet` reads a player's 20 equipment slots,
+`Items.PlanSet` says what applying a set would do without doing it, and `Items.EquipSet` applies it in one transaction:
+every slot changes or none does. One `PlayerEquippingEvent` decides the whole set, `EquipmentSetChangedEvent` follows a
+set that went in, and the result says exactly what changed.
+
+- Sets live for the current world session only; they are not saved loadouts. The hotbar and the main hand are not
+  touched, and backpack changes in a set are refused for now.
+- On this game build a set with several direct swaps can be refused before anything changes (`UnsupportedSwaps`):
+  split it into two sets. Two worn items can exchange slots through a free backpack slot.
+- The one exception to "all or nothing" is `InvariantFailure`: the game left the inventory neither as asked nor as
+  before, or faulted inside the transaction. Then Kiln warns that the inventory may be in an unknown state
+  (`EquipmentSetFaultedEvent`), and sets and single equips switch off until the server, or the hosting player's game,
+  restarts.
+
+Sets ran on a dedicated lab server with a stand-in character, including a failure at every step of every form, each
+compared byte for byte after the rollback. A real player, a second player watching, and a set kept over leaving and
+rejoining are not yet confirmed.
 
 ## Names, rules and reports
 

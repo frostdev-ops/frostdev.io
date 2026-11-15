@@ -3,7 +3,7 @@ title: "Mods for other frameworks"
 nav: "Other frameworks"
 description: "Kiln runs mods made for EML, ShroudForge, EMF, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink, unchanged, next to Kiln mods."
 status: "partial"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 Kiln loads mods made for other Enshrouded mod frameworks without rewriting them. It supplies the runtimes listed
@@ -252,8 +252,10 @@ overlap, names both sides and the fix. The list is in `kiln/state/hooks.json` un
 with dev.21 the page says "No hook map yet".
 
 **Compat rules.** The page lists the compat rules that apply to the loaded profile. A rule can `warn`, load a chain DLL
-`late`, or `disable` a chain DLL or a mod the profile lists. Kiln ships its own rules (`kiln/compat-rules.json`); yours go
-in the profile's config folder as `compat-rules.json`, and a rule of yours with the same `id` replaces Kiln's:
+`late`, `disable` a chain DLL or a mod the profile lists, or (since 0.2.0-dev.29) say that one DLL loads `before`
+another: Kiln loads the `target` late and keeps the `subject` early. Kiln ships its own rules (`kiln/compat-rules.json`,
+updated with every Kiln update); yours go in the profile's config folder as `compat-rules.json`, and a rule of yours with
+the same `id` replaces Kiln's:
 
 ```json
 { "format": 1, "rules": [
@@ -293,6 +295,23 @@ exe file in that case, and kiln.log names the places another mod patched:
 ```
 
 Tested on the client exe with those four places patched and on test servers. Not yet seen in a player's game: the guided check `00-sigdb.in-place-patches` (Creative Mode 3.2.0 with Multi Planter) confirms it.
+
+**Auto Loot Plus next to Ultimate ASI Loader** (0.2.0-dev.29). Both change the game's import table when they load, so
+their order matters. Kiln ships a `before` rule for the pair: Ultimate ASI Loader loads after Kiln and Auto Loot Plus
+first, whatever their **Load after Kiln and ShroudForge** switches say, so Auto Loot Plus can hook the game first and its
+F8 menu comes up. The page shows both switches held by Kiln's rule and says why. Kiln recognises Auto Loot Plus by the
+folder its package brings (`mods/auto-loot-plus`): if you imported only its DLL, or renamed it, set Ultimate ASI Loader
+to load late yourself. Its looting needs an Auto Loot Plus build made for the current game version; that part is the
+mod's.
+
+**Several chained `dinput8.dll` mods** (Spawn the World and Auto Loot Plus, for example): since 0.2.0-dev.29 Kiln's
+in-game mod list no longer shows a "Message From Dear ImGui" popup under them, and each one can be picked on its own.
+
+**Fewer hooks, less in the way** (0.2.0-dev.29). Kiln no longer hooks the game's building, crafting, terraforming,
+spawning and entity functions at start. They go in only when one of your mods needs them, so a player whose mods use
+none of that runs with no such hook of Kiln's in the game at all, which leaves those functions untouched for other
+loaders. A C# mod notices nothing. Likewise Kiln's item lookup hook goes in only when you join a server or your mods add
+items. kiln.log's "chained over" lines and the overlap warnings now name Kiln's hook and its owner.
 
 Status: the switch, overlaps and rules were tested under Wine and on lab servers, and the launcher pages with tests and
 mock data. Nobody has tried them with XHL-Core in a real game yet.

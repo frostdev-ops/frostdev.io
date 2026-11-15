@@ -2,7 +2,7 @@
 title: "Events"
 description: "One event bus for every mod and service: subscribe, cancel, decide, post your own. About 110 event types."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-15"
 ---
 
 Kiln has one event bus, `Events`, like Forge's `EVENT_BUS`. Kiln's services post about 110 event types on it: players,
@@ -63,6 +63,60 @@ Some events can be stopped, some can be changed, and some ask a question.
 
 `e.CanceledBy` says which mod canceled.
 
+### Refusing a death, a pickup or an equip
+
+```csharp
+Events.On<EntityDyingEvent>(e => { e.SurvivalHealth = 1; e.Cancel(); }, EventFilter.ForEntity(player));
+Events.On<ItemPickingUpEvent>(e => { if (e.Item == bannedItem) e.Cancel(); }, EventFilter.ForEntity(player));
+Events.On<PlayerEquippingEvent>(e => { if (e.Change is SingleEquipmentChange { Slot: EquipmentSlot.Ring0 }) e.Cancel(); });
+Events.On<DecisionCompletedEvent>(e => Log.Info($"{e.Result.Id}: {e.Result.Status} {e.Result.Reason}"));
+```
+
+New in 0.2.0-dev.29. Three things the game is about to do can be refused by a listener: `EntityDyingEvent` (a death
+from health), `ItemPickingUpEvent` (a walk-over pickup; an interaction pickup is `LootEvent`) and
+`PlayerEquippingEvent` (an equipment input). The game decides these on its own threads, so Kiln holds the action and
+posts the event on the tick thread: a death or a pickup comes one or two steps after the game reached it, an equipment
+input one step later. The game's own handling runs when nobody cancels or a listener doesn't answer in time. Each
+decision ends in one `DecisionCompletedEvent` that says how (`Allowed`, `Prevented`, `StaleEntity`, `TimeoutReleased`,
+and more).
+
+- **Only what you listen for is held.** A filter with `EventFilter.ForEntity` holds only that entity's; nothing is held
+  while nobody listens.
+- **Nothing is hooked until a mod listens.** The hooks go in at your first `Events.On`: the capability (`events.death`,
+  `events.pickup`, `events.equip`) reads pending, then available. If they can't be placed safely the row lowers and
+  `CapabilityChangedEvent` tells you.
+- **A refused death** keeps the entity alive at `SurvivalHealth` after one or two steps at 0 health. It isn't damage
+  cancellation: the lethal hit has already happened (refuse the hit itself in `EntityHurtEvent`).
+- **A walk-over allow** is one attempt; a failed one (no room in the bag) asks again.
+- Only the server world's deaths and pickups are held. A fault shuts the service down for the process.
+
+The sample `Decisions` does all four. These ran on dedicated lab servers with a stand-in player; what a real game shows
+during the steps a refused death spends at 0 health is not yet confirmed.
+
+### Watching components change
+
+```csharp
+var r = ComponentChanges.Watch(new(ComponentWatchScope.Entities, [player], ObservedComponents.Health | ObservedComponents.Inventory,
+    ComponentWatchExpansion.PlayerInventoryAndItems));
+if (!r.Ok) Log.Warn($"watch refused: {r.Reason}");
+Events.On<ComponentValueChangedEvent>(e => Log.Info($"{e.Entity} {e.Component} {e.Origin} {e.SourceMod}"), EventFilter.ForEntity(player));
+// later: r.Watch!.Dispose();
+```
+
+New in 0.2.0-dev.29 (`ComponentChanges.Watch`, Kiln.World, capability `events.component_net`). A watch covers Health,
+Stamina, Mana, Fuel, Inventory and SlotSelection of up to 128 entities, or of every player, optionally with their linked
+inventories and items. Each step it posts one `ComponentValueChangedEvent` per changed component, with the bytes before
+and after and an origin: `Kiln` with the writer's id (your mod, `kiln.combat`, `kiln.items`), `Mixed`, or `Unknown`. A
+change is never called the game's. `AttributeValueChangedEvent` carries typed values, and
+`ComponentWatchStateChangedEvent` says when a watch is suspended and why.
+
+- It reports the net change of a step in the server world, not every write.
+- All mods share the budgets, first come first served: 32 watches, 4,096 watched pairs, 128 roots a pair. A watch that
+  doesn't fit is refused with the reason; one that grows past them is suspended whole.
+- Nothing runs for it unless a mod watches. At the full budget it cost about 0.3 to 0.4 ms at the start of a step and
+  0.7 to 1.2 ms at its end on a loaded lab server, shared by every player on that server.
+- The test kit fakes it with `KilnHarness.ComponentChanges`.
+
 ```csharp
 [Subscribe] private void OnHurt(EntityHurtEvent e) { if (e.IsPlayer && InSafeZone(e.Position)) e.Cancel(); else e.Amount /= 2; }
 [Subscribe] private void OnFall(EntityFallEvent e) => e.Damage /= 2;
@@ -78,11 +132,11 @@ The main types. Each service's page or the API reference has the rest.
 | Lifecycle | `ModsLoadedEvent`, `ServerStartingEvent`, `ServerStartedEvent`, `ServerStoppingEvent`, `WorldLoadedEvent`, `WorldSavingEvent`, `WorldSavedEvent`, `ModReloadedEvent`, `ModDisabledEvent`, `ConfigChangedEvent` | |
 | Players | `PlayerJoinedEvent`, `PlayerLeftEvent`, `PlayerLevelChangedEvent`, `PlayerSkillsChangedEvent`, `PlayerEquipmentChangedEvent`, `PlayerHotbarChangedEvent` | |
 | Player states and actions | `PlayerStateChangedEvent` (glide, swim, climb, sit, sleep, Shroud and about 340 more), `PlayerActionEvent` (attack, cast, dodge, jump, use, interact), `PlayerConsumeEvent`, `PlayerConsumedEvent`, `PlayerJumpEvent`, `PlayerGlideEvent`, `PlayerClientActionEvent` | an action, a meal, some client commands |
-| Combat | `EntityHurtEvent`, `EntityHealEvent`, `EntityKnockbackEvent`, `EntityFallEvent`, `EntityDamagedEvent`, `EntityDeathEvent`, `EntityDropsEvent`, `PlayerRespawnEvent` | hurt, heal, knockback, fall (amounts too), drops |
+| Combat | `EntityHurtEvent`, `EntityHealEvent`, `EntityKnockbackEvent`, `EntityFallEvent`, `EntityDamagedEvent`, `EntityDyingEvent`, `EntityDeathEvent`, `EntityDropsEvent`, `PlayerRespawnEvent` | hurt, heal, knockback, fall (amounts too), drops, a death |
 | Chat and commands | `ChatMessageEvent`, `CommandExecutingEvent`, `CommandExecutedEvent` | a line (and its text), a command |
-| World and gameplay | `CraftEvent`, `ItemCraftedEvent`, `InteractEvent`, `LootEvent`, `ItemPickupEvent`, `ItemTossEvent`, `BuildEvent`, `TeleportEvent` (also redirect), `NaturalSpawnEvent`, `EntityJoinLevelEvent`, `EntityLeaveLevelEvent` | craft, interact, loot, toss, teleport, spawns |
+| World and gameplay | `CraftEvent`, `ItemCraftedEvent`, `InteractEvent`, `LootEvent`, `ItemPickingUpEvent`, `ItemPickupEvent`, `ItemTossEvent`, `BuildEvent`, `TeleportEvent` (also redirect), `NaturalSpawnEvent`, `EntityJoinLevelEvent`, `EntityLeaveLevelEvent` | craft, interact, loot, a walk-over pickup, toss, teleport, spawns |
 | Building | `BuildEditingEvent`, `BuildEditEvent` | an edit |
-| Items | `ItemsGivenEvent`, `ItemsTakenEvent`, `WaterRefilledEvent` | |
+| Items | `ItemsGivenEvent`, `ItemsTakenEvent`, `WaterRefilledEvent`, `PlayerEquippingEvent`, `EquipmentSetChangedEvent` | an equip |
 | Abilities and programs | `AbilityCastEvent`, `AbilityCastedEvent`, `ImpactStartingEvent`, `ImpactStartedEvent`, `ImpactEndedEvent`, `ImpactDamageEvent`, `ImpactBuffEvent`, `SequenceStartedEvent` | a cast, a program starting |
 | Talents | `TalentUnlockingEvent`, `TalentChangedEvent`, `GameNodesRefundedEvent` | an unlock |
 | Quests and dialogue | `QuestStartedEvent`, `QuestStepEvent`, `QuestCompletedEvent`, `QuestFailedEvent`, `QuestObjectiveProgressEvent`, `ConversationOptionEvent`, `DialogueLineEvent`, `KnowledgeChangedEvent` | quest steps, a conversation option; knowledge results |

@@ -3,7 +3,7 @@ title: "Player rules and creative mode"
 nav: "Player rules, creative"
 description: "Let players fly and build anywhere, fly through walls with NoClip, change building costs and digging, keep health or water full, freeze the Shroud timer. /creative is one preset."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-15"
 ---
 
 Some things the game decides for itself: where a player may fly and build, what building costs, how fast tools dig, how
@@ -54,7 +54,11 @@ from a second game are not checked in a game yet.
 | `/noclip status` | whether it works here, whether the server allows it, and who has it |
 
 - **Off until the server allows it.** Set `"allowNoClip": true` in `kiln/config/rules.json` of the server (for a world
-  you host, of your game folder). It needs the Admin level or the permission node `kiln.command.noclip`.
+  you host, of your game folder). It needs the Admin level or the permission node `kiln.command.noclip`. Since
+  0.2.0-dev.29 NoClip reads that file itself and follows your edits, also in a world where no mod has applied rules yet
+  (a Friends Only or Offline world with only a NoClip key mod, for one); before, it could say "rules.json does not allow
+  it" although the file allowed it. On a joined game, `/noclip status` in your own console says to ask the server in chat
+  instead of reading your own file. Reported and fixed by bisdat (GitHub issue 37, pull request 38).
 - **The player's game needs this release too.** A player without Kiln, or with an older Kiln, never gets it.
 - It flies as character flight does: jump climbs, sneak sinks, sprint is faster. It takes off at once, also from the
   ground and from water, and never lands. It grants nothing else: no invulnerability.
@@ -136,7 +140,9 @@ the game's rules. `Rules.Of(player)` says what applies now, also right after `Ru
 
 `rules.json` in the server's Kiln config folder caps what any mod may give: `allowFlyAnywhere`, `allowBuildOutsideBases`,
 `allowInvulnerable`, `allowIgnoreBasePermissions` (off by default), `minBuildCost`, `maxDigDamage`, `maxGlideSpeed`,
-`allowGlideSteer` (on by default), `maxGlideSteerAngle` (0 to 85 degrees), `allowNoClip` (off by default) and more. Edits apply within a second.
+`allowGlideSteer` (on by default), `maxGlideSteerAngle` (0 to 85 degrees), `allowNoClip` (off by default) and more. Edits apply within a second. Since 0.2.0-dev.29 a rules mod switches on the game's building hooks only when one of its rule sets keeps builds
+outside bases; where those hooks can't install (after a game update, for one), that one rule isn't kept and every other
+rule still applies.
 
 ## Who needs what
 
