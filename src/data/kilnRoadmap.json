@@ -1497,7 +1497,7 @@
         },
         {
           "title": "ShroudForge mods that spawn things",
-          "text": "ShroudForge mods that spawn things into the world, such as SpiderHook's grapple, work under Kiln again, with a ShroudForge fix by AlexK-Notable (ShroudForge pull request 1).",
+          "text": "ShroudForge mods that spawn things into the world, such as SpiderHook's grapple, work under Kiln again when none of your Kiln mods uses building events: Kiln no longer hooks those game functions unless a mod needs them. Beside a Kiln mod that does, they may still not work yet.",
           "area": "compat",
           "kind": "fix",
           "gamePending": true
