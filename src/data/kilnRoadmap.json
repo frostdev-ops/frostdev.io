@@ -1377,13 +1377,14 @@
       "status": "next",
       "title": "Hooks, events and limits",
       "summary": "Deeper ways for mods to change the game's own systems, events mods can cancel and higher limits; boot mods in players' games; and fixes from players' reports.",
-      "note": "Being built: most of it is in and going through its last checks. Items marked as waiting for a game test have run on test servers, not yet in a real game. No date yet.",
+      "note": "Being built: most of it is in and going through its last checks. Items marked as waiting for a game test are built and checked, but not yet seen in a real game. No date yet.",
       "features": [
         {
           "title": "Boot mods in your game",
-          "text": "Boot mods such as More Flame Altars work in a world you host and when you join a server, with no setting. A server whose players need a boot mod no longer turns away players who have it.",
+          "text": "Boot mods such as More Flame Altars work in a world you host and when you join a server, with no setting. Seen in a hosted world; joining a server still waits for a game test.",
           "area": "core",
-          "kind": "improved"
+          "kind": "improved",
+          "gamePending": true
         },
         {
           "title": "Boot mods compared at the join",
@@ -1398,7 +1399,7 @@
         },
         {
           "title": "Replace a mod's DLL",
-          "text": "A DLL mod's menu can swap in a patched DLL from its author. The mod keeps its place, its switch and its settings, and the build you had is kept.",
+          "text": "A DLL mod's menu can swap in a patched DLL from its author. The mod keeps its place, its switch and its settings, and the build you had is kept. Not yet tried on Windows.",
           "area": "launcher"
         },
         {
@@ -1460,7 +1461,7 @@
         },
         {
           "title": "More buffs and world programs",
-          "text": "Mods together can clone 4,096 buffs (1,024 before) and register 64 world programs (32 before), and can ask how much room is left.",
+          "text": "Mods together can clone 4,096 buffs (1,024 before), Kiln and mods together can register 64 world programs (32 before), and mods can ask how much room is left.",
           "area": "core",
           "gamePending": true
         },
@@ -1496,7 +1497,7 @@
         },
         {
           "title": "ShroudForge mods that spawn things",
-          "text": "ShroudForge mods that spawn things into the world, such as SpiderHook's grapple, work under Kiln. With AlexK-Notable (ShroudForge pull request 1).",
+          "text": "ShroudForge mods that spawn things into the world, such as SpiderHook's grapple, work under Kiln again, with a ShroudForge fix by AlexK-Notable (ShroudForge pull request 1).",
           "area": "compat",
           "kind": "fix",
           "gamePending": true
@@ -1517,7 +1518,7 @@
         },
         {
           "title": "Auto Loot Plus next to Ultimate ASI Loader",
-          "text": "Kiln keeps Auto Loot Plus ahead of Ultimate ASI Loader, so its F8 menu comes up.",
+          "text": "Kiln keeps Auto Loot Plus (installed from its package) ahead of Ultimate ASI Loader, so its F8 menu comes up. Its looting needs a build for the current game version.",
           "area": "compat",
           "kind": "fix",
           "gamePending": true
@@ -1538,7 +1539,7 @@
         },
         {
           "title": "Frame generation mods",
-          "text": "Frame generation mods (NVIDIA Streamline) no longer crash the game at start: Kiln's overlay drawing steps aside, and mods' keys, menu entries and loading keep working.",
+          "text": "Frame generation mods (NVIDIA Streamline) no longer crash the game at start: Kiln's overlay drawing steps aside, and mods' keys, menu entries and loading keep working. While Streamline is installed, mod windows and on-screen drawing are off.",
           "area": "core",
           "kind": "fix",
           "gamePending": true
@@ -1736,7 +1737,7 @@
     },
     {
       "title": "More room for VFX",
-      "text": "A Kiln game can hold twice as many VFX, so the room for mods' effects grows.",
+      "text": "Kiln could make room for more VFX in a game, so mods' effects stop running out of space.",
       "area": "core",
       "note": "Not in a release yet"
     },
