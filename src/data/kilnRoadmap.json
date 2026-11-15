@@ -1376,62 +1376,200 @@
       "version": "0.2.0-dev.29",
       "status": "next",
       "title": "Hooks, events and limits",
-      "summary": "Deeper ways for mods to change the game's own systems, events mods can cancel, and higher limits.",
+      "summary": "Deeper ways for mods to change the game's own systems, events mods can cancel and higher limits; boot mods in players' games; and fixes from players' reports.",
+      "note": "Being built: most of it is in and going through its last checks. Items marked as waiting for a game test have run on test servers, not yet in a real game. No date yet.",
       "features": [
         {
+          "title": "Boot mods in your game",
+          "text": "Boot mods such as More Flame Altars work in a world you host and when you join a server, with no setting. A server whose players need a boot mod no longer turns away players who have it.",
+          "area": "core",
+          "kind": "improved"
+        },
+        {
+          "title": "Boot mods compared at the join",
+          "text": "When you join a server, Kiln checks that each boot mod you share made the same game data as on the server, and names the mod when your settings differ.",
+          "area": "servers",
+          "gamePending": true
+        },
+        {
+          "title": "Roll back a mod update",
+          "text": "Updating a mod keeps the version you had: its menu offers to roll back to it, with the settings it had.",
+          "area": "launcher"
+        },
+        {
+          "title": "Replace a mod's DLL",
+          "text": "A DLL mod's menu can swap in a patched DLL from its author. The mod keeps its place, its switch and its settings, and the build you had is kept.",
+          "area": "launcher"
+        },
+        {
+          "title": "Restore the game's data",
+          "text": "When files another mod loader left in the game folder stop Kiln's EML mods, the launcher offers to move them aside, with an undo.",
+          "area": "launcher",
+          "gamePending": true
+        },
+        {
+          "title": "Why a start was stopped",
+          "text": "When Kiln stops a start to keep a world's mod progress safe, the launcher says why and names the mods.",
+          "area": "launcher"
+        },
+        {
+          "title": "Clear buttons in filter boxes",
+          "text": "The launcher's filter and search boxes get a clear (X) button, and Esc empties them.",
+          "area": "launcher"
+        },
+        {
+          "title": "ShroudForge running on its own",
+          "text": "When ShroudForge's own loader runs its mods, the launcher says so, names the file and shows the way back to the profile deciding.",
+          "area": "compat"
+        },
+        {
           "title": "Wrap the game's systems",
-          "text": "Mods can run code before, after or instead of the game's own systems, for each entity, without patching the game's code.",
-          "area": "api"
+          "text": "Mods can run code before, after or instead of the game's own systems, for each entity, without patching the game's code, and can add systems of their own.",
+          "area": "api",
+          "gamePending": true
         },
         {
           "title": "Typed function hooks",
-          "text": "Advanced mods can hook game functions with typed arguments, including floats and structs, and Kiln checks each hook against the game at load.",
-          "area": "api"
+          "text": "Advanced mods can hook game functions with typed arguments, including floats and structs, and Kiln checks each against the running game before it goes in.",
+          "area": "api",
+          "gamePending": true
         },
         {
           "title": "Cancelable events",
-          "text": "Mods can refuse a death, a walk-over pickup or an equipment change, and watch health, stamina, mana and inventory change step by step.",
-          "area": "api"
+          "text": "Mods can refuse a death, a walk-over pickup or an equipment change, and watch health, stamina, mana and inventories change.",
+          "area": "api",
+          "gamePending": true
         },
         {
           "title": "Faster Impact natives",
-          "text": "A mod's own Impact natives can answer in the same step and attach to the game's own scripts without copying them.",
-          "area": "api"
+          "text": "A mod's own Impact natives can answer in the same step, attach to the game's own scripts without copying them, and run first in a weapon's or a perk's hit.",
+          "area": "api",
+          "gamePending": true
         },
         {
           "title": "Programs in the client world",
           "text": "Client mods can run programs in the player's own game world, on a hosted or a joined game.",
-          "area": "api"
+          "area": "api",
+          "gamePending": true
         },
         {
           "title": "Equipment set swaps",
           "text": "Mods can swap a player's gear as one set: every slot changes or none does.",
-          "area": "content"
+          "area": "content",
+          "gamePending": true
         },
         {
           "title": "More buffs and world programs",
-          "text": "Mods together get room for far more cloned buffs and world programs, and can ask how much room is left.",
-          "area": "core"
-        },
-        {
-          "title": "More room for VFX",
-          "text": "A Kiln game gets much more room for VFX, so mods' effects stop running out of space.",
-          "area": "core"
+          "text": "Mods together can clone 4,096 buffs (1,024 before) and register 64 world programs (32 before), and can ask how much room is left.",
+          "area": "core",
+          "gamePending": true
         },
         {
           "title": "Larger NPC roster",
-          "text": "Mods together get room for many more roster NPCs than today.",
-          "area": "core"
+          "text": "Mods together can add up to 93 roster NPCs instead of 29.",
+          "area": "core",
+          "gamePending": true
+        },
+        {
+          "title": "VFX budget",
+          "text": "Mods can read how much room for VFX is left and get a clear answer when they define one. The room itself stays as it is in this release.",
+          "area": "core",
+          "gamePending": true
         },
         {
           "title": "Material sets for new shapes",
           "text": "Mods can give a new building shape its own set of materials in the build menu.",
-          "area": "content"
+          "area": "content",
+          "gamePending": true
         },
         {
-          "title": "More of EMF's API",
-          "text": "EMF mods get more of EMF's API from Kiln, including its programs and events in the player's own game world.",
-          "area": "compat"
+          "title": "EMF programs in your own world",
+          "text": "EMF mods' programs and events run in the player's own game world too, hosted or joined.",
+          "area": "compat",
+          "gamePending": true
+        },
+        {
+          "title": "Hooks only when needed",
+          "text": "Kiln hooks the game's building, crafting, spawning and entity functions only when a mod uses them, and leaves them untouched for other loaders otherwise.",
+          "area": "core",
+          "gamePending": true
+        },
+        {
+          "title": "ShroudForge mods that spawn things",
+          "text": "ShroudForge mods that spawn things into the world, such as SpiderHook's grapple, work under Kiln. With AlexK-Notable (ShroudForge pull request 1).",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "EML mods that need ShroudForge",
+          "text": "EML mods that bring a DLL for ShroudForge to load, such as Quiver & Spellbook, run whole: Kiln starts ShroudForge for them, or skips them with the reason, never half.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "EML mods with their own DLL on Windows",
+          "text": "With ShroudForge mods in the profile, EML mods that bring their own DLL (Auto Loot Plus, Endless Chests) switch on.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Auto Loot Plus next to Ultimate ASI Loader",
+          "text": "Kiln keeps Auto Loot Plus ahead of Ultimate ASI Loader, so its F8 menu comes up.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Shroudtopia mods that are only a DLL",
+          "text": "They switch on with the profile, and the in-game list says where an off Shroudtopia mod is switched off.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "EMF windows fit their content",
+          "text": "An EMF mod's window, such as the Beastmaster stable, grows with what is in it up to most of the screen, then scrolls.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Frame generation mods",
+          "text": "Frame generation mods (NVIDIA Streamline) no longer crash the game at start: Kiln's overlay drawing steps aside, and mods' keys, menu entries and loading keep working.",
+          "area": "core",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "EML failures say why",
+          "text": "When Kiln's EML loader cannot prepare the game's data, the log and each mod's status name the step and the cause.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Start display while you play",
+          "text": "The launcher no longer says Kiln has said nothing for a whole session while you play.",
+          "area": "launcher",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Several chained DLL mods in the game's list",
+          "text": "Each chained dinput8.dll mod gets its own row in Kiln's in-game list, without the ImGui popup.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Linux: Ultimate ASI Loader next to Kiln",
+          "text": "The Steam launch option names xinput9_1_0 too, and Kiln's logs say when Wine loaded its own copy of a chained DLL.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
         }
       ]
     },
@@ -1484,6 +1622,11 @@
         {
           "title": "Better EML support",
           "text": "EML and Kiln mods can decode and encode game textures in code, for 14 texture formats.",
+          "area": "compat"
+        },
+        {
+          "title": "More of EMF's API",
+          "text": "EMF mods get more of EMF's API from Kiln.",
           "area": "compat"
         }
       ]
@@ -1590,6 +1733,12 @@
       "area": "launcher",
       "text": "The launcher's Nexus catalog, sign-in and Mod Manager Download links come back once Nexus Mods approves Kiln's sign-in.",
       "note": "Waiting for Nexus Mods"
+    },
+    {
+      "title": "More room for VFX",
+      "text": "A Kiln game can hold twice as many VFX, so the room for mods' effects grows.",
+      "area": "core",
+      "note": "Not in a release yet"
     },
     {
       "title": "Fog and light",
