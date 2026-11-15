@@ -1,25 +1,33 @@
 {
-  "version": "4.0.8",
-  "sourceCommit": "2639c9ab54862f6725dee0baadaa39fda8aaaf8a",
-  "updated": "2026-11-12",
-  "summary": "Three Looks for Thanksgiving, Harvest Moon, Turkey Trot and Hearthside: each has its own animated scene (a harvest moon over the wheat; turkeys on parade at sundown; a fire in a brick hearth, with a cat asleep on the rug), pointer set and effects. The three scenes are also under Settings → Background → Scene. Halloween's Graveyard and Pumpkin Patch moved to the Looks gallery. They stay on wherever you already wear them, and their scenes and pointers stay in Settings. Blackboard: submission status on Activity cards, and the tasks on course cards, show when you open the page within two minutes of another Blackboard page. In 4.0.7 they were drawn and taken away again, over and over.",
+  "version": "4.0.9",
+  "sourceCommit": "ac3d5a9559211b81ba0cf3087829d6083858fa28",
+  "updated": "2026-11-14",
+  "summary": "What-if calculator: Fill what's left puts full marks, your average so far, or what you need for your target into the work not graded yet. Undo takes it back. What-if calculator: a Points or Percent switch. Type a score as points, a fraction (45/50), a percent (90%) or a letter on the item's own scale; work graded complete or incomplete is a menu. What-if calculator: a course graded by points shows its points beside the percent and takes a target in points (\"255 of 300 points\"). Categories show their points too. What-if calculator: work Blackboard scored zero for being missing, or Canvas marks missing, is tagged Missing. Writer on Blackboard: when Blackboard already has a file with the same name, the submit sheet offers to replace it. What-if calculator on Blackboard reads a teacher's own Overall Grade column and items weighted on their own, so it matches Blackboard's figure in more courses. Letters show where the course's scale is known: Canvas's, or the scale you gave the course in the GPA. What-if calculator: the target and Fill sit under the figures, the closed calculator shows your grade, each score sits on one line, Enter goes to the next score, \"Only work not graded yet\" hides graded rows, and the change your what-ifs make shows beside them. Writer on Blackboard submits when Blackboard saves the attempt slowly, when its confirmation is cancelled and Submit is pressed again, when the attempt was opened from the course, and in Firefox with attached files. Writer on Blackboard keeps its box after Blackboard re-saves centered text or links, and writes links Blackboard keeps. Documents imports a Word file again. What-if calculator: an item renamed \".\" reads by its own name, and work with no category is headed so.",
   "changes": [
     {
       "type": "Added",
       "items": [
-        "Three Looks for Thanksgiving, Harvest Moon, Turkey Trot and Hearthside: each has its own animated scene (a harvest moon over the wheat; turkeys on parade at sundown; a fire in a brick hearth, with a cat asleep on the rug), pointer set and effects. The three scenes are also under Settings → Background → Scene."
+        "What-if calculator: Fill what's left puts full marks, your average so far, or what you need for your target into the work not graded yet. Undo takes it back.",
+        "What-if calculator: a Points or Percent switch. Type a score as points, a fraction (45/50), a percent (90%) or a letter on the item's own scale; work graded complete or incomplete is a menu.",
+        "What-if calculator: a course graded by points shows its points beside the percent and takes a target in points (\"255 of 300 points\"). Categories show their points too.",
+        "What-if calculator: work Blackboard scored zero for being missing, or Canvas marks missing, is tagged Missing.",
+        "Writer on Blackboard: when Blackboard already has a file with the same name, the submit sheet offers to replace it."
       ]
     },
     {
       "type": "Changed",
       "items": [
-        "Halloween's Graveyard and Pumpkin Patch moved to the Looks gallery. They stay on wherever you already wear them, and their scenes and pointers stay in Settings."
+        "What-if calculator on Blackboard reads a teacher's own Overall Grade column and items weighted on their own, so it matches Blackboard's figure in more courses. Letters show where the course's scale is known: Canvas's, or the scale you gave the course in the GPA.",
+        "What-if calculator: the target and Fill sit under the figures, the closed calculator shows your grade, each score sits on one line, Enter goes to the next score, \"Only work not graded yet\" hides graded rows, and the change your what-ifs make shows beside them."
       ]
     },
     {
       "type": "Fixed",
       "items": [
-        "Blackboard: submission status on Activity cards, and the tasks on course cards, show when you open the page within two minutes of another Blackboard page. In 4.0.7 they were drawn and taken away again, over and over."
+        "Writer on Blackboard submits when Blackboard saves the attempt slowly, when its confirmation is cancelled and Submit is pressed again, when the attempt was opened from the course, and in Firefox with attached files.",
+        "Writer on Blackboard keeps its box after Blackboard re-saves centered text or links, and writes links Blackboard keeps.",
+        "Documents imports a Word file again.",
+        "What-if calculator: an item renamed \".\" reads by its own name, and work with no category is headed so."
       ]
     }
   ]
