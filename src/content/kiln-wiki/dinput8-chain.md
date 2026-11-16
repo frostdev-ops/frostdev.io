@@ -122,8 +122,6 @@ includes it.
 Where Kiln differs from the spec:
 
 - It reads `[EMF]`, EMF's own section, for DLLs that EMF's older installers renamed into it.
-- A line that names no `.dll` (a mistyped file name, an `.asi`) is skipped. Since 0.2.0-dev.29 `proxy.log` names it; a
-  `key = value` line whose value is no `.dll` is another tool's setting and is ignored without a line.
 - Under Wine or Proton, when Wine loads its own copy of a DLL in place of the chained one (Ultimate ASI Loader as
   `xinput9_1_0.dll` is the known case), `proxy.log` says so since 0.2.0-dev.29 and names the override to set, for example
   `WINEDLLOVERRIDES="xinput9_1_0=n,b"`. Before, it said "loaded" while the DLL never ran.
