@@ -2,7 +2,7 @@
 title: "The manifest"
 description: "kiln.mod.json: id and version, where the mod runs, what players need, boot content, update checks, dependencies and load order."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 Every mod folder has a `kiln.mod.json`. Kiln.Sdk writes it from your project file, or add your own. The build checks it
@@ -109,7 +109,9 @@ A value Kiln can't read in `updates` is a warning and is ignored: the mod still 
 
 ## Versions
 
-`apiVersion` is the mod API you built against (0.2 today; 0.2.0-dev.28 ships mod API 0.2.3, additive over 0.2.2: no public member of 0.2.0-dev.27 was removed or changed). Older APIs of the same major version load.
+`apiVersion` is the mod API you built against (0.2 today; 0.2.0-dev.29.16 ships mod API 0.2.8, additive over 0.2.7: no
+public member of 0.2.0-dev.29.15 was removed or changed). Older APIs of the same major version load. The running Kiln's
+API is `Kiln.Mods.RuntimeApiVersion`.
 
 | Range | Means |
 |---|---|

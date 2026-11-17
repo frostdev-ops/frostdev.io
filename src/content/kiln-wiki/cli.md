@@ -3,7 +3,7 @@ title: "The kiln command"
 nav: "The kiln command"
 description: "One command for a mod's whole life: create, build, cook, deploy, run, reload, test, debug, lint, pack, publish and read logs."
 status: "works"
-updated: "2026-11-14"
+updated: "2026-11-17"
 ---
 
 `kiln` is for mod authors, on Linux and Windows. (`kilnctl` [runs servers](/kiln/wiki/servers).) It drives Kiln.Sdk, so
@@ -33,6 +33,9 @@ kiln pack                             # my-items-0.1.0.zip, never with cooked ga
 | `kiln logs [-f] [--mod ID] [--level D\|I\|W\|E] [-n N]` | kiln.log, filtered |
 | `kiln lint [PATH…]` | the [linter](/kiln/wiki/lint) |
 | `kiln catalog status\|build\|path\|search` | the [catalog](/kiln/wiki/catalogs) |
+| `kiln blocks list [--mod ID]`, `kiln blocks show NAME [--programs]` | what a server's mods' [building blocks](/kiln/wiki/blocks) became, and what went wrong |
+| `kiln vfx info <name\|guid>` | one game VFX from the catalog: what finds it, how long it runs, what it takes |
+| `kiln skeleton player OUT.glb [--body male\|female\|none]` | the player's skeleton from your game, to weight a worn model against. It holds the game's data: keep it out of your mod |
 | `kiln publish …` | a packed mod as a GitHub release, in steps you confirm ([below](#publishing-a-release)) |
 | `kiln updates check [--offline] [--refresh]` | looks for a newer version of every installed mod; a notice and a link per mod, nothing downloaded or changed ([Mod updates](/kiln/wiki/profiles#mod-updates)) |
 | `kiln boot-snapshot --game DIR [--force]` | the game-data snapshot [OnBoot](/kiln/wiki/onboot#the-games-data-in-onboot) reads, once per game build: about a minute and 200 MB the first time |

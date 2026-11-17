@@ -3,7 +3,7 @@ title: "Game-data catalogs"
 nav: "Catalogs"
 description: "Every game id from your own install: search them, check data packs against them, and use them as C# constants."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-17"
 ---
 
 The **catalog** lists the game's items, recipes, templates, perks, buffs, skills, sound cues and more, made from your own install,
@@ -35,10 +35,10 @@ string guid = GameItems.Guids.Weapon_T1_1H_SwordEpic_01;
 Content.Buffs.Get(GameBuffs.Rested_cdbe9c80);
 ```
 
-`GameItems`, `GamePerks`, `GameRecipes`, `GameTemplates`, `GameSequences` and `GameSounds` hold names. `GameBuffs`, `GameSkills` and
-`GameWorkshops` hold `0x` ids. `GameCatalog` names the build.
+`GameItems`, `GamePerks`, `GameRecipes`, `GameTemplates`, `GameSequences`, `GameSounds` and `GameMaterials` hold names.
+`GameVfx` holds GUIDs. `GameBuffs`, `GameSkills` and `GameWorkshops` hold `0x` ids. `GameCatalog` names the build.
 
-`<KilnGameIds>` picks the sections: default `Items;Perks;Buffs;Skills;Workshops`, also `Recipes`, `Templates`, `Sequences`,
-`Sounds`, `All` (about 58,000 constants) or `None`.
+`<KilnGameIds>` picks the sections: default `Items;Perks;Buffs;Skills;Workshops;Materials`, also `Recipes`, `Templates`,
+`Sequences`, `Sounds`, `Vfx`, `Fields` (typed paths), `All` (about 58,000 constants) or `None`.
 
 No catalog gives `KILN190`, and code using the constants won't compile. Run `kiln catalog build`.

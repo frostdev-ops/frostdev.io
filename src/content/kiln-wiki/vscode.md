@@ -3,7 +3,7 @@ title: "VS Code extension"
 nav: "VS Code extension"
 description: "Schemas, lint, game-id hover, build and deploy, the Testing view, logs, a server console, a debugger and Impact assembly."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-17"
 ---
 
 A `.vsix` you install yourself ([download](/kiln/download#authors)). It isn't on the Marketplace or Open VSX.
@@ -21,6 +21,7 @@ It uses the [`kiln` command](/kiln/wiki/cli) when present (`kiln.cli.path`), and
 |---|---|
 | Mod files | schemas for every Kiln JSON file; lint on save with quick fixes |
 | Game ids | completion and hover from your [catalog](/kiln/wiki/catalogs), in JSON and C# strings; a **Game Data** view |
+| VFX blocks | completion and hover for `vfx` fields, the game VFX's parameters, each block's share of the VFX budget, snippets |
 | **Mods** view | Build, Deploy, Deploy and Reload, Pack, Reload, New Mod, Send Control Command, as tasks with problem matchers |
 | **Test Servers** view | your servers and their state; the selected one is what deploy, tests and logs use |
 | **Testing** view | `[KilnTest]` methods; deploys, reloads and runs; failures link to the line |
