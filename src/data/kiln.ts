@@ -31,7 +31,7 @@ export const kilnWikiSections = [
       'world-progress',
     ],
   },
-  { id: 'looks', title: 'Looks and sound', pages: ['game-ui', 'ui-looks', 'ui-blocks', 'drawing', 'assets', 'models', 'shaders', 'sounds'] },
+  { id: 'looks', title: 'Looks and sound', pages: ['game-ui', 'ui-looks', 'ui-blocks', 'drawing', 'screen-effects', 'assets', 'models', 'shaders', 'sounds'] },
   { id: 'devkit', title: 'Dev kit', pages: ['dev-kit', 'cli', 'lint', 'vscode', 'catalogs', 'testing', 'hot-reload', 'debugging'] },
   { id: 'reference', title: 'Reference', pages: ['forge', 'dinput8-chain', 'status'] },
 ] as const;

@@ -2,7 +2,7 @@
 title: "3D models"
 description: "Give an item a new mesh, or a new item its own model: model in Blender, ship glTF and a recipe, cook on the player's machine."
 status: "partial"
-updated: "2026-11-13"
+updated: "2026-11-17"
 ---
 
 > **Partly built.** Rigid weapon models work in game. Skinned models, worn looks and animations cook from glTF and run on a
@@ -79,6 +79,37 @@ Built, game test pending. The same `cook.json` cooks:
 A test server's animation engine plays cooked clips on their authored curves, and skinned vertices land within a few
 millimetres of Blender's. Drawing in the game isn't confirmed yet. [Building blocks](/kiln/wiki/blocks#creatures-and-npcs)
 use them for creatures with bodies of their own, and for armour and cosmetics.
+
+## States of your own in the player's animation graph
+
+A weapon that swings, guards or casts in its own way needs states of its own in the player's animation graph. You don't
+edit the graph (Kiln refuses an override of it): you list your states in `assets/player-states.json`, each placed
+**like** one of the game's states, and Kiln adds every enabled mod's states to the game's graph when the game starts.
+
+```json
+{
+  "format": 1,
+  "states": {
+    "cinder-slash-1": { "clip": "cinder_slash_1", "like": "Attack_Sword_Shield_01" },
+    "cinder-guard":   { "clip": "cinder_guard", "like": "Block_FullBody", "loop": true },
+    "cinder-cast":    { "clip": "cinder_cast", "like": "Staff_Cast_U_Shoot" }
+  }
+}
+```
+
+- `clip` is a clip your mod cooks (made for the player's skeleton) or a clip's GUID; `like` names the game's state yours
+  takes the place of: the same machine, blends, ways out, layer and bone mask. `blendIn`, `loop` and `speed` are
+  optional.
+- A sequence enters your state by its GUID (`PlayerAnimStates.GuidOf(mod, name)`), in a `SetAnimationEvent` or, for an
+  overlay such as a cast while walking, a `SetAnimationOverlayEvent`.
+- The manifest must state `"side": "both", "clients": "mod"`: the server plays every player's graph and every player's
+  game draws it. A player whose graph differs from the server's is refused at the join, also under `modSync: warn`. A
+  dedicated server needs the cooked clips too: run the mod's cook against the server's folder.
+- `PlayerAnimStates.Find(mod, name)` says whether a state is `Live` or why it was refused; the capability is
+  `anim.player_states`. The sample `PlayerStates` is a sword with its own attacks and guard.
+
+Proven on a dedicated server with a spawned player; not yet seen in a game client. The full guide is in Kiln's
+repository, `docs/kiln/modding/animations.md` ("Player states"), on [GitHub](https://github.com/frostdev-ops/kiln).
 
 ## Your own creature
 

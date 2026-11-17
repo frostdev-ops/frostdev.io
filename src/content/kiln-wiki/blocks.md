@@ -119,7 +119,7 @@ the same effect works on a spell, a weapon, a status or a talent.
 | `On` | `EffectOn.Target` (default) or `EffectOn.Caster`: who cast or who wields |
 | `Area` | everyone in `Radius` metres gets `Effects`; enemies, or friends with `Affects` |
 | `Spawns` | a game template there, at the spawner's level and faction |
-| `Vfx`, `Sound`, `Screen` | a VFX, a sound, a full-screen effect for a player |
+| `Vfx`, `Sound`, `Screen` | a VFX, a sound, a [full-screen effect](/kiln/wiki/screen-effects) for a player |
 | `Damage`, `Knockback`, `Flinch` | a hit: `Damage.Ice(40) + Damage.Fire(10)` |
 | `Heal`, `Restores` | `Restore.Mana(20) + Restore.Stamina(10)`; below 0 drains |
 | `Removes`, `Applies` | statuses taken off or put on: your blocks or the game's (`GameBuffs`) |
