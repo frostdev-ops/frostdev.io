@@ -18,8 +18,9 @@ listed under [Open in the game](#open-in-the-game); some have had fixes since th
 
 After 0.2.0-dev.29, Kiln shipped sixteen patches. Most fix how Kiln runs other loaders' mods; four bring a new SDK
 (29.11, 29.14, 29.15 and 29.16), each additive: no public member was removed or changed. **29.15 and 29.16 are not yet
-checked in a real game** except chat history: they passed Kiln's tests and lab checks on a dedicated server, and what a
-game client draws was checked against the game's code or in Kiln's preview renderer.
+checked in a real game** except 29.15's chest gems at the Shroud Forge and 29.16's chat history (both by bisdat): they
+passed Kiln's tests and lab checks on a dedicated server, and what a game client draws was checked against the game's
+code or in Kiln's preview renderer.
 
 | Patch | What it brought; evidence |
 |---|---|
@@ -28,7 +29,7 @@ game client draws was checked against the game's code or in Kiln's preview rende
 | 29.11 | [gems](/kiln/wiki/gems) (mod API 0.2.5): read gems, new gems with C# effects, forge actions from code, sockets on rings, armour and shields. [Kiln's line on the main menu](/kiln/wiki/in-game#the-line-on-the-main-menu). A mod switched off in a profile no longer locks players out. Gems seen in a hosted world (Linux, Proton); a dedicated server with a separate client not yet |
 | 29.12, 29.13 | a game folder that is a link works, EMF API v46 (EMF 0.6.14), Kiln's windows take no stray clicks, Skill Search and the In Game Ping System work |
 | 29.14 | [production stations and bases](/kiln/wiki/stations) (mod API 0.2.6): fill from Magic chests, stop, resume, select, collect, station events. Seen in a hosted world (Linux, Proton); a dedicated server with joined players not yet |
-| 29.15 | (mod API 0.2.7) [item icons and names](/kiln/wiki/game-ui#item-icons-and-names), panels at production stations, [chest gems at the Shroud Forge](/kiln/wiki/gems#chest-gems-in-the-forges-gems-list) (GitHub #61), [new kinds of boot patches](/kiln/wiki/onboot#lists-and-template-components); Expeditions finds survivors again (EMF). Lab checks only |
+| 29.15 | (mod API 0.2.7) [item icons and names](/kiln/wiki/game-ui#item-icons-and-names), panels at production stations, [chest gems at the Shroud Forge](/kiln/wiki/gems#chest-gems-in-the-forges-gems-list) (GitHub #61), [new kinds of boot patches](/kiln/wiki/onboot#lists-and-template-components); Expeditions finds survivors again (EMF). Chest gems seen in a real game (bisdat, a hosted world on Linux under Proton, with the mod Gem Forge Magic Storage): the rows in the forge's GEMS list, socket, unsocket, upgrade paid from Magic chests, a refusal with nothing lost, recycle, withdrawn offers; two players at once, stale rows, cross-base permissions and a dedicated server with a joined player not yet. Everything else: lab checks only |
 | 29.16 | (mod API 0.2.8) [the game's look for Kiln's menus](/kiln/wiki/in-game#the-look-of-kilns-menus) and [themes and fonts for mods](/kiln/wiki/ui-looks), [Kiln in your language](/kiln/wiki/languages), [chat history](/kiln/wiki/in-game#chat-history) by bisdat (tested in the game by bisdat), the launcher's icon on Linux taskbars, faster starts on hard drives, ShroudForge no longer rebuilding its asset mods at every start, Linux configs edited in the launcher kept. The rest is not yet seen in a real game |
 
 ## New in 0.2.0-dev.29
