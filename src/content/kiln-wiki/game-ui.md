@@ -1,8 +1,8 @@
 ---
 title: "Game UI"
-description: "Menu entries, your own screens, crafting tabs and panels, HUD lines, toasts, key bindings, and values in the game's own UI."
+description: "Menu entries, your own screens, crafting tabs and panels, HUD lines, toasts, key bindings, item icons and names, and values in the game's own UI."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 All client side. On a dedicated server `Ui.Available` is false and calls do nothing, so a `side: both` mod can call them freely.
@@ -47,8 +47,12 @@ var screen = Ui.Screen("Waypoints", ui =>
 
 <!-- shot: ui-screen | A mod's own screen in the game's style -->
 
-A screen takes the mouse and keyboard while open. Escape closes it. `UiStyle.Game` uses the game's colours and font, `UiStyle.Kiln`
-Kiln's. The draw function runs every frame: hand real work to `Client.Post`.
+A screen takes the mouse and keyboard while open. Escape closes it. The draw function runs every frame: hand real work
+to `Client.Post`.
+
+Looks: `UiStyle.Game` uses the game's colours and font, `UiStyle.Kiln` Kiln's ember look, and `UiStyle.Player` the look
+the player chose. **Since 0.2.0-dev.29.16 `UiStyle.Player` is the default** for windows, screens and crafting panels;
+before, windows defaulted to Kiln's look. Your own theme and font: [Looks, themes and fonts](/kiln/wiki/ui-looks).
 
 ## Crafting menus
 
@@ -61,6 +65,18 @@ Ui.Crafting.AddPanel("Recipe info", (ui, c) => ui.Text($"recipe {c.Recipe:x8}"))
 Workshop 0 is the hand menu. Panels sit next to any open crafting menu. The game has a fixed number of tabs; past that, an addition
 is refused.
 
+**At production stations** (0.2.0-dev.29.15): a kiln's, smelter's or loom's screen is not a crafting menu, so tabs never
+show there. A panel shows there only when it asks:
+
+```csharp
+Ui.Crafting.AddPanel("Kiln helper", (ui, c) => ui.Text($"station {c.Station}"),
+    new CraftingPanelOptions { AtFactories = true, When = c => c.IsFactory });
+```
+
+There `CraftingScreen.IsFactory` is true and `Station` is the station's entity; `Workshop` may be 0 or another station's,
+so key on `Station`. Existing panels stay off those screens. Send `Station` to your server half, which checks the player
+is near it before acting ([Production stations](/kiln/wiki/stations)). Not yet seen in a real game.
+
 ## HUD, toasts and keys
 
 ```csharp
@@ -69,8 +85,10 @@ Hud.Toast("Saved!", ToastKind.Success, seconds: 3);
 KeyBindings.Register("mymod.toggle", "F8", () => screen.Toggle(), "Toggle my window");
 ```
 
-Players remap keys in the Kiln menu. A key Kiln handles doesn't also reach the game. Letter keys fire during play only, so typing in
-chat doesn't trigger them.
+Players remap keys in the Kiln menu, and since 0.2.0-dev.29.9 can leave an action unbound. A key Kiln handles doesn't
+also reach the game. Letter keys fire during play only, so typing in chat doesn't trigger them. Since 0.2.0-dev.29.3 a
+binding's press comes once for one press, also when the game loses the keyboard focus for a moment, and its release
+reaches you while one of your windows has a text field focused.
 
 Since 0.2.0-dev.27 a binding can use the mouse: `Mouse4`, `Mouse5`, `MouseMiddle`, `WheelUp`, `WheelDown`, `WheelLeft`
 and `WheelRight`, with Ctrl, Shift and Alt (`"Ctrl+WheelUp"`, `"Shift+Mouse4"`; GitHub issue 29). One wheel notch is one
@@ -117,6 +135,33 @@ The sample `ValueBars` shows it. Every part was held in 0.2.0-dev.28 and is on s
 real game (`ui.values.detail`, `ui.values.slot`, `ui.values.held`, `ui.values.hud`, `ui.values.tooltip_lines`,
 `ui.slots.inspect`). They exist only in a player's game, never on a dedicated server; hooks go in on first use by a
 mod, and after a game update these rows stay off until Kiln is updated for that build.
+
+## Item icons and names
+
+New in 0.2.0-dev.29.15: the game's own icon of an item in any Kiln window, screen or crafting panel, and its name in the
+player's language.
+
+```csharp
+ui.ItemIcon(item, 48 * ui.Scale);                          // the icon the inventory shows
+ui.SameLine();
+ui.Text(Items.DisplayName(item) ?? "?");                   // "Holzscheite" in a German game
+var img = Ui.ItemImage(item);                              // for Image, ImageButton, RenderDraw.Image
+if (img != null && ui.ImageButton("pick", img, 40 * ui.Scale, 40 * ui.Scale)) Pick(item);
+```
+
+- The icon is read from the player's own game data when a mod first draws it; nothing loads before. A new item shows
+  its base item's icon until its own is served. An unknown id, or an icon still loading, draws a grey placeholder of the
+  same size, so the layout never jumps.
+- `Items.DisplayName` works on any side, also on a joined player's game and in the main menu. On a dedicated server
+  (whose data has no texts) it gives the English name. A server has no icons: `Ui.ItemImage` is null and
+  `Ui.ItemIconsAvailable` false there.
+- **Trimmed** (0.2.0-dev.29.16): the game's icons sit small inside a wide transparent margin. `ui.ItemIconTrimmed`,
+  `ui.ImageTrimmed` and `ui.ImageButtonTrimmed` (and `RenderDraw.ImageTrimmed`) draw only the art, as large as fits.
+  `ui.ImagePart` and `RenderDraw.ImagePart` draw part of an image, such as one cell of a sprite sheet.
+- The overlay holds up to 960 images (fonts, mods' PNGs and item icons together), at most 8 new ones a frame; Kiln keeps
+  up to 256 icons and drops those not drawn for a while.
+
+Not yet seen in a real game: lab checks and host tests only.
 
 ## Also
 

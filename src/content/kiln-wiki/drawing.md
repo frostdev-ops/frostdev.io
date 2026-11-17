@@ -3,7 +3,7 @@ title: "Drawing on screen and in the world"
 nav: "Drawing"
 description: "Run code every frame and draw over the game: shapes, text and images in pixels, markers and labels at world positions."
 status: "pending"
-updated: "2026-11-07"
+updated: "2026-11-17"
 ---
 
 > **New in 0.2.0-dev.16, not yet seen in the game.** It passes its tests (projection, the time budget, dispatch). Nobody
@@ -26,7 +26,9 @@ private void OnFrame(RenderFrameEvent e)
 ## What you can draw
 
 - **`e.Draw`, in pixels** from the top left: lines, rectangles, circles, triangles, polygons, arrows, text, and PNG
-  images from your mod (`Ui.LoadImage("pin.png")`). Multiply sizes by `e.Scale`, the UI scale.
+  images from your mod (`Ui.LoadImage("pin.png")`) or the game's item icons (`Ui.ItemImage(item)`, 0.2.0-dev.29.15).
+  Since 0.2.0-dev.29.16 `ImageTrimmed` draws an image without its transparent margin and `ImagePart` a part of one (a
+  sprite sheet's cell). Multiply sizes by `e.Scale`, the UI scale.
 - **`e.World`, at world positions** in metres: markers, labels, icons, lines, boxes and rings. Points behind the camera
   aren't drawn; lines, boxes and rings are cut at the screen's edge. `ToScreenClamped` puts an off-screen point on the
   edge of the screen, so you can draw an arrow towards it.

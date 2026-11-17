@@ -4,7 +4,7 @@ export const kilnSource = 'https://github.com/frostdev-ops/kiln';
 // The Kiln wiki's sections and page order. Each slug is a Markdown file in src/content/kiln-wiki/; the wiki pages
 // fail the build when a file is missing here or a slug has no file, so the two lists cannot drift.
 export const kilnWikiSections = [
-  { id: 'players', title: 'Players', pages: ['install', 'profiles', 'modpacks', 'other-mods', 'eml-shroudforge', 'emf-mods', 'more-frameworks'] },
+  { id: 'players', title: 'Players', pages: ['install', 'profiles', 'in-game', 'languages', 'modpacks', 'other-mods', 'eml-shroudforge', 'emf-mods', 'more-frameworks'] },
   { id: 'servers', title: 'Server admins', pages: ['dedicated-servers', 'servers', 'permissions', 'admin-pages'] },
   { id: 'modding', title: 'Modding', pages: ['first-mod', 'code-mods', 'hooks', 'events', 'world-programs', 'manifest', 'multiplayer', 'network', 'data-packs', 'game-data', 'onboot'] },
   {
@@ -31,7 +31,7 @@ export const kilnWikiSections = [
       'world-progress',
     ],
   },
-  { id: 'looks', title: 'Looks and sound', pages: ['game-ui', 'ui-blocks', 'drawing', 'assets', 'models', 'shaders', 'sounds'] },
+  { id: 'looks', title: 'Looks and sound', pages: ['game-ui', 'ui-looks', 'ui-blocks', 'drawing', 'assets', 'models', 'shaders', 'sounds'] },
   { id: 'devkit', title: 'Dev kit', pages: ['dev-kit', 'cli', 'lint', 'vscode', 'catalogs', 'testing', 'hot-reload', 'debugging'] },
   { id: 'reference', title: 'Reference', pages: ['forge', 'dinput8-chain', 'status'] },
 ] as const;
