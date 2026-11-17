@@ -20,7 +20,7 @@ run on test servers. Where no player has seen it in the game yet, the table says
 |---|---|---|---|---|
 | **EML** (Enshrouded Mod Loader) 0.2.0 | data mods: stats, stacks, recipes, new items | runs EML's own code before the game starts. Installed by default | untested in game (works on test servers) | drop the mod in, or import it in the launcher. [EML and ShroudForge](/kiln/wiki/eml-shroudforge) |
 | **ShroudForge** | Lua mods, with settings | ships ShroudForge's runtime and runs it. Installed by default. Your own ShroudForge can be used instead | untested in game (works on test servers) | drop the mod in, or import it. [EML and ShroudForge](/kiln/wiki/eml-shroudforge) |
-| **EMF** 0.3.3 through 0.6.11 / API v42 | DLL and Lua mods, server tools, commands | gives EMF mods EMF's API on Kiln. Installed by default | 76 full / 17 partial C slots; 42 functions of EMF 0.6.3 to 0.6.8 not yet; client checks remain | drop the mod in, or import it, then switch it on. [EMF mods](/kiln/wiki/emf-mods) |
+| **EMF** 0.3.3 through 0.6.14 / API v46 | DLL and Lua mods, server tools, commands | gives EMF mods EMF's API on Kiln. Installed by default | 76 full / 17 partial C slots; 49 functions of EMF 0.6.3 to 0.6.14 not yet; client checks remain | drop the mod in, or import it, then switch it on. [EMF mods](/kiln/wiki/emf-mods) |
 | **SET** (Shrouded Engine Tweaks) 0.1.1 | Lua mods with windows and tweaks | runs SET's Lua API on Kiln, also on dedicated servers | server probe 39/0; API and client limits remain | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#set) |
 | **Greeneye Loader** 1.2.2 | client mods: The Worst Map Mod, Find, Quick Deposit, Town Portals | gives them Greeneye's whole API. Works on Linux too | untested in game | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#greeneye-loader) |
 | **Flame** | Creative Mode | starts Creative Mode without its loader, from the game's `mods` folder | untested in game | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#creative-mode-flame) |
@@ -171,8 +171,8 @@ mods in your [modpack](/kiln/wiki/modpacks).
   that start. The in-game Mods menu shows them as failed; the launcher's **Engines** view can still say they run.
 - **A loader that was already running.** Enshwick's own loader may see a mod copied while it was running only from the
   next start.
-- **EMF.** Kiln serves EMF 0.6.11's API v42 (since 0.2.0-dev.28; 0.6.10 and 0.6.11 added no function), so mods built
-  for EMF 0.6.3 and later start; 42 of the functions EMF added since 0.6.3 answer "not available" for now. Client-world
+- **EMF.** Kiln serves EMF 0.6.14's API v46 (since 0.2.0-dev.29.12; v42 since dev.28), so mods built
+  for EMF 0.6.3 and later start; 49 of the functions EMF added since 0.6.3 answer "not available" for now. Client-world
   programs/events remain unsupported, and player-facing rendering/input and joined delivery remain unchecked. Mods
   requesting above API v42 are refused.
   [Mods built for EMF 0.6.3 to 0.6.8](/kiln/wiki/emf-mods#mods-built-for-emf-063-to-068).

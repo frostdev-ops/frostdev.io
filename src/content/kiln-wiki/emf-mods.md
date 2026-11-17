@@ -1,13 +1,13 @@
 ---
 title: "EMF mods"
 nav: "EMF mods"
-description: "Install EMF DLL and Lua mods with API v42 (EMF 0.6.11) support, current differences and server/client evidence limits."
+description: "Install EMF DLL and Lua mods with API v46 (EMF 0.6.14) support, current differences and server/client evidence limits."
 status: "partial"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
-Kiln runs mods made for EMF (the Enshrouded Modding Framework), DLL and Lua mods, up to EMF 0.6.11 / API v42 since
-**0.2.0-dev.28** (0.6.8 / v40 since dev.27). You do not need EMF's `dinput8.dll` or its core. Kiln's EMF part is
+Kiln runs mods made for EMF (the Enshrouded Modding Framework), DLL and Lua mods, up to EMF 0.6.14 / API v46 since
+**0.2.0-dev.29.12** (0.6.11 / v42 since dev.28, 0.6.8 / v40 since dev.27). You do not need EMF's `dinput8.dll` or its core. Kiln's EMF part is
 installed by default.
 
 The C table has **135 slots: 76 full, 17 partial, and 42 that answer "not available" for now** (functions EMF added
@@ -44,6 +44,14 @@ flag `EMF_MOVE_PEACEFUL_ALL`, and the door each point of a path goes through (`E
 0.2.0-dev.28 Kiln says version 42, so a mod whose `mod.json` says `"emf": 41` or `42` loads instead of being refused,
 and `emf::has_v41()` and `has_v42()` answer true. `enemy_move` and `path_find`, the functions those fields belong to,
 still answer "not available on Kiln yet".
+
+EMF 0.6.13 (API v43) and 0.6.14 (v44 to v46) added seven functions: the game's own permissions of a player
+(`player_permissions`), breaking player-built blocks (`break_blocks`, `block_at`, `find_wall`) and villager moves
+(`villager_move`, `villager_move_cancel`, `villager_moving`). EMF 0.6.14's own Lua mod 1.39, Night Raids 1.2 and
+Villager Jobs 1.5 need the whole v46 table to start, so until **0.2.0-dev.29.12** they stayed off on Kiln ("this mod
+was built for EMF API v46; the core is v42"), and with that Lua mod every Lua mod. Since 0.2.0-dev.29.12 Kiln serves
+the v46 table; the seven functions answer "not available on Kiln yet" for now. So on Kiln, Night Raids' raiders
+don't break walls yet, and Villager Jobs lets only EMF's admins give jobs. Not yet run in a lab or a game.
 
 Kiln doesn't carry every function EMF added since. Chat lines without a speaker (`chat_tell_ex`, `chat_broadcast_ex`)
 and `world_to_screen` work. Player join, leave and death events, item and character names, hits and hit rules, buffs,
