@@ -2,7 +2,7 @@
 title: "Code mods"
 description: "The Mod class, the tick thread, events, configs, commands, permissions, saved data, other mods, what a call does when it cannot work, and what waits for a game test."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 ## The mod
@@ -107,8 +107,9 @@ private string Heal(Player target, [Range(1, 1000)] int amount = 100) =>
 ```
 
 Typed arguments (players, `~` positions, items, durations, `@p`/`@a`/`@e`), `/help` and tab completion come with it.
+Every command has a permission node (`<mod>.command.<name>`) at its level.
 `Permissions.Register("mymod.fly", PermissionLevel.Everyone)` and `Permissions.Has(player, "mymod.fly")` add your own
-nodes, which admins map to groups.
+nodes, which admins grant to groups in `kiln/config/permissions.json`: [Permissions](/kiln/wiki/permissions).
 
 ## Saved data
 
@@ -143,11 +144,13 @@ Each part of the game is a service. List the ones you use in `KilnServices`:
 | Combat, Gameplay | health, damage, deaths; interactions, crafting, loot, zones |
 | Time, Settings, Saves | time, weather, world settings, saved data, backups |
 | Content | [data packs](/kiln/wiki/data-packs), [game data](/kiln/wiki/game-data) |
-| Creatures, Abilities | [creatures](/kiln/wiki/creatures), [abilities](/kiln/wiki/abilities) |
+| Creatures, Abilities | [creatures](/kiln/wiki/creatures), [abilities](/kiln/wiki/abilities), [gems](/kiln/wiki/gems) |
 | Skills, Quests | [talents](/kiln/wiki/talents), [quests](/kiln/wiki/quests), [NPCs](/kiln/wiki/npcs) |
 | Build, Terrain, Queries | [world edits, terrain overlays and questions about the world](/kiln/wiki/world-edits) |
+| Stations | [production stations and bases](/kiln/wiki/stations) (29.15; `Blocks` gives them too) |
+| Permissions | [permission nodes and groups](/kiln/wiki/permissions) |
 | CreatureControl | [who drives a creature's body](/kiln/wiki/creature-ai#creature-control) |
-| Ui, Client, Network | [game UI](/kiln/wiki/game-ui), [multiplayer](/kiln/wiki/multiplayer) |
+| Ui, Client, Network | [game UI](/kiln/wiki/game-ui), [looks and themes](/kiln/wiki/ui-looks), [multiplayer](/kiln/wiki/multiplayer), [channels](/kiln/wiki/network) |
 | Assets, Audio | [icons and textures](/kiln/wiki/assets), [sounds](/kiln/wiki/sounds) |
 
 ## When a call cannot work
