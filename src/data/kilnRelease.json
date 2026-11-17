@@ -1,16 +1,16 @@
 {
-  "version": "0.2.0-dev.29.12",
+  "version": "0.2.0-dev.29.13",
   "channel": "dev",
   "released": "2026-11-17",
   "files": {
-    "windows": "windows/kiln-launcher_0.2.0-dev.29.12_x64-setup.exe",
-    "appimage": "linux/kiln-launcher_0.2.0-dev.29.12_amd64.AppImage",
-    "deb": "linux/kiln-launcher_0.2.0-dev.29.12_amd64.deb",
-    "server": "runtime/kiln-server-0.2.0-dev.29.12.zip",
-    "runtime": "runtime/kiln-runtime-0.2.0-dev.29.12.zip",
+    "windows": "windows/kiln-launcher_0.2.0-dev.29.13_x64-setup.exe",
+    "appimage": "linux/kiln-launcher_0.2.0-dev.29.13_amd64.AppImage",
+    "deb": "linux/kiln-launcher_0.2.0-dev.29.13_amd64.deb",
+    "server": "runtime/kiln-server-0.2.0-dev.29.13.zip",
+    "runtime": "runtime/kiln-runtime-0.2.0-dev.29.13.zip",
     "sums": "SHA256SUMS"
   },
-  "github": "https://github.com/frostdev-ops/kiln/releases/tag/v0.2.0-dev.29.12",
+  "github": "https://github.com/frostdev-ops/kiln/releases/tag/v0.2.0-dev.29.13",
   "nexus": "https://www.nexusmods.com/enshrouded/mods/301",
   "groups": [
     {
@@ -18,9 +18,9 @@
       "title": "Launcher",
       "about": "Most people want one of these. The launcher installs Kiln into the game and keeps your mods and profiles.",
       "files": [
-        {"kind":"windows","path":"windows/kiln-launcher_0.2.0-dev.29.12_x64-setup.exe","label":"Windows installer","about":"For Windows 10 and 11. Installs for your user and updates itself.","size":108341374,"sha256":"96832a8c3a073ce8cd01a0ed285acc2ea71420dd4a2586014cf838b7bc006c4a"},
-        {"kind":"appimage","path":"linux/kiln-launcher_0.2.0-dev.29.12_amd64.AppImage","label":"Linux AppImage","about":"One file, no install: make it executable and run it. Updates itself.","size":179661304,"sha256":"95e6019748dafb8a8881685aa4a2572b4e2589cb94335d0df106961d8ea8aced"},
-        {"kind":"deb","path":"linux/kiln-launcher_0.2.0-dev.29.12_amd64.deb","label":"Linux .deb package","about":"For Debian, Ubuntu and Mint. Update it by installing the next package.","size":102237502,"sha256":"e0f9243a08ab90ee1adecc687fc624feff720309233db1729a4d21e153fa23ed"}
+        {"kind":"windows","path":"windows/kiln-launcher_0.2.0-dev.29.13_x64-setup.exe","label":"Windows installer","about":"For Windows 10 and 11. Installs for your user and updates itself.","size":108296279,"sha256":"c53d2456389ea118a94273b3686e1633ee4bc26fbb784a085a605d461bd3e59f"},
+        {"kind":"appimage","path":"linux/kiln-launcher_0.2.0-dev.29.13_amd64.AppImage","label":"Linux AppImage","about":"One file, no install: make it executable and run it. Updates itself.","size":179665400,"sha256":"8dd9069235e5d57d8976426ffc0ae90319f82f666c3e6fe4d0447eea74275e2c"},
+        {"kind":"deb","path":"linux/kiln-launcher_0.2.0-dev.29.13_amd64.deb","label":"Linux .deb package","about":"For Debian, Ubuntu and Mint. Update it by installing the next package.","size":102239400,"sha256":"78664e000c364058779358bfc001b4cac74dd332bac747f35f33f5f030395ec1"}
       ]
     },
     {
@@ -28,9 +28,9 @@
       "title": "Dedicated servers",
       "about": "For people who run an Enshrouded dedicated server. Unzip the server pack into the server folder, also over FTP on a rented server. kilnctl and the systemd units are for a server you run yourself.",
       "files": [
-        {"kind":"server","path":"runtime/kiln-server-0.2.0-dev.29.12.zip","label":"Server pack","about":"Unzip it into the folder with enshrouded_server.exe. Nothing else to install.","size":84115955,"sha256":"d5e847b31c93d3452c61bf590d639c972ff4de06db8c386dee9ddd0e7d3bb569"},
+        {"kind":"server","path":"runtime/kiln-server-0.2.0-dev.29.13.zip","label":"Server pack","about":"Unzip it into the folder with enshrouded_server.exe. Nothing else to install.","size":84118218,"sha256":"2d672820640d340215815141586c033b5dec158361c9b8b6198dca1c659559e9"},
         {"kind":"kilnctl-linux","path":"runtime/kilnctl","label":"kilnctl for Linux","about":"Command line that installs the Kiln runtime, runs a server under Wine and backs it up.","size":8175576,"sha256":"668393091d64c687f7ca6cdd49d4d5adcb1e8bab38f93b82a87308f88ceeae82"},
-        {"kind":"kilnctl-windows","path":"runtime/kilnctl.exe","label":"kilnctl for Windows","about":"Command line that installs the Kiln runtime into a game or server folder.","size":9566720,"sha256":"4f047d963162fe3b7fdf75fdf34b6b4dd95c8b01a8829da60d56fc0626bd10ef"},
+        {"kind":"kilnctl-windows","path":"runtime/kilnctl.exe","label":"kilnctl for Windows","about":"Command line that installs the Kiln runtime into a game or server folder.","size":9566720,"sha256":"cf7d394038541a59f66463155c860fd683bacd987e673c788eb187e441107f9d"},
         {"kind":"systemd-run","path":"runtime/kiln@.service","label":"kiln@.service","about":"systemd user unit that runs one kilnctl server. Put the server name after the @.","size":1971,"sha256":"81b96c9add2b095c80bfc45f17cb41f5a6d6275d73c73e4e09f458d3287a2009"},
         {"kind":"systemd-backup","path":"runtime/kiln-backup@.service","label":"kiln-backup@.service","about":"systemd user unit that backs up the savegame of one kilnctl server.","size":366,"sha256":"6dd1e6ee4f1062ed166bd2312e59fcd499982b64a4404a62990bd0047927c835"},
         {"kind":"systemd-timer","path":"runtime/kiln-backup@.timer","label":"kiln-backup@.timer","about":"Starts that backup every day.","size":338,"sha256":"e32ba5cd72bc54a2ad81b7d52ca68962bc9fa5d012a88a1ad6835a6a907e1d97"}
@@ -41,8 +41,8 @@
       "title": "Manual install",
       "about": "For installing Kiln by hand, without the launcher. kilnctl, in Dedicated servers, installs this zip for you.",
       "files": [
-        {"kind":"runtime","path":"runtime/kiln-runtime-0.2.0-dev.29.12.zip","label":"Kiln runtime","about":"Kiln without the launcher. Install it with kilnctl, or by hand.","size":87251814,"sha256":"3abef220c31e9e6b7d5c9bfd1c2a496e686d9e2570ba75a87f37a9981478f71f"},
-        {"kind":"install-runtime","path":"runtime/INSTALL-RUNTIME.txt","label":"Install instructions","about":"Step by step: the runtime on a game client or a server.","size":3339,"sha256":"fa29c3c9a7b5b661bab7667645d9961707729f4c9a8d7edc860ce7b0613f92cb"}
+        {"kind":"runtime","path":"runtime/kiln-runtime-0.2.0-dev.29.13.zip","label":"Kiln runtime","about":"Kiln without the launcher. Install it with kilnctl, or by hand.","size":87254549,"sha256":"1607c1a671d4f703189f0ba40a15ea200de46e71b42e1f9b3d867b2b7c368be9"},
+        {"kind":"install-runtime","path":"runtime/INSTALL-RUNTIME.txt","label":"Install instructions","about":"Step by step: the runtime on a game client or a server.","size":3339,"sha256":"83dbf03a50f1901a64c8b4f56de14f6b4d1140336c824e5356330078cffbeb27"}
       ]
     },
     {
@@ -50,14 +50,14 @@
       "title": "Source and notes",
       "about": "The source code of this release, its notes, the licences and the checksums.",
       "files": [
-        {"kind":"source","path":"source/kiln-0.2.0-dev.29.12-src.tar.gz","label":"Kiln source","about":"The source code of this release.","size":22816901,"sha256":"473d05ddfdbf60c9571f2467c9a266e153c18ee10eb08e2c81dffd7b50913e13"},
+        {"kind":"source","path":"source/kiln-0.2.0-dev.29.13-src.tar.gz","label":"Kiln source","about":"The source code of this release.","size":22818098,"sha256":"cee76ca7114561ac6aae418a06616fcdd678beb894b6f2fdc7dee1920a5162a6"},
         {"kind":"source-shroudforge","path":"source/shroudforge-kiln-4a4e81ebad4b-src.tar.gz","label":"ShroudForge source","about":"Source of the ShroudForge build that comes with Kiln.","size":77096419,"sha256":"cd9068e82f7d4489ee19decaff13c93d7e4ee51749aac39e7e93ed0972987b5a"},
-        {"kind":"release-notes","path":"RELEASE-NOTES.md","label":"Release notes","about":"What changed in this version.","size":3310,"sha256":"0ddfcf48e23dc58ab0f9588631b5566ca9ccb24fc3d0b1fd9d3da32bbaf95c89"},
-        {"kind":"readme","path":"README.txt","label":"Release README","about":"Which file to pick, and how to check it.","size":5332,"sha256":"0b2473737df0e180b3883da5348f0de347d037089a27a582ce8cbc589b78af6c"},
+        {"kind":"release-notes","path":"RELEASE-NOTES.md","label":"Release notes","about":"What changed in this version.","size":938,"sha256":"2625394fffa4e50a7f0c186adaac544bb89681653762cf3d166939015f558da7"},
+        {"kind":"readme","path":"README.txt","label":"Release README","about":"Which file to pick, and how to check it.","size":5332,"sha256":"7cc2925c6dbd0f732ba3546a232c4ee5d91980ee3b6f45be139526e45f027a46"},
         {"kind":"license","path":"LICENSE","label":"Licence","about":"Kiln is open source under the MIT licence.","size":1074,"sha256":"45af562b78a4a3ed91ce2b008575a60396cc84d2f6fc53874025dd6b19923acf"},
         {"kind":"credits","path":"CREDITS.md","label":"Credits","about":"Whose work Kiln builds on.","size":8580,"sha256":"736a519fdd4b77f2c44b6e8923b0727248244201541eb67db162d5dd9d02f242"},
-        {"kind":"third-party","path":"THIRD-PARTY-NOTICES.txt","label":"Third-party notices","about":"The licences of the software Kiln includes. A large text file.","size":2820122,"sha256":"742707d46e5754dda9f61b1c6df179f1b7174742aa3eefaf4cff5901e1e034d0"},
-        {"kind":"sums","path":"SHA256SUMS","label":"SHA256SUMS","about":"The SHA-256 of every file in this release.","size":2707,"sha256":"2beec901f31b166ecff3ba1b13e60d3290b3d72665b15c92170c5a57e583ff14"}
+        {"kind":"third-party","path":"THIRD-PARTY-NOTICES.txt","label":"Third-party notices","about":"The licences of the software Kiln includes. A large text file.","size":2820122,"sha256":"f341c0e1f16a107b83f82fa7033c8b0a4f4a8e5a58ebbabfb109f71a31754711"},
+        {"kind":"sums","path":"SHA256SUMS","label":"SHA256SUMS","about":"The SHA-256 of every file in this release.","size":2707,"sha256":"ca6e9b0ea01944de2ffd35afb3bde490f2e795dfcebba368c1f7ba588ef66b3e"}
       ]
     }
   ]
