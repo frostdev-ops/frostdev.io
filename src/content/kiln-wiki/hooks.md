@@ -3,7 +3,7 @@ title: "Hooks and patches"
 nav: "Hooks"
 description: "The advanced tier: detours, mid hooks, memory patches and symbols on game code, from C# or a native plugin, through Kiln's one hook registry."
 status: "pending"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 > **Changed in 0.2.0-dev.21.** Every hook Kiln places on the game exe now goes through one registry, kiln.hooks v2.
@@ -187,6 +187,11 @@ The full contract is in Kiln's repository, `docs/kiln/services/hooks.md`, on [Gi
 
 `kiln/state/hooks.json` lists every hooked function, its links in the order they run, and other modules' hooks found
 before or over Kiln. Kiln writes it at boot end, at the first world, and when links change.
+
+Since 0.2.0-dev.29.8 it also has `codePatches`: every place where the game's code in memory differs from the exe file,
+Kiln's own hooks included, with the module that changed it (a hook's jump, a redirected call and what it called before,
+or bytes changed in place). Some closed mods check the game's code before they patch it and refuse a spot another mod
+changed first (XHL-Core plugins: "could not prepare CALL 11 of 24"); this list names who did.
 
 kiln.log says when another DLL hooked first, or hooked over Kiln:
 

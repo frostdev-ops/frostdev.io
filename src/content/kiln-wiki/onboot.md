@@ -3,7 +3,7 @@ title: "OnBoot: content on the first start"
 nav: "OnBoot and boot mods"
 description: "Boot mods: statuses, effects, items, spells, talents and changes to the game's own data that are there before the game reads them, from the very first start."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 > **New in 0.2.0-dev.28 on dedicated servers, and since 0.2.0-dev.29 in a player's game too** (a world they host and a
@@ -186,7 +186,45 @@ late for such data: the game had already read it.
 | `{ "min": 16 }`, `{ "max": 100 }` | at least 16, at most 100 |
 
 The keys combine: the game's value times `mul`, plus `add`, then held between `min` and `max`. A path ends in a
-number, a bool or an enum; strings, references to other resources and the length of a list can't be patched.
+number, a bool or an enum; strings and references to other resources can't be patched.
+
+### Lists and template components
+
+New in 0.2.0-dev.29.15. Besides `set`, a patch can change the shape of a resource:
+
+| Key | On | Does |
+|---|---|---|
+| `append` | a list of numbers, bools or enum members | adds `values` at its end; `"aboveLast": true` adds only values greater than the list's last, so a sorted list stays sorted |
+| `addComponents` | a template | gives it components of these game types, zeroed; one it already has stays as it is |
+| `removeComponents` | a template | takes out components of these types; what an actor needs to live is refused |
+
+```json
+"ground-pickup": {
+  "resource": "9bf5aac3-6ae0-43b1-9f27-18c2f98abfca",
+  "type": "keen::ecs::TemplateResource",
+  "removeComponents": ["SpawnTime"],
+  "addComponents": ["PickupItemZone"],
+  "set": { "PickupItemZone.lastAttempt.value": 0, "Gravity.isActive": false }
+},
+"more-steps": {
+  "resource": "46e14df6-fb8f-4f66-9463-e23b9e19e48e",
+  "type": "keen::FbUiBundle",
+  "append": { "difficultySettings.settingValues.enemyDamage.steps": { "values": [3, 5, 10], "aboveLast": true } }
+}
+```
+
+On a template a path starts with a component's type name (`Gravity.isActive`; `Gravity#1.isActive` for a second one):
+that is how an added component's fields are filled in. Name components by type, never by their place in the list. On
+one resource, every `removeComponents` runs first, then `addComponents`, then `append`, then `set`, each in load order.
+In C#: `RemoveComponents`, `AddComponents` and `Append` (with `ResourceListAppend { Values = [3, 5, 10], AboveLast =
+true }`) on the `ResourcePatchBlock`.
+
+**A patch applies whole or not at all** (since 0.2.0-dev.29.15): if any of its changes fails, none is kept, and the
+resource is what the other patches make it. kiln.log and `kiln/state/boot.json` name the mod, the patch and the reason.
+
+**Finding records by name.** In `OnBoot`, the game-data queries `names:items`, `names:templates`, `names:skills` and
+`names:materials` list the names a kind holds, and `names:templates/<component type>` (`names:templates/MiningNode`)
+the templates with that component ([The game's data in OnBoot](#the-games-data-in-onboot)).
 
 - **Checked before the start**: the type, the path and the value. Two mods on one field are not combined: the later in
   the load order is refused, and the report names both.
@@ -195,8 +233,8 @@ number, a bool or an enum; strings, references to other resources and the length
   applied stops the start instead, with the reason in boot.json.
 - **Both sides need the mod.** A patch changes the data of the game it runs in. A player who joins without the mod
   keeps the game's values on their side, so what their game shows can differ from what the server does. A mod that
-  patches data both sides read says `"clients": "mod"`. In this release that keeps Kiln players out of the server
-  unless they switch OnBoot on: see [Where it runs](#where-it-runs).
+  patches data both sides read says `"clients": "mod"`. Since 0.2.0-dev.29 a boot mod loads in a player's game too, and
+  the join compares the two sides' boot content ([Settings and joining players](#settings-and-joining-players)).
 - A blocks file with `resourcePatches` may have comments (`//`, `/* */`) and trailing commas, like every blocks file.
 - **The game's own limits still hold.** The game never allows more than 16 Flame Altars, whatever the table says.
 - A patch lasts while the game runs. It isn't written to disk or into a save.

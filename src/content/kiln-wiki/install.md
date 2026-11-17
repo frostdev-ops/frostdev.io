@@ -2,7 +2,7 @@
 title: "Install Kiln"
 description: "Install Kiln for Enshrouded, import downloaded mod archives, and play with or without mods."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 > **Early access.** Download the launcher: [Windows installer](/kiln/download/windows), [Linux AppImage](/kiln/download/linux)
@@ -40,11 +40,26 @@ mods are in Settings ([Profiles and mods](/kiln/wiki/profiles)).
 
 Steam's Play button also starts Kiln, with the mods you switched on in the launcher.
 
+**Language and look** (0.2.0-dev.29.16). The launcher's **Settings**, **Language** picks the launcher's language
+(System by default) and Kiln's language in the game (the game's by default); English is the only one shipped so far
+([Kiln in your language](/kiln/wiki/languages)). **Settings** also has Kiln's in-game look
+([Kiln in the game](/kiln/wiki/in-game)).
+
+**The launcher's icon** (0.2.0-dev.29.16). The Linux AppImage adds its own app-menu entry and icons in your home folder,
+so taskbars and docks (GNOME, Hyprland and others) show Kiln's icon; **Settings**, **Appearance**, **Kiln Launcher in
+the app menu** removes them. On a Steam Deck that entry also puts Kiln in Steam's "Add a Non-Steam Game" list. On
+Windows the launcher and its pinned shortcut share one taskbar button. Not yet checked on a real desktop.
+
 Mods made for other frameworks (EML, ShroudForge, EMF, Enshwick, Greeneye and more) work too: drop them on the window
 like Kiln mods. You don't need to install those frameworks. A mod id with capitals is fine, and so is a package shaped
 like the game folder (a `mods` folder with a loader DLL beside it). Already have another tool's `dinput8.dll`, or
 another framework installed? Kiln keeps it, and copies your profile's mods for that framework's own loader. See
 [Mods for other frameworks](/kiln/wiki/other-mods) and [Adding mods in the launcher](/kiln/wiki/other-mods#adding-mods-in-the-launcher).
+
+**Don't copy another loader's `dinput8.dll` into the game folder** once Kiln is installed: that file is Kiln's own, and
+copying over it (Ultimate ASI Loader, for example) replaces Kiln. Add the loader's download to the launcher like any
+mod instead; since 0.2.0-dev.29.4 Kiln places Ultimate ASI Loader as `xinput9_1_0.dll`
+([Mods that run from the game folder](/kiln/wiki/other-mods#mods-that-run-from-the-game-folder)).
 
 ## When you press Play
 
@@ -128,7 +143,9 @@ Steam's settings.
 `WINEDLLOVERRIDES="dinput8,xinput9_1_0=n,b" %command%`. Since 0.2.0-dev.29 the launcher's launch option names it and says
 when only that part is missing; before, it showed "Already set" while Proton loaded its own `xinput9_1_0` and the
 loader's `.asi` plugins never started. When Wine loads its own copy of a DLL Kiln chains, `kiln/logs/proxy.log` now says
-so and names the override to set.
+so and names the override to set. Since 0.2.0-dev.29.4 the same goes for Ultimate ASI Loader added in the launcher.
+A plugin loader Kiln places in the game folder (a `powrprof.dll` with its `plugins` folder) needs an override for its
+name too (`powrprof=n,b`); the launcher's notes name it.
 
 **Without Kiln's launcher** (Bottles, Lutris or plain Wine), set `dinput8` to native, builtin
 (`WINEDLLOVERRIDES="dinput8=n,b"`, or in the runner's DLL overrides), and `xinput9_1_0` too with Ultimate ASI Loader.
@@ -152,6 +169,11 @@ from a terminal: its first line names its log (usually `~/.local/share/kiln/logs
 
 On Fedora Atomic and Bazzite, `/home` is a link to `/var/home`. Since dev.21 ShroudForge and SET placement and modpack
 installs accept that. Links inside Kiln's managed folders are still refused.
+
+**A game folder that is a link or junction** (a moved Steam library often is) works again since 0.2.0-dev.29.12. The
+launcher had refused the profile with "symlinks are not allowed", and the Engines view showed ShroudForge with "invalid
+game path". The game folder, Kiln's data folder and a Library entry may be links themselves; a link inside them
+(`mods`, `kiln` and so on) is still refused.
 
 ## "No Kiln": Kiln is not loading
 
@@ -208,6 +230,10 @@ in the manifest for Kiln's check. Players of this build download and import that
 | Without mods | Kiln, no mods |
 
 To play with another set of mods, load that profile in Settings, Profiles. Since dev.24 there is no "play a profile once".
+
+Since 0.2.0-dev.29.4 **Vanilla** and **Without mods** refuse to start while a loader Kiln placed in the game folder is
+still there (Ultimate ASI Loader, a `powrprof.dll` plugin loader): the game would load it anyway. Switch that mod off and
+press Play once first.
 
 The warning: a character carrying Kiln items can crash on a server that lets vanilla clients in, and may lose those items on other
 servers. Use another character.

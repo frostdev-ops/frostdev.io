@@ -3,7 +3,7 @@ title: "UI as blocks"
 nav: "UI blocks"
 description: "Define windows, HUD lines and keys in JSON or typed blocks, with config bindings and actions."
 status: "pending"
-updated: "2026-11-08"
+updated: "2026-11-17"
 ---
 
 > **New in 0.2.0-dev.20.** These blocks require the dev.20 runtime and MDK or newer. Their rendering, clicks, key/gamepad input and
@@ -56,7 +56,7 @@ Each `does` performs exactly one action:
 something. A refusal shows as a toast.
 
 Keys use `<mod>:<name>` in the Kiln menu's Keys tab. The player's rebinding survives a restart; say `was` if you rename a
-key block so that choice follows it.
+key block so that choice follows it. Since 0.2.0-dev.29.9 a player can also leave a key unbound there (Unbind).
 
 ## Refresh and unload
 

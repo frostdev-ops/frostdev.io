@@ -3,7 +3,7 @@ title: "Lint and analyzers"
 nav: "Lint and analyzers"
 description: "kiln lint checks your mod's JSON before the game has to. The analyzers catch thread and hot-reload mistakes in your C#."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 ## kiln lint
@@ -56,7 +56,7 @@ Kiln.Sdk runs these over every mod, in `dotnet build` and live in your editor. T
 | `KILN105` | a blocking call on the game thread |
 | `KILN106` | a thread, timer, watcher, socket or subscription never released |
 | `KILN107` | **error**: an advanced API without `KilnAdvanced` |
-| `KILN108` | a service used but not listed in `KilnServices` |
+| `KILN108` | a service used but not listed in `KilnServices`. Since 0.2.0-dev.29.16 a mod that lists `Stations` instead of `Blocks` no longer gets a false KILN108 for `BaseIdChange` |
 | `KILN120` | a Kiln result (`IKilnResult`, for example from `Items.Equip` or `NoClip.Set`) that nobody reads |
 | `KILN121` | a call that needs a capability, with no check of it first and no `catch` of `KilnUnavailableException` |
 | `KILN034` | **error**: an `OnBoot` that never runs (no `"boot"` in kiln.mod.json and no `<KilnBoot>`), or the run-time `Blocks.Define` in boot code |

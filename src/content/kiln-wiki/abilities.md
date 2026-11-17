@@ -2,7 +2,7 @@
 title: "Abilities"
 description: "Key-bound abilities, per-cast changes to the game's spells, explosions and buffs from code, and animations."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-17"
 ---
 
 Spells and attacks run on the server, so this works for players without Kiln. The exception: a key binding needs Kiln and
@@ -83,6 +83,12 @@ camera sits behind the character, so a ray for "what is the player looking at" s
 
 `ImpactDamageEvent`, `ImpactBuffEvent` and `ImpactSpawnEvent` report what spells did. `Abilities.OnDamage` can change one hit.
 To hear only the hits about one creature, filter the event by entity ([Events](/kiln/wiki/events#only-the-events-about-one-entity)).
+
+## Gems
+
+Gems are part of Kiln.Abilities too (since 0.2.0-dev.29.11): `Gems` reads the gems a player wears, registers new ones
+whose effect can be your C# (`GemTrigger.OnHit`, `OnKill`, ...), and runs the Shroud Forge's actions from code. See
+[Gems](/kiln/wiki/gems).
 
 ## New gameplay logic
 

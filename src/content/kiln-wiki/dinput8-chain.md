@@ -2,7 +2,7 @@
 title: "dinput8-chain.ini: a shared spec for loaders"
 nav: "dinput8 chain spec"
 description: "The shared rules for dinput8-chain.ini, which EMF, Kiln, ShroudForge, XHL-Core and Auto Loot Plus read: written for EMF, public domain, and how Kiln follows it."
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 Many Enshrouded mod loaders and DLL mods want to be the game's `dinput8.dll`, and only one file can have that name.
@@ -112,7 +112,9 @@ Kiln's own `dinput8.dll` starts DLLs from three lists, in this order:
    dinput8 mod).
 2. `dinput8-chain.ini` next to the game's exe: `[Chain]`, the lines before any section and `[EMF]`, in file order, by
    the rules above.
-3. The native mods of your profile that load in `dllmain` ([Kiln DLL mods](/kiln/wiki/other-mods#kiln-dll-mods)).
+3. `kiln/chain.ini` `[profile]`: the native mods of your profile that load in `dllmain`
+   ([Kiln DLL mods](/kiln/wiki/other-mods#kiln-dll-mods)), and since 0.2.0-dev.29.4 Ultimate ASI Loader when you added
+   it in the launcher (placed next to the game as `xinput9_1_0.dll`).
 
 Each DLL starts once, by its real path, and Kiln refuses its own proxy, Windows' `dinput8.dll` and ShroudForge's
 `dinput8.dll` (Kiln runs ShroudForge's runtime itself). One line per DLL goes to `kiln/logs/proxy.log`: loaded,
@@ -133,3 +135,10 @@ Where Kiln differs from the spec:
   ([Closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods)). EMF's loader, when Kiln's installer moved
   it, is never started late.
 - **Without mods** in the launcher starts Kiln but none of the chain. **Vanilla** starts neither.
+- **Never copy another `dinput8.dll` over Kiln's.** Since 0.2.0-dev.29.2 the launcher says so and names the supported
+  way: another name, listed in `dinput8-chain.ini` (for Ultimate ASI Loader, `xinput9_1_0.dll`). Since 0.2.0-dev.29.4
+  you can also add Ultimate ASI Loader in the launcher and Kiln places it ([Mods that run from the game folder](/kiln/wiki/other-mods#mods-that-run-from-the-game-folder)).
+- **A mod's own `dinput8.dll` loader is often not needed.** CharosDX's loader (Sparkworks Enhanced, Cross-Base Storage,
+  Craft From Stations) only loads `mods\<mod>\native\*.dll`. Since 0.2.0-dev.29.10 the launcher leaves it out and adds
+  each such mod as a native mod, which Kiln loads itself
+  ([Adding mods in the launcher](/kiln/wiki/other-mods#adding-mods-in-the-launcher)).

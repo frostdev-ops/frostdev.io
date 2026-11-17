@@ -3,7 +3,7 @@ title: "New items and recipes"
 nav: "New items"
 description: "Add items and recipes, borrow other items' models, name them in every language, and place them in loot and traders."
 status: "works"
-updated: "2026-11-08"
+updated: "2026-11-17"
 ---
 
 A new item is a copy of an existing one (its **base**) with its own GUID, name, texts and values.
@@ -12,7 +12,8 @@ A new item is a copy of an existing one (its **base**) with its own GUID, name, 
 
 To create an item without choosing a base or a GUID, start with [blocks](/kiln/wiki/blocks). dev.20+ adds the
 `item-blocks` template and reusable loot-table blocks. To move existing gear while keeping its state, use
-[inventory transfers](/kiln/wiki/inventory); persistent per-item data and affixes are not supplied.
+[inventory transfers](/kiln/wiki/inventory). Data on one item is [`InstanceData`](/kiln/wiki/inventory#item-data-and-saves),
+rolled bonuses are [affixes](/kiln/wiki/affixes), and new gems and gem sockets are on [Gems](/kiln/wiki/gems).
 
 ## In a data pack
 
@@ -38,6 +39,10 @@ To create an item without choosing a base or a GUID, start with [blocks](/kiln/w
 <!-- shot: item-tooltip | A new item's tooltip with its own icon and German name -->
 
 Later rules can change it too.
+
+**A gem socket on any gear (0.2.0-dev.29.11).** `"fields": { "gemSlotOverride": true }` gives your item a socket whenever
+the game makes one, also on a ring, armour or a shield. Players can use the Shroud Forge on such a piece only while a mod
+allows sockets on that kind of gear on their game (`Gems.AllowSockets`). See [Gems](/kiln/wiki/gems).
 
 ## In code
 
@@ -72,6 +77,10 @@ Or your own: [3D models](/kiln/wiki/models), [icons](/kiln/wiki/assets).
 `texts` holds name, description, lore and more per language (`en`, `de`, `pt-BR`, …), falling back to English.
 `displayName` and `description` set every language.
 
+`Items.DisplayName(item)` (since 0.2.0-dev.29.15) gives any item's name in the player's language, read from the game's
+texts, also on a joined client; for a new item, its `texts` for that language. A dedicated server answers the English name.
+To draw an item's icon in a mod's window, see [Game UI](/kiln/wiki/game-ui).
+
 ## Recipes
 
 `station` is `"hand"` (the crafting menu), a recipe whose station to use, or a station's id. Traders are stations, so a
@@ -98,4 +107,6 @@ a Kiln item can crash their game. See [Who can join](/kiln/wiki/multiplayer#who-
 ## When a mod is removed
 
 Its items stay valid until restart, and its recipes leave the menu. After a restart, saves keep the item as a placeholder,
-`[Missing: <mod>:<item>]`. Stacks and gear survive, and the item returns with the mod.
+`[Missing: <mod>:<item>]`. Stacks and gear survive, and the item returns with the mod. Since 0.2.0-dev.29.11 a mod's
+gems stay as such placeholders too, in the inventory or in a socket, instead of turning into their base gem; a gem whose
+effect was the mod's own code then does nothing ([Gems](/kiln/wiki/gems)).

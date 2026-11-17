@@ -3,7 +3,7 @@ title: "Quests and dialogue"
 nav: "Quests and dialogue"
 description: "Quest chains in JSON, shown by the game itself: its journal, NPC menu, map markers, notifications and voice."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-17"
 ---
 
 > **Two fixes await a client retest:** an NPC placed in a second hosted world of one session, and done quests notifying again
@@ -132,6 +132,9 @@ A step has `"objective"` or `"objectives"`; it's done when all are.
 
 The journal shows `kill`, `collect`, `craft`, `build` and `custom` as one counter. A step the player already fulfils stays open
 about 3 s, so it gets seen.
+
+Since 0.2.0-dev.29.14 a production station's cycle (a charcoal kiln, a smelter) counts once for `craft`, when its items are
+made. Before, it counted twice: when the cycle started and again when it ended. A player's own crafting counts as before.
 
 ## Places
 

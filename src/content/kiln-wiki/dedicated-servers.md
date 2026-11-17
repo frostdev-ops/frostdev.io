@@ -3,7 +3,7 @@ title: "Kiln on a dedicated server"
 nav: "Dedicated servers"
 description: "Put Kiln on an Enshrouded dedicated server: a rented host over FTP, your own Windows PC, or a headless Linux machine."
 status: "partial"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 This page is for server owners. It shows how to put Kiln on an Enshrouded dedicated server, check that it runs, add
@@ -175,7 +175,7 @@ list.** The last kiln.log lines and the file in `kiln/state/` name the mods.
 
 | Way | Where it works | What you need |
 |---|---|---|
-| Chat commands (`/help` in game) | everywhere | admin rights: a user group in `enshrouded_server.json` that may kick and ban, or a rule in `kiln/config/permissions.json` |
+| Chat commands (`/help` in game) | everywhere | admin rights: a user group in `enshrouded_server.json` that may kick and ban, or a rule in `kiln/config/permissions.json` ([Permissions](/kiln/wiki/permissions)) |
 | The console folder | everywhere, also over FTP | write access to `kiln/control/console/` |
 | `kilnctl cmd myserver <command>` | your own Linux server | kilnctl |
 | The Kiln Launcher's server pages | a server on the same PC, or a Linux server it reaches over SSH | the launcher ([Admin pages](/kiln/wiki/admin-pages)) |
@@ -199,8 +199,8 @@ it to `test.cmd`, so Kiln never reads a half-uploaded file.
 
 ### Kick and ban
 
-Since 0.2.0-dev.27 Kiln has commands of its own, for the Admin level or the permission nodes `kiln.command.kick`,
-`kiln.command.ban`, `kiln.command.unban` and `kiln.command.bans`:
+Since 0.2.0-dev.27 Kiln has commands of its own, for the Admin level or the [permission nodes](/kiln/wiki/permissions)
+`kiln.command.kick`, `kiln.command.ban`, `kiln.command.unban` and `kiln.command.bans`:
 
 | Command | Does |
 |---|---|
@@ -370,6 +370,9 @@ With the server pack:
 With kilnctl: `kilnctl stop myserver`, `kilnctl deploy myserver --bundle kiln-runtime-<new version>.zip`,
 `kilnctl start myserver`. kilnctl removes files the new version no longer has, keeps your `kiln/kiln.json`, and backs
 up anything it overwrites.
+
+Update the server and your players together when a release changes the join: in 0.2.0-dev.29 every player with Kiln
+was turned away from a server run by Kiln, and 0.2.0-dev.29.1 (needed on both sides) fixed it.
 
 ## Removing Kiln
 

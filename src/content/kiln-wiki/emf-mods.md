@@ -10,8 +10,8 @@ Kiln runs mods made for EMF (the Enshrouded Modding Framework), DLL and Lua mods
 **0.2.0-dev.29.12** (0.6.11 / v42 since dev.28, 0.6.8 / v40 since dev.27). You do not need EMF's `dinput8.dll` or its core. Kiln's EMF part is
 installed by default.
 
-The C table has **135 slots: 76 full, 17 partial, and 42 that answer "not available" for now** (functions EMF added
-between 0.6.3 and 0.6.8). That describes implemented contracts, not a claim that every mod or player-facing feature has
+The C table has **142 slots: 76 full, 17 partial, and 49 that answer "not available" for now** (functions EMF added
+between 0.6.3 and 0.6.8, and in 0.6.13 and 0.6.14). That describes implemented contracts, not a claim that every mod or player-facing feature has
 been tested. [What that means for a mod](#mods-built-for-emf-063-to-068), [remaining differences](#what-doesnt-work-yet)
 and client checks are below.
 
@@ -30,7 +30,7 @@ file: Kiln rewrites EMF's copy at each start.
 Which mods load:
 - A mod marked `client` doesn't load on a dedicated server.
 - A mod whose required mod is missing, off or too old doesn't load, and the log says why.
-- A mod that needs an EMF API newer than v42 is refused, with the version it needs.
+- A mod that needs an EMF API newer than v46 is refused, with the version it needs.
 
 ## Mods built for EMF 0.6.3 to 0.6.8
 
@@ -77,6 +77,15 @@ requires content mods still refuses a Kiln game; and after leaving one server an
 the game, the check (and EMF mod messages) can be missing for that session when EMF's greeting arrives before the world
 has loaded. Rejoining fixes it. A Kiln server answers an EMF game's check with its own list and logs the difference
 (`EMF mods check: player ...`); it never refuses a join.
+
+**Expeditions** (up to 1.2.x) kept saying "No free survivors nearby" next to your survivors, and Send said "too far
+away", in a world your own game hosts, above all on slower PCs and the Steam Deck. Since 0.2.0-dev.29.15 Kiln runs that
+mod's per-step work for the server side only, where all of its work happens. Thanks to Spirimtin for testing a
+diagnostic build.
+
+**What EMF mod windows do is in kiln.log** (0.2.0-dev.29.9): a window's title and the rows you can click when it opens,
+then real changes, each click the mod receives and when it closes, kept short. A support report then shows whether a
+window like Expeditions' opened, what it listed and whether Send was clicked.
 
 ## Settings and commands
 

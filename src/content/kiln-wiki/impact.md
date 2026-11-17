@@ -2,7 +2,7 @@
 title: "Impact programs"
 description: "Read the game's spell programs as text, clone and change them, write new ones, and call your own C#."
 status: "partial"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 > **Partly built.** Reading, writing, checking and cooking work for all of the game's programs, and a changed program has run
@@ -42,6 +42,9 @@ MyMod/
     assets.json          loads the cooked programs
     cooked/              made on the player's machine, never shipped
 ```
+
+A new item's `program` ([New items](/kiln/wiki/new-items)) may name a program your mod serves this way. Before
+0.2.0-dev.29.11 such a `program` was refused without a reason, and the item kept its base's program.
 
 ## Kiln natives
 

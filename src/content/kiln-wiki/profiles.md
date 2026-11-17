@@ -3,7 +3,7 @@ title: "Profiles and mods"
 nav: "Profiles and mods"
 description: "Every mod in one list on Play, saved sets of mods as profiles in Settings, the mods in your game folder, the library, update notices, rolling back an update, and mod settings in the launcher or in game."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 ## Profiles
@@ -54,6 +54,13 @@ One row per mod, by name: its switch, its kind (Kiln, EMF, EML, ShroudForge, SET
 its version, and a short note only when there is something to say ("Starts with your world", "Will not run",
 "Failed at the last start", "Left in the game folder"). The line above it counts every kind: "12 mods on, 3 off."
 
+- **Runs from the game folder** (0.2.0-dev.29.7): a mod Kiln copies into the game folder for the game to load itself,
+  such as a `powrprof.dll` plugin loader or Ultimate ASI Loader with `.asi` mods
+  ([Mods that run from the game folder](/kiln/wiki/other-mods#mods-that-run-from-the-game-folder)). Load order lists
+  them under "From the game folder". "Will not run" stays for mods that really don't load.
+- **Only partly runs** (0.2.0-dev.29.16): a mod that ships a modified EML loader with code of its own. Kiln runs its EML
+  part, not that DLL, and says what doesn't run
+  ([EML mods with a modified loader](/kiln/wiki/eml-shroudforge#eml-mods-with-a-modified-loader)).
 - **The switch.** Off keeps the mod in your list with its version and settings.
 - **The menu** (the three dots, or a right click on the row): Switch on/off, **Settings** (for mods that have them, such as
   ShroudForge's and Shroudtopia's), **Configs** (when the mod wrote a config file), **Cook again** (a Kiln mod with a
@@ -64,6 +71,9 @@ its version, and a short note only when there is something to say ("Starts with 
 - **Above the list:** **Filter** and **Kind** (with more than six rows), **All on** and **All off**, **Notes**, **Load
   order**, **Engines** and **Add mods** (zip, 7z, rar and DLL files). Dropping a file anywhere on the window adds a mod
   too, switched on. Settings' **Switch new mods on** (on by default) decides that; switched off, new mods are added off.
+- **What an add left out** (0.2.0-dev.29.10). When an add left a file out or found one not needed, its message stays
+  until you close it. **Last adds** above the list shows your last 10 adds with those details, also after a restart, and
+  `launcher.log` lists them, so a support report carries them.
 - **All on** and **All off** switch every mod the list shows, in one go. Narrow the list with **Filter** or **Kind**
   first, and the buttons say **Shown on** and **Shown off**. **Undo** in the message after it (shown for 20 seconds) puts
   the switches back; it leaves a mod you switched yourself since, and says so when the profile was changed or another one loaded
@@ -288,18 +298,31 @@ Kiln checks every value. Most apply at once; the form says which need a restart.
 applied values at once, and a slider has a number field beside it: type the value (on a wide range, a value such as 2.5
 is hard to reach by dragging).
 
+Since 0.2.0-dev.29.16:
+
+- **A config Kiln can't read at start is never reset.** If a mod's config file is locked or unreadable when the game
+  starts, Kiln leaves it alone and reads it again, instead of writing the mod's defaults over it.
+- **Linux: values set in the launcher stay.** With a Flatpak or Snap Steam (or a Wine prefix without `Z:`), the
+  launcher works on a copy of the configs, and a value you set on **Configs** was replaced by the game's older copy at
+  the next start or mod update. Now only what the game changed is copied back. When both sides changed a file, the newer
+  wins and the other is kept as `<name>.conflict-<time>`, with a warning. The first start after the update may leave such
+  a file where the two copies already differed. Not yet checked in a real game.
+
 ## The Kiln menu
 
 <!-- shot: kiln-menu | The in-game Kiln menu, Mods tab -->
 
 | Tab | Shows |
 |---|---|
-| Mods | the mods of every framework: version, state, errors and settings |
+| Mods | the mods of every framework: version, state, errors and settings. Its **Kiln settings** row has Kiln's own settings: **Look** (since 0.2.0-dev.29.16), **Language** and Kiln's configs |
 | Network | the server's Kiln version, mods and warnings |
-| Keys | key bindings: click one, then press the new key, a mouse side or middle button, or turn the wheel |
+| Keys | key bindings: click one, then press the new key, a mouse side or middle button, or turn the wheel. **Reset** puts the default back; since 0.2.0-dev.29.9 **Unbind** leaves an action without a key (not Kiln's own menu key, which would lock the menu away) |
 | Overlay | display scale and a test message |
 
-It works with gamepad, mouse and keyboard.
+It works with gamepad, mouse and keyboard. Since 0.2.0-dev.29.16 Kiln's menus use the game's colours and font; pick
+another look under **Mods > Kiln settings > Look** or in the launcher's Settings (not yet checked in a real game). The
+look, chat history and Kiln's line in the main menu: [Kiln in the game](/kiln/wiki/in-game). The language:
+[Kiln in your language](/kiln/wiki/languages).
 
 **The mod manager in the main menu.** Since dev.22 **MODS** in the game's main menu opens this menu's Mods tab as a
 page in the game's own look. Its left column has **All mods**, **Needs attention** (only when a mod failed or its folder

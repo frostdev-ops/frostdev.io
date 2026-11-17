@@ -2,7 +2,7 @@
 title: "The dev kit"
 description: "Kiln.Sdk, project templates, the kiln command, a linter, analyzers, a VS Code extension, a debugger and game-id constants."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 | Part | For |
@@ -22,11 +22,11 @@ is the local package "feed"; pass it to `kiln new` with `--feed <folder>` or set
 
 ## Kiln.Sdk
 
-Use the full version from your MDK pack (`0.2.0-dev.28` for this release, mod API 0.2.3); local packs have their own
+Use the full version from your MDK pack (`0.2.0-dev.29.16` for this release, mod API 0.2.8); local packs have their own
 version.
 
 ```xml
-<Project Sdk="Kiln.Sdk/0.2.0-dev.28">
+<Project Sdk="Kiln.Sdk/0.2.0-dev.29.16">
   <PropertyGroup>
     <KilnModId>my-mod</KilnModId>
     <Version>1.0.0</Version>
@@ -45,7 +45,7 @@ mod. Without a `kiln.mod.json`, the build writes one from the properties; with o
 |---|---|
 | `KilnModId`, `KilnModName`, `Version`, `Description`, `Authors` | identity |
 | `KilnSide`, `KilnClients` | where it runs, what players need |
-| `KilnServices` | the services you use, and `Testing` |
+| `KilnServices` | the services you use, and `Testing`. Since 0.2.0-dev.29.15 `Stations` gives [Stations and Bases](/kiln/wiki/stations) alone, without `Blocks`' side and clients defaults, so players without Kiln can still join |
 | `KilnServer` | your test server's folder |
 | `KilnTestsAutoRun` | run tests at server start and after reloads |
 | `KilnModFolders` | data folders to ship; default `content;assets;skills;quests;blocks;icons;impact;audio;vfx;models` |
@@ -142,5 +142,9 @@ New in 0.2.0-dev.29: `Decisions` ([refusing a death, a pickup or an equip](/kiln
 ([building-material pools](/kiln/wiki/blocks#building-material-pools)), `equipment-sets`
 ([equipment sets](/kiln/wiki/inventory#equipment-sets)) and `Budgets` (the buff room and the program budget read
 before defining).
+
+New in 0.2.0-dev.29.11 ([Gems](/kiln/wiki/gems)): `GemSample` (the Gem of Deep Cuts, a Gem of Bleeding copy with its
+own icon and texts, from a data pack alone, and an opt-in tweak of the game's Gem of Bleeding) and `GemEffects`
+(`Gems.Register` with C# effects: the Gem of Frostbite slows on a critical hit, the Gem of Renewal heals on a kill).
 
 If you rebuild Kiln's packages without changing their version, clear `~/.nuget/packages/kiln.*` first.

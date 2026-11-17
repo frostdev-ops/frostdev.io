@@ -1,7 +1,7 @@
 ---
 title: "Coming from Forge"
 description: "Minecraft Forge concepts and their Kiln equivalents."
-updated: "2026-11-13"
+updated: "2026-11-17"
 ---
 
 | Forge | Kiln |
@@ -15,15 +15,17 @@ updated: "2026-11-13"
 | `EVENT_BUS`, `@SubscribeEvent` | `Events`, `[Subscribe]`, priorities, cancelable events |
 | `ForgeConfigSpec` | `Config.Register<T>()`, `[Comment]`, `[Range]`, `[RequiresRestart]`, `[Synced]` |
 | Brigadier commands | `[Command]` or `Commands.Literal/Argument`, `@p @a @e` |
-| PermissionAPI | `Permissions.Register / Has` |
+| PermissionAPI (with LuckPerms-style groups) | [`Permissions.Register / Has / Explain`, `permissions.json`](/kiln/wiki/permissions) |
 | SavedData, capabilities | `WorldData`, `PlayerData`, `EntityData` |
 | registries, DeferredRegister | [`Blocks.Define`](/kiln/wiki/blocks), or `Content.Items`, `Content.Recipes`, `.Register(...)` |
 | data packs, loot modifiers, `/reload` | `content/*.json`; reapplied when a file changes |
 | missing registry entries | placeholders that keep saved items |
 | resource packs | `assets/assets.json` |
 | SoundEvent, `playSound` | [`cook.json` cues, `Sound`, `Voiceover`](/kiln/wiki/sounds) |
-| SimpleChannel | `Network.Channel(...).Register<T>()` |
+| SimpleChannel, the FML handshake | [`Network.Channel(...).Register<T>()`, mod sync at the join](/kiln/wiki/network) |
 | KeyMappings, Screens, overlays, toasts | `KeyBindings`, `Ui.Screen`, `Hud`, `Hud.Toast` |
+| GUI themes, item rendering in screens | [`Ui.Themes.Define`](/kiln/wiki/ui-looks), [`ui.ItemIcon`](/kiln/wiki/game-ui#item-icons-and-names) |
+| language files (`lang/*.json`) | [`locales/<language>.json`, `Mod.Text`](/kiln/wiki/languages) |
 | title and pause screen buttons | `Ui.Menus.Add` |
 | advancements, FTB Quests | [`quests/*.json`, `Quests.Define`](/kiln/wiki/quests) |
 | villagers, trades | [`npcs` clones, `roster`, `vendor`](/kiln/wiki/npcs) |

@@ -1,11 +1,11 @@
 ---
 title: "What works today"
 description: "What Kiln does in the current build, what is on but not yet confirmed in a real game, what's being built and what isn't, as of November 2026."
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.29**, the current development release; check the download's version before using its new APIs.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.29.16** (mod API 0.2.8), the current development release; check the download's version before using its new APIs.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026, or, for dev.24 and later, in the one real game the release's notes name (Linux,
@@ -13,6 +13,23 @@ Proton, one client). Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) and, for dev.29,
 [On, not yet confirmed in a real game](#on-not-yet-confirmed-in-a-real-game) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
+
+## New in the 0.2.0-dev.29 patches
+
+After 0.2.0-dev.29, Kiln shipped sixteen patches. Most fix how Kiln runs other loaders' mods; four bring a new SDK
+(29.11, 29.14, 29.15 and 29.16), each additive: no public member was removed or changed. **29.15 and 29.16 are not yet
+checked in a real game** except chat history: they passed Kiln's tests and lab checks on a dedicated server, and what a
+game client draws was checked against the game's code or in Kiln's preview renderer.
+
+| Patch | What it brought; evidence |
+|---|---|
+| 29.1 | players with Kiln can join a world run by Kiln again ([update both sides](/kiln/wiki/multiplayer#who-can-join)) |
+| 29.2 to 29.10 | other loaders' mods: XHL mods switched off stay off, Ultimate ASI Loader and `.asi` mods, plugin loaders that run from the game folder, Greeneye, Shroudlink, Auto Doors beside Item Skill Descriptions, CharosDX loader mods, Last adds ([Mods for other loaders](/kiln/wiki/other-mods)); autosaves no longer hitch on hard drives, one key press counts once, keys can be unbound ([Kiln in the game](/kiln/wiki/in-game#keys-in-kilns-menu)); support reports show where other mods changed the game's code ([Debugging](/kiln/wiki/debugging)) |
+| 29.11 | [gems](/kiln/wiki/gems) (mod API 0.2.5): read gems, new gems with C# effects, forge actions from code, sockets on rings, armour and shields. [Kiln's line on the main menu](/kiln/wiki/in-game#the-line-on-the-main-menu). A mod switched off in a profile no longer locks players out. Gems seen in a hosted world (Linux, Proton); a dedicated server with a separate client not yet |
+| 29.12, 29.13 | a game folder that is a link works, EMF API v46 (EMF 0.6.14), Kiln's windows take no stray clicks, Skill Search and the In Game Ping System work |
+| 29.14 | [production stations and bases](/kiln/wiki/stations) (mod API 0.2.6): fill from Magic chests, stop, resume, select, collect, station events. Seen in a hosted world (Linux, Proton); a dedicated server with joined players not yet |
+| 29.15 | (mod API 0.2.7) [item icons and names](/kiln/wiki/game-ui#item-icons-and-names), panels at production stations, [chest gems at the Shroud Forge](/kiln/wiki/gems#chest-gems-in-the-forges-gems-list) (GitHub #61), [new kinds of boot patches](/kiln/wiki/onboot#lists-and-template-components); Expeditions finds survivors again (EMF). Lab checks only |
+| 29.16 | (mod API 0.2.8) [the game's look for Kiln's menus](/kiln/wiki/in-game#the-look-of-kilns-menus) and [themes and fonts for mods](/kiln/wiki/ui-looks), [Kiln in your language](/kiln/wiki/languages), [chat history](/kiln/wiki/in-game#chat-history) by bisdat (tested in the game by bisdat), the launcher's icon on Linux taskbars, faster starts on hard drives, ShroudForge no longer rebuilding its asset mods at every start, Linux configs edited in the launcher kept. The rest is not yet seen in a real game |
 
 ## New in 0.2.0-dev.29
 

@@ -3,7 +3,7 @@ title: "Mods for other frameworks"
 nav: "Other frameworks"
 description: "Kiln runs mods made for EML, ShroudForge, EMF, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink, unchanged, next to Kiln mods."
 status: "partial"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 Kiln loads mods made for other Enshrouded mod frameworks without rewriting them. It supplies the runtimes listed
@@ -55,13 +55,54 @@ a plain DLL. Since dev.22 mods are taken the way they are shared:
   mod's own id shown next to it. ShroudForge packages with upper-case ids import the same way. Kiln's own mod kinds,
   EMF mods and Enshwick mods still need a lower-case id.
 - **A `dinput8.dll` mod keeps its files.** A DLL beside the `.ini`, data or picture files it reads (or `powrprof.dll` with a
-  folder) is imported as one mod with all its files, and loaded from that folder, so it finds them next to its DLL. A mod
-  that looks for its files in the game folder instead is not served by this: the launcher can't place files there yet.
+  folder) is imported as one mod with all its files, and loaded from that folder, so it finds them next to its DLL. Two
+  shapes that only work from the game folder are placed there since 0.2.0-dev.29.4: a plugin loader with a folder of
+  plugin DLLs, and Ultimate ASI Loader with `.asi` mods ([below](#mods-that-run-from-the-game-folder)). Any other DLL mod
+  that reads its files from the game folder is still not served.
   Since dev.24 an update of such a mod (dinput8.dll and the like) replaces the old version instead of becoming a second
   entry, and the same DLL is no longer loaded twice.
+- **Mods for CharosDX's loader** (Sparkworks Enhanced, Cross-Base Storage, Craft From Stations; since
+  0.2.0-dev.29.10). Their download carries the author's own `dinput8.dll`, which loads `mods/<mod>/native/*.dll`. Kiln
+  leaves that loader out (it says it isn't needed) and adds each `mods/<mod>` folder as one native mod, loaded before
+  Kiln hooks anything, in the game and on servers. Its `config.ini` and `debug.log` are in its folder in Kiln's Library.
+  Added with an earlier Kiln? Remove the entry it made (named after the download) and drop the zip on the launcher again.
+- **What an add left out** stays readable since 0.2.0-dev.29.10: the message stays until you close it, and **Last adds**
+  above the list shows your last 10 adds with the files left out and why
+  ([The list on Play](/kiln/wiki/profiles#the-list-on-play)).
+- **Mods that ship a modified EML loader** (Put Away Your Weapon's holster hotkey) are marked **Only partly runs** since
+  0.2.0-dev.29.16: Kiln runs their EML part, not the loader's own code
+  ([details](/kiln/wiki/eml-shroudforge#eml-mods-with-a-modified-loader)).
 
 More on the library: [Profiles and mods](/kiln/wiki/profiles#the-library). Mods you extracted into the game folder by hand
 are in the same list, marked **Game folder** ([In the game folder](/kiln/wiki/profiles#in-the-game-folder)).
+
+## Mods that run from the game folder
+
+New in 0.2.0-dev.29.4. Some mods only work when their files sit in the game folder itself, and Kiln now puts them there
+when you switch them on, so the game loads them itself. The list on Play says **Runs from the game folder** for them
+(since 0.2.0-dev.29.7; before, it said "Will not run" although they ran).
+
+- **Plugin loaders** such as "Autoloot and coop loot sharing" (a `powrprof.dll` with its `plugins` folder). Under Kiln
+  it used to do nothing, because it was loaded from its Library folder and found no plugins there.
+- **Ultimate ASI Loader and `.asi` mods** such as Smart Workshop (its `Scripts` folder). Add Ultimate ASI Loader's
+  download (its `dinput8.dll`) and the `.asi` mod like any other mod. Kiln puts Ultimate ASI Loader next to the game as
+  `xinput9_1_0.dll`, so Kiln's own `dinput8.dll` stays, and the plugins go where the loader looks. An `.asi` mod alone
+  uses the Ultimate ASI Loader Kiln's installer already set up, if there is one. Don't copy Ultimate ASI Loader's
+  `dinput8.dll` into the game folder yourself: that replaces Kiln.
+
+How Kiln treats your files:
+
+- It writes a file only where there is none or where its own copy still is, never replaces a file it did not put there,
+  and removes only its own unchanged files when you switch the mod off or remove it. Settings you changed stay.
+- A code file already there that Kiln didn't place (Shrouded Engine Tweaks' `powrprof.dll`, your own copy) keeps the
+  mod out, and Kiln says so.
+- An interrupted change (the launcher crashed or was closed) is settled at the next activation. On a drive without hard
+  links (some SD cards and network drives) Kiln refuses to place these mods and says why.
+- **Vanilla** and **Without mods** refuse to start while such a loader is still in the game folder: switch the mod off and
+  press Play once first.
+- **Linux (Proton)** needs a DLL override for the file's name: the launcher's notes name it (`powrprof`), and its launch
+  option asks for `xinput9_1_0` with Ultimate ASI Loader ([On Linux](/kiln/wiki/install#on-linux-proton)).
+- Not covered yet: dedicated servers, and a DLL mod that reads only its settings from the game folder.
 
 ## Your other loader is installed too
 
@@ -173,8 +214,8 @@ mods in your [modpack](/kiln/wiki/modpacks).
   next start.
 - **EMF.** Kiln serves EMF 0.6.14's API v46 (since 0.2.0-dev.29.12; v42 since dev.28), so mods built
   for EMF 0.6.3 and later start; 49 of the functions EMF added since 0.6.3 answer "not available" for now. Client-world
-  programs/events remain unsupported, and player-facing rendering/input and joined delivery remain unchecked. Mods
-  requesting above API v42 are refused.
+  programs and events (since 0.2.0-dev.29) have not run in a real game yet, and player-facing rendering/input and joined delivery remain unchecked. Mods
+  requesting above API v46 are refused.
   [Mods built for EMF 0.6.3 to 0.6.8](/kiln/wiki/emf-mods#mods-built-for-emf-063-to-068).
 - **SET.** SET itself only runs in worlds you host. Kiln's dedicated-server probe passes 39/0; game options, `Admin.send`,
   ImGui Debug and SET's `settings.ini` editor remain unavailable. Kiln's tool windows still need client drawing/input
@@ -203,6 +244,10 @@ from there, listed in `kiln/chain.ini`. Kiln also reads the `dinput8-chain.ini` 
 with quoted DLL names and a comment after a name, as [the shared chain spec](/kiln/wiki/dinput8-chain) describes (since 0.2.0-dev.27; before, such a line
 was dropped without a word).
 A mod with its own name (`iphlpapi.dll`, `powrprof.dll`, `dxgi.dll`) is left alone and runs next to Kiln.
+
+Once Kiln is installed, don't copy another `dinput8.dll` (a loader such as Ultimate ASI Loader, or a mod) into the game
+folder: it replaces Kiln's. Drop it on the launcher instead, or list it under another name in `dinput8-chain.ini`
+([the chain spec](/kiln/wiki/dinput8-chain)). Since 0.2.0-dev.29.2 the launcher's text says so too.
 
 A `dinput8.dll` mod you drop on the launcher is kept with the files around it and added as a native mod, loaded from its
 own folder ([Adding mods in the launcher](#adding-mods-in-the-launcher)).
@@ -253,7 +298,11 @@ with dev.21 the page says "No hook map yet".
 
 **Compat rules.** The page lists the compat rules that apply to the loaded profile. A rule can `warn`, load a chain DLL
 `late`, `disable` a chain DLL or a mod the profile lists, or (since 0.2.0-dev.29) say that one DLL loads `before`
-another: Kiln loads the `target` late and keeps the `subject` early. Kiln ships its own rules (`kiln/compat-rules.json`,
+another: Kiln loads the `target` late and keeps the `subject` early. Two more actions are for Shroudtopia mods: `defer`
+(0.2.0-dev.29.4) keeps a named native mod back until Kiln's Shroudtopia host has started its mods, when a named
+Shroudtopia mod is on (at most `max_wait_ms`; a native mod with an `init` is never deferred), and `original-code`
+(0.2.0-dev.29.6) shows a Shroudtopia mod that checks the game's code before it hooks it the game's original code where
+another mod's hook sits ([below](#auto-doors-item-skill-descriptions-and-shroudlink)). Kiln ships its own rules (`kiln/compat-rules.json`,
 updated with every Kiln update); yours go in the profile's config folder as `compat-rules.json`, and a rule of yours with
 the same `id` replaces Kiln's:
 
@@ -315,6 +364,47 @@ items. kiln.log's "chained over" lines and the overlap warnings now name Kiln's 
 
 Status: the switch, overlaps and rules were tested under Wine and on lab servers, and the launcher pages with tests and
 mock data. Nobody has tried them with XHL-Core in a real game yet.
+
+**Where another mod changed the game's code** (0.2.0-dev.29.8). `kiln/state/hooks.json`, which every support report
+includes, has a `codePatches` list: each place where the game's code in memory differs from the game file, which module
+changed it, and for a redirected call what it called before. It helps find two mods that change the same spot.
+
+### Auto Doors, Item Skill Descriptions and Shroudlink
+
+Auto Doors 1.1.0 (through its own `powrprof.dll`) hooks the game early, and two other mods look at the same game
+functions:
+
+- **Shroudlink's K tab** (0.2.0-dev.29.3). The Shroudlink client addon looks for a function Auto Doors hooks, to draw its
+  tab. Kiln now lets the addon finish looking before it starts early native mods such as Auto Doors (at most 10
+  seconds, and only when the addon is installed).
+- **Item Skill Descriptions** 0.3.0 checks the function it changes before it hooks it, and found Auto Doors' hook there,
+  so item tooltips stayed vanilla. 0.2.0-dev.29.4 started Auto Doors later instead, which broke Auto Doors; 0.2.0-dev.29.5
+  took that back. Since 0.2.0-dev.29.6 Auto Doors starts first again, and when Item Skill Descriptions checks the
+  function, Kiln shows it the game's original code (Kiln's shipped `original-code` rule). It then hooks on top of Auto
+  Doors and both run. kiln.log says "item-skill-text sees the game's original code …" when this applies.
+
+All three run side by side. Checked with Kiln's own tests on Wine, not yet in the real game with these three mods.
+
+### XHL mods
+
+XHL's mods (Vein Mining, Area Harvest, Remote Chest and the rest) are plugins of XHL-Core, which you install as a
+native mod or with its own installer. Kiln places them where XHL-Core reads them (the game's `mods` folder); XHL-Core
+loads them, Kiln never runs them.
+
+- **Switching one off stops it** (0.2.0-dev.29.2). A mod whose `native-plugin.ini` you had changed (its settings, or
+  XHL-Core's own switch) used to keep its folder in the game's `mods` folder when switched off, and XHL-Core went on
+  loading it. That file now counts as the mod's settings: the folder goes, the file waits in
+  `kiln/state/placed-settings` and comes back when you switch the mod on again; the launcher says where settings came
+  back from. A new version whose DLL has another name starts with its own `native-plugin.ini`, and Kiln says where yours
+  waits.
+- **A folder you put there yourself** stays when you switch the mod off (Kiln never removes a folder it didn't place),
+  and XHL-Core still loads it: the launcher says so, and how to stop it. The same goes for a ShroudForge mod that is an
+  XHL-Core plugin too (Building Tools for ShroudForge): ShroudForge has it off, but XHL-Core still loads it.
+- **Kiln's in-game Mods page** (0.2.0-dev.29.8) says that XHL-Core loads such a plugin itself and where XHL-Core's own
+  log is (`XHL-Native-Plugin-Host.log`). The yellow "Requires XHL-Core" line shows only when XHL-Core did not start.
+- **XHL-Core's line in the main menu.** Since 0.2.0-dev.29.11 Kiln's own line takes its place, XHL-Core's warnings there
+  ("Game updated", "Mod conflict") included. Kiln setting **mainMenuFooter** (Mods page, Kiln settings) turns Kiln's line
+  off and brings XHL-Core's back ([Kiln in the game](/kiln/wiki/in-game)).
 
 ## Logs
 

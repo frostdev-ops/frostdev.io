@@ -2,7 +2,7 @@
 title: "Icons and textures"
 description: "Your own PNG icons, retextures of the game's images, and new or overridden resources, with no game file changed."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 Kiln serves your files to the game from memory, like a resource pack. No game file changes.
@@ -50,9 +50,15 @@ for (ulong at = 0; at < snapshot.Total;)
 }
 ```
 
-`Assets.ReadBlob(hash)` gives the bytes the game reads for one hash. Capability `assets.blob_catalog`: a dedicated server
-has it, and since 0.2.0-dev.29 every player's game too (on, not yet confirmed in a real game). The sample `BlobCatalog`
-adds `/blobs`.
+`Assets.ReadBlob(hash)` gives the bytes the game reads for one hash; call it from `OnLoad`, a tick or a UI callback,
+since before the game has opened its content index it asks the game itself. Capability `assets.blob_catalog`: a
+dedicated server has it, and since 0.2.0-dev.29 every player's game too (on, not yet confirmed in a real game). The
+sample `BlobCatalog` adds `/blobs`.
+
+**From a worker thread** (0.2.0-dev.29.16): `Assets.ReadResidentBlob(hash)` never asks the game for anything. It
+answers a mod's registered blob at once, and a game blob once the game has opened its content index; until then it is
+null, as for a hash no blob has. `AssetsCatalogChangedEvent` with reason `Ready` says when to try again. A game blob is
+read from its file on the calling thread, so keep it off a frame.
 
 ## Limits
 

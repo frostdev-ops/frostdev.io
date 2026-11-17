@@ -3,7 +3,7 @@ title: "Run a server"
 nav: "Run a server"
 description: "Install, update and run dedicated servers with Kiln, from the launcher or kilnctl on Linux."
 status: "works"
-updated: "2026-11-13"
+updated: "2026-11-17"
 ---
 
 > Rented server with only FTP, or a server without the launcher? See
@@ -53,7 +53,9 @@ enter the address. Joining players' launchers then offer it. See [Join a modded 
 
 ## Who may join
 
-> **Not yet in the real game.** The default refusal and the hold pass on test servers. They haven't run with a real client.
+> **Partly seen in a real game:** a player without Kiln refused by a server whose mods they need, a Kiln player
+> without a required mod refused with a message, and `modSync: off` letting players without Kiln in. The rest of these
+> rules, the hold before world data among them, pass on test servers.
 
 `modSync` in `kiln/config/network.json` sets what happens when a Kiln player's mods don't match:
 
@@ -65,7 +67,9 @@ enter the address. Joining players' launchers then offer it. See [Join a modded 
 | `refuse` | players missing anything required are refused, with a list |
 
 A player let in without a mod doesn't get that mod's entities. The check covers Kiln mods; mods for other frameworks
-aren't compared yet.
+aren't compared yet. Every key of `network.json` (version matching, optional mods, the hold, rate limits, the modpack
+address): [Network](/kiln/wiki/network#networkjson). Who may run which command is in `kiln/config/permissions.json`:
+[Permissions](/kiln/wiki/permissions).
 
 A player without Kiln is held before any world data, at most `vanillaHoldSeconds` (default 5), until the server decides. They're
 refused when:

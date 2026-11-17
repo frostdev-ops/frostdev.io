@@ -2,7 +2,7 @@
 title: "Events"
 description: "One event bus for every mod and service: subscribe, cancel, decide, post your own. About 110 event types."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 Kiln has one event bus, `Events`, like Forge's `EVENT_BUS`. Kiln's services post about 110 event types on it: players,
@@ -137,6 +137,8 @@ The main types. Each service's page or the API reference has the rest.
 | World and gameplay | `CraftEvent`, `ItemCraftedEvent`, `InteractEvent`, `LootEvent`, `ItemPickingUpEvent`, `ItemPickupEvent`, `ItemTossEvent`, `BuildEvent`, `TeleportEvent` (also redirect), `NaturalSpawnEvent`, `EntityJoinLevelEvent`, `EntityLeaveLevelEvent` | craft, interact, loot, a walk-over pickup, toss, teleport, spawns |
 | Building | `BuildEditingEvent`, `BuildEditEvent` | an edit |
 | Items | `ItemsGivenEvent`, `ItemsTakenEvent`, `WaterRefilledEvent`, `PlayerEquippingEvent`, `EquipmentSetChangedEvent` | an equip |
+| [Gems](/kiln/wiki/gems) (since 0.2.0-dev.29.11) | `GemTriggeredEvent`, `GemSocketChangedEvent`, `GemCraftingEvent`, `GemCraftedEvent`, `GemForgeOpenedEvent` (0.2.0-dev.29.15) | a player's forge action |
+| [Stations and bases](/kiln/wiki/stations) (since 0.2.0-dev.29.14) | `StationStateChangedEvent`, `StationCraftedEvent`, `StationPlacedEvent`, `StationRemovedEvent`, `StationPlayerActionEvent`, `StationChangedEvent`, `BasesChangedEvent` | a player's button press at a station |
 | Abilities and programs | `AbilityCastEvent`, `AbilityCastedEvent`, `ImpactStartingEvent`, `ImpactStartedEvent`, `ImpactEndedEvent`, `ImpactDamageEvent`, `ImpactBuffEvent`, `SequenceStartedEvent` | a cast, a program starting |
 | Talents | `TalentUnlockingEvent`, `TalentChangedEvent`, `GameNodesRefundedEvent` | an unlock |
 | Quests and dialogue | `QuestStartedEvent`, `QuestStepEvent`, `QuestCompletedEvent`, `QuestFailedEvent`, `QuestObjectiveProgressEvent`, `ConversationOptionEvent`, `DialogueLineEvent`, `KnowledgeChangedEvent` | quest steps, a conversation option; knowledge results |
@@ -150,6 +152,9 @@ The main types. Each service's page or the API reference has the rest.
 `PlayerProgressionChangedEvent`, `BuffRemovedEvent`, `EquipChangedEvent`, `ComponentWrittenEvent` and the players'
 `PlayerKickedEvent`, `PlayerBannedEvent` and `PlayerLoginEvent` (cancelable). A change made inside the handler of its
 own event arrives first thing in the next step instead of looping.
+
+Since 0.2.0-dev.29.14 `ItemCraftedEvent` reports a production station's cycle once, when the items are made (before,
+twice: at its start and at its end). A player's own crafting is reported as before.
 
 Many events cost nothing until someone subscribes: Kiln starts watching the game for them only then. Subscribe to what
 you need, not to `KilnEvent`.

@@ -2,7 +2,7 @@
 title: "Debugging"
 description: "Why a mod didn't load, the support report to send, the fault policy, crash reports, and breakpoints in a running server."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 ## Start with kiln.log
@@ -10,10 +10,14 @@ updated: "2026-11-15"
 `kiln logs --mod my-mod`, or read `kiln/logs/kiln.log`. A mod that didn't load says why, and the others load anyway:
 
 ```
-mod my-mod 0.1.0 loaded in … ms
+mod my-mod 0.1.0 loaded in … ms (layout check … ms, assemblies … ms, OnLoad … ms)
 [E] [host] mod my-mod 1.0.0 not loaded: missing dependency sample-lib ^1.0
 [I] [host] mod my-mod 1.0.0 skipped: side 'client': not loaded on a server
 ```
+
+Since 0.2.0-dev.29.16 a mod's line splits its load time: the check of its layout, reading its assemblies, and its
+`OnLoad` (with the registration of its event handlers). Kiln reads the mods' files ahead on a background thread while
+the game starts (`prefetch: …` in kiln.log; `KILN_NO_PREFETCH=1` turns it off).
 
 Data packs log problems per file.
 
@@ -63,10 +67,12 @@ launcher's **Logs** page and the admin **Crashes** page.
 | the in-game Mods page is empty next to ReShade or another overlay | since dev.24 Kiln takes the graphics device over when the game makes its swapchain, if the PC has one graphics device. When it can't, kiln.log says why |
 | Steam shows the game as running for about a minute after you quit (Linux) | Steam's networking library crashes while the game shuts down, and the system writes a crash dump of several gigabytes. No Kiln or mod code is in that crash |
 | a `.rar` is refused | no unrar, 7-Zip or bsdtar on the PC. Extract it and drop the folder |
-| the game slows down for seconds at each autosave, on a hard drive | fixed in 0.2.0-dev.29 (GitHub issue 39): Kiln's save data is no longer written and forced to disk when no mod data changed. If it still happens, send a support report: its `tick-stats.jsonl` tells a slow session from a stall at save time |
+| the game slows down for seconds at each autosave, on a hard drive | fixed in 0.2.0-dev.29 and 0.2.0-dev.29.3 (GitHub issue 39): Kiln's save data is no longer written when no mod data changed, and Kiln.Saves does its file work on its own thread. The game's write of the world waits for Kiln's file at most 6 seconds; on a slower drive it goes ahead and kiln.log says so, with how long each part of a save took. If it still happens, send a support report: its `tick-stats.jsonl` tells a slow session from a stall at save time |
+| the loading screen freezes for seconds at start, on a hard drive | fixed in 0.2.0-dev.29.16: Kiln's check for other mod loaders no longer reads the Windows folder's DLLs and runs on its own thread, and the mods' files are read ahead. Not yet checked on a real hard drive |
 | the game or server closes at its start and names mods | Kiln stopped the start on purpose, so a world doesn't lose its mods' progress: [When Kiln stops the start](/kiln/wiki/dedicated-servers#when-kiln-stops-the-start). Don't restart; fix the mod list |
 | the game crashes at its start with a frame generation mod (NVIDIA Streamline) | fixed in 0.2.0-dev.29: with Streamline installed Kiln leaves its overlay's drawing off (mod windows, on-screen drawing and screen effects), while key bindings, menu entries and mod loading keep working. `KILN_UI_OVERLAY=1` tries the drawing anyway, `KILN_UI_OVERLAY=0` switches it off. Not yet tried on a PC with such a mod |
-| the overlay stays off after a crash at start | if the game closes while Kiln's overlay starts, the next start leaves its drawing off and kiln.log says why; after a minute without it, the next start tries once more. Remove `kiln/state/overlay-start.guard`, or set `KILN_UI_OVERLAY=1`, to try again yourself |
+| the overlay stays off after a crash at start | if the game closes while Kiln's overlay starts, the next start leaves its drawing off and kiln.log says why; after a minute without it, the next start tries once more. Since 0.2.0-dev.29.3, adding, removing or replacing a graphics wrapper (a frame generation mod) also allows one new try. Remove `kiln/state/overlay-start.guard`, or set `KILN_UI_OVERLAY=1`, to try again yourself |
+| one key press opens and closes a mod's window at once | fixed in 0.2.0-dev.29.3 for a focus change while the key is held. If it still happens, kiln.log has a line `ui: key … went down again … ms after its last press`; send it |
 | a mod's settings page says its file couldn't be saved | a read-only folder or a full disk. Since 0.2.0-dev.29 the page says so until a later save works |
 
 ## Save a support report
@@ -92,9 +98,20 @@ It only reads. Nothing is written to the game folder, and the game may be runnin
 - since 0.2.0-dev.29, the end of `kiln/logs/tick-stats.jsonl`: Kiln's step times per minute and world, so a slow session
   can be told apart from a stall at save time. It says how long the game's own wait for its world jobs, each Kiln
   service or plugin and the slowest subscribers took, with a breakdown of each minute's worst step;
+- since 0.2.0-dev.29.8, `kiln/state/hooks.json` has a `codePatches` list: each place where the game's code in memory
+  differs from the game file, which module changed it, and for a redirected call what it called before. It finds two
+  mods that change the same spot;
+- since 0.2.0-dev.29.9, kiln.log lines for EMF mod windows: the title and rows when one opens, each click the mod gets,
+  and when it closes;
 - Kiln's state files, and `profile.json`, `chain.ini` and `kiln.json` as they are, after the removals below;
-- the launcher's log;
+- the launcher's log, which since 0.2.0-dev.29.10 lists what each add to the Library took and each file it left out, with
+  the reason;
 - lists of the game folder, Kiln's folder and each framework's mods folder: names, sizes and dates only.
+
+The report calls `steam_api64.dll` in the game folder Steam's own Steamworks DLL (since 0.2.0-dev.29.12; before, "an
+unknown DLL"), lists an EML mod that is on but could not be applied as "on, not applied" with the reason (since
+0.2.0-dev.29.8; before, "off"), and says what doesn't run of a mod that only partly runs under Kiln (since
+0.2.0-dev.29.16).
 
 The zip is usually under 1 MiB, and cut at 6 MiB before compression.
 
@@ -123,7 +140,8 @@ When a feature stops working next to another DLL mod, check the hook lines in ki
 [W] [kiln] compat: overlap: xhl-core.dll+0x11ea80 hooked chat/ChatLogAdd before chat, emf; Kiln chained over it. ...
 ```
 
-`kiln/state/hooks.json` lists every hooked function, its links in order, overlaps and the compat rules that fired. The
+`kiln/state/hooks.json` lists every hooked function, its links in order, overlaps, the compat rules that fired and
+(since 0.2.0-dev.29.8) `codePatches`, every place another module changed the game's code. The
 fix for an overlap is usually to load the other DLL late:
 [closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods). For your own hooks: [Hooks and patches](/kiln/wiki/hooks).
 
