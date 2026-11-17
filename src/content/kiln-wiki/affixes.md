@@ -3,7 +3,7 @@ title: "Affixes: bonuses on one item"
 nav: "Affixes"
 description: "Roll bonuses such as +5 Strength onto one particular item. Kiln applies them while the item is in hand or worn."
 status: "pending"
-updated: "2026-11-13"
+updated: "2026-11-17"
 ---
 
 > **New in 0.2.0-dev.27.** Proven on a test server with stand-ins for players. What a player feels and sees is a check
@@ -12,7 +12,8 @@ updated: "2026-11-13"
 "+5 Strength", "+10% Move Speed", "+17% Resist Fire": a bonus that belongs to one sword, not to every sword of its kind.
 Your mod says which affixes there are and which items roll them. Kiln keeps each item's rolls with that item, and
 applies them to whoever holds or wears it. Add `<KilnServices>Blocks</KilnServices>` to the project. The sample
-`AffixSword` is a sword with one of three.
+`AffixSword` is a sword with one of three. For the game's own per-item bonus, a gem in a socket (since 0.2.0-dev.29.11 a
+mod can give rings and armour sockets too), see [Gems](/kiln/wiki/gems).
 
 ## Define and roll
 

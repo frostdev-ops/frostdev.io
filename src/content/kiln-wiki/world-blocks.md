@@ -3,14 +3,16 @@ title: "World and furniture blocks"
 nav: "World blocks"
 description: "Crafting props, nearby-prop recipes, container loot, lids, doors and collision boxes."
 status: "pending"
-updated: "2026-11-08"
+updated: "2026-11-17"
 ---
 
 > **New in 0.2.0-dev.20.** Crafting props, default loot, lid and door controls, and several collider boxes require
 > the dev.20 runtime and MDK or newer. Server checks pass; visible behaviour still needs a client check.
 
 [Blocks](/kiln/wiki/blocks) make things players place: props, stations, containers, doors, beds and seats. Define them in
-`OnLoad` or in `blocks/*.json`; Kiln derives their ids. Start with `kiln new world-blocks MyWorkshop`.
+`OnLoad` or in `blocks/*.json`; Kiln derives their ids. Start with `kiln new world-blocks MyWorkshop`. To run the
+production stations of a player's base from code (fill them from Magic chests, stop, resume, collect), see
+[Stations and bases](/kiln/wiki/stations).
 
 ## A recipe needs a nearby prop
 

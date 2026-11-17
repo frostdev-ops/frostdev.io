@@ -2,7 +2,7 @@
 title: "Building blocks"
 description: "Say what you mean: a spell, a sword, a potion, a status, a creature. Kiln picks the game data, the ids and the programs."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 > **Works** since 0.2.0-dev.14: on test servers, and much of it seen in the game (spells, abilities, items, creature rules,
@@ -317,6 +317,9 @@ C# is there from the next start, because the game reads these tables once.
 A station that works on its own and lists `Recipes` has a workshop of its own: it runs only its recipes, and its menu
 lists only them, titled with its name. Its menu's title and list are still
 [open in the game](/kiln/wiki/status#open-in-the-game).
+
+To run the production stations in players' bases from code (fill, stop, resume, collect), see
+[Stations and bases](/kiln/wiki/stations).
 
 **New:** a prop can have a model of your own, `Visual = new VisualBlock { Model = "models/lantern.glb" }`. In
 `blocks/*.json`, `kiln cook` cooks the glTF by itself; from C#, add a model step to `assets/cook.json`. Its collision is

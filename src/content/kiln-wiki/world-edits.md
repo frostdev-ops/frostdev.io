@@ -2,7 +2,7 @@
 title: "World edits"
 description: "Dig, build, flatten and paint terrain, place props, paste schematics, lay terrain overlays, and ask the world about ground, sight and paths. Players without Kiln see it all."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 Kiln uses the game's own building and terraforming, so every player sees the edits. It adds the areas it edits to the save, so
@@ -197,6 +197,8 @@ The Schematics sample registers `/build`:
 crafting or interacting in an area. The admin **Zones** and **Map** pages edit them.
 
 Kiln's own edits leave bases alone unless asked (`BuildFlags.InBases`), and follow zones when asked (`BuildFlags.RespectZones`).
+To find a base and read its altars, Magic chests and production stations (`Bases.Of`, `Bases.At`), see
+[Stations and bases](/kiln/wiki/stations).
 
 ## Limits
 

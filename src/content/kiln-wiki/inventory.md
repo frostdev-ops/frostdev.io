@@ -3,7 +3,7 @@ title: "Inventory transfers"
 nav: "Inventory transfers"
 description: "Move gear with its state, put items on and take them off, swap whole sets of gear, read container names, keep items out of quick stack or move all, and keep data on one item."
 status: "pending"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 > **New in 0.2.0-dev.20.** These APIs require the dev.20 runtime and MDK or newer. Server evidence and pending client checks are tracked on
@@ -11,6 +11,7 @@ updated: "2026-11-15"
 
 `Kiln.Items` adds moves that preserve the item's entity: level, upgrades, gem slot and durability follow it. A take followed
 by a give creates new gear. Everything here runs on the tick thread; moves finish in a later simulation step.
+Sockets and gems (`Gems.AddSocket`, socketing at the Shroud Forge from code) are on [Gems](/kiln/wiki/gems).
 
 ## Move a stack
 
