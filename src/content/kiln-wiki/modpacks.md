@@ -3,7 +3,7 @@ title: "Join a modded server"
 nav: "Join a modded server"
 description: "What a modded server needs from your game, and how the launcher installs its modpack with your consent."
 status: "works"
-updated: "2026-11-11"
+updated: "2026-11-17"
 ---
 
 ## What a server needs from you
@@ -29,6 +29,14 @@ runs, or install its modpack.
 - With Kiln, missing a mod that states `clients: "mod"` means you're refused by default and told which mods. A server with `modSync`
   set to `warn` or `off` lets you in, without that mod's entities.
 - Playing vanilla with a character carrying Kiln items can crash on a server that lets you in, and may lose those items elsewhere.
+- **Update Kiln on both sides.** In 0.2.0-dev.29 every Kiln player who joined a world run by Kiln (a friend's hosted
+  world or a dedicated server) was turned away after a few seconds ("Your Kiln handshake did not complete before
+  admission timed out"). 0.2.0-dev.29.1 fixes that; the host or server and every player need it.
+- **A mod switched off is not required** (0.2.0-dev.29.11). Kiln used to list a mod switched off in the host's or
+  server's profile as one players need, so a game hosting its own world refused its own player and a server refused
+  players without it. A mod a server skips because it is only for clients is still listed.
+
+How Kiln's handshake and mod check work: [Kiln.Network](/kiln/wiki/network).
 
 ## When a server refuses you
 

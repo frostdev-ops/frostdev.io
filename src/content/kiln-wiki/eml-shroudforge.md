@@ -3,7 +3,7 @@ title: "EML and ShroudForge mods"
 nav: "EML and ShroudForge"
 description: "Kiln runs EML data mods and ShroudForge's Lua mods unchanged, with no extra loader and no Wine settings."
 status: "pending"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 EML (the Enshrouded Mod Loader) and ShroudForge are the frameworks with the most Enshrouded mods. Both come with Kiln
@@ -92,6 +92,21 @@ On Windows, with ShroudForge mods in the profile, these mods now switch on: Shro
 `\\?\C:\...`, and Kiln used to compare the two spellings letter by letter. An `extended.mod.json` you made by hand as a
 workaround can stay; Kiln takes it as its own switch. Kiln's in-game Mods page treats that folder as the same folder
 however ShroudForge spells it.
+
+### EML mods with a Shroudtopia module
+
+Some mods come as an EML mod (its `mod.json` and Lua) with a Shroudtopia module beside it in the same folder: Skill
+Search (the module draws its search box) and the In Game Ping System (its markers). The launcher adds such a mod as an
+EML mod. Since 0.2.0-dev.29.13 Kiln also loads the Shroudtopia module of an EML mod that is switched on, so both halves
+run; before, the module started only with Shroudtopia's drop-in folder on. If you removed its `mod.json` and `src`
+folder as a workaround, add the mod again as it came.
+
+### EML mods with a modified loader
+
+Some mods ship EML's `dbghelp.dll` rebuilt with code of their own, such as Put Away Your Weapon's holster hotkey. Kiln
+runs such a mod's EML part (its Lua), but never that DLL: it is a whole EML loader that would patch the game's data a
+second time. Since 0.2.0-dev.29.16 the launcher marks the mod **Only partly runs** and says what doesn't run, as do
+kiln.log and the support report; before, it called the DLL "not needed".
 
 EML mods change data that the server and every player need to agree on. Use the same EML mods on the server and in
 each player's game. A server with bigger stacks and a player without them can lose items.
@@ -200,6 +215,13 @@ tests and under Wine, not in a game yet: SpiderHook itself hasn't been run besid
 says which way ShroudForge's check went (`[sf] ... executable file accepted ...` or `refused: <reason>`). Other loaders'
 code patches (EMF's memory writes, SET, Flame) can still hide the spawn code from it.
 
+**Faster starts with asset mods** (0.2.0-dev.29.16). With a ShroudForge asset mod that also exports a file (Holster
+Toggle, for one), every start restored the game's data and applied all asset mods again: over two minutes on a Steam
+Deck. ShroudForge now keeps a record beside its backup (`enshrouded.kfc.prepared.json`) and skips that step while the
+mods, the game build, the game's data files and the exported files are as the last start left them. Any change, or
+anything it can't check, applies them again, and so does another program replacing the game's data file. Its status
+file is also written every 3 seconds instead of about 1.5 times a second. Not yet checked in a real game.
+
 ### ShroudForge's own loader in the game folder
 
 New in 0.2.0-dev.29: when ShroudForge's own loader is in the game folder, Kiln says so. The Engines view's ShroudForge
@@ -236,10 +258,15 @@ ShroudForge's native runtime off. On the current game build these hooks are dorm
 [after Kiln and ShroudForge](/kiln/wiki/other-mods#closed-source-dll-mods).
 
 **Linked home folder.** Since dev.21 ShroudForge placement no longer refuses a game folder just because `/home` is a
-link to `/var/home` (Fedora Atomic, Bazzite). Links inside the managed folders are still refused.
+link to `/var/home` (Fedora Atomic, Bazzite). Links inside the managed folders are still refused. Since
+0.2.0-dev.29.12 a game folder that is itself a link or junction works too: the Engines view no longer shows ShroudForge
+with "invalid game path" for it, and says why when a game folder really is unusable.
 
 To start once without ShroudForge mods, use **Just once**, **Without mods** on the launcher's Play, or set
-`KILN_SHROUDFORGE=0` in the launch options. Going back to ShroudForge alone no longer needs a reinstall (dev.24): Kiln's
+`KILN_SHROUDFORGE=0` in the launch options. That variable switches ShroudForge off until you remove it: setting it to 0
+does not mean "default". Since 0.2.0-dev.29.7 an EML mod that needs ShroudForge says so when it is skipped for that
+reason: remove the variable, restart Steam and the Kiln launcher, and start the game again. Since 0.2.0-dev.29.8 the
+support report lists such a mod as "on, not applied" with the reason, not as "off". Going back to ShroudForge alone no longer needs a reinstall (dev.24): Kiln's
 EML part used to put the game's data files back from a backup although ShroudForge had patched them.
 
 ## EML and ShroudForge together

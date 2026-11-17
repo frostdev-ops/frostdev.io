@@ -3,7 +3,7 @@ title: "Greeneye, Enshwick, SET and more"
 nav: "More frameworks"
 description: "How Kiln runs mods for SET, Greeneye Loader, Creative Mode's Flame, Shroudtopia, Enshwick, shroudlink and Ember."
 status: "pending"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 Kiln has a part for each of these frameworks. All of them come with Kiln, so you don't install the framework. Each
@@ -34,7 +34,9 @@ Lua mods for Shrouded Engine Tweaks (SET 0.1.1).
 - **Limits:** Kiln runs SET mods with time limits and keeps each mod to its own folder. Only sprint-stamina and
   fall-damage systems can be switched off.
 - **SET installed too:** if any other tool's `powrprof.dll` is loaded (SET's own, Enshwick's, Shared XP), Kiln's SET
-  part stays off.
+  part stays off. The other way round, since 0.2.0-dev.29.4: a mod Kiln would place in the game folder as
+  `powrprof.dll` (a plugin loader) is left out while SET's own `powrprof.dll` is there, and Kiln says so
+  ([Mods that run from the game folder](/kiln/wiki/other-mods#mods-that-run-from-the-game-folder)).
 
 **In dev.20:** `Admin.setLevel`, `Admin.setFlameLevel`, English item names and `Res.text` lookups are available.
 General English localization tags need a locally generated client text catalog; a server without it returns nil.
@@ -72,6 +74,14 @@ Hollow Halls Progression.
 - **The Worst Map Mod** patches the game's code in place. Up to 0.2.0-dev.27 that switched off several of Kiln's
   features, so Kiln mods next to it did nothing; since 0.2.0-dev.28 they keep working
   ([Mods that patch the game's code](/kiln/wiki/other-mods#closed-source-dll-mods)).
+- **Quick Deposit's keys** (G G, K) work under Kiln since 0.2.0-dev.29.3. Greeneye mods now find their game functions in
+  the game's original code, read from the game's exe, so another loader's hook over a function no longer hides it from
+  them; when the exe can't be read, Kiln looks in the live code as before. kiln.log has one line per Quick Deposit start
+  that says whether both of its hooks were found.
+- **Mods start when a game thread can't be opened** (0.2.0-dev.29.11). On some PCs (security software is the usual
+  source of such threads) Kiln wrote no Greeneye hooks at all, so The Worst Map Mod and Continue never started and the
+  start took about a minute of retries. Kiln now does as Greeneye Loader does: such threads don't hold the hooks back,
+  and kiln.log names them.
 
 Status: untested in game.
 
@@ -113,6 +123,12 @@ Mods for Shroudtopia 0.1.1 and its Enshrouded 1.0 release: minimaps, first-perso
 - **A mod that never reports itself active** shows as "activating" with the reason (the mod may not support this game
   version), instead of "inactive" with an `Activating:` line in kiln.log twice a second. Kiln calls its `Activate` on
   every update, as Shroudtopia's own loader does, and says so once.
+- **EML mods with a Shroudtopia module** (Skill Search, the In Game Ping System): since 0.2.0-dev.29.13 Kiln loads the
+  module of such an EML mod when the mod is on, without Shroudtopia's drop-in
+  ([EML mods with a Shroudtopia module](/kiln/wiki/eml-shroudforge#eml-mods-with-a-shroudtopia-module)).
+- **Item Skill Descriptions next to Auto Doors** work side by side since 0.2.0-dev.29.6
+  ([details](/kiln/wiki/other-mods#auto-doors-item-skill-descriptions-and-shroudlink)).
+- Since 0.2.0-dev.29.16 Kiln's Shroudtopia part no longer reads mod DLLs again every half second.
 
 Status: untested in game.
 
@@ -166,6 +182,12 @@ kit.
 - **Mods on without the addon** (0.2.0-dev.29). When your profile switches shroudlink mods on in a player's game but
   doesn't load the client addon, the launcher's mod list says the mods still run and that the in-game MODS tab needs the
   addon, and offers to switch the addon on when it is in the Library. A support report names it too.
+- **Singleplayer: an old `shroudlink_core.dll` in the game folder** (0.2.0-dev.29.4). If a core from an earlier hand
+  installation is still there, the client addon starts it, and your profile's shroudlink mods (Expeditions, Assistants)
+  don't load ("no mods on this server"). The launcher, kiln.log and support reports name the file Kiln found: remove
+  `shroudlink_core.dll` from the game folder, and Kiln runs the mods. Keep the addon on: it draws the MODS tab.
+- **The K tab next to Auto Doors** works since 0.2.0-dev.29.3
+  ([details](/kiln/wiki/other-mods#auto-doors-item-skill-descriptions-and-shroudlink)).
 
 Status: works on a test server (shroudlink's own self-test passed). With players joined: untested. The MODS tab after
 dropping the addon on the launcher: not seen in a real client yet.
