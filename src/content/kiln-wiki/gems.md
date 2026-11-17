@@ -13,7 +13,7 @@ game. With one:
 
 - **Rings, armour and shields with a socket** are listed at the Shroud Forge on a Kiln client. Take the piece off first:
   the forge lists what is in your backpack and action bars, not what you wear.
-- **Chest gems at the forge** (29.15): on a server whose mod offers them, the gems in your chests show in the forge's
+- **Chest gems at the forge** (29.15, seen in a real game): on a server whose mod offers them, the gems in your chests show in the forge's
   own GEMS list after your own, and you can insert, upgrade and recycle them without moving them first. The mod can
   let a chest or your base's Magic chests pay the essence. This needs Kiln 0.2.0-dev.29.15 or newer in your own game;
   without it the forge works as usual.
@@ -175,8 +175,16 @@ Capability `gems.sockets`.
 by hand with the four events; Frostbite and Renewal; a refused Recycle; rings with a socket at the forge; `AddSocket` and
 `ReturnSocketedGems`; sockets kept after leaving and joining; a removed mod's gems doing nothing. Not yet seen: a
 dedicated server with a separate Kiln client, a player without Kiln there, the German texts, tooltips after a
-data-pack change. 29.15's chest gems passed lab checks on a dedicated server; the forge's GEMS list with chest gems has
-not been seen in a real game yet.
+data-pack change.
+
+29.15's chest gems, in a real game on 17 November (bisdat, GitHub #61): a world hosted on a Bazzite PC under Proton,
+with bisdat's server mod Gem Forge Magic Storage 1.0.0 offering the base's Magic chests. Passed: 28 loose gems of one
+Magic chest as rows in the forge's own GEMS list; a chest gem socketed into a held weapon with the game's controls,
+without a trip through the backpack; unsocketed back to the backpack; upgraded from level 43 to 44 with the 172 Archaic
+Essence VII paid from the Magic chests and none in the backpack; refused when the essence was short, with nothing lost;
+recycled; and offers withdrawn, leaving the player's own gems. Not yet seen: an action on a row whose gem was just
+moved, two players at one forge at once, the cross-base permission cases, and a player who joined a dedicated server.
+The read-only `GemForgeCandidates()` copy has not been checked in a real game yet.
 
 The full guides are in Kiln's repository, `docs/kiln/services/gems.md` (with `gems-new.md`, `gems-forge.md` and
 `gems-sockets.md`) and `docs/kiln/ui-gemforge.md`, on [GitHub](https://github.com/frostdev-ops/kiln).
