@@ -2,7 +2,7 @@
 title: "Admin pages"
 description: "Live tools for a running server in the launcher: players, map, zones, world, creatures, game data, mods and more."
 status: "works"
-updated: "2026-11-04"
+updated: "2026-11-17"
 ---
 
 Open a running server and choose **Admin**. The launcher connects directly on the same machine (with a token only it can
@@ -22,7 +22,7 @@ read), or through an SSH tunnel. It reconnects after a restart. Kiln checks ever
 | Creatures | find, inspect; change level, faction, size; orders (stay, attack, guard) |
 | Game data | search spells, creatures, buffs, perks, skills; change or reset a value |
 | Content | change or reset items and recipes; data packs and conflicts |
-| Permissions | groups, rules, membership; why a player may or may not do something |
+| Permissions | groups, the server's user groups mapped to Kiln groups, players' groups and rules, every registered node, and why a player may or may not do something ([Permissions](/kiln/wiki/permissions)) |
 | Configs | every mod's settings, checked as you type |
 | Mods | state, cost per tick, faults; test, reload, unload, load |
 | Console | Kiln commands with completion and history; the server log |

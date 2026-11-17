@@ -2,7 +2,7 @@
 title: "Multiplayer"
 description: "What players need, who can join, a short hold at the door, kicks and bans, per-character progress, synced configs, your own network messages and client code."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-17"
 ---
 
 ## Decide what players need
@@ -17,7 +17,9 @@ Set `clients` in your [manifest](/kiln/wiki/manifest):
 
 ## Who can join
 
-> **Not yet in the real game.** These rules pass on test servers. They haven't run with a real client.
+> **Partly seen in a real game:** a player without Kiln refused by a server whose mods they need, a Kiln player
+> without a required mod refused with a message, and `modSync: off` letting players without Kiln in. The rest of these
+> rules, the hold before world data among them, pass on test servers.
 
 | Client | Server | Result |
 |---|---|---|
@@ -30,7 +32,13 @@ Set `clients` in your [manifest](/kiln/wiki/manifest):
 | Kiln, other building-material pools than the server's | a mod with pools | refused before any block data, with the pools named |
 | Kiln, less room for mod buffs than the server uses | a server with many mod buffs | refused, with how many the server uses and how much room the game has |
 
-The check on a Kiln client needs `side: both`. `optionalMods` exempts a mod. See [Run a server](/kiln/wiki/servers).
+The check on a Kiln client needs `side: both`. `optionalMods` exempts a mod. See [Run a server](/kiln/wiki/servers), and
+[Network](/kiln/wiki/network#the-join-step-by-step) for the handshake step by step and every `network.json` key.
+
+- **Update both sides to 0.2.0-dev.29.1 or newer.** In 0.2.0-dev.29 every Kiln player who joined a world run by Kiln
+  was turned away after a few seconds ("Your Kiln handshake did not complete before admission timed out"); 29.1 fixed it.
+- Since 0.2.0-dev.29.11 a mod switched off in the host's or server's profile no longer counts as a mod players need.
+  Before, a game hosting its own world could refuse its own player ("This server requires mods you do not have").
 
 The check covers Kiln mods. Mods made for [other frameworks](/kiln/wiki/other-mods) aren't compared yet, except by their
 own framework (Enshwick has its own join check). A server's modpack can carry them.
@@ -132,7 +140,8 @@ channel.SendToAll(message);                                       // on the serv
 ```
 
 Channels use the game's connection: no extra port. Register messages in the same order on both sides. Players without Kiln
-never receive them. A channel closes when its mod unloads.
+never receive them. A channel closes when its mod unloads. Sends, peers, events, limits and threads:
+[Network](/kiln/wiki/network).
 
 `NetPeer.FramesIn` and `NetPeer.FramesOut` (0.2.0-dev.28) count the frames each player's game and the server have sent
 on Kiln's channel; a player without Kiln sends none.

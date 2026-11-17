@@ -5,8 +5,8 @@ export const kilnSource = 'https://github.com/frostdev-ops/kiln';
 // fail the build when a file is missing here or a slug has no file, so the two lists cannot drift.
 export const kilnWikiSections = [
   { id: 'players', title: 'Players', pages: ['install', 'profiles', 'modpacks', 'other-mods', 'eml-shroudforge', 'emf-mods', 'more-frameworks'] },
-  { id: 'servers', title: 'Server admins', pages: ['dedicated-servers', 'servers', 'admin-pages'] },
-  { id: 'modding', title: 'Modding', pages: ['first-mod', 'code-mods', 'hooks', 'events', 'world-programs', 'manifest', 'multiplayer', 'data-packs', 'game-data', 'onboot'] },
+  { id: 'servers', title: 'Server admins', pages: ['dedicated-servers', 'servers', 'permissions', 'admin-pages'] },
+  { id: 'modding', title: 'Modding', pages: ['first-mod', 'code-mods', 'hooks', 'events', 'world-programs', 'manifest', 'multiplayer', 'network', 'data-packs', 'game-data', 'onboot'] },
   {
     id: 'gameplay',
     title: 'Gameplay',
