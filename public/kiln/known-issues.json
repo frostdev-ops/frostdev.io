@@ -1,0 +1,51 @@
+{
+  "format": 1,
+  "issues": [
+    {
+      "id": "proton-override",
+      "title": "Kiln needs one Steam launch option on Linux and Steam Deck",
+      "fix": "Under this Proton, Wine loads its own dinput8.dll, so Kiln never starts. In Steam: right-click Enshrouded > Properties > General > Launch Options, paste the line below and start the game again. If the box already has a line, put the WINEDLLOVERRIDES part in front of it. GE-Proton 11-11 and later don't need this.",
+      "copy": "WINEDLLOVERRIDES=\"dinput8=n,b\" %command%",
+      "match": { "findings": ["proton-override"], "os": ["linux", "deck"] },
+      "added": "2026-11-18"
+    },
+    {
+      "id": "proton-chained-override",
+      "title": "Ultimate ASI Loader needs a second override under Proton",
+      "fix": "Ultimate ASI Loader sits next to Kiln as xinput9_1_0.dll, and Valve's Proton loads its own copy of that DLL instead, so the loader and its .asi plugins don't start. In Steam: right-click Enshrouded > Properties > General > Launch Options and use the line below instead of the dinput8-only one.",
+      "copy": "WINEDLLOVERRIDES=\"dinput8,xinput9_1_0=n,b\" %command%",
+      "match": { "findings": ["proton-chained-override"], "os": ["linux", "deck"] },
+      "added": "2026-11-18"
+    },
+    {
+      "id": "antivirus-files-missing",
+      "title": "An antivirus removed some of Kiln's files",
+      "fix": "Some of Kiln's DLLs are gone from the game folder. That's almost always an antivirus quarantining them (ESET, for one, flags kiln-greeneye.dll by mistake). Restore them from its quarantine and add an exception for the game folder. Then reinstall Kiln on the Runtime page. If Reinstall isn't offered, use Uninstall and then Install: your kiln folder with your mods, profiles and settings is kept.",
+      "action": { "label": "Open Runtime", "to": "runtime" },
+      "match": { "findings": ["files-missing"] },
+      "added": "2026-11-18"
+    },
+    {
+      "id": "files-changed",
+      "title": "Some of Kiln's files were changed or removed",
+      "fix": "Another installer, a manual copy or an antivirus changed Kiln's files in the game folder. If it was an antivirus, restore the files from its quarantine and add an exception for the game folder first. Then reinstall Kiln on the Runtime page, or use Uninstall and then Install: your kiln folder with your mods, profiles and settings is kept.",
+      "action": { "label": "Open Runtime", "to": "runtime" },
+      "match": { "findings": ["files-changed"] },
+      "added": "2026-11-18"
+    },
+    {
+      "id": "webkit-sandbox",
+      "title": "The Linux launcher can't start WebKit's sandbox",
+      "fix": "WebKit, which draws the launcher's window, was set to use its process sandbox (bubblewrap), and that can't start on this system, so the launcher closes at start. The launcher offers to turn the sandbox off when this happens. You can also turn off WebKit's sandbox in Settings, or start the launcher with --no-webkit-sandbox. Off means the launcher's page runs without that extra isolation. It only shows the launcher's own pages and images from Nexus Mods.",
+      "match": { "findings": ["webkit-sandbox"], "os": ["linux", "deck"] },
+      "added": "2026-11-18"
+    },
+    {
+      "id": "optiscaler-menu-off",
+      "title": "OptiScaler with its menu turned off can crash the game",
+      "fix": "With OptiScaler's own menu switched off (OverlayMenu=false in OptiScaler.ini), Kiln's in-game drawing can fail and the game closes right at the start. Update Kiln: newer versions handle this. If you can't update yet, set OverlayMenu back to true.",
+      "match": { "findings": ["optiscaler"], "kiln": { "max": "0.2.0-dev.29.17" } },
+      "added": "2026-11-18"
+    }
+  ]
+}

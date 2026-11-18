@@ -13,7 +13,7 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
   path="/kiln/privacy"
 >
   <article class="product-page reading-page">
-    <p class="article-meta"><a href="/kiln">Kiln</a> · Updated <time datetime="2026-11-18">November 18, 2026</time></p>
+    <p class="article-meta"><a href="/kiln">Kiln</a> · Updated <time datetime="2026-11-19">November 19, 2026</time></p>
     <h1>Kiln on Discord: privacy.</h1>
     <p>This page covers two things that Frostdev runs: the <strong>Kiln app on Discord</strong> (the bot in the <a href={invite}>Kiln Discord server</a>, named KilnBot until November 2026) and the <strong>Discord features of the Kiln Launcher</strong>. Discord itself handles your account and your messages under <a href="https://discord.com/privacy">Discord's privacy policy</a>. This website has its own <a href="/privacy">privacy page</a>.</p>
 
@@ -36,16 +36,16 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
     <p>A separate bot in the server, Wallu, answers questions from Kiln's documentation when a message starts with its name. Wallu is run by its own provider under its own privacy policy.</p>
 
     <h2 id="launcher">Discord features in the Kiln Launcher</h2>
-    <p>These features are being built and are not in a released launcher yet. This section says what they will do. It will be checked again before they are released, and nothing in the launcher uses Discord until then.</p>
+    <p>These features are in the Kiln Launcher from version 0.2.0-dev.29.18. They are optional. The Community page can be hidden in the launcher's settings, and then the launcher makes no request for any of them. With the page shown but you signed out, the only thing the launcher fetches is public: when you open the page, it downloads frostdev.io's news and a list of known problems.</p>
 
-    <p><strong>Sign in with Discord.</strong> The sign-in goes through frostdev.io. You approve it on Discord's own page. On a Steam Deck you scan a code with your phone, sign in there, and then also press Approve on a frostdev.io page that shows the code from your Deck. The launcher and frostdev.io's service then learn your Discord user ID, username, display name and avatar. If you leave the box ticked, the sign-in also adds you to the Kiln Discord server. We don't receive your email address, your password or your messages, and we keep no Discord sign-in key, on your computer or on frostdev.io.</p>
+    <p><strong>Sign in with Discord.</strong> The sign-in goes through frostdev.io. You approve it on Discord's own page. On a Steam Deck you scan a code with your phone, sign in there, and then also press Approve on a frostdev.io page that shows the code from your Deck. The launcher and frostdev.io's service then learn your Discord user ID, username, display name and avatar. If you leave the box ticked, the sign-in also adds you to the Kiln Discord server. We don't receive your email address, your password or your messages, and we keep no Discord sign-in key, on your computer or on frostdev.io. On a Steam Deck with the box ticked, frostdev.io holds Discord's sign-in key in memory only, never on disk, until you press Approve (at most 10 minutes). It uses it once to add you to the server and then cancels it.</p>
     <p>The launcher's sign-in is a key kept on your own computer. frostdev.io keeps only a fingerprint of it, so it can tell it is yours. Signing out removes both, and a sign-in you don't use ends after 90 days. A Steam Deck sign-in code lasts 10 minutes and works once. For those 10 minutes frostdev.io keeps a scrambled form of the network address the code came from, so it can warn you when the code came from another network than your phone.</p>
 
     <p><strong>Sending a report to Kiln support.</strong> A report is sent only when you press Send, after a screen has shown what will go:</p>
     <ul>
       <li>the line you typed or picked about what went wrong, the kind of problem, and anything else you wrote;</li>
       <li>the report's findings and version details: your Kiln, launcher and game versions, your operating system and Proton or Wine build, how many mods are on, and the mods a finding is about. These become a post by the Kiln app in the server's support channel. It names you, and everyone in the server can read it;</li>
-      <li>the report file: logs, Kiln's settings and lists of the game folder. Your user name, machine name, Steam names, Steam ID, IP addresses and your home folder in paths are replaced. Saves and mod settings are not in it. A character or server name you chose can still appear in a log line. The file goes to the Kiln team only, unless you choose to attach it to your public post, or choose not to send it.</li>
+      <li>the report file: logs, Kiln's settings and lists of the game folder. Your user name, machine name, Steam names, Steam ID, IP addresses and your home folder in paths are replaced. Saves and mod settings are not in it. A character or server name you chose can still appear in a log line. The file goes to the Kiln team only, unless you choose to attach it to your public post, or choose not to send it. If you don't send it, only the facts shown in the post go to frostdev.io, so it can write the post.</li>
     </ul>
     <p>frostdev.io's service passes the report on to Discord. It checks your sign-in and limits how often reports can be sent. It does not keep the report file. The file stays in a channel that only the Kiln team can read for 30 days, and is then deleted. Deleting your post, or "Sign out and forget me", deletes it there at once. The Kiln team and its AI assistants read it, and a copy the team has downloaded to work on your report is kept as described under <a href="#server">"What we keep"</a> above, until we delete it or you ask us to.</p>
 
@@ -60,7 +60,9 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
     </ul>
     <p>It keeps no log of requests, no Discord sign-in keys and no report files. "Sign out and forget me" deletes all of it at once.</p>
 
-    <p><strong>Replies.</strong> While you are signed in, the launcher asks that service whether your posts have new replies, so it can show a notice. The service learns who replied and when, not what was written. The conversation itself stays in Discord.</p>
+    <p><strong>Known problems.</strong> Before you send a report, the launcher compares it with the public list of known problems it downloaded, on your own computer. When one matches, it shows that fix first. Nothing about your report is sent for this.</p>
+
+    <p><strong>Replies.</strong> While you are signed in and the Community page is shown, the launcher asks that service every few minutes whether your posts have new replies, so it can show a notice. A system notification is off until you turn it on. The service learns who replied and when, not what was written. The conversation itself stays in Discord.</p>
 
     <p><strong>Testing Kiln.</strong> If you volunteer as a tester, the launcher first shows you what it would share: your graphics card, its driver, the video memory, your operating system and how the game runs (Windows, or Proton on Linux). When you confirm, these go to the Kiln team and you get the Tester role in the server. Results you send for a test build are added to that build's post in the testers' channel, which testers and the Kiln team can read. A report file you attach goes to the Kiln team only. "Stop testing" removes the role and your hardware details.</p>
 
