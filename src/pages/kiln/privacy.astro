@@ -22,15 +22,18 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
       <li>The Kiln app works in the Kiln Discord server only. It is not offered for other servers.</li>
       <li>The launcher's Discord features are optional and stay off until you turn them on.</li>
       <li>The launcher sends nothing to Discord until you press a button on a screen that shows what will be sent.</li>
+      <li>AI assistants help run Kiln's support. They read the server's public channels and write many of the replies.</li>
       <li>We don't sell data, show ads or build profiles of you.</li>
     </ul>
 
     <h2 id="server">In the Kiln Discord server</h2>
     <p><strong>What the app does.</strong> It posts release news, opens and tidies threads and forum posts, gives and removes roles such as Release Pings, helps with moderation, and lets the Kiln team read and answer posts.</p>
     <p><strong>What it can see.</strong> The messages, attachments, names and roles in the Kiln server's channels, as a staff member there can. It cannot see your direct messages, your other servers, your email address or your password.</p>
-    <p><strong>What we keep.</strong> The app has no database of its own. When you ask for help or report a bug, the Kiln team may save what you posted for that purpose: your message, the logs and report files you attached, and your Discord name. We use them to find the cause and to tell you when it is fixed. They are kept on the Kiln team's own computers.</p>
+    <p><strong>What we keep.</strong> The app has no database of its own. When you ask for help or report a bug, files you attach (report files, logs, screenshots) are downloaded to the Kiln team's own computer. We use them to find the cause, to compare later reports and to check that a fix works. Your Discord name and what you reported also go into the team's working notes, so we can tell you when it is fixed. There is no fixed deletion time today: these are kept until we delete them or you <a href="#choices">ask us to</a>.</p>
     <p><strong>Public write-ups.</strong> A fix can lead to a note in Kiln's release notes or an issue in Kiln's public GitHub repository. Those describe the problem. They name you only when you agreed to be credited.</p>
-    <p><strong>AI assistance.</strong> The Kiln team uses AI assistants to help read and answer support posts and logs. Text from the server's channels and files you attach for support can be sent to the assistant's provider, Anthropic, for that purpose. A separate bot in the server, Wallu, answers questions from Kiln's documentation. Wallu is run by its own provider under its own privacy policy.</p>
+    <p id="ai"><strong>AI assistants.</strong> The Kiln team works with AI assistants. They read new messages in the server's public channels and every post in the support and bug report forums, and they read the files you attach for support. They also write replies and post them through the Kiln app, often without a person reading each reply first. A person on the Kiln team decides anything out of the ordinary.</p>
+    <p>The assistants run on AI models from Anthropic. So the text of those messages and the contents of those files are sent to Anthropic for this purpose, under <a href="https://www.anthropic.com/legal/privacy">Anthropic's privacy policy</a>. If we start using another provider's models for this, we will name it here first.</p>
+    <p>A separate bot in the server, Wallu, answers questions from Kiln's documentation when a message starts with its name. Wallu is run by its own provider under its own privacy policy.</p>
 
     <h2 id="launcher">Discord features in the Kiln Launcher</h2>
     <p>These features are being built and are not in a released launcher yet. This section says what they will do. It will be updated before they are released, and nothing in the launcher uses Discord until then.</p>
@@ -39,7 +42,7 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
     <ul>
       <li>the line you typed about what went wrong;</li>
       <li>the report's findings and version details: your Kiln, launcher and game versions, your operating system, and the names and versions of your mods. These become a post in the server's support channel under your Discord name, which everyone in the server can read;</li>
-      <li>the report file: logs and settings, in which user names, machine names and folder paths have been replaced. It goes to the Kiln team only, unless you choose to attach it to your public post.</li>
+      <li>the report file: logs and settings, in which user names, machine names and folder paths have been replaced. It goes to the Kiln team only, unless you choose to attach it to your public post. The team and its AI assistants read it and keep it as described <a href="#server">above</a>.</li>
     </ul>
     <p>A small service on frostdev.io passes the report on to Discord. It checks your sign-in and limits how often reports can be sent. It keeps only what it needs to work: which posts are yours, so the launcher can show you replies, and short-lived counters for those limits. It does not keep the report once it has been passed on. The exact time limits will be listed here when the feature is released.</p>
     <p><strong>Replies.</strong> While you are signed in, the launcher asks that service whether your posts have new replies, so it can show a notice. The conversation itself stays in Discord.</p>
@@ -50,13 +53,14 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
       <li><strong>Discord</strong> stores your account, your messages and your posts. See <a href="https://discord.com/privacy">Discord's privacy policy</a>.</li>
       <li><strong>Cloudflare</strong> delivers frostdev.io, as the <a href="/privacy">site's privacy page</a> describes.</li>
       <li><strong>GitHub</strong>, when you open an issue in Kiln's repository yourself.</li>
-      <li><strong>Anthropic</strong> and <strong>Wallu</strong>, as described under "AI assistance" above.</li>
+      <li><strong>Anthropic</strong> and <strong>Wallu</strong>, as described under <a href="#ai">AI assistants</a> above.</li>
     </ul>
 
     <h2 id="choices">Your choices</h2>
     <ul>
       <li>Delete your own messages and posts in Discord at any time.</li>
-      <li>Ask us to delete support files we saved from you. Write to <a href="mailto:admin@frostdev.io">admin@frostdev.io</a> or message the Kiln team in the server.</li>
+      <li>Ask us to delete the support files and notes we keep about you. Write to <a href="mailto:admin@frostdev.io">admin@frostdev.io</a> or message the Kiln team in the server.</li>
+      <li>If you don't want an AI assistant to read something, don't post it in the server. Send it to <a href="mailto:admin@frostdev.io">admin@frostdev.io</a> instead and say so.</li>
       <li>Sign out in the launcher, and turn "show what I'm playing" off there.</li>
       <li>Remove the Kiln app's access in Discord: User Settings, then Authorized Apps.</li>
       <li>Leave the Kiln Discord server. The launcher and Kiln keep working without Discord.</li>
