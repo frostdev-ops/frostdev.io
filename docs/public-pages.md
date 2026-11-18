@@ -109,10 +109,9 @@ and the stable links all read it through `src/lib/kilnDownloads.ts`. To publish 
    entry may leave out `date` while it is the release `kilnRelease.json` names: it takes that date, and the build fails
    if the release data does not name it yet. Commit and deploy.
 
-`/kiln/stats` is not a public page: the owner's download statistics, read from Cloudflare's request data once an hour
-by `stats/kiln-downloads.mjs` on the server and shown only to someone signed in to the gallery dashboard (it redirects
-to `/glaze/admin/kiln-stats/`). It is not part of the static build and `robots.txt` disallows it. See
-[Kiln download statistics](kiln-download-stats.md).
+`/kiln/stats` is not a public page: it redirects to the owner's private dashboard, [frostdev HQ](hq.md) (`/hq#kiln`),
+which shows Kiln's download statistics ([Kiln download statistics](kiln-download-stats.md)). Neither is part of the
+static build, and `robots.txt` disallows both.
 
 `/kiln/download` ("Download Kiln") groups the files by who needs them: the launcher as large buttons, then dedicated
 servers (server pack, kilnctl, systemd units), manual install (the runtime zip and its instructions), mod authors

@@ -977,13 +977,17 @@ numbers, the second reviewer's decision, reason, rationale and any reasoning sum
 
 ## Admin dashboard
 
-`/glaze/admin` is the owner's private dashboard. It is completely off (404) unless all three settings below are
-present. The public gallery and CLI continue to work with it off. There are no student accounts or sign-ups.
+The owner's private dashboard is [frostdev HQ](hq.md) at `/hq`; the review below is its Glaze section (Mods, Looks,
+Activity), beside Kiln's, Glaze's and the site's numbers. It was `/glaze/admin` until HQ; those addresses send the
+browser to `/hq`, and `/glaze/admin/callback` is still the OAuth redirect URI. It is completely off (404) unless all
+three settings below are present. The public gallery and CLI continue to work with it off. There are no student
+accounts or sign-ups.
 
 1. In Google Cloud's Google Auth Platform, configure Branding and Audience for the owner's project. An Internal app
    can be limited to the Workspace organization; for an External app in Testing, add each administrator as a test
    user. Request only `openid email`. Create an OAuth client of type **Web application** and add this exact Authorized
-   redirect URI (no trailing slash): `https://frostdev.io/glaze/admin/callback`. A different `SITE_ORIGIN` needs its own
+   redirect URI (no trailing slash): `https://frostdev.io/glaze/admin/callback` (it stayed there when the dashboard moved
+   to `/hq`). A different `SITE_ORIGIN` needs its own
    matching redirect URI and HTTPS origin. No browser JavaScript OAuth client or API key is needed.
 2. Add these lines to the existing root-owned, mode-600 `/etc/glaze-gallery.env` on the gallery host, using the new
    client's values and the exact Google account emails allowed to moderate. Keep the other existing settings:
@@ -998,10 +1002,11 @@ present. The public gallery and CLI continue to work with it off. There are no s
    restarting the server also refuses that email's existing sessions. Never put the secret in a repository or a page.
 3. Deploy the committed gallery server using `ops/deploy-gallery.sh` after the existing release prerequisites above
    are met. It stages `gallery-admin.mjs` and `admin/` as well as `gallery.mjs`; the Docker image copies all of them.
-   Recreating the container loads the environment changes. Install **both** new admin locations from
-   `ops/public-site.nginx.conf` in the frostdev.io HTTPS server (the exact `/glaze/admin` and `^~ /glaze/admin/` locations).
+   Recreating the container loads the environment changes. Install the admin locations from
+   `ops/public-site.nginx.conf` in the frostdev.io HTTPS server (the exact `/hq` and `^~ /hq/` locations, and the exact
+   `/glaze/admin` and `^~ /glaze/admin/` ones for the callback and the old addresses).
    They pass cookies and the trusted visitor IP, disable caching and request logs, and cap request bodies at 4 KiB.
-   Run `sudo nginx -t && sudo systemctl reload nginx` on the host, then visit `https://frostdev.io/glaze/admin`.
+   Run `sudo nginx -t && sudo systemctl reload nginx` on the host, then visit `https://frostdev.io/hq`.
 
 Sign-in uses Google's authorization-code flow with S256 PKCE, a browser-bound single-use state and nonce, and only the
 `openid email` scopes. ID tokens come exclusively from the server's direct HTTPS exchange at Google's fixed token
@@ -1013,7 +1018,7 @@ email allowlist. OAuth attempts expire after ten minutes and are consumed before
 Sign-in starts require the site's Origin and are limited to ten per network per hour (IPv6 /64), using keyed hashes.
 
 Sessions are random 256-bit tokens, stored only as SHA-256 hashes in SQLite, with a fixed twelve-hour expiry and a
-host-only `HttpOnly; Secure; SameSite=Lax` cookie at `/glaze/admin`. Sign-out deletes the session. Every moderation POST
+host-only `HttpOnly; Secure; SameSite=Lax` cookie at `/hq` (`__Secure-fd_hq`). Sign-out deletes the session. Every moderation POST
 and sign-out needs both the exact site Origin and the session's random CSRF token. All admin responses, including
 errors and assets, are `no-store`, `nosniff`, and have a strict CSP with no inline scripts, no framing and no external
 resources. Secure cookies require HTTPS; local tests use a fake Google endpoint and pass cookies explicitly.

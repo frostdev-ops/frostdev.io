@@ -1,5 +1,6 @@
 // Tests of the Kiln download statistics (stats/kiln-downloads.mjs) against a stand-in for Cloudflare's GraphQL API on
-// 127.0.0.1: nothing leaves the machine and no token is involved.
+// 127.0.0.1: nothing leaves the machine and no token is involved. stats/hq-stats.test.mjs has the site's page views,
+// the public numbers and the whole collection.
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -8,7 +9,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import {
   buildPageData, classifyAgent, cleanReferrer, collect, countedByBytes, daysToFetch, describeFile, fetchLimits,
-  fetchWindow, fileKey, fileSizes, newestBrowsers, parsePath, readDays, reduceGroups, refusedField, render, renderPage,
+  fetchWindow, fileKey, fileSizes, newestBrowsers, parsePath, readDays, reduceGroups, refusedField, render,
 } from './kiln-downloads.mjs';
 
 const ZONE = '0123456789abcdef0123456789abcdef';
@@ -360,17 +361,7 @@ test('a day that was never collected is in the calendar as an empty day', () => 
   assert.deepEqual(data.notes, ['2 days were never collected (shown as empty): Cloudflare no longer had them when the collection ran again.']);
 });
 
-test('the page holds the data and no file name can break out of its script element', () => {
-  const page = renderPage('<script id="d" type="application/json">/*KILN-STATS-DATA*/null</script>', { files: [{ file: '</script><script>alert(1)</script>', note: '$& $1 \u2028' }] });
-  assert(!page.includes('</script><script>'), page);
-  assert.equal(page.split('</script>').length, 2);
-  const data = JSON.parse(/<script id="d" type="application\/json">(.*)<\/script>/s.exec(page)[1]);
-  assert.equal(data.files[0].file, '</script><script>alert(1)</script>');
-  assert.equal(data.files[0].note, '$& $1 \u2028');
-  assert.throws(() => renderPage('<p>no marker</p>', {}), /no data marker/);
-});
-
-test('a collection stores one file per day, writes the page, and a second run changes nothing', async (t) => {
+test('a collection stores one file per day, writes kiln.json, and a second run changes nothing', async (t) => {
   const now = at('2026-11-13', 15);
   const events = [
     hit('2026-11-13'), hit('2026-11-13', { agent: UPDATER, country: 'CA' }), hit('2026-11-13', { status: 404, path: '/kiln/downloads/nope/x.zip', bytes: 0 }),
@@ -402,21 +393,14 @@ test('a collection stores one file per day, writes the page, and a second run ch
   assert.deepEqual(day('2026-11-01').rows, [[v, 'SHA256SUMS', 'US', 200, 'tool', '', '', 1, 500]]);
   assert.deepEqual(JSON.parse(readFileSync(join(cf.env.DATA_DIR, 'newest-browsers.json'), 'utf8')), { chrome: 157, firefox: 0, at: { chrome: now } });
   assert.deepEqual(day('2026-11-13').sizes, { [`${v}/${f}`]: EXE_SIZE }, 'a day keeps the sizes it was collected with');
-  assert.deepEqual(readdirSync(cf.env.OUT_DIR).sort(), ['index.html', 'page.css', 'page.js'], 'no temporary file is left');
+  assert.deepEqual(readdirSync(cf.env.OUT_DIR).sort(), ['kiln.json'], 'no temporary file is left');
   assert.deepEqual(readdirSync(cf.env.DATA_DIR).sort(), ['days', 'last-run.json', 'newest-browsers.json', 'sizes.json']);
   assert.deepEqual(JSON.parse(readFileSync(join(cf.env.DATA_DIR, 'sizes.json'), 'utf8')), { [`${v}/SHA256SUMS`]: 500, [`${v}/${f}`]: EXE_SIZE });
 
-  const page = readFileSync(join(cf.env.OUT_DIR, 'index.html'), 'utf8');
-  // the page loads its own stylesheet and script and has nothing inline that runs: the server's policy refuses that
-  for (const name of ['page.css', 'page.js']) assert.equal(readFileSync(join(cf.env.OUT_DIR, name), 'utf8'), readFileSync(new URL(name, import.meta.url), 'utf8'));
-  assert.match(page, /<link rel="stylesheet" href="page\.css">/);
-  assert.match(page, /<script src="page\.js" defer><\/script>/);
-  assert.deepEqual([...page.matchAll(/<script(?![^>]*\bsrc=)[^>]*>/g)].map((m) => m[0]), ['<script id="kiln-stats-data" type="application/json">']);
-  assert(!/<style|\sstyle=|\son[a-z]+=/i.test(page), 'no inline style or event handler');
-  assert(!/setAttribute\('style'|style: `|innerHTML|insertAdjacentHTML|document\.write/.test(readFileSync(new URL('page.js', import.meta.url), 'utf8')), 'the script sets no style attribute and builds no markup from text');
-  assert(!page.includes('secret-token-for-tests') && !page.includes(ZONE), 'neither the token nor the zone id is in the page');
-  assert(!page.includes('Chrome/157'), 'no User-Agent string is in the page');
-  const data = JSON.parse(/<script id="kiln-stats-data" type="application\/json">(.*?)<\/script>/s.exec(page)[1]);
+  const text = readFileSync(join(cf.env.OUT_DIR, 'kiln.json'), 'utf8');
+  assert(!text.includes('secret-token-for-tests') && !text.includes(ZONE), 'neither the token nor the zone id is in kiln.json');
+  assert(!text.includes('Chrome/157'), 'no User-Agent string is in kiln.json');
+  const data = JSON.parse(text);
   assert.equal(data.days.length, 31);
   assert.equal(data.collected, new Date(now).toISOString());
   const total = data.rows.reduce((sum, row) => sum + row[6], 0);
@@ -435,7 +419,7 @@ test('a collection stores one file per day, writes the page, and a second run ch
   assert.equal(render(cf.env, now).files.find((file) => file.file === f).size, EXE_SIZE);
 });
 
-test('when Cloudflare refuses, the stored days stay and the page says so', async (t) => {
+test('when Cloudflare refuses, the stored days stay and kiln.json says so', async (t) => {
   const now = at('2026-11-13', 15);
   const cf = await cloudflare(t, { events: [hit('2026-11-13')] });
   await collect(cf.env, now);
@@ -444,8 +428,8 @@ test('when Cloudflare refuses, the stored days stay and the page says so', async
   await assert.rejects(collect(cf.env, now + 3_600_000), /Authentication error for \[token\]/);
   assert(!readFileSync(join(cf.env.DATA_DIR, 'last-run.json'), 'utf8').includes('secret-token-for-tests'), 'the token is in no stored error');
   assert.equal(JSON.stringify(readDays(cf.env.DATA_DIR)), before);
-  const page = readFileSync(join(cf.env.OUT_DIR, 'index.html'), 'utf8');
-  const data = JSON.parse(/<script id="kiln-stats-data" type="application\/json">(.*?)<\/script>/s.exec(page)[1]);
+  const page = readFileSync(join(cf.env.OUT_DIR, 'kiln.json'), 'utf8');
+  const data = JSON.parse(page);
   assert.match(data.alerts[0], /The last collection \(2026-11-13T16:00:00.000Z\) failed: Authentication error/);
   assert.equal(data.collected, null);
   assert.equal(data.rows.length, 1);
@@ -453,6 +437,6 @@ test('when Cloudflare refuses, the stored days stay and the page says so', async
 
   const empty = await cloudflare(t);
   await assert.rejects(collect({ ...empty.env, CF_API_TOKEN: '' }, now), /CF_API_TOKEN is not set/);
-  assert.equal(existsSync(join(empty.env.OUT_DIR, 'index.html')), false);
+  assert.equal(existsSync(join(empty.env.OUT_DIR, 'kiln.json')), false);
   await assert.rejects(collect({ ...empty.env, CF_API: 'http://127.0.0.1:9/' }, now), /could not be reached/);
 });

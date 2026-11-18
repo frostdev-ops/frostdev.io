@@ -1,0 +1,23 @@
+# Installed by ops/deploy-stats.sh as /etc/systemd/system/frostdev-stats.service on loothing-vps.
+[Unit]
+Description=frostdev statistics: one collection for frostdev HQ (Kiln downloads, page views, store and GitHub numbers)
+Documentation=https://github.com/frostdev-ops/frostdev.io/blob/main/docs/hq.md
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# A container a stopped run left behind would block the name.
+ExecStartPre=-/usr/bin/docker rm -f frostdev-stats
+# The image is unused between runs, so the server's nightly `docker image prune -af --filter until=24h`
+# (/etc/cron.d/docker-image-prune) removes it a day after each deploy; the Kiln numbers stopped twice that way. Build
+# it again from the staged source when it is gone.
+ExecStartPre=/bin/sh -c 'docker image inspect frostdev-stats >/dev/null 2>&1 || docker build -q -t frostdev-stats /opt/frostdev-stats >/dev/null'
+# The container writes only to its data folder; the release folders and the built site are read for file sizes and
+# to tell the site's own pages from everything else.
+ExecStart=/usr/bin/docker run --rm --name frostdev-stats --env-file /etc/frostdev-stats.env --read-only --cap-drop ALL \
+    --security-opt no-new-privileges --memory 384m --cpus 1 \
+    -v /var/lib/frostdev-stats:/data \
+    -v /opt/frostdev-downloads/kiln/downloads:/files:ro -v /opt/frostdev-public/current:/site:ro frostdev-stats
+TimeoutStartSec=900

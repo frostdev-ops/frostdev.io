@@ -2,26 +2,26 @@
 // Kiln download statistics: how often each file under /kiln/downloads/ was downloaded, per day, country, kind of
 // program and referring site. The numbers are Cloudflare's: frostdev.io sits behind Cloudflare, which answers most
 // downloads of the Windows installer and the zips from its cache, so this server never sees them and its nginx keeps
-// no access log for those locations (ops/public-site.nginx.conf). Once an hour this script asks Cloudflare's GraphQL
-// Analytics API for grouped request counts, adds them to one small JSON file per day and writes the private page
-// (stats/page.html with the data inside, and its page.css and page.js). docs/kiln-download-stats.md has the rest.
+// no access log for those locations (ops/public-site.nginx.conf). Once an hour stats/collect.mjs has this module ask
+// Cloudflare's GraphQL Analytics API for grouped request counts, add them to one small JSON file per day and write
+// kiln.json, which the private dashboard (/hq, docs/hq.md) draws. docs/kiln-download-stats.md has the rest.
 //
-//   node stats/kiln-downloads.mjs collect     ask Cloudflare for the last days, store them, write the page
-//   node stats/kiln-downloads.mjs render      write the page again from what is stored
+//   node stats/kiln-downloads.mjs collect     ask Cloudflare for the last days, store them, write kiln.json
+//   node stats/kiln-downloads.mjs render      write kiln.json again from what is stored
 //   node stats/kiln-downloads.mjs agents      print today's most frequent User-Agent strings (to tune classifyAgent);
 //                                             nothing is stored
 //
 // Environment: CF_API_TOKEN (a token with Zone > Analytics > Read for the zone), CF_ZONE_ID, DATA_DIR (the day files),
-// OUT_DIR (index.html, page.css and page.js go here), FILES_DIR (the release folders, read-only, for file sizes; optional),
+// OUT_DIR (kiln.json goes here), FILES_DIR (the release folders, read-only, for file sizes; optional),
 // CF_API (the endpoint, tests only), DAYS_BACK (how many days each run asks again, default 3).
 //
 // What is asked for and kept: per day, file, country, HTTP status, kind of program and referring host, a request count
 // and the bytes sent. No IP address is asked for, and the User-Agent string is reduced to a kind ("browser", "launcher",
 // "tool", "bot", "automated") and a system ("windows", "linux", ...) before anything is written.
 import { randomBytes } from 'node:crypto';
-import { constants, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve, sep } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { join, resolve, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 export const PREFIX = '/kiln/downloads/';
 const DAY_MS = 86_400_000;
@@ -262,8 +262,12 @@ export function refusedField(message, names) {
   return named.length === 1 && /unknown|cannot|not (?:allowed|available|permitted|supported)|no such|access/i.test(message) ? named[0] : '';
 }
 
-function windowQuery(env, limits, from, to) {
-  const filters = [`datetime_geq: "${from.toISOString()}"`, `datetime_lt: "${to.toISOString()}"`, `clientRequestPath_like: "${PREFIX}%"`];
+/** What a query counts: Kiln's downloads by default. A scope's own filters are never dropped: when Cloudflare refuses
+ *  one, the question fails rather than count something else. */
+export const KILN_SCOPE = { filters: [`clientRequestPath_like: "${PREFIX}%"`] };
+
+function windowQuery(env, limits, from, to, scope = KILN_SCOPE) {
+  const filters = [`datetime_geq: "${from.toISOString()}"`, `datetime_lt: "${to.toISOString()}"`, ...scope.filters];
   if (limits.filters.includes('requestSource')) filters.push('requestSource: "eyeball"');
   if (limits.filters.includes('clientRequestHTTPMethodName')) filters.push('clientRequestHTTPMethodName: "GET"');
   return `{ viewer { zones(filter: {zoneTag: "${zoneOf(env)}"}) { ${DATASET}(limit: ${limits.maxPageSize}, filter: {${filters.join(', ')}}, orderBy: [count_DESC]) { count sum { edgeResponseBytes } avg { sampleInterval } dimensions { ${limits.fields.join(' ')} } } } } }`;
@@ -272,13 +276,13 @@ function windowQuery(env, limits, from, to) {
 /** Every group of [from, to). A window that fills a whole page is asked again in two halves, so nothing is cut off
  *  (down to one minute; a minute that still fills a page is reported in `truncated`). An optional dimension or filter
  *  Cloudflare refuses is dropped from `limits` and the window is asked again. */
-export async function fetchWindow(env, limits, from, to, state = { queries: 0, truncated: 0 }) {
+export async function fetchWindow(env, limits, from, to, state = { queries: 0, truncated: 0 }, scope = KILN_SCOPE) {
   const span = to - from;
   const longest = limits.maxDuration * 1000;
   if (span > longest) {
     const out = [];
     for (let at = from.getTime(); at < to.getTime(); at += longest) {
-      out.push(...await fetchWindow(env, limits, new Date(at), new Date(Math.min(at + longest, to.getTime())), state));
+      out.push(...await fetchWindow(env, limits, new Date(at), new Date(Math.min(at + longest, to.getTime())), state, scope));
     }
     return out;
   }
@@ -286,7 +290,7 @@ export async function fetchWindow(env, limits, from, to, state = { queries: 0, t
   for (;;) {
     state.queries++;
     try {
-      groups = (await cfQuery(env, windowQuery(env, limits, from, to))).viewer?.zones?.[0]?.[DATASET];
+      groups = (await cfQuery(env, windowQuery(env, limits, from, to, scope))).viewer?.zones?.[0]?.[DATASET];
       break;
     } catch (error) {
       const refused = error instanceof CloudflareError && refusedField(error.message, [...OPTIONAL.filter((n) => limits.fields.includes(n)), ...limits.filters]);
@@ -304,7 +308,7 @@ export async function fetchWindow(env, limits, from, to, state = { queries: 0, t
   }
   // halves on whole minutes, never shorter than one: both are shorter than the window, so this ends
   const middle = new Date(from.getTime() + Math.max(60_000, Math.floor(span / 2 / 60_000) * 60_000));
-  return [...await fetchWindow(env, limits, from, middle, state), ...await fetchWindow(env, limits, middle, to, state)];
+  return [...await fetchWindow(env, limits, from, middle, state, scope), ...await fetchWindow(env, limits, middle, to, state, scope)];
 }
 
 // ---- the day files ------------------------------------------------------------------------------------------------
@@ -341,13 +345,15 @@ export function reduceGroups(groups, newest = newestBrowsers(groups)) {
   return { rows: list, skipped, sampled };
 }
 
-const dayName = (ms) => new Date(ms).toISOString().slice(0, 10);
-const dayStart = (name) => Date.parse(`${name}T00:00:00Z`);
+export const DAY = DAY_MS;
+export const SETTLE = SETTLE_MS;
+export const dayName = (ms) => new Date(ms).toISOString().slice(0, 10);
+export const dayStart = (name) => Date.parse(`${name}T00:00:00Z`);
 
 /** A temporary name beside `path` that no other run has: two containers both have process id 1. */
 const tmpName = (path) => `${path}.tmp-${randomBytes(9).toString('base64url')}`;
 
-function writeAtomic(path, text) {
+export function writeAtomic(path, text) {
   const tmp = tmpName(path);
   writeFileSync(tmp, text, { flag: 'wx' });
   renameSync(tmp, path);
@@ -398,7 +404,7 @@ export function fileSizes(dataDir, filesDir, wanted) {
   return sizes;
 }
 
-// ---- the page -----------------------------------------------------------------------------------------------------
+// ---- what the dashboard draws -------------------------------------------------------------------------------------
 
 /** Whether a file's downloads are counted from the bytes sent (bytes / size: a download that was resumed, or fetched
  *  in parts by a download manager, counts once, and one that was given up counts as the part that arrived). Only for
@@ -406,7 +412,7 @@ export function fileSizes(dataDir, filesDir, wanted) {
  *  nothing about how much of a text file arrived. Other files count full answers (status 200). */
 export const countedByBytes = (file, size) => size >= 1_048_576 && !/\.(txt|md|json|xml|html?|css|js|svg|ya?ml)$/i.test(file);
 
-/** Everything the page needs, small: the stored rows of every day with names replaced by indexes, and downloads
+/** Everything the dashboard needs, small: the stored rows of every day with names replaced by indexes, and downloads
  *  worked out per row. A row is [day, file, country, client, os, referrer, downloads, requests]. */
 export function buildPageData(days, sizes, now) {
   const index = (list, map, value) => {
@@ -463,23 +469,11 @@ export function buildPageData(days, sizes, now) {
   return data;
 }
 
-/** The page: the template with the data in its one script element. "<" is escaped, so no file name, referrer or
- *  country can end the element. */
-export function renderPage(template, data) {
-  const marker = '/*KILN-STATS-DATA*/null';
-  if (!template.includes(marker)) throw new Error('stats/page.html has no data marker');
-  return template.replace(marker, () => JSON.stringify(data).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029'));
-}
-
 // ---- the commands -------------------------------------------------------------------------------------------------
-
-const here = dirname(fileURLToPath(import.meta.url));
-/** What the page loads, written beside it. */
-const ASSETS = ['page.css', 'page.js'];
 
 function settings(env) {
   for (const name of ['DATA_DIR', 'OUT_DIR']) if (!env[name]) throw new Error(`${name} is not set`);
-  return { dataDir: env.DATA_DIR, outDir: env.OUT_DIR, filesDir: env.FILES_DIR || '', template: env.TEMPLATE || join(here, 'page.html') };
+  return { dataDir: env.DATA_DIR, outDir: env.OUT_DIR, filesDir: env.FILES_DIR || '' };
 }
 
 export function render(env, now = Date.now()) {
@@ -495,13 +489,7 @@ export function render(env, now = Date.now()) {
     if (!run.ok) data.alerts.push(`The last collection (${run.at}) failed: ${run.error}. The numbers are from the collection before.`);
   }
   mkdirSync(s.outDir, { recursive: true });
-  // the page's stylesheet and script first, so a new page never meets old ones
-  for (const name of ASSETS) {
-    const tmp = tmpName(join(s.outDir, name));
-    copyFileSync(join(dirname(s.template), name), tmp, constants.COPYFILE_EXCL);
-    renameSync(tmp, join(s.outDir, name));
-  }
-  writeAtomic(join(s.outDir, 'index.html'), renderPage(readFileSync(s.template, 'utf8'), data));
+  writeAtomic(join(s.outDir, 'kiln.json'), JSON.stringify(data));
   return data;
 }
 
@@ -542,7 +530,7 @@ export async function collect(env, now = Date.now()) {
     run.error = (error instanceof CloudflareError ? error.message : `${error.name}: ${error.message}`).split(env.CF_API_TOKEN).join('[token]');
   }
   writeAtomic(join(s.dataDir, 'last-run.json'), JSON.stringify(run));
-  // the page is written either way: after a failure it says so and shows what the collection before stored
+  // kiln.json is written either way: after a failure it says so and holds what the collection before stored
   render(env, now);
   if (!run.ok) throw new Error(run.error);
   return run;
@@ -576,7 +564,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
       console.log(`kiln-stats: ${run.days} days asked in ${run.queries} queries (${run.fields.join(', ')})${run.note ? `; ${run.note}` : ''}`);
     } else if (command === 'render') {
       const data = render(process.env);
-      console.log(`kiln-stats: page written, ${data.days.length} days, ${data.rows.length} rows`);
+      console.log(`kiln-stats: kiln.json written, ${data.days.length} days, ${data.rows.length} rows`);
     } else if (command === 'agents') {
       for (const line of await agents(process.env)) console.log(`${String(line.count).padStart(6)}  ${line.client.padEnd(8)} ${line.os.padEnd(8)} ${line.agent}`);
     } else {

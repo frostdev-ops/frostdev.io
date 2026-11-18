@@ -1,39 +1,71 @@
 <!doctype html>
+<!-- frostdev HQ, the private dashboard (docs/hq.md). Its scripts build every view; everything that comes from data or a
+     submitter reaches the page as text. No inline script or style: the content security policy refuses both. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark light">
-  <title>Gallery admin · Glaze</title>
-  <link rel="stylesheet" href="/glaze/admin/style.css">
-  <script src="/glaze/admin/viewer.js" defer></script>
-  <script src="/glaze/admin/app.js" defer></script>
+  <meta name="color-scheme" content="dark">
+  <meta name="robots" content="noindex, nofollow">
+  <title>frostdev HQ</title>
+  <link rel="icon" href="/hq/frostdev-icon.webp">
+  <link rel="stylesheet" href="/hq/style.css">
+  <script src="/hq/viewer.js" defer></script>
+  <script src="/hq/charts.js" defer></script>
+  <script src="/hq/gallery.js" defer></script>
+  <script src="/hq/app.js" defer></script>
 </head>
 <body class="app">
-  <header class="bar">
-    <a class="brand" href="/glaze"><strong>frostdev</strong><span aria-hidden="true">/</span> Glaze</a>
-    <nav class="sections" aria-label="Sections">
-      <a id="nav-mods" href="#mods">Mods <span class="count" id="count-mods"></span></a>
-      <a id="nav-looks" href="#looks">Looks <span class="count" id="count-looks"></span></a>
-      <a id="nav-activity" href="#activity">Activity</a>
+  <div class="ground" aria-hidden="true"></div>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href="#overview"><img src="/hq/frostdev-icon.webp" width="28" height="28" alt=""><span class="wordmark">frostdev</span><span class="hq">HQ</span></a>
+    <button id="menu" class="secondary" type="button" aria-controls="rail" aria-expanded="false">Menu</button>
+  </header>
+  <aside class="rail" id="rail">
+    <a class="brand" href="#overview"><img src="/hq/frostdev-icon.webp" width="34" height="34" alt=""><span class="wordmark">frostdev</span><span class="hq">HQ</span></a>
+    <nav aria-label="Dashboard">
+      <a id="nav-overview" href="#overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4zM14 20h6v-9h-6zM14 4v3h6V4zM4 20h6v-3H4z"/></svg>Overview</a>
+      <p class="group">Kiln</p>
+      <a id="nav-kiln" href="#kiln"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>Downloads</a>
+      <p class="group">Glaze</p>
+      <a id="nav-glaze" href="#glaze"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H3"/></svg>Numbers</a>
+      <a id="nav-mods" href="#glaze/mods"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/></svg>Mods <span class="count" id="count-mods"></span></a>
+      <a id="nav-looks" href="#glaze/looks"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-2.5 1-1.5 2.5-1.5H18a3 3 0 0 0 3-3c0-5-4-9-9-9z"/><circle cx="7.5" cy="11" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10" r="1"/></svg>Looks <span class="count" id="count-looks"></span></a>
+      <a id="nav-activity" href="#activity"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Activity</a>
+      <p class="group">frostdev.io</p>
+      <a id="nav-site" href="#site"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0m0 0h18M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9s1-6.5 3.5-9z"/></svg>Page views</a>
+      <p class="group">Elsewhere</p>
+      <a class="out" href="/admin/users">Rimeward admin <span class="out-mark" aria-hidden="true">↗</span></a>
+      <a class="out" href="/">frostdev.io <span class="out-mark" aria-hidden="true">↗</span></a>
+      <a class="out" href="https://www.nexusmods.com/enshrouded/mods/301" rel="noopener noreferrer">Kiln on Nexus <span class="out-mark" aria-hidden="true">↗</span></a>
+      <a class="out" href="https://github.com/frostdev-ops" rel="noopener noreferrer">GitHub <span class="out-mark" aria-hidden="true">↗</span></a>
     </nav>
     <div class="who"><span id="email"></span><button id="logout" class="quiet" type="button">Sign out</button></div>
-  </header>
+  </aside>
   <p id="message" class="toast" role="status" aria-live="polite" hidden></p>
-  <main id="workspace" class="workspace">
-    <aside class="sidebar" aria-label="Submissions">
-      <div class="filters" id="filters" role="group" aria-label="Show"></div>
-      <input id="search" type="search" placeholder="Search name, author or id" aria-label="Search">
-      <ul id="list" class="list" aria-live="polite"></ul>
-    </aside>
-    <section id="detail" class="detail" tabindex="-1" aria-live="polite"></section>
-  </main>
-  <main id="activity" class="activity" hidden>
-    <h1>Activity</h1>
-    <p class="muted">Every decision made in this dashboard, newest first.</p>
-    <div id="limits" class="note"></div>
-    <ol id="audit" class="audit"></ol>
-    <button id="older" class="secondary" type="button" hidden>Show older</button>
+  <main id="main" tabindex="-1">
+    <section id="view-overview" class="view" aria-labelledby="overview-title" hidden></section>
+    <section id="view-kiln" class="view" aria-label="Kiln downloads" hidden></section>
+    <section id="view-glaze" class="view" aria-label="Glaze numbers" hidden></section>
+    <section id="view-site" class="view" aria-label="frostdev.io page views" hidden></section>
+    <section id="view-gallery" class="view gallery" aria-label="Glaze gallery review" hidden>
+      <div id="workspace" class="workspace">
+        <aside class="sidebar" aria-label="Submissions">
+          <h1 id="gallery-title">Mods</h1>
+          <div class="filters" id="filters" role="group" aria-label="Show"></div>
+          <input id="search" type="search" placeholder="Search name, author or id" aria-label="Search">
+          <ul id="list" class="list" aria-live="polite"></ul>
+        </aside>
+        <section id="detail" class="detail" tabindex="-1" aria-live="polite"></section>
+      </div>
+    </section>
+    <section id="activity" class="view" aria-labelledby="activity-title" hidden>
+      <div class="view-head"><div><p class="eyebrow">Glaze · gallery</p><h1 id="activity-title">Activity</h1><p class="sub">Every decision made in this dashboard or with the gallery's command line, newest first.</p></div></div>
+      <div id="limits" class="note"></div>
+      <ol id="audit" class="audit"></ol>
+      <p><button id="older" class="secondary" type="button" hidden>Show older</button></p>
+    </section>
   </main>
 </body>
 </html>

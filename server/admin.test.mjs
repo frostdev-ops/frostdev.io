@@ -11,7 +11,7 @@ import { gallery, fromEnv, modFacts } from './gallery.mjs';
 import { adminFileType } from './gallery-admin.mjs';
 import { checkCode, describe, glaze } from '../scripts/looks.mjs';
 
-const ORIGIN = 'https://frostdev.io', ROOT = '/glaze/admin';
+const ORIGIN = 'https://frostdev.io', ROOT = '/hq', CALLBACK = '/glaze/admin/callback';
 const CLIENT = 'fake-client', SECRET = 'fake-secret', EMAIL = 'owner@example.edu';
 const tmp = mkdtempSync(path.join(os.tmpdir(), 'gallery-admin-test-'));
 const MB = glaze('modbundle.js');
@@ -32,7 +32,7 @@ const google = http.createServer((req, res) => {
   req.on('end', () => {
     const args = Object.fromEntries(new URLSearchParams(body)); exchanges.push(args);
     const expected = codes.get(args.code); codes.delete(args.code);
-    if (!expected || args.client_id !== CLIENT || args.client_secret !== SECRET || args.redirect_uri !== `${ORIGIN}${ROOT}/callback`
+    if (!expected || args.client_id !== CLIENT || args.client_secret !== SECRET || args.redirect_uri !== `${ORIGIN}${CALLBACK}`
       || args.grant_type !== 'authorization_code' || sha(args.code_verifier || '') !== expected.challenge) {
       res.writeHead(400, { 'content-type': 'application/json' }); return res.end('{}');
     }
@@ -49,7 +49,7 @@ const options = (over = {}) => ({ db: path.join(dir, 'gallery.db'), now: () => c
   googleFetch: (url, init) => { assert.equal(url, 'https://oauth2.googleapis.com/token'); assert.equal(init.redirect, 'error'); return fetch(`${googleBase}/token`, init); }, ...over });
 const open = async (over) => { g = gallery(options(over)); const a = await g.listen(0, '127.0.0.1'); base = `http://127.0.0.1:${a.port}`; };
 const start = async (over) => { dir = mkdtempSync(path.join(tmp, 'g-')); clock = Date.parse('2026-10-17T12:00:00Z'); codes.clear(); exchanges.length = 0; await open(over); };
-const request = (p, { cookie, method = 'GET', origin, csrf, body, headers = {} } = {}) => fetch(`${base}${ROOT}${p}`, {
+const at = (p, { cookie, method = 'GET', origin, csrf, body, headers = {} } = {}) => fetch(`${base}${p}`, {
   method, redirect: 'manual', headers: { ...(cookie && { cookie }), ...(origin !== undefined && { origin }), ...(csrf !== undefined && { 'x-csrf-token': csrf }),
     ...(body !== undefined && { 'content-type': 'application/json' }), ...headers }, ...(body !== undefined && { body: typeof body === 'string' ? body : JSON.stringify(body) }),
 });
@@ -61,12 +61,13 @@ const begin = async (claims = {}, opts = {}) => {
   assert.equal(url.origin, 'https://accounts.google.com');
   assert.equal(url.searchParams.get('scope'), 'openid email');
   assert.equal(url.searchParams.get('code_challenge_method'), 'S256');
-  assert.equal(url.searchParams.get('redirect_uri'), `${ORIGIN}${ROOT}/callback`);
+  assert.equal(url.searchParams.get('redirect_uri'), `${ORIGIN}${CALLBACK}`);
   const code = `code-${++flowSeq}`;
   codes.set(code, { challenge: url.searchParams.get('code_challenge'), nonce: url.searchParams.get('nonce'), claims });
   return { code, state: url.searchParams.get('state'), cookie: cookies(r), response: r };
 };
-const finish = (f, over = {}) => request(`/callback?state=${f.state}&code=${f.code}`, { cookie: f.cookie, ...over });
+const request = (p, options) => at(`${ROOT}${p}`, options);
+const finish = (f, over = {}) => at(`${CALLBACK}?state=${f.state}&code=${f.code}`, { cookie: f.cookie, ...over });
 const login = async (claims = {}) => {
   const r = await finish(await begin(claims));
   assert.equal(r.status, 303, await r.text());
@@ -116,20 +117,20 @@ test('full login: PKCE, cookie binding, claims and exact case-insensitive allowl
   const f = await begin({ email: EMAIL.toUpperCase() });
   const flow = g.db.prepare('SELECT * FROM admin_flows').get();
   assert.equal(flow.state, sha(f.state)); assert.notEqual(flow.browser, f.cookie.split('=')[1]);
-  for (const flag of ['HttpOnly', 'Secure', 'SameSite=Lax', 'Path=/glaze/admin']) assert.ok(f.response.headers.get('set-cookie').includes(flag));
+  for (const flag of ['HttpOnly', 'Secure', 'SameSite=Lax', `Path=${CALLBACK};`]) assert.ok(f.response.headers.get('set-cookie').includes(flag), flag);
   const r = await finish(f); assert.equal(r.status, 303);
   const c = cookies(r), session = g.db.prepare('SELECT * FROM admin_sessions').get();
-  const raw = /__Secure-gz_admin=([^;]+)/.exec(c)[1];
+  const raw = /__Secure-fd_hq=([^;]+)/.exec(c)[1];
   assert.equal(session.token, sha(raw)); assert.equal(session.email, EMAIL);
   assert.equal(session.expires, clock + 12 * 3600e3); assert.equal(g.db.prepare('SELECT COUNT(*) n FROM admin_flows').get().n, 0);
   assert.equal(exchanges.length, 1); assert.equal(exchanges[0].code_verifier, flow.verifier);
-  for (const flag of ['HttpOnly', 'Secure', 'SameSite=Lax', 'Path=/glaze/admin', 'Max-Age=43200']) assert.ok(r.headers.getSetCookie().some((v) => v.includes(flag)));
-  for (const p of ['', '/', '/app.js', '/style.css', '/api/data']) {
+  for (const flag of ['HttpOnly', 'Secure', 'SameSite=Lax', 'Path=/hq;', 'Max-Age=43200']) assert.ok(r.headers.getSetCookie().some((v) => v.startsWith('__Secure-fd_hq=') && v.includes(flag)), flag);
+  for (const p of ['', '/', '/app.js', '/charts.js', '/gallery.js', '/viewer.js', '/style.css', '/frostdev-icon.webp', '/api/data', '/api/glaze']) {
     const page = await request(p, { cookie: c }); assert.equal(page.status, 200, p);
     assert.equal(page.headers.get('cache-control'), 'no-store'); assert.equal(page.headers.get('x-content-type-options'), 'nosniff');
     assert.ok(!page.headers.get('content-security-policy').includes('unsafe-inline'));
   }
-  assert.equal((await request('/api/data', { cookie: `${c}; __Secure-gz_admin=${raw}` })).status, 401, 'ambiguous session cookies refused');
+  assert.equal((await request('/api/data', { cookie: `${c}; __Secure-fd_hq=${raw}` })).status, 401, 'ambiguous session cookies refused');
 });
 
 test('wrong or unverified email, issuer, audience, nonce, expiry and malformed tokens are refused identically', async () => {
@@ -142,7 +143,7 @@ test('wrong or unverified email, issuer, audience, nonce, expiry and malformed t
     const f = await begin(failures[i], { headers: { 'x-real-ip': `198.51.100.${i + 1}` } });
     const r = await finish(f);
     assert.equal(r.status, 403, JSON.stringify(failures[i]));
-    const text = await r.text(); message ||= text; assert.equal(text, message); assert.ok(!cookies(r).includes('__Secure-gz_admin='));
+    const text = await r.text(); message ||= text; assert.equal(text, message); assert.ok(!cookies(r).includes('__Secure-fd_hq='));
   }
   const f = await begin({}, { headers: { 'x-real-ip': '203.0.113.3' } }); codes.get(f.code).token = 'not.a.token';
   assert.equal((await finish(f)).status, 403);
@@ -153,7 +154,7 @@ test('bad state, wrong browser, expired flow, replayed state and replayed code n
   await start();
   const f = await begin();
   assert.equal((await finish({ ...f, state: 'x'.repeat(43) })).status, 403);
-  assert.equal((await finish(f, { cookie: `__Secure-gz_admin_flow=${'x'.repeat(43)}` })).status, 403);
+  assert.equal((await finish(f, { cookie: `__Secure-fd_hq_flow=${'x'.repeat(43)}` })).status, 403);
   assert.equal(exchanges.length, 0);
   const pair = await Promise.all([finish(f), finish(f)]);
   assert.deepEqual(pair.map((r) => r.status).sort(), [303, 403]); assert.equal(exchanges.length, 1);
@@ -163,7 +164,7 @@ test('bad state, wrong browser, expired flow, replayed state and replayed code n
   const stale = await begin(); clock += 10 * 60e3;
   assert.equal((await finish(stale)).status, 403);
   const denied = await begin();
-  assert.equal((await request(`/callback?state=${denied.state}&error=access_denied`, { cookie: denied.cookie })).status, 403);
+  assert.equal((await at(`${CALLBACK}?state=${denied.state}&error=access_denied`, { cookie: denied.cookie })).status, 403);
   assert.equal((await finish(denied)).status, 403);
 });
 
@@ -173,8 +174,8 @@ test('the sign-in page lets browsers send their Origin and follow the redirect t
   assert.equal(page.headers.get('referrer-policy'), 'same-origin', 'no-referrer makes browsers send Origin: null on POST');
   assert.match(page.headers.get('content-security-policy'), /form-action 'self' https:\/\/accounts\.google\.com;/);
   const html = await page.text();
-  assert.match(html, /href="\/glaze\/admin\/style\.css"/);
-  assert.match(html, /<form method="post" action="\/glaze\/admin\/login">/);
+  assert.match(html, /href="\/hq\/style\.css"/);
+  assert.match(html, /<form method="post" action="\/hq\/login">/);
   assert.doesNotMatch(html, /<script|<style|\sstyle=|\sonclick=/i);
   const css = await request('/style.css');
   assert.equal(css.status, 200);
@@ -194,31 +195,56 @@ test('login starts require the site Origin and are limited per trusted client ne
   clock += 3600e3; await begin({}, { headers: { 'x-real-ip': '2001:db8:1:2::1' } });
 });
 
-test('the route nginx asks before it serves the Kiln statistics page: 200 to a session, 401 to anything else', async () => {
-  // ops/public-site.nginx.conf, location = /_kiln_stats_session: an auth_request to GET /glaze/admin/api/live with the
-  // visitor's cookie. nginx lets a 2xx through, sends a 401 to the sign-in and shows an error for anything else, so
-  // this route must not start redirecting, need a parameter, or answer a signed-out visitor with anything but 401.
-  await start();
-  const gate = '/api/live';
-  assert.equal((await request(gate)).status, 401);
-  assert.equal((await request(gate, { cookie: `__Secure-gz_admin=${'a'.repeat(43)}` })).status, 401, 'a cookie that is no session');
+test('statistics files and the gallery numbers are private, read only by name from STATS_DIR, and never public', async () => {
+  const stats = mkdtempSync(path.join(tmp, 'stats-'));
+  writeFileSync(path.join(stats, 'kiln.json'), JSON.stringify({ days: [{ day: '2026-11-17' }], rows: [], note: HOSTILE }));
+  writeFileSync(path.join(stats, 'secret.json'), '{"no":1}');
+  await start({ statsDir: stats, reviewsPerDay: 300, modReviewsPerDay: 40, mailUrl: '' });
+  for (const p of ['/api/stats/kiln', '/api/glaze']) assert.equal((await request(p)).status, 401, p);
   const who = await login();
-  const r = await request(gate, { cookie: who.cookie });
-  assert.equal(r.status, 200);
-  assert.deepEqual(await r.json(), { feeds: [] });
-  assert.equal(r.headers.get('set-cookie'), null);
-  clock += 12 * 3600e3 + 1;
-  assert.equal((await request(gate, { cookie: who.cookie })).status, 401, 'an expired session');
+  const kiln = await request('/api/stats/kiln', who);
+  assert.equal(kiln.status, 200); assert.match(kiln.headers.get('content-type'), /^application\/json/);
+  assert.equal(kiln.headers.get('cache-control'), 'no-store');
+  assert.equal((await kiln.json()).note, HOSTILE, 'the file is passed on as it is, not encoded twice');
+  for (const name of ['secret', 'site', '..%2Fsecret', '../secret', 'KILN']) assert.equal((await request(`/api/stats/${name}`, who)).status, 404, name);
+  seedLook('pending'); seedLook('published'); seedLook('published', { created: new Date(clock - 40 * 86400e3).toISOString() });
+  g.db.prepare("INSERT INTO rejected VALUES ('Nope', 'x', ?, ?)").run(JSON.stringify({ first: { cost: 0.5 }, escalation: { cost: 0.25 } }), '2026-10-17');
+  await seedMod('published', { decision: JSON.stringify({ review: { cost: 1 } }) });
+  g.db.prepare("INSERT INTO quota VALUES ('all', '', '2026-10-17', 7)").run();
+  const n = await (await request('/api/glaze', who)).json();
+  assert.deepEqual(n.looks, { pending: 1, published: 2 }); assert.deepEqual(n.mods, { published: 1 }); assert.equal(n.modsLive, 1);
+  assert.equal(n.curated, readdirSync('src/data/looks').filter((f) => f.endsWith('.json')).length);
+  assert.deepEqual(n.days['2026-10-17'], { looks: { pending: 1, published: 1, declined: 1 }, mods: { published: 1 } }, 'the 40-day-old Look is left out');
+  assert.equal(n.spent30, 1.75); assert.equal(n.mail, false); assert.equal(n.limits, true);
+  assert.deepEqual(n.reviewsToday, { looks: 7, looksLimit: 300, mods: 0, modsLimit: 40 });
+  assert.ok(!JSON.stringify(n).includes('private-submitter-token'));
+  await g.close(); g = null;
+  await start({ statsDir: '' }); const again = await login();
+  assert.equal((await request('/api/stats/kiln', again)).status, 404, 'no folder, no statistics');
+});
+
+test('the old dashboard addresses send the browser to HQ; the OAuth callback stays where Google expects it', async () => {
+  await start();
+  for (const [from, to] of [['/glaze/admin', '/hq'], ['/glaze/admin/', '/hq'], ['/glaze/admin/app.js', '/hq'], ['/glaze/admin/kiln-stats/', '/hq#kiln'], ['/glaze/admin/kiln-stats', '/hq#kiln']]) {
+    const r = await at(from);
+    assert.equal(r.status, 302, from); assert.equal(r.headers.get('location'), to, from); assert.equal(r.headers.get('set-cookie'), null);
+  }
+  assert.equal((await at('/glaze/admin/api/looks/c-0000000001/approve', { method: 'POST', origin: ORIGIN })).status, 404, 'no decision through the old address');
+  assert.equal((await at('/glaze/admin/login', { method: 'POST', origin: ORIGIN })).status, 404, 'sign-in starts only at /hq/login');
+  // a session is HQ's alone: its cookie is never sent under /glaze/admin
+  const who = await login();
+  assert.equal((await at('/glaze/admin/api/data', who)).status, 302);
+  assert.equal(who.response.headers.get('location'), '/hq');
 });
 
 test('every private route refuses without a session; sessions persist, expire and sign out with CSRF and Origin', async () => {
   await start();
   const look = seedLook(), mod = await seedMod();
-  const routes = ['/app.js', '/api/data', '/api/audit?before=20', `/api/looks/${look.id}`, `/api/mods/${mod.id}/${mod.hash}`,
+  const routes = ['/app.js', '/charts.js', '/gallery.js', '/api/glaze', '/api/stats/kiln', '/api/live', '/api/data', '/api/audit?before=20', `/api/looks/${look.id}`, `/api/mods/${mod.id}/${mod.hash}`,
     `/files/looks/${look.id}`, `/files/mods/${mod.id}/${mod.hash}?path=page.html`, `/bundles/mods/${mod.id}/${mod.hash}`, '/unknown'];
   for (const p of routes) {
     assert.equal((await request(p)).status, 401, p);
-    assert.equal((await request(p, { cookie: `__Secure-gz_admin=${'a'.repeat(43)}` })).status, 401, p);
+    assert.equal((await request(p, { cookie: `__Secure-fd_hq=${'a'.repeat(43)}` })).status, 401, p);
   }
   for (const p of ['/logout', `/api/looks/${look.id}/approve`, `/api/mods/${mod.id}/${mod.hash}/remove`]) assert.equal((await request(p, { method: 'POST', origin: ORIGIN, body: { reason: '' } })).status, 401);
   assert.equal((await request('')).headers.get('location'), `${ROOT}/login`);
@@ -229,7 +255,7 @@ test('every private route refuses without a session; sessions persist, expire an
     assert.equal((await action(`looks/${look.id}/approve`, missing)).status, 403);
   }
   assert.equal((await request(`/api/looks/${look.id}/approve`, { method: 'POST', cookie: who.cookie, csrf: who.csrf, body: { reason: '' } })).status, 403);
-  const r = await request('/logout', { method: 'POST', origin: ORIGIN, ...who }); assert.equal(r.status, 200); assert.match(cookies(r), /__Secure-gz_admin=/);
+  const r = await request('/logout', { method: 'POST', origin: ORIGIN, ...who }); assert.equal(r.status, 200); assert.match(cookies(r), /__Secure-fd_hq=/);
   assert.equal((await request('/api/data', who)).status, 401);
   const fresh = await login(); clock += 12 * 3600e3;
   assert.equal((await request('/api/data', fresh)).status, 401);
@@ -249,7 +275,7 @@ test('Looks and every mod version include declined records, queue reasons, revie
   const m = await (await request(`/api/mods/${mod.id}/${mod.hash}`, who)).json();
   assert.equal(m.versions.length, 2); assert.deepEqual(m.decision.review.commands, ['cat page.html', 'find . -type f']); assert.equal(m.decision.review.rounds, 3);
   assert.equal(m.permissions[0].why, HOSTILE); assert.match(m.permissions[0].means, /To Do/); assert.ok(m.summary.hosts.includes('api.weather.gov'));
-  for (const route of ['', '/app.js', '/viewer.js', '/style.css']) { const text = await (await request(route, who)).text(); assert.ok(!text.includes(HOSTILE)); assert.ok(!text.includes('private-submitter-token')); }
+  for (const route of ['', '/app.js', '/charts.js', '/gallery.js', '/viewer.js', '/style.css']) { const text = await (await request(route, who)).text(); assert.ok(!text.includes(HOSTILE)); assert.ok(!text.includes('private-submitter-token')); }
 });
 
 test('all six moderation actions share CLI state transitions and atomically record actor, item, time and reason', async () => {
@@ -393,7 +419,7 @@ test('audit pages can reach older records and have no public route; nginx and Do
   const older = await (await request(`/api/audit?before=${recent.at(-1).seq}`, who)).json(); assert.equal(older.length, 5); assert.equal(older.at(-1).seq, 1);
   assert.equal((await request('/api/audit?before=oops', who)).status, 400);
   const conf = readFileSync('ops/public-site.nginx.conf', 'utf8');
-  for (const match of [/location = \/glaze\/admin \{([^}]+)\}/, /location \^~ \/glaze\/admin\/ \{([^}]+)\}/]) {
+  for (const match of [/location = \/hq \{([^}]+)\}/, /location \^~ \/hq\/ \{([^}]+)\}/, /location = \/glaze\/admin \{([^}]+)\}/, /location \^~ \/glaze\/admin\/ \{([^}]+)\}/]) {
     const body = conf.match(match)?.[1]; assert.ok(body);
     for (const text of ['access_log off;', 'client_max_body_size 4k;', 'proxy_pass http://127.0.0.1:8788;', 'proxy_set_header X-Real-IP $remote_addr;', 'proxy_cache off;', 'Cache-Control "no-store"']) assert.ok(body.includes(text), text);
     assert.ok(!body.includes('Cookie ""'));
@@ -401,6 +427,9 @@ test('audit pages can reach older records and have no public route; nginx and Do
   const docker = readFileSync('server/Dockerfile', 'utf8'), deploy = readFileSync('ops/deploy-gallery.sh', 'utf8');
   assert.match(docker, /COPY gallery-admin\.mjs/); assert.match(docker, /COPY admin admin\//);
   assert.match(deploy, /cp server\/gallery-admin\.mjs/); assert.match(deploy, /cp -R server\/admin/);
+  assert.match(deploy, /-v \/var\/lib\/frostdev-stats\/out:\/stats:ro/); assert.match(deploy, /STATS_DIR=\/stats/);
+  assert.doesNotMatch(conf, /auth_request|kiln-stats|_kiln_stats_session/, 'the old statistics page and its gate are gone');
+  assert.match(conf, /location = \/kiln\/stats \{\s*return 302 \/hq#kiln;/);
 });
 
 test('browser UI keeps hostile names and reviews in text sinks, separates mods and Looks, and declines with a reason and CSRF', async () => {
@@ -417,7 +446,7 @@ test('browser UI keeps hostile names and reviews in text sinks, separates mods a
     async fire(type) { for (const fn of this.events[type] || []) await fn({ preventDefault() {}, target: this }); }
     focus() {} scrollIntoView() {}
   }
-  const ids = ['workspace', 'activity', 'nav-mods', 'nav-looks', 'nav-activity', 'count-mods', 'count-looks', 'email', 'logout', 'message', 'filters', 'search', 'list', 'detail', 'limits', 'audit', 'older'];
+  const ids = ['workspace', 'activity', 'gallery-title', 'count-mods', 'count-looks', 'message', 'filters', 'search', 'list', 'detail', 'limits', 'audit', 'older'];
   const nodes = Object.fromEntries(ids.map((id) => [id, new Node()]));
   const id = 'a'.repeat(16), hash = 'b'.repeat(43);
   const mod = { kind: 'mods', id, hash, name: HOSTILE, credit: HOSTILE, version: '1.0.0', status: 'pending', created: 1, person: HOSTILE };
@@ -429,10 +458,14 @@ test('browser UI keeps hostile names and reviews in text sinks, separates mods a
     if (url.endsWith(`/api/mods/${id}/${hash}/decline`)) { posts.push({ url, init }); mod.status = 'declined'; return Response.json({ ok: true }); }
     throw new Error(`Unexpected UI fetch ${url}`);
   };
-  const location = { hash: `#mods/pending/${id}/${hash}`, assign() {} };
+  const location = { hash: `#glaze/mods/pending/${id}/${hash}`, assign() {} };
   const context = vm.createContext({ document: { hidden: false, getElementById: (k) => nodes[k], createElement: (tag) => new Node(tag), createTextNode: (text) => { const n = new Node('#text'); n.textContent = text; return n; } },
     location, window: { addEventListener() {} }, fetch: fakeFetch, setInterval: () => 0, clearInterval() {}, setTimeout: () => 0, clearTimeout() {}, console, GalleryViewer: {} });
-  vm.runInContext(readFileSync('server/admin/app.js', 'utf8'), context);
+  vm.runInContext(readFileSync('server/admin/gallery.js', 'utf8'), context);
+  const seen = [];
+  await context.HQGallery.start({ toast() {}, onData: (d) => seen.push(d.email) });
+  assert.deepEqual(seen, [EMAIL], 'the shell is told who is signed in');
+  context.HQGallery.show({ section: 'mods', filter: 'pending', id, hash });
   const wait = async (f) => { for (let i = 0; i < 200 && !f(); i++) await new Promise((r) => setTimeout(r, 2)); assert.ok(f()); };
   await wait(() => nodes.detail.textContent.includes('Reviewer'));
   assert.ok(nodes.list.textContent.includes(HOSTILE)); assert.ok(nodes.detail.textContent.includes(HOSTILE));

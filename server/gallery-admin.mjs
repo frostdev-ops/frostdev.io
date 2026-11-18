@@ -1,25 +1,64 @@
-// The private gallery surface. Google tokens are accepted only from the server's direct TLS token exchange,
-// never from a browser. Google documents this channel as authenticating the ID token without a second JWT
-// signature check: https://developers.google.com/identity/openid-connect/openid-connect#exchangecode
+// The private dashboard, frostdev HQ (/hq, docs/hq.md): the gallery's moderation plus Kiln's, Glaze's and the site's
+// numbers, behind Google sign-in. Google tokens are accepted only from the server's direct TLS token exchange, never
+// from a browser. Google documents this channel as authenticating the ID token without a second JWT signature check:
+// https://developers.google.com/identity/openid-connect/openid-connect#exchangecode
 import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
-const ROOT = '/glaze/admin';
-const SESSION = '__Secure-gz_admin';
-const FLOW = '__Secure-gz_admin_flow';
+const ROOT = '/hq';
+// Where the dashboard was before HQ. Its addresses (bookmarks, review emails already sent) are sent on to HQ.
+const LEGACY = '/glaze/admin';
+// The redirect URI registered with Google for this OAuth client. It stays where it was when the dashboard moved to /hq,
+// so the move needed no change in Google Cloud; moving it means adding the new URI to the client there first.
+const CALLBACK = `${LEGACY}/callback`;
+const SESSION = '__Secure-fd_hq';
+const FLOW = '__Secure-fd_hq_flow';
 const HOURS12 = 12 * 3600e3;
 const MINUTES10 = 10 * 60e3;
+const DAY = 86400e3;
 const random = () => crypto.randomBytes(32).toString('base64url');
 const hash = (v) => crypto.createHash('sha256').update(v).digest('base64url');
-const cookie = (name, value, seconds) => `${name}=${value}; Path=${ROOT}; Max-Age=${seconds}; HttpOnly; Secure; SameSite=Lax`;
+const cookie = (name, value, seconds, at = ROOT) => `${name}=${value}; Path=${at}; Max-Age=${seconds}; HttpOnly; Secure; SameSite=Lax`;
 const cookieOf = (req, name) => {
   const values = String(req.headers.cookie || '').split(';').map((p) => p.trim()).filter((p) => p.startsWith(`${name}=`));
   const value = values.length === 1 ? values[0].slice(name.length + 1) : '';
   return /^[\w-]{43}$/.test(value) ? value : '';
 };
+// img-src allows the site's own brand pictures (/projects/...), which nginx serves from the same origin.
 const CSP = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; object-src 'none'";
 const plain = 'text/plain; charset=utf-8';
 const mediaTypes = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', mp4: 'video/mp4', webm: 'video/webm' };
+// The numbers stats/collect.mjs writes (docs/hq.md), read from STATS_DIR, which the container mounts read-only.
+const STATS = new Set(['kiln', 'site', 'public', 'status']);
+const ASSETS = {
+  '': ['index.html', 'text/html; charset=utf-8'], '/': ['index.html', 'text/html; charset=utf-8'],
+  '/app.js': ['app.js', 'text/javascript; charset=utf-8'], '/charts.js': ['charts.js', 'text/javascript; charset=utf-8'],
+  '/gallery.js': ['gallery.js', 'text/javascript; charset=utf-8'], '/viewer.js': ['viewer.js', 'text/javascript; charset=utf-8'],
+  '/style.css': ['style.css', 'text/css; charset=utf-8'],
+};
+// No secret, and the sign-in page needs them before there is a session.
+const PUBLIC_ASSETS = new Set(['/style.css', '/frostdev-icon.webp']);
+
+// The sign-in page: no script, the dashboard's stylesheet, one form that starts Google's flow.
+const LOGIN = `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><meta name="robots" content="noindex, nofollow"><title>Sign in · frostdev HQ</title><link rel="stylesheet" href="${ROOT}/style.css"></head>
+<body class="login">
+  <div class="ground" aria-hidden="true"></div>
+  <a class="skip" href="#sign-in">Skip to sign in</a>
+  <main class="login-main" id="sign-in">
+    <div class="login-card">
+      <div class="brand big"><img src="${ROOT}/frostdev-icon.webp" width="56" height="56" alt=""><span class="wordmark">frostdev</span><span class="hq">HQ</span></div>
+      <p class="eyebrow">Kiln · Glaze · frostdev.io</p>
+      <h1>Everything behind the site, in one place.</h1>
+      <p class="lead">Downloads and numbers for Kiln and Glaze, the site's page views, and the gallery's review queue.</p>
+      <form method="post" action="${ROOT}/login"><button type="submit">Sign in with Google <span aria-hidden="true">→</span></button></form>
+      <p class="login-note">Only approved Google accounts can sign in.</p>
+    </div>
+  </main>
+  <footer class="login-foot"><a href="/">frostdev.io</a><span>Work · Play · Create</span></footer>
+</body></html>`;
 
 // Byte signatures, never a submitter's extension or MIME. Active formats (including SVG and Lottie) stay text.
 export function adminFileType(bytes) {
@@ -38,7 +77,8 @@ export function adminFileType(bytes) {
 }
 
 export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide, decideMod, readMod, readLookMedia, permissionWords, live = () => new Map(),
-  limits, blocklist, googleClientId, googleClientSecret, adminEmails, googleFetch = fetch }) {
+  limits, blocklist, googleClientId, googleClientSecret, adminEmails, googleFetch = fetch, statsDir = '', reviewsPerDay = 0, modReviewsPerDay = 0,
+  mailOn = false, curated = () => 0 }) {
   const emails = new Set(String(adminEmails || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean));
   const enabled = !!(googleClientId && googleClientSecret && emails.size);
   db.exec(`CREATE TABLE IF NOT EXISTS admin_sessions (token TEXT PRIMARY KEY, email TEXT NOT NULL, csrf TEXT NOT NULL, expires INTEGER NOT NULL);
@@ -58,7 +98,8 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
       // same-origin, not no-referrer: under no-referrer browsers send `Origin: null` on every POST (forms and same-origin
       // fetch alike), which the Origin checks below refuse.
       'content-security-policy': CSP, 'referrer-policy': 'same-origin', 'x-frame-options': 'DENY', ...headers });
-    res.end(type.startsWith('application/json') ? JSON.stringify(body) : body);
+    // a string under a JSON type is JSON already (a statistics file)
+    res.end(type.startsWith('application/json') && typeof body !== 'string' ? JSON.stringify(body) : body);
   };
   const redirect = (res, to, headers = {}) => reply(res, 303, '', plain, { location: to, ...headers });
   const refuse = (res) => reply(res, 403, { error: 'Sign-in refused.' });
@@ -103,27 +144,82 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
     reply(res, status, body, mime, { ...headers, 'content-length': Buffer.byteLength(body) });
   };
 
+  // Glaze's gallery in numbers, from its own records: what is in it, what came in over the last 30 days and how it went,
+  // what the reviews cost and how much of today's review allowance is used. Nothing about visitors: the gallery keeps
+  // nothing about them (docs/looks-gallery.md, Privacy). Declined submissions are deleted after 30 days.
+  const glazeNumbers = () => {
+    const t = now(), today = new Date(t).toISOString().slice(0, 10), since = t - 30 * DAY;
+    const counts = (table) => Object.fromEntries(sql(`SELECT status, COUNT(*) n FROM ${table} GROUP BY status`).all().map((r) => [r.status, r.n]));
+    const parse = (text) => { try { return JSON.parse(text) || {}; } catch { return {}; } };
+    const costOf = (d) => [d.first?.cost, d.escalation?.cost, d.review?.cost].reduce((sum, c) => sum + (typeof c === 'number' && c > 0 ? c : 0), 0);
+    const days = {};
+    const count = (day, kind, status) => { const b = (days[day] ||= { looks: {}, mods: {} })[kind]; b[status] = (b[status] || 0) + 1; };
+    let spent = 0;
+    for (const r of sql('SELECT status, created, decision FROM looks').all()) {
+      if (!(Date.parse(r.created) >= since)) continue;
+      count(r.created.slice(0, 10), 'looks', r.status);
+      spent += costOf(parse(r.decision));
+    }
+    // a Look the review declined is kept only here, by day
+    for (const r of sql('SELECT day, decision FROM rejected').all()) {
+      if (!(Date.parse(`${r.day}T23:59:59Z`) >= since)) continue;
+      count(r.day, 'looks', 'declined');
+      spent += costOf(parse(r.decision));
+    }
+    for (const r of sql('SELECT status, created, decision FROM mods').all()) {
+      if (!(r.created >= since)) continue;
+      count(new Date(r.created).toISOString().slice(0, 10), 'mods', r.status);
+      spent += costOf(parse(r.decision));
+    }
+    const used = (kind) => sql('SELECT n FROM quota WHERE kind = ? AND key = ? AND day = ?').get(kind, '', today)?.n || 0;
+    return {
+      looks: counts('looks'), mods: counts('mods'), modsLive: sql("SELECT COUNT(DISTINCT id) n FROM mods WHERE status = 'published'").get().n, curated: curated(),
+      days, spent30: Math.round(spent * 1e4) / 1e4, mail: !!mailOn, limits: !!limits,
+      reviewsToday: { looks: used('all'), looksLimit: reviewsPerDay || null, mods: used('mod-all'), modsLimit: modReviewsPerDay || null },
+    };
+  };
+
+  // Google sends the browser back here (CALLBACK, the registered redirect URI); the session cookie it sets is HQ's.
+  const callback = async (req, res, url) => {
+    res.setHeader('set-cookie', cookie(FLOW, '', 0, CALLBACK));
+    const state = url.searchParams.get('state') || '', browser = cookieOf(req, FLOW), code = url.searchParams.get('code');
+    if (!/^[\w-]{43}$/.test(state) || !browser) return refuse(res);
+    // DELETE RETURNING consumes before the asynchronous exchange, including failed exchanges and parallel replays.
+    const flow = sql('DELETE FROM admin_flows WHERE state = ? AND browser = ? AND expires > ? RETURNING *').get(hash(state), hash(browser), now());
+    if (!flow || !code || code.length > 4096 || url.searchParams.has('error') || url.searchParams.getAll('code').length !== 1 || url.searchParams.getAll('state').length !== 1) return refuse(res);
+    try {
+      const response = await googleFetch('https://oauth2.googleapis.com/token', { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(10e3),
+        headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code, client_id: googleClientId,
+          client_secret: googleClientSecret, redirect_uri: `${siteOrigin}${CALLBACK}`, grant_type: 'authorization_code', code_verifier: flow.verifier }) });
+      if (!response.ok) return refuse(res);
+      const { id_token: token } = await response.json();
+      if (typeof token !== 'string' || token.length > 16384 || !/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) return refuse(res);
+      const [header, payload] = token.split('.').slice(0, 2).map((s) => JSON.parse(Buffer.from(s, 'base64url').toString('utf8')));
+      const email = typeof payload.email === 'string' ? payload.email.toLowerCase() : '';
+      if (header.alg !== 'RS256' || !['https://accounts.google.com', 'accounts.google.com'].includes(payload.iss) || payload.aud !== googleClientId
+        || (payload.azp !== undefined && payload.azp !== googleClientId) || !Number.isFinite(payload.exp) || payload.exp * 1000 <= now()
+        || !Number.isFinite(payload.iat) || payload.iat * 1000 > now() + 60e3 || typeof payload.sub !== 'string' || !payload.sub
+        || payload.nonce !== flow.nonce || payload.email_verified !== true || !emails.has(email)) return refuse(res);
+      const session = random(), csrf = random();
+      sql('DELETE FROM admin_sessions WHERE token = ?').run(hash(cookieOf(req, SESSION)));
+      sql('INSERT INTO admin_sessions VALUES (?, ?, ?, ?)').run(hash(session), email, csrf, now() + HOURS12);
+      return redirect(res, ROOT, { 'set-cookie': [cookie(FLOW, '', 0, CALLBACK), cookie(SESSION, session, HOURS12 / 1000)] });
+    } catch { return refuse(res); }
+  };
+
   const handle = async (req, res, url) => {
     res.setHeader('cache-control', 'no-store');
     res.setHeader('content-security-policy', CSP);
     res.setHeader('x-frame-options', 'DENY');
     if (!enabled) return reply(res, 404, { error: 'Not found.' });
+    if (url.pathname === CALLBACK && req.method === 'GET') return callback(req, res, url);
+    if (url.pathname === LEGACY || url.pathname.startsWith(`${LEGACY}/`)) {
+      // The old dashboard's addresses go to HQ; the browser keeps a #fragment (an emailed #looks/<id>) across the redirect.
+      if (req.method !== 'GET' && req.method !== 'HEAD') return reply(res, 404, { error: 'The dashboard moved to /hq.' });
+      return reply(res, 302, '', plain, { location: url.pathname.startsWith(`${LEGACY}/kiln-stats`) ? `${ROOT}#kiln` : ROOT });
+    }
     const p = url.pathname.slice(ROOT.length);
-    if (p === '/login' && req.method === 'GET') return reply(res, 200,
-      `<!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light"><title>Gallery sign-in · Glaze · Frostdev</title><link rel="stylesheet" href="/glaze/admin/style.css"></head>
-<body>
-  <a class="skip" href="#sign-in">Skip to sign in</a>
-  <header class="masthead shell"><a class="brand" href="/glaze"><strong>frostdev</strong><span aria-hidden="true">/</span> Glaze</a><a class="text-link" href="/glaze/looks">Public gallery <span aria-hidden="true">↗</span></a></header>
-  <main class="shell login-main" id="sign-in">
-    <div class="login-card"><p class="eyebrow">Glaze · Gallery workspace</p><h1>A little care.<br>A better gallery.</h1><p class="lead">Review Looks and mods, inspect submissions, and help decide what goes live.</p>
-      <form method="post" action="/glaze/admin/login"><button type="submit">Sign in with Google <span aria-hidden="true">→</span></button></form>
-      <p class="login-note">Use your approved admin account to continue.</p><a class="login-back" href="/glaze">Back to Glaze <span aria-hidden="true">↗</span></a>
-    </div>
-  </main>
-  <footer class="shell footer"><span>Frostdev · Glaze gallery</span><span>Made to be shared. Reviewed with care.</span></footer>
-</body></html>`, 'text/html; charset=utf-8');
+    if (p === '/login' && req.method === 'GET') return reply(res, 200, LOGIN, 'text/html; charset=utf-8');
     if (p === '/login' && req.method === 'POST') {
       if (req.headers.origin !== siteOrigin) return refuse(res);
       sweep();
@@ -134,38 +230,12 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
       const state = random(), browser = random(), verifier = random(), nonce = random();
       sql('INSERT INTO admin_flows VALUES (?, ?, ?, ?, ?)').run(hash(state), hash(browser), verifier, nonce, now() + MINUTES10);
       const auth = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-      auth.search = new URLSearchParams({ client_id: googleClientId, redirect_uri: `${siteOrigin}${ROOT}/callback`, response_type: 'code',
+      auth.search = new URLSearchParams({ client_id: googleClientId, redirect_uri: `${siteOrigin}${CALLBACK}`, response_type: 'code',
         scope: 'openid email', state, nonce, code_challenge: hash(verifier), code_challenge_method: 'S256', prompt: 'select_account' }).toString();
-      return redirect(res, auth.href, { 'set-cookie': cookie(FLOW, browser, 600) });
+      // the flow cookie goes only to the callback, the one place that reads it
+      return redirect(res, auth.href, { 'set-cookie': cookie(FLOW, browser, 600, CALLBACK) });
     }
-    if (p === '/callback' && req.method === 'GET') {
-      res.setHeader('set-cookie', cookie(FLOW, '', 0));
-      const state = url.searchParams.get('state') || '', browser = cookieOf(req, FLOW), code = url.searchParams.get('code');
-      if (!/^[\w-]{43}$/.test(state) || !browser) return refuse(res);
-      // DELETE RETURNING consumes before the asynchronous exchange, including failed exchanges and parallel replays.
-      const flow = sql('DELETE FROM admin_flows WHERE state = ? AND browser = ? AND expires > ? RETURNING *').get(hash(state), hash(browser), now());
-      if (!flow || !code || code.length > 4096 || url.searchParams.has('error') || url.searchParams.getAll('code').length !== 1 || url.searchParams.getAll('state').length !== 1) return refuse(res);
-      try {
-        const response = await googleFetch('https://oauth2.googleapis.com/token', { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(10e3),
-          headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code, client_id: googleClientId,
-            client_secret: googleClientSecret, redirect_uri: `${siteOrigin}${ROOT}/callback`, grant_type: 'authorization_code', code_verifier: flow.verifier }) });
-        if (!response.ok) return refuse(res);
-        const { id_token: token } = await response.json();
-        if (typeof token !== 'string' || token.length > 16384 || !/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) return refuse(res);
-        const [header, payload] = token.split('.').slice(0, 2).map((s) => JSON.parse(Buffer.from(s, 'base64url').toString('utf8')));
-        const email = typeof payload.email === 'string' ? payload.email.toLowerCase() : '';
-        if (header.alg !== 'RS256' || !['https://accounts.google.com', 'accounts.google.com'].includes(payload.iss) || payload.aud !== googleClientId
-          || (payload.azp !== undefined && payload.azp !== googleClientId) || !Number.isFinite(payload.exp) || payload.exp * 1000 <= now()
-          || !Number.isFinite(payload.iat) || payload.iat * 1000 > now() + 60e3 || typeof payload.sub !== 'string' || !payload.sub
-          || payload.nonce !== flow.nonce || payload.email_verified !== true || !emails.has(email)) return refuse(res);
-        const session = random(), csrf = random();
-        sql('DELETE FROM admin_sessions WHERE token = ?').run(hash(cookieOf(req, SESSION)));
-        sql('INSERT INTO admin_sessions VALUES (?, ?, ?, ?)').run(hash(session), email, csrf, now() + HOURS12);
-        return redirect(res, ROOT, { 'set-cookie': [cookie(FLOW, '', 0), cookie(SESSION, session, HOURS12 / 1000)] });
-      } catch { return refuse(res); }
-    }
-    // The stylesheet is no secret, and the sign-in page needs it before there is a session.
-    if (p === '/style.css' && req.method === 'GET') return reply(res, 200, readFileSync(new URL('./admin/style.css', import.meta.url)), 'text/css; charset=utf-8');
+    if (PUBLIC_ASSETS.has(p) && req.method === 'GET') return reply(res, 200, readFileSync(new URL(`./admin${p}`, import.meta.url)), p.endsWith('.css') ? 'text/css; charset=utf-8' : 'image/webp');
     const session = getSession(req);
     if (!session) return (p === '' || p === '/') && req.method === 'GET' ? redirect(res, `${ROOT}/login`) : reply(res, 401, { error: 'Sign in to continue.' });
     if (req.method === 'POST') {
@@ -186,8 +256,17 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
       return reply(res, ok ? 200 : 409, ok ? { ok: true } : { error: 'The item changed, is blocked, or cannot take that action. Refresh and check it.' });
     }
     if (req.method !== 'GET') return reply(res, 405, { error: 'GET or POST only.' }, undefined, { allow: 'GET, POST' });
-    const asset = { '': ['index.html', 'text/html; charset=utf-8'], '/': ['index.html', 'text/html; charset=utf-8'], '/app.js': ['app.js', 'text/javascript; charset=utf-8'], '/viewer.js': ['viewer.js', 'text/javascript; charset=utf-8'], '/style.css': ['style.css', 'text/css; charset=utf-8'] }[p];
+    const asset = Object.hasOwn(ASSETS, p) && ASSETS[p];
     if (asset) return reply(res, 200, readFileSync(new URL(`./admin/${asset[0]}`, import.meta.url)), asset[1]);
+    const stats = /^\/api\/stats\/([a-z]+)$/.exec(p);
+    if (stats) {
+      if (!STATS.has(stats[1])) return reply(res, 404, { error: 'Not found.' });
+      if (!statsDir) return reply(res, 404, { error: 'This server has no statistics folder (STATS_DIR).' });
+      let text;
+      try { text = readFileSync(path.join(statsDir, `${stats[1]}.json`), 'utf8'); } catch { return reply(res, 404, { error: 'Nothing has been collected yet.' }); }
+      return reply(res, 200, text);
+    }
+    if (p === '/api/glaze') return reply(res, 200, glazeNumbers());
     if (p === '/api/data') {
       // shortcut: lists fit in one response today; page in SQL when the gallery holds thousands of submissions.
       const looks = sql('SELECT * FROM looks ORDER BY created, id').all().map((r) => {

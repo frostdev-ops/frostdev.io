@@ -1,8 +1,10 @@
 # Kiln download statistics
 
-A private page, `https://frostdev.io/kiln/stats`, that shows how often each file under `/kiln/downloads/` was
-downloaded: per day, file, release, country, kind of program, system and referring site. It opens for whoever is
-signed in to the Glaze gallery dashboard (`/glaze/admin`, Google sign-in); there is no separate password.
+How often each file under `/kiln/downloads/` was downloaded: per day, file, release, country, kind of program, system
+and referring site. The numbers are shown in [frostdev HQ](hq.md), the private dashboard, at `https://frostdev.io/hq#kiln`
+(`/kiln/stats` sends you there). They used to be a page of their own; since HQ, the collection writes `kiln.json` and
+HQ draws it. The collection is one part of HQ's hourly `frostdev-stats` run, beside the site's page views and the
+public numbers.
 
 ## Where the numbers come from
 
@@ -15,7 +17,7 @@ under `/kiln/downloads/` only, and writes them down.
 What it asks for, per day: the path, the country, the HTTP status, the User-Agent, whether Cloudflare has verified the
 sender as a bot, the referring host, a request count and the bytes sent. It never asks for an IP address.
 
-What it keeps (`/var/lib/kiln-stats/days/<day>.json`): release, file, country, status (200 or 206), kind of program,
+What it keeps (`/var/lib/frostdev-stats/kiln/days/<day>.json`; before HQ, `/var/lib/kiln-stats`): release, file, country, status (200 or 206), kind of program,
 system, referring host, count and bytes. The User-Agent text is reduced to a kind and a system before anything is
 written; no User-Agent string is stored or shown. The launcher's update check (`/kiln/updates/`) is not counted at all.
 
@@ -62,61 +64,20 @@ until you switch them on.
 To see what the classifier does with today's traffic (printed, never stored):
 
 ```sh
-ssh loothing-vps 'docker run --rm --env-file /etc/kiln-stats.env kiln-stats node kiln-downloads.mjs agents'
+ssh loothing-vps 'docker run --rm --env-file /etc/frostdev-stats.env frostdev-stats node kiln-downloads.mjs agents'
 ```
 
-## The page
+## The view in HQ
 
-`stats/page.html` with the numbers in one JSON script element, and `page.css` and `page.js`, which it loads; nothing
-else is loaded and nothing is sent. Filters: time range, release, group of files, and the four kinds (which are also
-the key to the colors).
+HQ's Kiln view (`server/admin/app.js`, `charts.js`) draws `kiln.json`: filters for the time range, release, group of
+files, and the four kinds (which are also the key to the colors), the downloads per day with a table view, and the
+files, countries, versions, systems and referring sites. Nexus's and GitHub's numbers sit above it. Who can open it,
+how it is installed and looked after: [frostdev HQ](hq.md).
 
-## Who can open it
+Cloudflare counts some requests from a sample when it is busy; the view says so when a stored day has such counts.
 
-Whoever is signed in to the gallery dashboard: the Google accounts in `ADMIN_EMAILS` of `/etc/glaze-gallery.env`
-([Looks gallery](looks-gallery.md)). nginx serves the three files from `/opt/frostdev-stats/kiln/`, and before each
-one it asks the gallery server whether the visitor's cookie is a dashboard session (`auth_request` to
-`GET /glaze/admin/api/live`: 200 to a session, 401 without; `server/admin.test.mjs` holds the route to that).
-
-- The dashboard's cookie is sent only under `/glaze/admin`, so the page's real address is
-  `/glaze/admin/kiln-stats/`. `/kiln/stats` redirects there.
-- Without a session the browser is sent to `/glaze/admin/login`. After signing in the dashboard opens; open
-  `/kiln/stats` again. A session lasts 12 hours.
-- When the gallery server is down, nobody gets the page (nginx answers 500).
-- No access log, `Cache-Control: no-store`, `X-Robots-Tag: noindex` (and `robots.txt` disallows both paths), never
-  framed, and a content security policy that allows only the page's own stylesheet and script: nothing inline runs.
-
-Cloudflare counts some requests from a sample when it is busy; the page says so when a stored day has such counts.
-
-## Installing
-
-1. A Cloudflare API token with **Zone > Analytics > Read** for the zone frostdev.io, and the zone's id. On the server,
-   as root, `/etc/kiln-stats.env`, mode 600:
-
-   ```
-   CF_API_TOKEN=...
-   CF_ZONE_ID=...
-   ```
-
-2. `ops/deploy-kiln-stats.sh` from a clean checkout: it runs the tests, copies the script to `/opt/kiln-stats`, builds
-   the image `kiln-stats`, installs `kiln-stats.service` and `kiln-stats.timer` (seven minutes past every hour) and
-   runs one collection. It fails when Cloudflare refuses the token.
-3. The Kiln statistics locations of `ops/public-site.nginx.conf` in `/etc/nginx/snippets/frostdev-public.conf` (the
-   installed file stays byte-identical to the repository's): back up, `nginx -t`, `systemctl reload nginx`. They need
-   the gallery dashboard to be running with Google sign-in set up.
-
-## Looking after it
-
-- `systemctl list-timers kiln-stats.timer`, `journalctl -u kiln-stats.service -n 20`: each run logs one line, for
-  example `kiln-stats: 3 days asked in 3 queries (...)`.
-- When a collection fails (the token was revoked, Cloudflare is down), the stored days stay, the page shows a banner
-  with the reason, and the next run tries again. A gap of less than 31 days fills itself; a longer one stays in the
-  calendar as days marked "not collected".
-- A new token: edit `/etc/kiln-stats.env`, then `systemctl start kiln-stats.service`.
-- To write the page again from what is stored (after changing `page.html`): deploy, or
-  `docker run --rm -v /var/lib/kiln-stats:/data -v /opt/frostdev-stats/kiln:/out kiln-stats node kiln-downloads.mjs render`.
 - To change how a User-Agent is classified: `classifyAgent` and its test. Stored days keep the kinds they were
   written with; only days Cloudflare still has can be collected again (delete their files in
-  `/var/lib/kiln-stats/days/` and start the service).
+  `/var/lib/frostdev-stats/kiln/days/` and start `frostdev-stats.service`).
 - Tests: `node --test stats/kiln-downloads.test.mjs` (a stand-in for Cloudflare on 127.0.0.1; nothing leaves the
   machine).

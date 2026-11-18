@@ -62,7 +62,7 @@ test('the private Kiln statistics page is blocked, and the pages beside it are n
 });
 
 test('admin, APIs, submission pages and application routes remain blocked', () => {
-  const blocked = ['/glaze/admin', '/glaze/admin/api', '/glaze/admin/oauth/callback',
+  const blocked = ['/hq', '/hq/login', '/hq/api/stats/kiln', '/glaze/admin', '/glaze/admin/api', '/glaze/admin/callback',
     '/glaze/looks/submit', '/glaze/mods/submit', '/glaze/looks/api', '/glaze/looks/api/submit',
     '/glaze/mods/api', '/glaze/mods/api/mods', '/glaze/mods/api/blocklist',
     '/glaze/mods/api/submit', '/api', '/login', '/dashboard', '/unknown'];

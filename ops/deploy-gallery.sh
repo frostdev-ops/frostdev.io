@@ -5,8 +5,9 @@ set -euo pipefail
 # Builds and (re)starts the Glaze Looks gallery server on loothing-vps from this committed tree: stages the files its
 # image needs (server/Dockerfile's layout), copies them to /opt/glaze-gallery, builds the image there and replaces the
 # container. The database is in the glaze-gallery volume and survives. /etc/glaze-gallery.env must already exist on
-# the server (mode 600; docs/looks-gallery.md). nginx is separate: the /glaze/looks/api/ location in
-# ops/public-site.nginx.conf. Run after ops/deploy.sh when curated entries change, so both agree.
+# the server (mode 600; docs/looks-gallery.md). The same server runs frostdev HQ (/hq, docs/hq.md), which reads the
+# numbers ops/deploy-stats.sh's collection writes to /var/lib/frostdev-stats/out, mounted read-only. nginx is separate:
+# the locations in ops/public-site.nginx.conf. Run after ops/deploy.sh when curated entries change, so both agree.
 [[ $# -eq 0 ]] || { echo "This script takes no arguments." >&2; exit 1; }
 cd "$(dirname "$0")/.."
 [[ -z $(git status --porcelain --untracked-files=all) ]] || {
@@ -40,8 +41,12 @@ ssh "$host" bash -s <<'REMOTE'
 set -euo pipefail
 cd /opt/glaze-gallery
 docker build -t glaze-gallery .
+# HQ's numbers: the collection's output, read-only (an empty folder until ops/deploy-stats.sh has run)
+install -d -o 1000 -g 1000 -m 750 /var/lib/frostdev-stats
+install -d -o 1000 -g 1000 -m 755 /var/lib/frostdev-stats/out
 docker rm -f glaze-gallery >/dev/null 2>&1 || true
 docker run -d --name glaze-gallery --restart unless-stopped --network host -v glaze-gallery:/data \
+    -v /var/lib/frostdev-stats/out:/stats:ro -e STATS_DIR=/stats \
     --env-file /etc/glaze-gallery.env glaze-gallery
 for _ in 1 2 3 4 5 6 7 8 9 10; do
     curl -fsS http://127.0.0.1:8788/glaze/looks/api/looks >/dev/null && { echo "Glaze Looks gallery is up"; exit 0; }

@@ -18,7 +18,9 @@
 //                                               (admin@frostdev.io), BLOCKLIST_KEY (the owner's Ed25519 public key for the
 //                                               mod blocklist, base64url). OPENROUTER_BASE overrides the API's address, for
 //                                               tests only.
-//                                               GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ADMIN_EMAILS enable /glaze/admin.
+//                                               GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ADMIN_EMAILS enable the private
+//                                               dashboard, frostdev HQ (/hq; /glaze/admin sends there). STATS_DIR: the
+//                                               folder of stats/collect.mjs's JSON files it draws (docs/hq.md).
 //   node server/gallery.mjs --list              published, pending and removed community Looks
 //   node server/gallery.mjs --pending           Looks waiting for a person, and whether their mail went out
 //   node server/gallery.mjs --show <id>         a Look's review: both reviewers' numbers, decision, reason and rationale
@@ -532,7 +534,7 @@ export function gallery({
   db: file = 'gallery.db', looksDir = 'src/data/looks', siteOrigin = 'https://frostdev.io', ipHeader = '', trustedProxies = '127.0.0.1,::1',
   apiKey = '', decisionModel = 'liquid/d1-ultra', escalationModel = 'openai/gpt-6-luna-pro:exacto', openrouter = 'https://openrouter.ai/api',
   reviewsPerDay = 300, modReviewsPerDay = 40, limits = true, mailUrl = '', mailFrom = '', mailTo = 'admin@frostdev.io', blocklistKey = '', bundles = '', now = () => Date.now(),
-  googleClientId = '', googleClientSecret = '', adminEmails = '', googleFetch = fetch,
+  googleClientId = '', googleClientSecret = '', adminEmails = '', googleFetch = fetch, statsDir = '',
 } = {}) {
   const db = new DatabaseSync(file);
   // Mod bundles are files next to the database (/data/mods in the image), named by their bundle hash; SQLite holds the rest.
@@ -1072,7 +1074,7 @@ export function gallery({
         ...(row.media ? ['', wrap(`Its background is a ${d.media?.type} file that no reviewer saw. Look at it before deciding: copy it off the server with the command below and open it (a video or picture in a browser; a Lottie animation is JSON). To see the whole Look, paste the code into Glaze, then choose this file in the editor's background (a file from this computer): its name matches, so the Look uses it.`),
           `  docker cp glaze-gallery:${mediaFile(row.media)} .`] : []),
         '', 'Theme code (paste it into Glaze\'s Share tab to see it):', codeLines(row.code),
-        '', `Review in the dashboard: ${siteOrigin}/glaze/admin#looks/${row.id}`,
+        '', `Review in the dashboard: ${siteOrigin}/hq#glaze/looks/pending/${row.id}`,
         '', 'To decide, on the server:',
         `  docker exec glaze-gallery node gallery.mjs --approve ${row.id}`,
         `  docker exec glaze-gallery node gallery.mjs --decline ${row.id} "<reason the student will see>"`,
@@ -1109,7 +1111,7 @@ export function gallery({
         ...(s.media ? ['', wrap(`Its background is ${s.media.path} in the bundle (${s.media.type}, ${s.media.bytes} bytes), ${r.viewedImages?.includes(s.media.path) ? 'which the reviewer viewed but a person must still check' : 'which no reviewer saw'}: look at it before deciding. Copy the bundle off the server with the docker cp command below and unzip it (a .glazemod is a zip); Glaze checked the file with its background limits.`)] : []),
         '', `Files (${s.size} bytes, ${s.text} of them text):`,
         ...s.files.map((f) => `  ${f.path}  ${f.bytes} bytes${f.lines ? `, ${f.lines} lines, the longest ${f.longestLine}` : ''}${f.hidden ? `, ${f.hidden} hidden characters` : ''}`),
-        '', `Review in the dashboard: ${siteOrigin}/glaze/admin#mods/${row.id}/${row.hash}`,
+        '', `Review in the dashboard: ${siteOrigin}/hq#glaze/mods/pending/${row.id}/${row.hash}`,
         '', 'To read it and decide, on the server:', cmd(`--mod ${row.id}`),
         `  docker cp glaze-gallery:${bundleFile(row.hash)} .`,
         cmd(`--approve-mod ${row.id} ${row.hash}`),
@@ -1466,13 +1468,14 @@ export function gallery({
   };
   const admin = galleryAdmin({ db, siteOrigin, now, readJson, decide, decideMod, readMod: readStoredMod, readLookMedia: readMedia,
     permissionWords, limits, blocklist, live: () => live, googleClientId, googleClientSecret, adminEmails, googleFetch,
+    statsDir, reviewsPerDay, modReviewsPerDay, mailOn: !!mailUrl, curated: () => curated.length,
     clientKey: (req) => hmac(saltOf(today(now())), clientOf(req)),
   });
 
   const handle = async (req, res) => {
     let url;
     try { url = new URL(req.url, 'http://gallery'); } catch { return send(res, 400, { error: 'Bad request.' }); }
-    if (url.pathname === '/glaze/admin' || url.pathname.startsWith('/glaze/admin/')) return admin.handle(req, res, url);
+    if (['/hq', '/glaze/admin'].some((root) => url.pathname === root || url.pathname.startsWith(`${root}/`))) return admin.handle(req, res, url);
     if (url.pathname === '/glaze/mods/api/blocklist') {
       if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, { error: 'GET only.' }, { allow: 'GET, HEAD' });
       const body = blocklist();
@@ -1623,6 +1626,7 @@ export const fromEnv = (env) => ({
   mailUrl: env.MAIL_URL || '', mailFrom: env.MAIL_FROM || '', mailTo: env.MAIL_TO || undefined, blocklistKey: env.BLOCKLIST_KEY || '',
   modReviewsPerDay: Number(env.MOD_REVIEWS_PER_DAY) || undefined, limits: env.SUBMIT_LIMITS !== 'off',
   googleClientId: env.GOOGLE_CLIENT_ID || '', googleClientSecret: env.GOOGLE_CLIENT_SECRET || '', adminEmails: env.ADMIN_EMAILS || '',
+  statsDir: env.STATS_DIR || '',
 });
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
