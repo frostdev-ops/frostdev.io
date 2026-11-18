@@ -1,0 +1,44 @@
+---
+import KilnLayout from '../../layouts/KilnLayout.astro';
+
+// "Kiln on Discord": where the Kiln app's install link points (the Install Link's Custom URL in Discord's developer
+// portal). The app is not offered for other servers, so this page sends people to the Kiln Discord server and to the
+// launcher instead, and links the app's privacy policy and terms. docs/public-pages.md: "Kiln on Discord".
+const invite = 'https://discord.gg/7pjr8SMTfU';
+---
+
+<KilnLayout
+  title="Kiln on Discord"
+  description="Join the Kiln Discord server for help, news and mods for Enshrouded. The Kiln app on Discord works there and in the Kiln Launcher."
+  path="/kiln/discord"
+>
+  <article class="product-page reading-page">
+    <p class="article-meta"><a href="/kiln">Kiln</a> · Discord</p>
+    <h1>Kiln on Discord.</h1>
+    <p>The Kiln Discord server is where players, server hosts and mod authors meet: help with Kiln, release news, mods and modded servers.</p>
+    <p class="kiln-discord-actions">
+      <a class="product-button" href={invite}>Join the Kiln Discord <span aria-hidden="true">↗</span></a>
+      <a class="product-button secondary" href="/kiln/download">Get the Kiln Launcher <span aria-hidden="true">↓</span></a>
+    </p>
+
+    <h2 id="app">The Kiln app</h2>
+    <p>"Kiln" on Discord is the Kiln project's own app. In the Kiln Discord server it posts release news, keeps the support posts in order and helps the Kiln team answer them. There is nothing to add to your own server: the app works in the Kiln server only.</p>
+
+    <h2 id="launcher">In the Kiln Launcher</h2>
+    <p>The Kiln Launcher is getting optional Discord features. They are being built and are not in a released launcher yet:</p>
+    <ul>
+      <li><strong>Sign in with Discord</strong>, and join the Kiln server from the launcher.</li>
+      <li><strong>Send a report to Kiln support.</strong> The launcher opens a support post for you with what the Kiln team needs, after showing you what will be sent.</li>
+      <li><strong>Show what you play.</strong> Your Discord profile can show that you are playing Enshrouded with Kiln. It is off until you turn it on.</li>
+    </ul>
+    <p>Kiln and the launcher work without Discord, and every one of these stays off until you turn it on.</p>
+
+    <h2 id="policies">Privacy and terms</h2>
+    <p><a href="/kiln/privacy">Privacy for Kiln on Discord</a> says what the app and the launcher see, send and keep. <a href="/kiln/terms">The terms</a> say what we ask of you and what we can promise.</p>
+  </article>
+</KilnLayout>
+
+<style>
+  .kiln-discord-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .kiln-discord-actions .product-button { text-decoration: none; }
+</style>

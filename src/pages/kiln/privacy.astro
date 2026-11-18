@@ -1,0 +1,72 @@
+---
+import KilnLayout from '../../layouts/KilnLayout.astro';
+
+// Privacy policy of the Kiln app on Discord (the bot in the Kiln Discord server) and of the Kiln Launcher's Discord
+// features. Linked from the app's settings in Discord's developer portal (Privacy Policy URL), from /kiln/discord and
+// /kiln/terms. docs/public-pages.md: "Kiln on Discord".
+const invite = 'https://discord.gg/7pjr8SMTfU';
+---
+
+<KilnLayout
+  title="Kiln on Discord: privacy"
+  description="What the Kiln app on Discord and the Kiln Launcher's optional Discord features see, send and keep, and how to have it removed."
+  path="/kiln/privacy"
+>
+  <article class="product-page reading-page">
+    <p class="article-meta"><a href="/kiln">Kiln</a> · Updated <time datetime="2026-11-18">November 18, 2026</time></p>
+    <h1>Kiln on Discord: privacy.</h1>
+    <p>This page covers two things that Frostdev runs: the <strong>Kiln app on Discord</strong> (the bot in the <a href={invite}>Kiln Discord server</a>, named KilnBot until November 2026) and the <strong>Discord features of the Kiln Launcher</strong>. Discord itself handles your account and your messages under <a href="https://discord.com/privacy">Discord's privacy policy</a>. This website has its own <a href="/privacy">privacy page</a>.</p>
+
+    <h2>The short version</h2>
+    <ul>
+      <li>The Kiln app works in the Kiln Discord server only. It is not offered for other servers.</li>
+      <li>The launcher's Discord features are optional and stay off until you turn them on.</li>
+      <li>The launcher sends nothing to Discord until you press a button on a screen that shows what will be sent.</li>
+      <li>We don't sell data, show ads or build profiles of you.</li>
+    </ul>
+
+    <h2 id="server">In the Kiln Discord server</h2>
+    <p><strong>What the app does.</strong> It posts release news, opens and tidies threads and forum posts, gives and removes roles such as Release Pings, helps with moderation, and lets the Kiln team read and answer posts.</p>
+    <p><strong>What it can see.</strong> The messages, attachments, names and roles in the Kiln server's channels, as a staff member there can. It cannot see your direct messages, your other servers, your email address or your password.</p>
+    <p><strong>What we keep.</strong> The app has no database of its own. When you ask for help or report a bug, the Kiln team may save what you posted for that purpose: your message, the logs and report files you attached, and your Discord name. We use them to find the cause and to tell you when it is fixed. They are kept on the Kiln team's own computers.</p>
+    <p><strong>Public write-ups.</strong> A fix can lead to a note in Kiln's release notes or an issue in Kiln's public GitHub repository. Those describe the problem. They name you only when you agreed to be credited.</p>
+    <p><strong>AI assistance.</strong> The Kiln team uses AI assistants to help read and answer support posts and logs. Text from the server's channels and files you attach for support can be sent to the assistant's provider, Anthropic, for that purpose. A separate bot in the server, Wallu, answers questions from Kiln's documentation. Wallu is run by its own provider under its own privacy policy.</p>
+
+    <h2 id="launcher">Discord features in the Kiln Launcher</h2>
+    <p>These features are being built and are not in a released launcher yet. This section says what they will do. It will be updated before they are released, and nothing in the launcher uses Discord until then.</p>
+    <p><strong>Sign in with Discord.</strong> You approve the sign-in on Discord's own page. The launcher then learns your Discord user ID, username, display name and avatar. If you choose it, the sign-in also adds you to the Kiln Discord server. We don't receive your email address, your password or your messages. The sign-in is kept on your own computer, and signing out removes it. On a Steam Deck you can sign in by scanning a code with your phone. That code is short-lived, works once, and passes through frostdev.io.</p>
+    <p><strong>Sending a report to Kiln support.</strong> A report is sent only when you press Send, after a screen has listed what will go:</p>
+    <ul>
+      <li>the line you typed about what went wrong;</li>
+      <li>the report's findings and version details: your Kiln, launcher and game versions, your operating system, and the names and versions of your mods. These become a post in the server's support channel under your Discord name, which everyone in the server can read;</li>
+      <li>the report file: logs and settings, in which user names, machine names and folder paths have been replaced. It goes to the Kiln team only, unless you choose to attach it to your public post.</li>
+    </ul>
+    <p>A small service on frostdev.io passes the report on to Discord. It checks your sign-in and limits how often reports can be sent. It keeps only what it needs to work: which posts are yours, so the launcher can show you replies, and short-lived counters for those limits. It does not keep the report once it has been passed on. The exact time limits will be listed here when the feature is released.</p>
+    <p><strong>Replies.</strong> While you are signed in, the launcher asks that service whether your posts have new replies, so it can show a notice. The conversation itself stays in Discord.</p>
+    <p><strong>Showing what you play.</strong> This is off until you turn it on. The launcher then tells the Discord app on your own computer that you are playing Enshrouded with Kiln, how many mods are on, and for how long. Discord shows that on your profile. It never includes a server name or a world name, and nothing is sent to Frostdev for it.</p>
+
+    <h2 id="others">Who else is involved</h2>
+    <ul>
+      <li><strong>Discord</strong> stores your account, your messages and your posts. See <a href="https://discord.com/privacy">Discord's privacy policy</a>.</li>
+      <li><strong>Cloudflare</strong> delivers frostdev.io, as the <a href="/privacy">site's privacy page</a> describes.</li>
+      <li><strong>GitHub</strong>, when you open an issue in Kiln's repository yourself.</li>
+      <li><strong>Anthropic</strong> and <strong>Wallu</strong>, as described under "AI assistance" above.</li>
+    </ul>
+
+    <h2 id="choices">Your choices</h2>
+    <ul>
+      <li>Delete your own messages and posts in Discord at any time.</li>
+      <li>Ask us to delete support files we saved from you. Write to <a href="mailto:admin@frostdev.io">admin@frostdev.io</a> or message the Kiln team in the server.</li>
+      <li>Sign out in the launcher, and turn "show what I'm playing" off there.</li>
+      <li>Remove the Kiln app's access in Discord: User Settings, then Authorized Apps.</li>
+      <li>Leave the Kiln Discord server. The launcher and Kiln keep working without Discord.</li>
+    </ul>
+
+    <h2 id="age">Age</h2>
+    <p>Discord sets a minimum age for its users. The Kiln app and the launcher's Discord features are for people who may use Discord under Discord's own terms.</p>
+
+    <h2 id="changes">Changes and questions</h2>
+    <p>Changes to this page are dated here. When a change means we handle more data than before, we also announce it in the Kiln Discord server. Questions and requests go to <a href="mailto:admin@frostdev.io">admin@frostdev.io</a>.</p>
+    <p><a href="/kiln/terms">Terms for Kiln on Discord</a> · <a href="/kiln/discord">Kiln on Discord</a></p>
+  </article>
+</KilnLayout>

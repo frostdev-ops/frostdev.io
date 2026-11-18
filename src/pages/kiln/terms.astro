@@ -1,0 +1,57 @@
+---
+import KilnLayout from '../../layouts/KilnLayout.astro';
+
+// Terms of service of the Kiln app on Discord and of the Kiln Launcher's Discord features. Linked from the app's
+// settings in Discord's developer portal (Terms of Service URL), from /kiln/discord and /kiln/privacy.
+// docs/public-pages.md: "Kiln on Discord".
+const invite = 'https://discord.gg/7pjr8SMTfU';
+const source = 'https://github.com/frostdev-ops/kiln';
+---
+
+<KilnLayout
+  title="Kiln on Discord: terms"
+  description="The terms for the Kiln app on Discord and the Kiln Launcher's optional Discord features: free to use, what we ask of you, and what we can and cannot promise."
+  path="/kiln/terms"
+>
+  <article class="product-page reading-page">
+    <p class="article-meta"><a href="/kiln">Kiln</a> · Effective <time datetime="2026-11-18">November 18, 2026</time></p>
+    <h1>Kiln on Discord: terms.</h1>
+    <p>These terms cover the <strong>Kiln app on Discord</strong> (the bot in the <a href={invite}>Kiln Discord server</a>) and the <strong>Discord features of the Kiln Launcher</strong>. Frostdev runs both. By using them you agree to these terms.</p>
+    <p>Kiln itself, the mod framework and the launcher, is open-source software. Its own <a href={`${source}/blob/main/LICENSE`}>licence</a> covers using, copying and changing it.</p>
+
+    <h2>The short version</h2>
+    <ul>
+      <li>It is free, and it stays optional. Kiln works without Discord.</li>
+      <li>Follow Discord's rules and the server's rules.</li>
+      <li>Send reports only about Kiln, and don't flood us with them.</li>
+      <li>We help as well as we can, but we can't promise an answer or a fix.</li>
+    </ul>
+
+    <h2 id="free">Free and optional</h2>
+    <p>The Kiln app and the launcher's Discord features cost nothing. There is no paid tier. You can use Kiln and the Kiln Launcher without a Discord account, and you can turn the Discord features off again at any time.</p>
+
+    <h2 id="rules">What we ask of you</h2>
+    <ul>
+      <li>Follow <a href="https://discord.com/terms">Discord's Terms of Service</a>, <a href="https://discord.com/guidelines">Discord's Community Guidelines</a> and the rules of the Kiln Discord server.</li>
+      <li>Use "Send to Kiln support" for real problems with Kiln, its launcher or mods running on it. Don't send the same report again and again.</li>
+      <li>Don't send other people's private information, and don't send files that are meant to harm.</li>
+      <li>Don't try to break, overload or get around the app, the launcher's Discord features or the service on frostdev.io that passes reports on.</li>
+    </ul>
+
+    <h2 id="content">What you post</h2>
+    <p>What you write and attach stays yours. By posting it you allow us to show it in the Kiln Discord server and to use it to find and fix problems in Kiln. A post in a public channel can be read by everyone in the server. The <a href="/kiln/privacy">privacy page</a> says what is sent, who can see it and how to have it removed.</p>
+
+    <h2 id="ours">What we may do</h2>
+    <p>We may remove posts, and limit or block someone's use of the app or of report sending, when these terms or the server's rules are broken or when the service is being misused. We may change, pause or end features. Support is given as well as we can: we don't promise a reply, a fix or a time for either.</p>
+
+    <h2 id="warranty">No warranty</h2>
+    <p>The Kiln app and the launcher's Discord features are provided as they are, without warranty, as far as the law allows. Mods can break a game or a save. Back up your saves before you try something new. As far as the law allows, Frostdev is not liable for loss or damage from using them. Rights that the law gives you and that cannot be waived stay in place.</p>
+
+    <h2 id="others">Not affiliated</h2>
+    <p>Kiln is an unofficial community project. It is not affiliated with or endorsed by Discord Inc. or Keen Games GmbH. Discord is a trademark of Discord Inc. Enshrouded is a trademark of Keen Games GmbH.</p>
+
+    <h2 id="changes">Changes and questions</h2>
+    <p>Changes to these terms are dated here and announced in the Kiln Discord server. Questions go to <a href="mailto:admin@frostdev.io">admin@frostdev.io</a>.</p>
+    <p><a href="/kiln/privacy">Privacy for Kiln on Discord</a> · <a href="/kiln/discord">Kiln on Discord</a></p>
+  </article>
+</KilnLayout>

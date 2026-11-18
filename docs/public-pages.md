@@ -74,6 +74,14 @@ checkout>` copies it into `src/content/kiln-skill/`. Production nginx needs the 
 of the product-page location from `ops/public-site.nginx.conf`. Every Kiln page ends with "Enshrouded is a trademark of
 Keen Games GmbH. Kiln is unofficial."
 
+**Kiln on Discord.** `/kiln/discord`, `/kiln/privacy` and `/kiln/terms` belong to the Kiln app on Discord (the bot in
+the Kiln Discord server, named KilnBot until November 2026) and to the Kiln Launcher's optional Discord features. They
+are the three addresses the app's settings in Discord's developer portal point to: the install link's custom URL
+(`/kiln/discord`: the app is not offered for other servers, so the page sends people to the Kiln server and the
+launcher), the privacy policy URL and the terms of service URL. Plain reading pages in Kiln's layout
+(`src/pages/kiln/discord.astro`, `privacy.astro`, `terms.astro`), no scripts. The privacy page must stay true to what
+the app and the launcher do: update it, with its date, before a launcher release that changes what is sent or kept.
+
 `/kiln/roadmap` is Kiln's roadmap: every release with what it brought (new, improved, fixes), the next release, the
 planned ones after it, the 1.0 milestone and planned features with no release yet. Its data is
 `src/data/kilnRoadmap.json`, read and checked by `src/lib/kilnRoadmap.ts` (an unknown area, kind or status, a release
