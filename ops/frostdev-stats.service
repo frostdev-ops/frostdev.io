@@ -20,4 +20,6 @@ ExecStart=/usr/bin/docker run --rm --name frostdev-stats --env-file /etc/frostde
     --security-opt no-new-privileges --memory 384m --cpus 1 \
     -v /var/lib/frostdev-stats:/data \
     -v /opt/frostdev-downloads/kiln/downloads:/files:ro -v /opt/frostdev-public/current:/site:ro frostdev-stats
+# A timeout or stop can kill the Docker client before it removes its container.
+ExecStopPost=-/bin/sh -c 'if docker container inspect frostdev-stats >/dev/null 2>&1; then docker rm -f frostdev-stats; fi'
 TimeoutStartSec=900

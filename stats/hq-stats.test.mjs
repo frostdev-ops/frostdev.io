@@ -1,14 +1,11 @@
-// Tests of frostdev HQ's other numbers: the site's page views (stats/site-pages.mjs), the public numbers
-// (stats/public-numbers.mjs) and the whole collection (stats/collect.mjs). Cloudflare is a stand-in on 127.0.0.1 and the
-// other sites are a fake fetch: nothing leaves the machine.
+// Tests of frostdev HQ's other numbers. Requests to Cloudflare and other public sources use in-process fixtures.
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { buildSiteData, collectSite, isGlaze, pageOf, reduceSiteGroups } from './site-pages.mjs';
-import { assetKind, collectPublic, cwsUsers, SOURCES } from './public-numbers.mjs';
+import { assetKind, buildPublicData, collectPublic, cwsUsers, github, SOURCES } from './public-numbers.mjs';
 import { collectAll } from './collect.mjs';
 
 const ZONE = '0123456789abcdef0123456789abcdef';
@@ -18,47 +15,47 @@ const tmp = (t) => { const dir = mkdtempSync(join(tmpdir(), 'hq-stats-')); t.aft
 
 /** Cloudflare's stand-in. An event: {at, host, path, type, status, agent, country, referrer, bytes}. A query counts the
  *  events its scope's filters match, grouped by the dimensions it asks for. */
-async function cloudflare(t, events, { fail } = {}) {
+function cloudflare(t, events, { fail } = {}) {
   const state = { queries: [], fail };
-  const server = createServer((request, response) => {
-    let body = '';
-    request.on('data', (chunk) => { body += chunk; });
-    request.on('end', () => {
-      const { query } = JSON.parse(body);
-      state.queries.push(query);
-      const send = (value) => { response.writeHead(200, { 'content-type': 'application/json' }); response.end(JSON.stringify(value)); };
-      if (state.fail) return send({ data: null, errors: [{ message: state.fail }] });
-      if (query.includes('settings')) return send({ data: { viewer: { zones: [{ settings: { httpRequestsAdaptiveGroups: { enabled: true, maxDuration: 2_592_000, maxPageSize: 10_000, notOlderThan: 2_678_400,
-        availableFields: ['count', ...['clientRequestPath', 'clientCountryName', 'edgeResponseStatus', 'userAgent', 'verifiedBotCategory', 'clientRefererHost', 'requestSource', 'clientRequestHTTPMethodName'].map((n) => `dimensions_${n}`)] } } }] } } });
-      const wanted = /dimensions \{ ([^}]+) \}/.exec(query)[1].trim().split(/\s+/);
-      const from = Date.parse(/datetime_geq: "([^"]+)"/.exec(query)[1]), to = Date.parse(/datetime_lt: "([^"]+)"/.exec(query)[1]);
-      const prefix = /clientRequestPath_like: "([^"%]*)%"/.exec(query)?.[1];
-      const host = /clientRequestHTTPHost: "([^"]+)"/.exec(query)?.[1];
-      const type = /edgeResponseContentTypeName: "([^"]+)"/.exec(query)?.[1];
-      const status = /edgeResponseStatus: (\d+)/.exec(query)?.[1];
-      const value = { clientRequestPath: 'path', clientCountryName: 'country', edgeResponseStatus: 'status', userAgent: 'agent', verifiedBotCategory: 'bot', clientRefererHost: 'referrer' };
-      const groups = new Map();
-      for (const e of events) {
-        if (e.at < from || e.at >= to || (prefix !== undefined && !e.path.startsWith(prefix)) || (host && e.host !== host) || (type && e.type !== type) || (status && String(e.status) !== status)) continue;
-        const dimensions = Object.fromEntries(wanted.map((name) => [name, e[value[name]] ?? '']));
-        const key = JSON.stringify(dimensions);
-        const group = groups.get(key) || { count: 0, sum: { edgeResponseBytes: 0 }, avg: { sampleInterval: 1 }, dimensions };
-        group.count += 1; group.sum.edgeResponseBytes += e.bytes || 0;
-        groups.set(key, group);
-      }
-      send({ data: { viewer: { zones: [{ httpRequestsAdaptiveGroups: [...groups.values()] }] } } });
-    });
+  const url = 'https://cloudflare.invalid/graphql';
+  t.mock.method(globalThis, 'fetch', async (endpoint, init) => {
+    assert.equal(endpoint, url);
+    const { query } = JSON.parse(init.body);
+    state.queries.push(query);
+    const send = (value) => Response.json(value);
+    const failure = typeof state.fail === 'function' ? state.fail(query) : state.fail;
+    if (failure) return send({ data: null, errors: [{ message: failure }] });
+    if (query.includes('settings')) return send({ data: { viewer: { zones: [{ settings: { httpRequestsAdaptiveGroups: { enabled: true, maxDuration: 2_592_000, maxPageSize: 10_000, notOlderThan: 2_678_400,
+      availableFields: ['count', ...['clientRequestPath', 'clientCountryName', 'edgeResponseStatus', 'userAgent', 'verifiedBotCategory', 'clientRefererHost', 'requestSource', 'clientRequestHTTPMethodName'].map((n) => `dimensions_${n}`)] } } }] } } });
+    const wanted = /dimensions \{ ([^}]+) \}/.exec(query)[1].trim().split(/\s+/);
+    const from = Date.parse(/datetime_geq: "([^"]+)"/.exec(query)[1]), to = Date.parse(/datetime_lt: "([^"]+)"/.exec(query)[1]);
+    const prefix = /clientRequestPath_like: "([^"%]*)%"/.exec(query)?.[1];
+    const host = /clientRequestHTTPHost: "([^"]+)"/.exec(query)?.[1];
+    const type = /edgeResponseContentTypeName: "([^"]+)"/.exec(query)?.[1];
+    const status = /edgeResponseStatus: (\d+)/.exec(query)?.[1];
+    const method = /clientRequestHTTPMethodName: "([^"]+)"/.exec(query)?.[1];
+    const source = /requestSource: "([^"]+)"/.exec(query)?.[1];
+    const value = { clientRequestPath: 'path', clientCountryName: 'country', edgeResponseStatus: 'status', userAgent: 'agent', verifiedBotCategory: 'bot', clientRefererHost: 'referrer' };
+    const groups = new Map();
+    for (const e of events) {
+      if (e.at < from || e.at >= to || (prefix !== undefined && !e.path.startsWith(prefix)) || (host && e.host !== host) || (type && e.type !== type) || (status && String(e.status) !== status)) continue;
+      if ((method && (e.method || 'GET') !== method) || (source && (e.source || 'eyeball') !== source)) continue;
+      const dimensions = Object.fromEntries(wanted.map((name) => [name, e[value[name]] ?? '']));
+      const key = JSON.stringify(dimensions);
+      const group = groups.get(key) || { count: 0, sum: { edgeResponseBytes: 0 }, avg: { sampleInterval: 1 }, dimensions };
+      group.count += 1; group.sum.edgeResponseBytes += e.bytes || 0; group.avg.sampleInterval = Math.max(group.avg.sampleInterval, e.sample || 1);
+      groups.set(key, group);
+    }
+    return send({ data: { viewer: { zones: [{ httpRequestsAdaptiveGroups: [...groups.values()] }] } } });
   });
-  await new Promise((done) => server.listen(0, '127.0.0.1', done));
-  t.after(() => server.close());
-  state.env = { CF_API: `http://127.0.0.1:${server.address().port}/graphql`, CF_API_TOKEN: 'secret-token-for-tests', CF_ZONE_ID: ZONE };
+  state.env = { CF_API: url, CF_API_TOKEN: 'secret-token-for-tests', CF_ZONE_ID: ZONE };
   return state;
 }
 const view = (day, path, extra = {}) => ({ at: at(day), host: 'frostdev.io', path, type: 'html', status: 200, agent: CHROME, country: 'US', referrer: '', ...extra });
 
 /** A built site with a few pages, as the static site's build lays them out. */
 function site(dir) {
-  for (const page of ['', 'kiln', 'kiln/wiki/install', 'guides/rimeward-first-workspace', 'glaze', 'glaze/looks', 'guides/glaze-chrome', 'privacy']) {
+  for (const page of ['', 'kiln', 'kiln/wiki/install', 'guides/rimeward-first-workspace', 'glaze', 'glaze/looks', 'guides/glaze-chrome', 'privacy', 's/abc123token', 'rimeward/settings']) {
     mkdirSync(join(dir, page), { recursive: true });
     writeFileSync(join(dir, page, 'index.html'), '<!doctype html>');
   }
@@ -67,22 +64,24 @@ function site(dir) {
 
 test('only the public site\'s own pages count, and no path naming Glaze ever does', (t) => {
   const dir = site(join(tmp(t), 'site'));
-  for (const [path, page] of [['/', '/'], ['/index.html', '/'], ['/kiln', '/kiln'], ['/kiln/', '/kiln'], ['/kiln/wiki/install', '/kiln/wiki/install'], ['/kiln/wiki/install/', '/kiln/wiki/install'],
+  for (const [path, page] of [['/', '/'], ['/kiln', '/kiln'], ['/kiln/', '/kiln'], ['/kiln/wiki/install', '/kiln/wiki/install'], ['/kiln/wiki/install/', '/kiln/wiki/install'], ['/kiln/wiki/install/index.html', '/kiln/wiki/install'],
     ['/kiln/downloads/0.2.0-dev.29/sdk/api/Kiln.Mods.html', '/kiln/downloads/*/sdk/api/'], ['/privacy', '/privacy']]) assert.equal(pageOf(path, dir), page, path);
   for (const path of ['/glaze', '/glaze/looks', '/Glaze/', '/gl%61ze', '/guides/glaze-chrome', '/guides/GLAZE-chrome', '/kiln/../glaze', '/login', '/dash', '/s/abc123token',
-    '/kiln/missing', '/../etc/passwd', '/kiln/%2e%2e/glaze', 'kiln', '', null, `/${'a'.repeat(300)}`, '/kiln//wiki', '/%E0%A4%A']) assert.equal(pageOf(path, dir), null, String(path));
+    '/index.html', '/rimeward/settings', '/kiln/missing', '/kiln/%2e%2e/glaze', 'kiln', '', null, `/${'a'.repeat(300)}`, '/kiln//wiki', '/%E0%A4%A', '/kiln/downloads/1.0/sdk/api/%25bad']) assert.equal(pageOf(path, dir), null, String(path));
   assert.ok(isGlaze('/gl%61ze/looks')); assert.ok(isGlaze('/guides/glaze-agents')); assert.ok(!isGlaze('/kiln/wiki/glass'));
-  // without a built site, the public sections are trusted by name; Glaze still never is
-  assert.equal(pageOf('/guides/anything'), '/guides/anything'); assert.equal(pageOf('/glaze/looks'), null); assert.equal(pageOf('/login'), null);
+  assert.equal(pageOf('/guides/anything'), null); assert.equal(pageOf('/'), null); assert.equal(pageOf('/', join(dir, 'missing')), null);
 });
 
-test('a day of groups becomes rows; Glaze is not even counted as skipped, and programs keep no system or referrer', () => {
+test('only public pages affect saved rows or sampling, and only browsers keep a system or referrer', (t) => {
+  const siteDir = site(join(tmp(t), 'site'));
   const g = (path, count, d = {}) => ({ count, avg: { sampleInterval: 1 }, dimensions: { clientRequestPath: path, clientCountryName: 'DE', userAgent: CHROME, verifiedBotCategory: '', clientRefererHost: 'www.Google.com', ...d } });
-  const { rows, skipped } = reduceSiteGroups([g('/kiln', 3), g('/kiln/', 2), g('/glaze', 50), g('/guides/glaze-chrome', 9), g('/login', 7),
-    g('/kiln', 4, { userAgent: 'Googlebot/2.1 (+http://www.google.com/bot.html)' }), g('/', 1, { clientCountryName: 'not a code' })], { newest: { chrome: 157, firefox: 160 } });
-  assert.deepEqual(rows, [['/', 'XX', 'browser', 'windows', 'google.com', 1], ['/kiln', 'DE', 'bot', '', '', 4], ['/kiln', 'DE', 'browser', 'windows', 'google.com', 5]]);
-  assert.deepEqual(skipped, { 'not a site page': 7 });
-  assert.ok(!JSON.stringify({ rows, skipped }).toLowerCase().includes('glaze'));
+  const excluded = ['/glaze', '/gl%61ze', '/gl%2561ze', '/%xx/gl%61ze', '/guides/glaze-chrome', '/login', '/s/abc123token'];
+  const result = reduceSiteGroups([g('/kiln', 3), g('/kiln/', 2), ...excluded.map((p) => ({ ...g(p, 50), avg: { sampleInterval: 91 } })),
+    g('/kiln', 4, { userAgent: 'Googlebot/2.1 (+http://www.google.com/bot.html)' }), g('/kiln', 2, { userAgent: 'curl/8.0 (Linux)' }),
+    g('/', 1, { clientCountryName: 'not a code' })], { newest: { chrome: 157, firefox: 160 }, siteDir });
+  const { rows } = result;
+  assert.deepEqual(rows, [['/', 'XX', 'browser', 'windows', 'google.com', 1], ['/kiln', 'DE', 'bot', '', '', 4], ['/kiln', 'DE', 'browser', 'windows', 'google.com', 5], ['/kiln', 'DE', 'tool', '', '', 2]]);
+  assert.deepEqual(result, { rows, sampled: 1 });
 });
 
 test('site.json holds the last 120 days with the gaps filled, and nothing about Glaze', () => {
@@ -100,16 +99,17 @@ test('site.json holds the last 120 days with the gaps filled, and nothing about 
 
 test('a site collection asks Cloudflare for frostdev.io\'s HTML pages only and stores no Glaze path, token or User-Agent', async (t) => {
   const dir = tmp(t), now = at('2026-11-13', 15);
-  const cf = await cloudflare(t, [view('2026-11-13', '/kiln'), view('2026-11-13', '/glaze/looks'), view('2026-11-12', '/guides/glaze-chrome'),
+  const cf = cloudflare(t, [view('2026-11-13', '/kiln'), view('2026-11-13', '/glaze/looks', { sample: 39 }), view('2026-11-12', '/guides/glaze-chrome'),
+    view('2026-11-13', '/s/abc123token'), view('2026-11-13', '/kiln', { method: 'POST' }), view('2026-11-13', '/kiln', { source: 'edgeWorkerFetch' }),
     view('2026-11-13', '/kiln', { host: 'sim.frostdev.io' }), view('2026-11-13', '/kiln', { type: 'js' }), view('2026-11-13', '/kiln', { status: 404 }),
     view('2026-11-12', '/kiln/wiki/install', { referrer: 'www.nexusmods.com', country: 'DE' })]);
   const env = { ...cf.env, DATA_DIR: join(dir, 'site'), OUT_DIR: join(dir, 'out'), SITE_DIR: site(join(dir, 'built')) };
   const run = await collectSite(env, now);
   assert.equal(run.ok, true);
   const data = cf.queries.filter((q) => q.includes('httpRequestsAdaptiveGroups(limit'));
-  assert.ok(data.length >= 1 && data.every((q) => q.includes('clientRequestHTTPHost: "frostdev.io"') && q.includes('edgeResponseContentTypeName: "html"') && q.includes('edgeResponseStatus: 200')));
+  assert.ok(data.length >= 1 && data.every((q) => q.includes('clientRequestHTTPHost: "frostdev.io"') && q.includes('edgeResponseContentTypeName: "html"') && q.includes('edgeResponseStatus: 200') && q.includes('clientRequestHTTPMethodName: "GET"') && q.includes('requestSource: "eyeball"')));
   const stored = readdirSync(join(env.DATA_DIR, 'days')).map((n) => readFileSync(join(env.DATA_DIR, 'days', n), 'utf8')).join('\n');
-  assert.ok(!/glaze/i.test(stored), 'no Glaze path in a day file'); assert.ok(!stored.includes('Mozilla'));
+  assert.doesNotMatch(stored, /glaze|abc123token|Mozilla|"skipped"|"sampled":39/i);
   const out = readFileSync(join(env.OUT_DIR, 'site.json'), 'utf8');
   assert.ok(!/glaze/i.test(out)); assert.ok(!out.includes('secret-token-for-tests'));
   const json = JSON.parse(out);
@@ -119,6 +119,22 @@ test('a site collection asks Cloudflare for frostdev.io\'s HTML pages only and s
   await assert.rejects(collectSite(env, now + 3_600_000), /\[token\]/);
   const after = JSON.parse(readFileSync(join(env.OUT_DIR, 'site.json'), 'utf8'));
   assert.match(after.alerts[0], /failed: Authentication error for \[token\]/); assert.equal(after.rows.length, json.rows.length);
+});
+
+test('the site collector fails closed on a missing build or a refused GET filter and preserves the previous rows', async (t) => {
+  const dir = tmp(t), now = at('2026-11-13', 15);
+  const cf = cloudflare(t, [view('2026-11-13', '/kiln')]);
+  const env = { ...cf.env, DATA_DIR: join(dir, 'site'), OUT_DIR: join(dir, 'out'), SITE_DIR: site(join(dir, 'built')) };
+  await collectSite(env, now);
+  const filename = join(env.DATA_DIR, 'days', '2026-11-13.json');
+  const saved = readFileSync(filename, 'utf8');
+  const queriesBefore = cf.queries.length;
+  await assert.rejects(collectSite({ ...env, SITE_DIR: '' }, now), /SITE_DIR does not contain the built site/);
+  assert.equal(cf.queries.length, queriesBefore);
+  cf.fail = (query) => query.includes('clientRequestHTTPMethodName') && 'Unknown field "clientRequestHTTPMethodName"';
+  await assert.rejects(collectSite(env, now), /Unknown field "clientRequestHTTPMethodName"/);
+  assert.equal(cf.queries.length, queriesBefore + 2);
+  assert.equal(readFileSync(filename, 'utf8'), saved);
 });
 
 /** A fake fetch for GitHub, Nexus, Firefox Add-ons and the Chrome Web Store. */
@@ -172,9 +188,23 @@ test('the public numbers keep the latest answer of each day; a failing source ke
   assert.equal(none.ok, false); assert.equal(none.failed.length, Object.keys(SOURCES).length);
 });
 
+test('GitHub totals include releases after the third page, and history limits leave old source answers available', async () => {
+  const release = { tag_name: 'v1', assets: [{ name: 'sample.zip', download_count: 1 }] };
+  const result = await github(SOURCES['github:glaze'], { fetcher: async (url) => {
+    const page = Number(new URL(url).searchParams.get('page'));
+    return Response.json(page ? Array.from({ length: page <= 3 ? 100 : 1 }, () => release) : {});
+  } });
+  assert.equal(result.downloads, 301);
+  assert.equal(result.releases.length, 30);
+  const past = { day: '2025-10-01', sources: { 'github:glaze': result } };
+  const data = buildPublicData([past, ...Array.from({ length: 401 }, (_, i) => ({ day: new Date(at('2025-10-02') + i * 86400e3).toISOString().slice(0, 10) }))], at('2026-11-18', 10));
+  assert.equal(data.history.length, 400);
+  assert.equal(data.sources['github:glaze'].latest.downloads, 301);
+});
+
 test('the whole collection: each part on its own, status.json says which failed, and the token is in nothing written', async (t) => {
   const dir = tmp(t), now = at('2026-11-13', 15);
-  const cf = await cloudflare(t, [view('2026-11-13', '/kiln'), { at: at('2026-11-13'), host: 'frostdev.io', path: '/kiln/downloads/0.2.0-dev.26/SHA256SUMS', type: 'text', status: 200, agent: 'curl/8.0', country: 'US', bytes: 10 }]);
+  const cf = cloudflare(t, [view('2026-11-13', '/kiln'), { at: at('2026-11-13'), host: 'frostdev.io', path: '/kiln/downloads/0.2.0-dev.26/SHA256SUMS', type: 'text', status: 200, agent: 'curl/8.0', country: 'US', bytes: 10 }]);
   const env = { ...cf.env, DATA_DIR: join(dir, 'data'), OUT_DIR: join(dir, 'data', 'out'), SITE_DIR: site(join(dir, 'built')) };
   const status = await collectAll(env, now, { fetcher: fakeFetch() });
   assert.deepEqual(Object.fromEntries(Object.entries(status.parts).map(([k, v]) => [k, v.ok])), { kiln: true, site: true, public: true });
@@ -187,4 +217,14 @@ test('the whole collection: each part on its own, status.json says which failed,
   for (const name of readdirSync(env.OUT_DIR)) assert.ok(!readFileSync(join(env.OUT_DIR, name), 'utf8').includes('secret-token-for-tests'), name);
   assert.match(JSON.parse(readFileSync(join(env.OUT_DIR, 'status.json'), 'utf8')).parts.kiln.error, /\[token\]/);
   assert.ok(existsSync(join(env.DATA_DIR, 'kiln', 'newest-browsers.json')), 'the site reads the browsers Kiln measured');
+
+  // Redact before provider error messages are capped, even when a token straddles the cap.
+  cf.fail = `Authentication ${'x'.repeat(575)} ${env.CF_API_TOKEN}`;
+  const more = await collectAll({ ...env, GITHUB_TOKEN: 'github-secret' }, now, { fetcher: fakeFetch({
+    'api.nexusmods.com': () => Response.json({ errors: [{ message: `${'x'.repeat(190)}${env.CF_API_TOKEN} github-secret` }] }),
+  }) });
+  assert.equal(more.parts.site.ok, false);
+  const outputs = [join(env.DATA_DIR, 'site', 'last-run.json'), join(env.DATA_DIR, 'kiln', 'last-run.json'), join(env.DATA_DIR, 'public', '2026-11-13.json'),
+    ...readdirSync(env.OUT_DIR).map((name) => join(env.OUT_DIR, name))];
+  for (const file of outputs) assert.doesNotMatch(readFileSync(file, 'utf8'), /secret-token|github-secret/, file);
 });

@@ -15,11 +15,12 @@ import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 import {
   CloudflareError, DAY, SETTLE, classifyAgent, cleanReferrer, dayName, dayStart, daysToFetch, fetchLimits, fetchWindow,
-  readDays, writeAtomic,
+  readDays, redactStatsError, writeAtomic,
 } from './kiln-downloads.mjs';
 
 export const HOST = 'frostdev.io';
-export const SCOPE = { filters: [`clientRequestHTTPHost: "${HOST}"`, 'edgeResponseContentTypeName: "html"', 'edgeResponseStatus: 200'] };
+export const SCOPE = { filters: [`clientRequestHTTPHost: "${HOST}"`, 'edgeResponseContentTypeName: "html"', 'edgeResponseStatus: 200',
+  'clientRequestHTTPMethodName: "GET"', 'requestSource: "eyeball"'], useOptionalFilters: false };
 /** How many days site.json holds in full; older day files stay on disk. */
 export const KEEP_DAYS = 120;
 
@@ -31,10 +32,9 @@ export const isGlaze = (path) => {
   return /glaze/i.test(raw) || /glaze/i.test(decoded);
 };
 
-/** A request path -> the page it counts for, or null. `siteDir` is the built site; without one (tests), the public
- *  site's sections are trusted by name. */
+/** A request path -> the built page or Kiln API reference it counts for, or null. */
 export function pageOf(path, siteDir = '') {
-  if (typeof path !== 'string' || !path.startsWith('/') || path.length > 200) return null;
+  if (!siteDir || typeof path !== 'string' || !path.startsWith('/') || path.length > 200) return null;
   let p;
   try {
     p = decodeURIComponent(path);
@@ -42,50 +42,50 @@ export function pageOf(path, siteDir = '') {
     return null;
   }
   if (isGlaze(path)) return null;
-  if (/^\/kiln\/downloads\/[0-9A-Za-z.+-]{1,64}\/sdk\/api(\/|$)/.test(p)) return '/kiln/downloads/*/sdk/api/';
   if (!/^\/[A-Za-z0-9._~/-]*$/.test(p) || p.includes('//') || p.split('/').some((part) => part === '.' || part === '..')) return null;
-  p = p.replace(/\/index\.html$/, '/');
+  if (/^\/kiln\/downloads\/[0-9A-Za-z.+-]{1,64}\/sdk\/api\//.test(p)) return '/kiln/downloads/*/sdk/api/';
   if (p.length > 1) p = p.replace(/\/+$/, '');
-  if (p === '/') return '/';
-  if (siteDir) {
-    const root = resolve(siteDir);
-    for (const file of [join(p, 'index.html'), `${p}.html`]) {
-      const target = resolve(root, `.${file}`);
-      if (!target.startsWith(root + sep)) return null;
-      try {
-        if (statSync(target).isFile()) return p;
-      } catch { /* not this one */ }
-    }
-    return null;
+  // Match the public routes in ops/public-site.nginx.conf before checking the build. The rest go to Rimeward.
+  if (p !== '/' && !/^\/(?:crosspane|rimeward|rimewire|privacy)$|^\/(?:kiln|guides|projects)(?:\/|$)/.test(p)) return null;
+  if (/^\/kiln\/(?:downloads|updates|stats)(?:\/|$)/.test(p)) return null;
+  p = p.replace(/\/index\.html$/, '');
+  const root = resolve(siteDir);
+  for (const file of [join(p, 'index.html'), ...(p.endsWith('.html') ? [p] : [])]) {
+    const target = resolve(root, `.${file}`);
+    if (target.startsWith(root + sep) && isFile(target)) return p;
   }
-  return /^\/(kiln|crosspane|rimeward|rimewire|guides|privacy)(\/|$)/.test(p) ? p : null;
+  return null;
+}
+
+function isFile(path) {
+  try { return !!statSync(path, { throwIfNoEntry: false })?.isFile(); }
+  catch (error) { if (error.code === 'ENOTDIR') return false; throw error; }
 }
 
 /** Cloudflare's groups of one day -> rows [page, country, client, os, referrer, views]. Programs that are not a person
  *  (bots, scanners, old browser strings) keep their kind but not their system or referrer, so they take little room. */
 export function reduceSiteGroups(groups, { newest, siteDir = '' } = {}) {
   const rows = new Map();
-  const skipped = {};
+  const pages = new Map();
   let sampled = 1;
-  const skip = (why, n) => { skipped[why] = (skipped[why] || 0) + n; };
   for (const group of groups) {
     const d = group.dimensions || {};
+    const path = d.clientRequestPath;
+    if (!pages.has(path)) pages.set(path, pageOf(path, siteDir));
+    const page = pages.get(path);
+    if (!page) continue;
     const count = Number(group.count) || 0;
     sampled = Math.max(sampled, Number(group.avg?.sampleInterval) || 1);
-    // not even into `skipped`: that would be a count of Glaze's page views after all
-    if (isGlaze(String(d.clientRequestPath || ''))) continue;
-    const page = pageOf(d.clientRequestPath, siteDir);
-    if (!page) { skip('not a site page', count); continue; }
     let { client, os } = 'userAgent' in d ? classifyAgent(d.userAgent, { verifiedBot: d.verifiedBotCategory, newest }) : { client: 'unknown', os: '' };
     let referrer = cleanReferrer(d.clientRefererHost);
-    if (!['browser', 'tool', 'launcher'].includes(client)) { os = ''; referrer = ''; }
+    if (client !== 'browser') { os = ''; referrer = ''; }
     const country = /^[A-Z0-9]{2}$/.test(d.clientCountryName || '') ? d.clientCountryName : 'XX';
     const key = JSON.stringify([page, country, client, os, referrer]);
     rows.set(key, (rows.get(key) || 0) + count);
   }
   const list = [...rows].map(([key, views]) => [...JSON.parse(key), views]);
   list.sort((a, b) => (a.slice(0, 5).join('\u0001') < b.slice(0, 5).join('\u0001') ? -1 : 1));
-  return { rows: list, skipped, sampled };
+  return { rows: list, sampled };
 }
 
 /** What the dashboard draws: the last `keep` days, names replaced by indexes. A row is
@@ -98,6 +98,7 @@ export function buildSiteData(days, now, keep = KEEP_DAYS) {
     return maps[name].get(value);
   };
   let sampled = 1;
+  let truncated = 0;
   const shown = days.filter((day) => dayStart(day.day) > now - keep * DAY);
   for (const day of shown) {
     for (let at = data.days.length ? dayStart(data.days.at(-1).day) + DAY : dayStart(day.day); at < dayStart(day.day); at += DAY) {
@@ -106,14 +107,17 @@ export function buildSiteData(days, now, keep = KEEP_DAYS) {
     const d = data.days.length;
     data.days.push({ day: day.day, final: !!day.final });
     sampled = Math.max(sampled, day.sampled || 1);
+    truncated += day.truncated || 0;
     for (const [page, country, client, os, referrer, views] of day.rows) {
       if (!(views > 0) || isGlaze(page)) continue;
-      data.rows.push([d, index('pages', page), index('countries', country), index('clients', client), index('systems', os), index('referrers', referrer), views]);
+      data.rows.push([d, index('pages', page), index('countries', country), index('clients', client),
+        index('systems', client === 'browser' ? os : ''), index('referrers', client === 'browser' ? referrer : ''), views]);
     }
   }
   const missing = data.days.filter((day) => day.missing).length;
   if (missing) data.notes.push(`${missing} ${missing === 1 ? 'day was' : 'days were'} never collected (shown as empty).`);
   if (sampled > 1) data.notes.push(`Cloudflare counted some of these requests from a sample (as few as 1 in ${Math.ceil(sampled - 1e-9)}): those counts are estimates.`);
+  if (truncated) data.notes.push('Some Cloudflare results reached the group limit. Page views for those periods may be undercounted.');
   return data;
 }
 
@@ -144,22 +148,24 @@ export async function collectSite(env, now = Date.now()) {
   mkdirSync(join(s.dataDir, 'days'), { recursive: true });
   const run = { at: new Date(now).toISOString(), ok: false };
   try {
+    if (!s.siteDir || !isFile(join(s.siteDir, 'index.html'))) throw new Error('SITE_DIR does not contain the built site');
     const limits = await fetchLimits(env);
     const daysBack = Math.max(1, Number(env.DAYS_BACK) || 3);
     const wanted = daysToFetch(readDays(s.dataDir), now, daysBack, Math.min(limits.notOlderThan, KEEP_DAYS * DAY / 1000));
     const newest = s.newestFile && existsSync(s.newestFile) ? JSON.parse(readFileSync(s.newestFile, 'utf8')) : { chrome: 0, firefox: 0 };
     const state = { queries: 0, truncated: 0 };
+    const days = [];
     for (const name of wanted) {
       const from = dayStart(name);
       const before = state.truncated;
       const groups = await fetchWindow(env, limits, new Date(from), new Date(Math.min(from + DAY, now)), state, SCOPE);
-      const { rows, skipped, sampled } = reduceSiteGroups(groups, { newest, siteDir: s.siteDir });
-      const day = { day: name, fetched: run.at, final: now >= from + DAY + SETTLE, sampled, truncated: state.truncated - before, skipped, rows };
-      writeAtomic(join(s.dataDir, 'days', `${name}.json`), JSON.stringify(day));
+      const { rows, sampled } = reduceSiteGroups(groups, { newest, siteDir: s.siteDir });
+      days.push({ day: name, fetched: run.at, final: now >= from + DAY + SETTLE, sampled, truncated: state.truncated > before, rows });
     }
+    for (const day of days) writeAtomic(join(s.dataDir, 'days', `${day.day}.json`), JSON.stringify(day));
     Object.assign(run, { ok: true, days: wanted.length, queries: state.queries });
   } catch (error) {
-    run.error = (error instanceof CloudflareError ? error.message : `${error.name}: ${error.message}`).split(env.CF_API_TOKEN).join('[token]');
+    run.error = redactStatsError(error instanceof CloudflareError ? error.message : `${error.name}: ${error.message}`, env);
   }
   writeAtomic(join(s.dataDir, 'last-run.json'), JSON.stringify(run));
   renderSite(env, now);

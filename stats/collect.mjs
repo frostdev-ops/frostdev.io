@@ -13,7 +13,7 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { collect as collectKiln, render as renderKiln, writeAtomic } from './kiln-downloads.mjs';
+import { collect as collectKiln, render as renderKiln, redactStatsError, writeAtomic } from './kiln-downloads.mjs';
 import { collectSite, renderSite } from './site-pages.mjs';
 import { collectPublic, renderPublic } from './public-numbers.mjs';
 
@@ -45,7 +45,7 @@ export async function collectAll(env, now = Date.now(), { fetcher } = {}) {
     try {
       status.parts[name] = { ok: true, note: await step() };
     } catch (error) {
-      status.parts[name] = { ok: false, error: String(error.message || error).split(env.CF_API_TOKEN || '\u0000').join('[token]').slice(0, 600) };
+      status.parts[name] = { ok: false, error: redactStatsError(error.message || error, env).slice(0, 600) };
     }
   }
   writeAtomic(join(env.OUT_DIR, 'status.json'), JSON.stringify(status));

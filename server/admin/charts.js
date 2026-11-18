@@ -176,7 +176,7 @@
    *  defaultKinds, item: {title, head, of(row, state) -> {key, name, detail}, sub(state, n)}, selects: [{id, label,
    *  options: [[value, label]], test(row, value)}], tables: [{title, sub, head, of(row) -> {key, name}, sort}],
    *  answers(row) (optional, a second count shown under the average), notes: [element] }. */
-  function Explorer(host, cfg) {
+  function Explorer(host, cfg, previous) {
     const { data } = cfg;
     host.replaceChildren();
     const warnings = el('div');
@@ -189,9 +189,14 @@
     const KINDS = cfg.kinds;
     const kindOfClient = data.clients.map((client) => { const i = KINDS.findIndex((kind) => kind.clients.includes(client)); return i < 0 ? KINDS.length - 1 : i; });
     const RANGES = [[7, '7 days'], [30, '30 days'], [90, '90 days'], [0, 'All']].filter(([days]) => days <= data.days.length);
-    const state = { range: data.days.length >= 30 ? 30 : 0, selects: Object.fromEntries((cfg.selects || []).map((s) => [s.id, ''])), kinds: new Set(cfg.defaultKinds) };
+    const rangeDays = RANGES.some(([days]) => days === previous?.range) ? previous.range : data.days.length >= 30 ? 30 : 0;
+    const selects = Object.fromEntries((cfg.selects || []).map((s) => {
+      const value = previous?.selects[s.id];
+      return [s.id, s.options.some(([option]) => option === value) ? value : ''];
+    }));
+    const state = { range: rangeDays, selects, kinds: new Set(previous?.kinds ?? cfg.defaultKinds), showTable: previous?.showTable ?? false };
     // nothing but automated or unknown programs (a zone without the User-Agent): show them, or the view is empty
-    if (kindOfClient.every((kind) => !state.kinds.has(KINDS[kind].id))) for (const kind of KINDS) state.kinds.add(kind.id);
+    if (!previous && kindOfClient.every((kind) => !state.kinds.has(KINDS[kind].id))) for (const kind of KINDS) state.kinds.add(kind.id);
 
     const range = el('div', { class: 'seg', role: 'group', 'aria-label': 'Time range' });
     for (const [days, label] of RANGES) {
@@ -202,6 +207,7 @@
     const filters = el('div', { class: 'filters-row' }, range);
     for (const s of cfg.selects || []) {
       const select = el('select', {}, ...s.options.map(([value, label]) => el('option', { value, text: label })));
+      select.value = state.selects[s.id];
       select.addEventListener('change', () => { state.selects[s.id] = select.value; draw(); });
       filters.append(el('label', { class: 'pick' }, s.label, select));
     }
@@ -219,14 +225,15 @@
     });
     const tiles = el('section', { class: 'tiles', 'aria-label': 'Totals' });
     const chart = el('div', { class: 'chart' });
-    const table = el('div', { class: 'scroll', hidden: '' });
-    const toggle = el('button', { class: 'link', type: 'button', 'aria-pressed': 'false', text: 'Show as table' });
-    toggle.addEventListener('click', () => {
-      const showTable = table.hidden;
-      table.hidden = !showTable; chart.hidden = showTable;
-      toggle.textContent = showTable ? 'Show as chart' : 'Show as table';
-      toggle.setAttribute('aria-pressed', String(showTable));
-    });
+    const table = el('div', { class: 'scroll' });
+    const toggle = el('button', { class: 'link', type: 'button' });
+    const presentation = () => {
+      table.hidden = !state.showTable; chart.hidden = state.showTable;
+      toggle.textContent = state.showTable ? 'Show as chart' : 'Show as table';
+      toggle.setAttribute('aria-pressed', String(state.showTable));
+    };
+    toggle.addEventListener('click', () => { state.showTable = !state.showTable; presentation(); });
+    presentation();
     const daily = el('section', { class: 'card' }, el('div', { class: 'card-head' }, el('div', {}, el('h2', { text: `${cfg.measure} per day` }), el('p', { class: 'sub', text: 'Days are UTC. Today is not over yet.' })), toggle), chart, table);
     const cards = [{ ...cfg.item, item: true }, { title: 'Countries', head: 'Country', sub: 'Where Cloudflare places the address.', of: (row) => ({ key: row[2], name: countryName(data.countries[row[2]]) }) }, ...cfg.tables];
     const boxes = cards.map((c) => {
@@ -235,12 +242,12 @@
       const section = el('section', { class: 'card' }, el('div', { class: 'card-head' }, el('div', {}, el('h2', { text: c.title }), sub)), box);
       return { ...c, box, sub, section };
     });
-    const collected = data.collected || data.generated;
-    const when = new Date(collected).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    const when = new Date(data.collected || data.generated).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     const span = data.days.length === 1 ? dayLabel(data.days[0].day) : `${dayLabel(data.days[0].day)} to ${dayLabel(data.days.at(-1).day)}, ${data.days.length} days`;
     const notes = el('section', { class: 'notes' }, ...(cfg.notes || []), ...(data.notes || []).map((note) => el('p', { text: note })));
-    host.append(el('p', { class: 'sub', text: `Collected ${when} (your time) · ${span}` }), filters, kindsBox, tiles, daily, el('div', { class: 'grid' }, ...boxes.map((b) => b.section)), notes);
+    host.append(el('p', { class: 'sub', text: `${data.collected ? 'Collected' : 'Rendered'} ${when} (your time) · ${span}` }), filters, kindsBox, tiles, daily, el('div', { class: 'grid' }, ...boxes.map((b) => b.section)), notes);
 
+    let drawDaily;
     function draw() {
       const count = state.range ? Math.min(state.range, data.days.length) : data.days.length;
       const first = data.days.length - count;
@@ -259,7 +266,7 @@
         if (cfg.answers && state.kinds.has(KINDS[kind].id)) answers += cfg.answers(row);
         boxes.forEach((b, i) => {
           const g = b.of(row, state);
-          if (!groups[i].has(g.key)) groups[i].set(g.key, { name: g.name, detail: g.detail, order: g.order, values: zero() });
+          if (!groups[i].has(g.key)) groups[i].set(g.key, { name: g.name, detail: g.detail, empty: g.empty, values: zero() });
           groups[i].get(g.key).values[kind] += value;
         });
       }
@@ -269,7 +276,8 @@
       const total = shownIdx.reduce((sum, i) => sum + kinds[i], 0);
       const daysText = count === 1 ? '1 day' : `${count} days`;
       const rangeText = state.range && count < data.days.length ? `the last ${daysText}` : daysText;
-      table.replaceChildren(dailyChart(chart, days, KINDS, shownIdx, { measure: cfg.measure }));
+      drawDaily = () => table.replaceChildren(dailyChart(chart, days, KINDS, shownIdx, { measure: cfg.measure }));
+      drawDaily();
       let places = [];
       boxes.forEach((b, i) => {
         const rows = [...groups[i].values()];
@@ -277,7 +285,7 @@
         const list = ranked(b.box, rows, { nameHead: b.head, kinds: KINDS, shown, measure: cfg.measure, sorted: !!b.sort });
         if (b.item && b.subOf) b.sub.textContent = b.subOf(state, list.length);
         if (b.title === 'Countries') places = list;
-        if (b.hideEmpty) b.section.hidden = !list.length || (list.length === 1 && !list[0].name);
+        if (b.hideEmpty) b.section.hidden = !list.length || (list.length === 1 && list[0].empty);
       });
       const avg = total / count;
       tiles.replaceChildren(
@@ -288,9 +296,12 @@
       );
     }
     draw();
-    let resize = 0;
-    new ResizeObserver(() => { clearTimeout(resize); resize = setTimeout(() => { if (host.isConnected && !host.closest('[hidden]')) draw(); }, 120); }).observe(chart);
-    return { draw };
+    let width = chart.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (chart.clientWidth && chart.clientWidth !== width) { width = chart.clientWidth; drawDaily(); }
+    });
+    observer.observe(chart);
+    return { state, destroy: () => observer.disconnect() };
   }
 
   globalThis.HQCharts = { el, svg, fmt, compact, dayLabel, countryName, SYSTEMS, axis, dailyChart, ranked, spark, tile, change, Explorer };

@@ -32,7 +32,8 @@ view" (`src/pages/privacy.astro`). So:
 
 Rimeward's application (sign-in, dashboards, share links under `/s/`) is not counted either: only the pages of the
 built static site (`/opt/frostdev-public/current`, mounted read-only) and the Kiln SDK's API reference count, so no
-account route or link token is ever stored.
+account route or link token is ever stored. The page-view collector requires the built site and leaves excluded
+requests out of its stored rows and skipped counts.
 
 ## How it works
 
@@ -77,6 +78,8 @@ two differences:
 - the OAuth redirect URI stays `https://frostdev.io/glaze/admin/callback`, the one registered with Google, so the
   move needed no change in Google Cloud. The flow cookie is sent only to that path. To move the callback under `/hq`,
   add the new URI to the OAuth client in Google Cloud first, then change `CALLBACK` in `server/gallery-admin.mjs`.
+- Links to individual views or review items are restored after sign-in. A successful sign-in replaces the prior HQ
+  session when one was present on the login request.
 
 ## Installing
 
@@ -85,7 +88,8 @@ two differences:
    `/etc/kiln-stats.env` when it is missing.
 2. `ops/deploy-stats.sh` from a clean checkout: runs `stats/*.test.mjs`, stages the four scripts and the Dockerfile
    in `/opt/frostdev-stats`, builds the image, copies Kiln's stored days from `/var/lib/kiln-stats` the first time,
-   switches the old `kiln-stats` timer off, installs `frostdev-stats.service` and `.timer` and runs one collection.
+   installs `frostdev-stats.service` and `.timer` and runs one collection. It switches off the old `kiln-stats` timer
+   after the first successful run and keeps the legacy page available until nginx is updated.
 3. `ops/deploy-gallery.sh`: the gallery server, now with `-v /var/lib/frostdev-stats/out:/stats:ro -e STATS_DIR=/stats`.
 4. nginx: the `/hq` locations and the new `/kiln/stats` redirect from `ops/public-site.nginx.conf` into
    `/etc/nginx/snippets/frostdev-public.conf` (the installed file stays byte-identical to the repository's): back up,

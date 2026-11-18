@@ -1384,6 +1384,7 @@ export function gallery({
 
   // If-None-Match names this ETag (or any).
   const unchanged = (req, etag) => String(req.headers['if-none-match'] || '').split(',').some((t) => t.trim() === '*' || t.trim().replace(/^W\//, '') === etag);
+  const publicMods = () => q.modListing.all().filter((r) => !blockedMod(r));
   // /glaze/mods/api/… but the blocklist.
   const handleMods = async (req, res, url, p) => {
     if (p === '/mods') {
@@ -1391,7 +1392,7 @@ export function gallery({
       const page = Number(url.searchParams.get('page') ?? 1);
       if (!Number.isInteger(page) || page < 1 || page > 1000) return send(res, 400, { error: 'No such page.' });
       // ponytail: reads every published mod per request; page in SQL once the gallery holds thousands.
-      const all = q.modListing.all().filter((r) => !blockedMod(r));
+      const all = publicMods();
       return send(res, 200, { mods: all.slice((page - 1) * MOD_PAGE, page * MOD_PAGE).map(modCard), page, pages: Math.max(1, Math.ceil(all.length / MOD_PAGE)), total: all.length }, { 'cache-control': 'public, max-age=60' });
     }
     // Exactly the bundle that was reviewed, for as long as it is published: the extension checks its hash and signature.
@@ -1468,7 +1469,8 @@ export function gallery({
   };
   const admin = galleryAdmin({ db, siteOrigin, now, readJson, decide, decideMod, readMod: readStoredMod, readLookMedia: readMedia,
     permissionWords, limits, blocklist, live: () => live, googleClientId, googleClientSecret, adminEmails, googleFetch,
-    statsDir, reviewsPerDay, modReviewsPerDay, mailOn: !!mailUrl, curated: () => curated.length,
+    statsDir, reviewsPerDay, modReviewsPerDay, mailOn: !!(mailUrl && mailFrom), curated: () => curated.length,
+    publicModCount: () => new Set(publicMods().map((r) => r.id)).size,
     clientKey: (req) => hmac(saltOf(today(now())), clientOf(req)),
   });
 

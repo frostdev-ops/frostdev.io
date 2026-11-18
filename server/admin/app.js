@@ -11,17 +11,17 @@
   const NAV = { overview: 'nav-overview', kiln: 'nav-kiln', glaze: 'nav-glaze', site: 'nav-site', mods: 'nav-mods', looks: 'nav-looks', activity: 'nav-activity' };
   let csrf = '', gallery = null, route = { view: 'overview' }, needsShown = -1;
   const cache = {};
+  const explorers = {}, explorerState = {};
 
   const toast = (text, error = false) => {
     const m = $('message'); m.textContent = text; m.className = `toast${error ? ' error' : ''}`; m.hidden = false;
     clearTimeout(toast.t); toast.t = setTimeout(() => { m.hidden = true; }, error ? 7000 : 3500);
   };
-  const api = async (path) => {
-    const r = await fetch(`${ROOT}${path}`, { credentials: 'same-origin' });
-    if (r.status === 401) { location.assign(`${ROOT}/login`); throw new Error('Signed out.'); }
-    const body = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(body.error || `Request failed (${r.status}).`);
-    return body;
+  const api = async (path, init) => {
+    const r = await fetch(`${ROOT}${path}`, { credentials: 'same-origin', ...init });
+    if (r.status === 401) { location.assign(`${ROOT}/login${location.hash}`); throw new Error('Signed out.'); }
+    if (!r.ok) throw new Error((await r.json().catch(() => null))?.error || `Request failed (${r.status}).`);
+    return r.json();
   };
   /** A statistics file or the gallery's numbers, kept for ten minutes; null when it is not there. */
   const get = async (name, fresh = false) => {
@@ -92,14 +92,13 @@
     needsShown = needs;
     const hello = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
     const nexusDays = trend(pub, 'nexus:kiln', 'downloads');
-    const glazeUsers = (cws?.users || 0) + (amo?.users || 0);
     host.replaceChildren(
       head(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }), hello, 'Kiln, Glaze and frostdev.io at a glance. Numbers are collected once an hour.'),
       el('section', { class: 'tiles', 'aria-label': 'At a glance' },
         numberTile('Glaze', 'Needs you', g ? needs : null, { note: needs ? 'Gallery submissions a reviewer handed to a person.' : 'Nothing in the gallery is waiting for you.', href: needs ? (g.mods.some((r) => r.status === 'pending') ? '#glaze/mods/pending' : '#glaze/looks/pending') : '', attention: needs > 0 }),
         numberTile('Kiln', 'Downloads, 30 days', ok(kiln) ? sum(kilnDays) : null, { values: kilnDays, note: 'People, launcher updates and tools on frostdev.io.', href: '#kiln' }),
         numberTile('Kiln', 'Nexus downloads', nexus?.downloads ?? null, { values: nexusDays, note: nexus ? `${fmt(nexus.endorsements || 0)} endorsements · ${nexus.version || ''}` : '', href: '#kiln' }),
-        numberTile('Glaze', 'Store users', cws || amo ? glazeUsers : null, { note: `Chrome ${cws ? fmt(cws.users) : '—'} · Firefox ${amo ? fmt(amo.users) : '—'} a day`, href: '#glaze' }),
+        numberTile('Glaze', 'Chrome Web Store users', cws?.users ?? null, { note: `Firefox daily users ${amo?.users != null ? fmt(amo.users) : '—'}`, href: '#glaze' }),
         numberTile('Glaze', 'Release downloads', ghGlaze?.downloads ?? null, { values: trend(pub, 'github:glaze', 'downloads'), note: 'Every GitHub release, all time.', href: '#glaze' }),
         numberTile('frostdev.io', 'Page views, 30 days', ok(site) ? sum(siteDays) : null, { values: siteDays, note: 'People only; Glaze pages are never counted.', href: '#site' }),
       ),
@@ -120,7 +119,7 @@
     } else check('bad', 'Statistics', status?.__error || 'not collected yet');
     for (const [id, error] of Object.entries(pub?.errors || {})) check('wait', `Source ${id}`, error);
     if (ok(glaze)) {
-      check(glaze.mail ? 'ok' : 'wait', 'Pending-review email', glaze.mail ? 'on: a person is mailed when a submission needs them' : 'off (no MAIL_URL): check this dashboard');
+      check(glaze.mail ? 'ok' : 'wait', 'Pending-review email', glaze.mail ? 'on: a person is mailed when a submission needs them' : 'off: MAIL_URL and MAIL_FROM are required');
       check(glaze.limits ? 'ok' : 'wait', 'Submit limits', glaze.limits ? 'on' : 'OFF: anyone can submit without daily limits');
       const r = glaze.reviewsToday;
       check('ok', 'Reviews today', `${r.looks}${r.looksLimit ? ` of ${r.looksLimit}` : ''} Looks · ${r.mods}${r.modsLimit ? ` of ${r.modsLimit}` : ''} mods`);
@@ -154,12 +153,15 @@
   async function kilnView(host) {
     const [kiln, pub] = await Promise.all([get('kiln'), get('public')]);
     const nexus = latest(pub, 'nexus:kiln'), gh = latest(pub, 'github:kiln');
+    const nexusDays = trend(pub, 'nexus:kiln', 'downloads');
+    const nexusDelta = sinceFirst(nexusDays);
     const explorer = el('div');
+    explorers.kiln?.destroy();
     host.replaceChildren(
       head('Kiln', 'Downloads', 'Files under frostdev.io/kiln/downloads, from Cloudflare’s request data, plus Nexus and GitHub.',
         el('div', { class: 'links' }, el('a', { href: '/kiln/download', text: 'Download page ↗' }), el('a', { href: 'https://www.nexusmods.com/enshrouded/mods/301', rel: 'noopener noreferrer', text: 'Nexus ↗' }))),
       el('section', { class: 'tiles', 'aria-label': 'Elsewhere' },
-        numberTile('Nexus', 'Downloads', nexus?.downloads ?? null, { values: trend(pub, 'nexus:kiln', 'downloads'), note: sinceFirst(trend(pub, 'nexus:kiln', 'downloads')) !== null ? `+${fmt(sinceFirst(trend(pub, 'nexus:kiln', 'downloads')))} over the last ${trend(pub, 'nexus:kiln', 'downloads').length} days` : 'Grows a trend line as days are collected.' }),
+        numberTile('Nexus', 'Downloads', nexus?.downloads ?? null, { values: nexusDays, note: nexusDelta !== null ? `${nexusDelta >= 0 ? '+' : ''}${fmt(nexusDelta)} across ${nexusDays.length} recorded days` : 'Grows a trend line as days are collected.' }),
         numberTile('Nexus', 'Endorsements', nexus?.endorsements ?? null, { note: nexus?.version ? `Listed version ${nexus.version}` : '' }),
         numberTile('GitHub', 'Stars', gh?.stars ?? null, { values: trend(pub, 'github:kiln', 'stars'), note: gh ? `${fmt(gh.forks || 0)} forks` : '' }),
         numberTile('GitHub', 'Open issues and PRs', gh?.openIssues ?? null, { note: gh ? `${fmt(gh.downloads || 0)} release asset downloads` : '' }),
@@ -168,7 +170,7 @@
     );
     if (!ok(kiln)) { explorer.append(missing('Kiln downloads', kiln)); return; }
     const files = kiln.files;
-    C.Explorer(explorer, {
+    explorers.kiln = C.Explorer(explorer, {
       data: kiln, measure: 'Downloads', kinds: KILN_KINDS, defaultKinds: ['people', 'launcher', 'tool'],
       answers: (row) => row[7] || 0,
       selects: [
@@ -183,14 +185,15 @@
       tables: [
         { title: 'Versions', head: 'Version', sub: 'Newest first.', of: (row) => ({ key: files[row[1]].version, name: files[row[1]].version }), sort: (a, b) => versionOrder(a.name, b.name) },
         { title: 'Systems', head: 'System', sub: 'What the program said it runs on; for a launcher update, the file it fetched.', of: (row) => ({ key: row[4], name: C.SYSTEMS[kiln.systems[row[4]]] ?? kiln.systems[row[4]] }) },
-        { title: 'Came from', head: 'Site', sub: 'The site the download link was on.', hideEmpty: true, of: (row) => ({ key: row[5], name: kiln.referrers[row[5]] || 'No referring site' }) },
+        { title: 'Came from', head: 'Site', sub: 'The site the download link was on.', hideEmpty: true, of: (row) => ({ key: row[5], name: kiln.referrers[row[5]] || 'No referring site', empty: !kiln.referrers[row[5]] }) },
       ],
       notes: [
         el('p', {}, el('strong', { text: 'How this is counted. ' }), 'Cloudflare’s request statistics for /kiln/downloads/, read once an hour. For a file of a megabyte or more, a download is the file’s size in bytes sent: a download that was resumed or fetched in parts counts once, one that was given up counts as the part that arrived. For small files and text files it is a complete answer.'),
         el('p', {}, el('strong', { text: 'Who. ' }), 'People: a current web browser. Launcher updates: the Kiln launcher fetching its own update. Tools: curl, PowerShell, NuGet, download managers. Automated: crawlers, link previews, scanners, and programs that claim to be a browser nobody runs any more. A program can claim anything, so these are estimates.'),
         el('p', {}, el('strong', { text: 'What is kept. ' }), 'Per day: file, country, kind of program, system, a count and the bytes. No IP address and no User-Agent text.'),
       ],
-    });
+    }, explorerState.kiln);
+    if (explorers.kiln) explorerState.kiln = explorers.kiln.state;
   }
 
   // ---- Glaze -------------------------------------------------------------------------------------------------------
@@ -226,7 +229,7 @@
       parts.push(el('section', { class: 'tiles', 'aria-label': 'Gallery' },
         numberTile('Gallery', 'Looks in the gallery', looksLive, { note: `${fmt(glaze.curated || 0)} curated · ${fmt(glaze.looks.published || 0)} from the community`, href: '#glaze/looks/published' }),
         numberTile('Gallery', 'Mods live', glaze.modsLive, { note: `${fmt(glaze.mods.published || 0)} published versions`, href: '#glaze/mods/published' }),
-        numberTile('Gallery', 'Needs you', needs, { href: needs ? '#glaze/mods/pending' : '', attention: needs > 0, note: `${glaze.looks.pending || 0} Looks · ${glaze.mods.pending || 0} mods` }),
+        numberTile('Gallery', 'Needs you', needs, { href: glaze.mods.pending ? '#glaze/mods/pending' : needs ? '#glaze/looks/pending' : '', attention: needs > 0, note: `${glaze.looks.pending || 0} Looks · ${glaze.mods.pending || 0} mods` }),
         numberTile('Gallery', 'Review cost, 30 days', money(glaze.spent30), { note: 'What the review models charged for the last 30 days’ submissions.' }),
       ));
       const outcome = (kind) => {
@@ -263,9 +266,10 @@
   async function siteView(host) {
     const site = await get('site');
     const explorer = el('div');
+    explorers.site?.destroy();
     host.replaceChildren(head('frostdev.io', 'Page views', 'How often each page of the public site was opened, from Cloudflare’s request data.', el('div', { class: 'links' }, el('a', { href: '/', text: 'frostdev.io ↗' }))), explorer);
     if (!ok(site)) { explorer.append(missing('Page views', site)); return; }
-    C.Explorer(explorer, {
+    explorers.site = C.Explorer(explorer, {
       data: site, measure: 'Page views', kinds: SITE_KINDS, defaultKinds: ['people'],
       selects: [{ id: 'section', label: 'Pages', options: SECTIONS.filter(([id]) => !id || site.pages.some((p) => sectionOf(p) === id)), test: (row, v) => sectionOf(site.pages[row[1]]) === v }],
       item: { title: 'Pages', head: 'Page', of: (row) => ({ key: row[1], name: pageName(site.pages[row[1]]), detail: site.pages[row[1]] }), subOf: (state, n) => `${n} pages.` },
@@ -278,14 +282,16 @@
         el('p', {}, el('strong', { text: 'Glaze’s pages are never counted. ' }), 'Glaze promises no analytics and no invisible audience, so its pages, its guides and its gallery are left out before anything is written — not even a total.'),
         el('p', {}, el('strong', { text: 'What is kept. ' }), 'Per day: page, country, kind of program, system, referring site and a count. No IP address and no User-Agent text. The last 120 days are shown.'),
       ],
-    });
+    }, explorerState.site);
+    if (explorers.site) explorerState.site = explorers.site.state;
   }
 
   // ---- routes ------------------------------------------------------------------------------------------------------
   // #overview · #kiln · #glaze · #site · #activity · #glaze/mods/<filter>/<id>/<hash> · #glaze/looks/<filter>/<id>
   // The old dashboard's #mods/... and #looks/... (emails already sent) still open their item.
   function readRoute() {
-    const parts = decodeURIComponent(location.hash.slice(1)).split('/');
+    let parts;
+    try { parts = location.hash.slice(1).split('/').map(decodeURIComponent); } catch { return { view: 'overview' }; }
     if (parts[0] === 'mods' || parts[0] === 'looks') {
       const [section, a = '', b = '', c = ''] = parts;
       // the old mods links were #mods/<id>/<hash>, without a filter
@@ -293,11 +299,23 @@
       history.replaceState(null, '', `#${['glaze', section, ...old].filter(Boolean).join('/')}`);
       return readRoute();
     }
-    if (parts[0] === 'glaze' && (parts[1] === 'mods' || parts[1] === 'looks')) return { view: 'gallery', section: parts[1], filter: parts[2] || 'pending', id: parts[3] || '', hash: parts[4] || '' };
+    if (parts[0] === 'glaze' && (parts[1] === 'mods' || parts[1] === 'looks')) {
+      const [, section, filter = 'pending', id = '', hash = ''] = parts;
+      const valid = section === 'looks' ? /^c-[0-9a-f]{10}$/.test(id) : /^[a-z2-7]{16}$/.test(id) && /^[\w-]{43}$/.test(hash);
+      return { view: 'gallery', section, filter, id: valid ? id : '', hash: valid && section === 'mods' ? hash : '' };
+    }
     if (parts[0] === 'activity') return { view: 'activity', section: 'activity' };
     return { view: VIEWS.includes(parts[0]) && parts[0] !== 'gallery' ? parts[0] : 'overview' };
   }
   const drawn = {};
+  const views = { overview, kiln: kilnView, glaze: glazeView, site: siteView };
+  async function refreshView(view) {
+    if (!Object.hasOwn(views, view)) return;
+    const host = $(`view-${view}`);
+    if (!drawn[view]) host.replaceChildren(el('p', { class: 'muted', text: 'Loading…' }));
+    try { await views[view](host); drawn[view] = true; }
+    catch (e) { host.replaceChildren(el('p', { class: 'warn', text: `Couldn’t draw this view: ${e.message}` })); }
+  }
   async function show() {
     route = readRoute();
     document.body.classList.remove('menu-open'); $('menu').setAttribute('aria-expanded', 'false');
@@ -306,24 +324,24 @@
     for (const [key, id] of Object.entries(NAV)) { const a = $(id); if (key === current) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
     document.title = `${{ overview: 'Overview', kiln: 'Kiln downloads', glaze: 'Glaze numbers', site: 'Page views', activity: 'Activity', mods: 'Mods', looks: 'Looks' }[current] || 'HQ'} · frostdev HQ`;
     gallery?.show(route.view === 'gallery' || route.view === 'activity' ? route : null);
-    const draw = { overview, kiln: kilnView, glaze: glazeView, site: siteView }[route.view];
-    if (draw) {
-      const host = $(`view-${route.view}`);
-      if (!drawn[route.view]) host.replaceChildren(el('p', { class: 'muted', text: 'Loading…' }));
-      try { await draw(host); drawn[route.view] = true; } catch (e) { host.replaceChildren(el('p', { class: 'warn', text: `Couldn’t draw this view: ${e.message}` })); }
-    }
+    await refreshView(route.view);
   }
 
   $('menu').addEventListener('click', () => { const open = document.body.classList.toggle('menu-open'); $('menu').setAttribute('aria-expanded', String(open)); });
+  document.querySelector('.skip').addEventListener('click', (event) => { event.preventDefault(); $('main').focus(); });
   $('logout').addEventListener('click', async () => {
-    try { await fetch(`${ROOT}/logout`, { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json', 'x-csrf-token': csrf }, body: '{}' }); } catch { /* signed out anyway */ }
-    location.assign(`${ROOT}/login`);
+    $('logout').disabled = true;
+    try {
+      await api('/logout', { method: 'POST', headers: { 'content-type': 'application/json', 'x-csrf-token': csrf }, body: '{}' });
+      location.assign(`${ROOT}/login`);
+    } catch (e) { $('logout').disabled = false; toast(e.message, true); }
   });
   window.addEventListener('hashchange', show);
   gallery = globalThis.HQGallery || null;
   const started = gallery ? gallery.start({
     toast,
     onData: (d) => {
+      if (!csrf) $('logout').disabled = false;
       csrf = d.csrf; $('email').textContent = d.email;
       // the overview's "Needs you" follows the gallery's own refreshes
       const needs = d.looks.filter((r) => r.status === 'pending').length + d.mods.filter((r) => r.status === 'pending').length;
@@ -333,5 +351,5 @@
   // the gallery's data first: the overview counts what needs you
   started.finally(show);
   // numbers are collected once an hour: look again every ten minutes while the tab is open
-  setInterval(() => { if (!document.hidden && ['overview', 'kiln', 'glaze', 'site'].includes(route.view)) { for (const k of Object.keys(cache)) delete cache[k]; show(); } }, 600e3);
+  setInterval(() => { if (!document.hidden && Object.hasOwn(views, route.view)) { for (const k of Object.keys(cache)) delete cache[k]; refreshView(route.view); } }, 600e3);
 })();

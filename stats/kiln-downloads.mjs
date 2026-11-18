@@ -194,6 +194,14 @@ export const DEFAULT_LIMITS = { maxDuration: DAY_MS / 1000, maxPageSize: 10_000,
 
 export class CloudflareError extends Error {}
 
+export function redactStatsError(message, env) {
+  let text = String(message);
+  for (const token of [env.CF_API_TOKEN, env.GITHUB_TOKEN].filter(Boolean).sort((a, b) => b.length - a.length)) {
+    text = text.replaceAll(token, '[token]');
+  }
+  return text;
+}
+
 /** One GraphQL request. Throws CloudflareError with Cloudflare's own words; the token is never part of a message. */
 export async function cfQuery(env, query) {
   const endpoint = env.CF_API || 'https://api.cloudflare.com/client/v4/graphql';
@@ -214,7 +222,7 @@ export async function cfQuery(env, query) {
   } catch {
     throw new CloudflareError(`Cloudflare answered ${response.status} without JSON`);
   }
-  if (body?.errors?.length) throw new CloudflareError(body.errors.map((e) => e.message).join('; ').slice(0, 600));
+  if (body?.errors?.length) throw new CloudflareError(redactStatsError(body.errors.map((e) => e.message).join('; '), env).slice(0, 600));
   if (!response.ok || !body?.data) throw new CloudflareError(`Cloudflare answered ${response.status}`);
   return body.data;
 }
@@ -268,8 +276,10 @@ export const KILN_SCOPE = { filters: [`clientRequestPath_like: "${PREFIX}%"`] };
 
 function windowQuery(env, limits, from, to, scope = KILN_SCOPE) {
   const filters = [`datetime_geq: "${from.toISOString()}"`, `datetime_lt: "${to.toISOString()}"`, ...scope.filters];
-  if (limits.filters.includes('requestSource')) filters.push('requestSource: "eyeball"');
-  if (limits.filters.includes('clientRequestHTTPMethodName')) filters.push('clientRequestHTTPMethodName: "GET"');
+  if (scope.useOptionalFilters !== false) {
+    if (limits.filters.includes('requestSource')) filters.push('requestSource: "eyeball"');
+    if (limits.filters.includes('clientRequestHTTPMethodName')) filters.push('clientRequestHTTPMethodName: "GET"');
+  }
   return `{ viewer { zones(filter: {zoneTag: "${zoneOf(env)}"}) { ${DATASET}(limit: ${limits.maxPageSize}, filter: {${filters.join(', ')}}, orderBy: [count_DESC]) { count sum { edgeResponseBytes } avg { sampleInterval } dimensions { ${limits.fields.join(' ')} } } } } }`;
 }
 
@@ -293,7 +303,8 @@ export async function fetchWindow(env, limits, from, to, state = { queries: 0, t
       groups = (await cfQuery(env, windowQuery(env, limits, from, to, scope))).viewer?.zones?.[0]?.[DATASET];
       break;
     } catch (error) {
-      const refused = error instanceof CloudflareError && refusedField(error.message, [...OPTIONAL.filter((n) => limits.fields.includes(n)), ...limits.filters]);
+      const optionalFilters = scope.useOptionalFilters === false ? [] : limits.filters;
+      const refused = error instanceof CloudflareError && refusedField(error.message, [...OPTIONAL.filter((n) => limits.fields.includes(n)), ...optionalFilters]);
       if (!refused) throw error;
       limits.fields = limits.fields.filter((name) => name !== refused);
       limits.filters = limits.filters.filter((name) => name !== refused);
@@ -527,7 +538,7 @@ export async function collect(env, now = Date.now()) {
     Object.assign(run, { ok: true, days: wanted.length, queries: state.queries, fields: limits.fields, note: limits.note });
   } catch (error) {
     // Cloudflare's words go into last-run.json, the log and the page: never with the token in them
-    run.error = (error instanceof CloudflareError ? error.message : `${error.name}: ${error.message}`).split(env.CF_API_TOKEN).join('[token]');
+    run.error = redactStatsError(error instanceof CloudflareError ? error.message : `${error.name}: ${error.message}`, env);
   }
   writeAtomic(join(s.dataDir, 'last-run.json'), JSON.stringify(run));
   // kiln.json is written either way: after a failure it says so and holds what the collection before stored

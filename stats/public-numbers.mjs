@@ -5,7 +5,7 @@
 // (/hq, docs/hq.md) can show how they change. A source that fails keeps its last answer and says why.
 import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { dayName, writeAtomic } from './kiln-downloads.mjs';
+import { dayName, redactStatsError, writeAtomic } from './kiln-downloads.mjs';
 
 export const SOURCES = {
   'github:glaze': { kind: 'github', repo: 'frostdev-ops/glaze', product: 'glaze' },
@@ -43,7 +43,7 @@ export async function github(source, { fetcher = fetch, token = '' } = {}) {
   const headers = { accept: 'application/vnd.github+json', ...(token && { authorization: `Bearer ${token}` }) };
   const repo = await (await get(fetcher, `https://api.github.com/repos/${source.repo}`, { headers })).json();
   const releases = [];
-  for (let page = 1; page <= 3; page++) {
+  for (let page = 1; ; page++) {
     const list = await (await get(fetcher, `https://api.github.com/repos/${source.repo}/releases?per_page=100&page=${page}`, { headers })).json();
     if (!Array.isArray(list)) throw new Error('GitHub answered something other than a list of releases');
     releases.push(...list);
@@ -72,7 +72,7 @@ export async function github(source, { fetcher = fetch, token = '' } = {}) {
 export async function nexus(source, { fetcher = fetch } = {}) {
   const query = `{ mods(filter:{gameId:[{value:"${source.game}"}], modId:[{value:"${source.mod}"}]}) { nodes { modId downloads endorsements version updatedAt } } }`;
   const body = await (await get(fetcher, 'https://api.nexusmods.com/v2/graphql', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) })).json();
-  if (body?.errors?.length) throw new Error(`Nexus: ${String(body.errors[0].message).slice(0, 200)}`);
+  if (body?.errors?.length) throw new Error(`Nexus: ${body.errors[0].message}`);
   const mod = body?.data?.mods?.nodes?.find((m) => Number(m.modId) === source.mod);
   if (!mod) throw new Error('Nexus knows no such mod');
   return { downloads: num(mod.downloads), endorsements: num(mod.endorsements), version: String(mod.version || '').slice(0, 40), updated: mod.updatedAt || null };
@@ -110,7 +110,7 @@ export async function collectPublic(env, now = Date.now(), { fetcher = fetch, so
     try {
       today.sources[id] = { at: new Date(now).toISOString(), ...await ASK[source.kind](source, { fetcher, token: env.GITHUB_TOKEN || '' }) };
     } catch (error) {
-      errors[id] = String(error.message || error).split(env.GITHUB_TOKEN || '\u0000').join('[token]').slice(0, 300);
+      errors[id] = redactStatsError(error.message || error, env).slice(0, 300);
     }
   }));
   today.errors = errors;
@@ -124,11 +124,13 @@ export async function collectPublic(env, now = Date.now(), { fetcher = fetch, so
 export function buildPublicData(days, now, sources = SOURCES) {
   const data = { generated: new Date(now).toISOString(), sources: {}, history: [], errors: {} };
   for (const [id, source] of Object.entries(sources)) data.sources[id] = { ...source, latest: null };
+  for (const [id, source] of Object.entries(data.sources)) {
+    source.latest = days.findLast((day) => Object.hasOwn(day.sources || {}, id))?.sources[id] ?? null;
+  }
   for (const d of days.slice(-KEEP_DAYS)) {
     const point = { day: d.day };
     for (const [id, value] of Object.entries(d.sources || {})) {
-      if (!data.sources[id]) continue;
-      data.sources[id].latest = value;
+      if (!Object.hasOwn(data.sources, id)) continue;
       const { releases, ...flat } = value;
       point[id] = Object.fromEntries(Object.entries(flat).filter(([, v]) => typeof v === 'number'));
     }

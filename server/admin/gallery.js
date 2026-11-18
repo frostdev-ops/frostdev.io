@@ -27,7 +27,7 @@
   const toast = (text, error = false) => ctx.toast(text, error);
   const api = async (path, init) => {
     const r = await fetch(`${ROOT}${path}`, { credentials: 'same-origin', ...init });
-    if (r.status === 401) { location.assign(`${ROOT}/login`); throw new Error('Signed out.'); }
+    if (r.status === 401) { location.assign(`${ROOT}/login${location.hash}`); throw new Error('Signed out.'); }
     const body = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(body.error || `Request failed (${r.status}).`);
     return body;
@@ -82,8 +82,10 @@
     }) : [h('li', { className: 'empty' }, q ? 'No matches.' : empty)]));
   }
 
+  function stopLive() { clearInterval(liveTimer); liveTimer = 0; }
+
   async function renderDetail() {
-    clearInterval(liveTimer);
+    stopLive();
     const pane = $('detail'), seq = ++detailSeq;
     $('workspace').classList.toggle('open', !!state.id);
     if (!state.id) {
@@ -148,6 +150,7 @@
   function tabs(defs) {
     const bar = h('div', { className: 'tabs', role: 'tablist' }), body = h('div', { className: 'panel' });
     const show = (key) => {
+      stopLive();
       state.tab = key;
       for (const b of bar.children) b.setAttribute('aria-selected', String(b.dataset.key === key));
       body.replaceChildren(...[defs.find((d) => d.key === key)?.draw()].flat().filter(Boolean));
@@ -187,7 +190,9 @@
     if (m.fileError) return card('Files', para(m.fileError));
     const viewer = h('div', { className: 'viewer-pane' }), tree = h('div', { className: 'tree', role: 'list' });
     const url = (f, extra = '') => `${ROOT}/files/mods/${m.id}/${m.hash}?path=${encodeURIComponent(f.path)}${extra}`;
+    let selection = 0;
     const open = async (f, b) => {
+      const current = ++selection;
       for (const x of tree.children) x.removeAttribute('aria-current'); b.setAttribute('aria-current', 'true');
       const head = h('div', { className: 'viewer-head' }, h('strong', {}, f.path), h('span', {}, `${kb(f.bytes)} · `, h('a', { href: url(f, '&download=1') }, 'download')));
       if (f.type.startsWith('image/')) { const box = h('div'); GalleryViewer.image(box, url(f), f.path); viewer.replaceChildren(head, box); return; }
@@ -195,8 +200,10 @@
       viewer.replaceChildren(head, h('p', { className: 'muted' }, 'Loading…'));
       try {
         const r = await fetch(url(f, '&view=text'), { credentials: 'same-origin' });
-        const text = await r.text(); const box = h('div'); GalleryViewer.code(box, text, f.path); viewer.replaceChildren(head, box);
-      } catch { viewer.replaceChildren(head, h('p', {}, 'Couldn’t load this file.')); }
+        if (!r.ok) throw new Error('File unavailable.');
+        const text = await r.text(); const box = h('div'); GalleryViewer.code(box, text, f.path);
+        if (current === selection) viewer.replaceChildren(head, box);
+      } catch { if (current === selection) viewer.replaceChildren(head, h('p', {}, 'Couldn’t load this file.')); }
     };
     const files = [...m.files].sort((a, b) => (a.path === 'mod.json' ? -1 : b.path === 'mod.json' ? 1 : a.path.localeCompare(b.path)));
     for (const f of files) { const b = h('button', { type: 'button', role: 'listitem' }, h('span', {}, f.path), h('small', {}, kb(f.bytes))); b.addEventListener('click', () => open(f, b)); tree.append(b); }
@@ -214,17 +221,19 @@
       const status = h('p', { className: 'muted' }, s === 'queued' ? 'Waiting for the agent to start…' : 'Connecting…'), list = h('div');
       wrap.append(card('Live', status, list));
       const poll = async () => {
+        const timer = liveTimer;
         try {
           const { feeds } = await api(`/api/live?hash=${encodeURIComponent(m.hash)}`);
+          if (timer !== liveTimer) return;
           const f = feeds[0];
-          if (!f) { if (s === 'reviewing') { clearInterval(liveTimer); status.textContent = 'The review finished.'; load(); } return; }
+          if (!f) { if (s === 'reviewing') { stopLive(); status.textContent = 'The review finished.'; load(); } return; }
           status.textContent = `Round ${f.rounds} · started ${when(f.started)} · ${f.events.length} steps`;
           const near = list.lastChild ? list.scrollHeight - list.scrollTop - list.clientHeight < 80 : true;
           list.replaceChildren(feedList(f.events));
           if (near) list.lastChild?.lastChild?.scrollIntoView?.({ block: 'nearest' });
-        } catch { status.textContent = 'Live view unavailable; refresh to retry.'; }
+        } catch { if (timer === liveTimer) status.textContent = 'Live view unavailable; refresh to retry.'; }
       };
-      poll(); liveTimer = setInterval(poll, 2000);
+      liveTimer = setInterval(poll, 2000); poll();
       return wrap;
     }
     wrap.append(card('Run', facts([['Model', review.model], ['Rounds', review.rounds], ['Prompt tokens', review.tokens?.prompt], ['Completion tokens', review.tokens?.completion], ['Cost', review.cost ? `$${Number(review.cost).toFixed(4)}` : undefined]])));
@@ -278,14 +287,22 @@
       // Keep lists fresh (new submissions, agent progress) without touching an open detail.
       setInterval(async () => {
         if (document.hidden || !data) return;
-        try { took(await api('/api/data')); if (visible && state.section !== 'activity') renderList(); } catch { /* next time */ }
+        try {
+          const next = await api('/api/data');
+          const selectedMod = (d) => d.mods.find((r) => r.id === state.id && r.hash === state.hash);
+          const before = selectedMod(data), after = selectedMod(next);
+          took(next);
+          if (visible && state.section !== 'activity') renderList();
+          if (visible && state.section === 'mods' && state.tab === 'agent' && before?.status === 'queued' && after?.status !== 'queued') renderDetail();
+        } catch { /* next time */ }
       }, 15000);
       return load();
     },
     /** route: { section: 'mods' | 'looks' | 'activity', filter, id, hash }, or null when another view is showing. */
     show(route) {
       visible = !!route;
-      if (!route) { clearInterval(liveTimer); detailSeq++; return; }
+      if (!route || route.section === 'activity') { stopLive(); detailSeq++; }
+      if (!route) return;
       const next = { section: route.section, filter: FILTERS.some(([f]) => f === route.filter) ? route.filter : 'pending', id: route.id || '', hash: route.hash || '' };
       if (`${next.section}/${next.id}/${next.hash}` !== `${state.section}/${state.id}/${state.hash}`) state.tab = 'review';
       state = { ...state, ...next };

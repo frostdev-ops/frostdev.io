@@ -39,11 +39,20 @@ const ASSETS = {
 };
 // No secret, and the sign-in page needs them before there is a session.
 const PUBLIC_ASSETS = new Set(['/style.css', '/frostdev-icon.webp']);
+const FILTER_HASH = '(?:/(?:pending|review|published|declined|removed|all))?';
+const RETURN_HASHES = [
+  /^#(?:overview|kiln|glaze|site|activity)$/,
+  new RegExp(`^#(?:glaze/)?looks${FILTER_HASH}(?:/c-[0-9a-f]{10})?$`),
+  new RegExp(`^#(?:glaze/)?mods${FILTER_HASH}(?:/[a-z2-7]{16}/[\\w-]{43})?$`),
+];
+const LOGIN_SCRIPT = `document.querySelector('form').addEventListener('submit', (event) => {
+  if (location.hash) event.currentTarget.action = '${ROOT}/login?' + new URLSearchParams({ returnTo: location.hash });
+});`;
 
 // The sign-in page: no script, the dashboard's stylesheet, one form that starts Google's flow.
 const LOGIN = `<!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><meta name="robots" content="noindex, nofollow"><title>Sign in · frostdev HQ</title><link rel="stylesheet" href="${ROOT}/style.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><meta name="robots" content="noindex, nofollow"><title>Sign in · frostdev HQ</title><link rel="stylesheet" href="${ROOT}/style.css"><script src="${ROOT}/login.js" defer></script></head>
 <body class="login">
   <div class="ground" aria-hidden="true"></div>
   <a class="skip" href="#sign-in">Skip to sign in</a>
@@ -78,15 +87,20 @@ export function adminFileType(bytes) {
 
 export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide, decideMod, readMod, readLookMedia, permissionWords, live = () => new Map(),
   limits, blocklist, googleClientId, googleClientSecret, adminEmails, googleFetch = fetch, statsDir = '', reviewsPerDay = 0, modReviewsPerDay = 0,
-  mailOn = false, curated = () => 0 }) {
+  mailOn = false, curated = () => 0, publicModCount = () => 0 }) {
   const emails = new Set(String(adminEmails || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean));
   const enabled = !!(googleClientId && googleClientSecret && emails.size);
   db.exec(`CREATE TABLE IF NOT EXISTS admin_sessions (token TEXT PRIMARY KEY, email TEXT NOT NULL, csrf TEXT NOT NULL, expires INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS admin_flows (state TEXT PRIMARY KEY, browser TEXT NOT NULL, verifier TEXT NOT NULL, nonce TEXT NOT NULL, expires INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS admin_flows (state TEXT PRIMARY KEY, browser TEXT NOT NULL, verifier TEXT NOT NULL, nonce TEXT NOT NULL, expires INTEGER NOT NULL,
+      return_hash TEXT NOT NULL DEFAULT '', previous_session TEXT NOT NULL DEFAULT '');
     CREATE TABLE IF NOT EXISTS admin_login_limits (network TEXT PRIMARY KEY, started INTEGER NOT NULL, n INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS admin_audit (seq INTEGER PRIMARY KEY, email TEXT NOT NULL, action TEXT NOT NULL, kind TEXT NOT NULL,
       id TEXT NOT NULL, hash TEXT NOT NULL, at INTEGER NOT NULL, reason TEXT NOT NULL);`);
   const sql = (s) => db.prepare(s);
+  const flowColumns = new Set(sql('PRAGMA table_info(admin_flows)').all().map(({ name }) => name));
+  for (const column of ['return_hash', 'previous_session']) {
+    if (!flowColumns.has(column)) db.exec(`ALTER TABLE admin_flows ADD COLUMN ${column} TEXT NOT NULL DEFAULT ''`);
+  }
   const sweep = () => {
     sql('DELETE FROM admin_sessions WHERE expires <= ?').run(now());
     sql('DELETE FROM admin_flows WHERE expires <= ?').run(now());
@@ -148,32 +162,31 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
   // what the reviews cost and how much of today's review allowance is used. Nothing about visitors: the gallery keeps
   // nothing about them (docs/looks-gallery.md, Privacy). Declined submissions are deleted after 30 days.
   const glazeNumbers = () => {
-    const t = now(), today = new Date(t).toISOString().slice(0, 10), since = t - 30 * DAY;
+    const today = new Date(now()).toISOString().slice(0, 10);
+    const since = Date.parse(today) - 29 * DAY;
+    const firstDay = new Date(since).toISOString().slice(0, 10);
     const counts = (table) => Object.fromEntries(sql(`SELECT status, COUNT(*) n FROM ${table} GROUP BY status`).all().map((r) => [r.status, r.n]));
     const parse = (text) => { try { return JSON.parse(text) || {}; } catch { return {}; } };
     const costOf = (d) => [d.first?.cost, d.escalation?.cost, d.review?.cost].reduce((sum, c) => sum + (typeof c === 'number' && c > 0 ? c : 0), 0);
     const days = {};
     const count = (day, kind, status) => { const b = (days[day] ||= { looks: {}, mods: {} })[kind]; b[status] = (b[status] || 0) + 1; };
     let spent = 0;
-    for (const r of sql('SELECT status, created, decision FROM looks').all()) {
-      if (!(Date.parse(r.created) >= since)) continue;
+    for (const r of sql('SELECT status, created, decision FROM looks WHERE created >= ?').all(firstDay)) {
       count(r.created.slice(0, 10), 'looks', r.status);
       spent += costOf(parse(r.decision));
     }
     // a Look the review declined is kept only here, by day
-    for (const r of sql('SELECT day, decision FROM rejected').all()) {
-      if (!(Date.parse(`${r.day}T23:59:59Z`) >= since)) continue;
+    for (const r of sql('SELECT day, decision FROM rejected WHERE day >= ?').all(firstDay)) {
       count(r.day, 'looks', 'declined');
       spent += costOf(parse(r.decision));
     }
-    for (const r of sql('SELECT status, created, decision FROM mods').all()) {
-      if (!(r.created >= since)) continue;
+    for (const r of sql('SELECT status, created, decision FROM mods WHERE created >= ?').all(since)) {
       count(new Date(r.created).toISOString().slice(0, 10), 'mods', r.status);
       spent += costOf(parse(r.decision));
     }
     const used = (kind) => sql('SELECT n FROM quota WHERE kind = ? AND key = ? AND day = ?').get(kind, '', today)?.n || 0;
     return {
-      looks: counts('looks'), mods: counts('mods'), modsLive: sql("SELECT COUNT(DISTINCT id) n FROM mods WHERE status = 'published'").get().n, curated: curated(),
+      looks: counts('looks'), mods: counts('mods'), modsLive: publicModCount(), curated: curated(),
       days, spent30: Math.round(spent * 1e4) / 1e4, mail: !!mailOn, limits: !!limits,
       reviewsToday: { looks: used('all'), looksLimit: reviewsPerDay || null, mods: used('mod-all'), modsLimit: modReviewsPerDay || null },
     };
@@ -201,9 +214,9 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
         || !Number.isFinite(payload.iat) || payload.iat * 1000 > now() + 60e3 || typeof payload.sub !== 'string' || !payload.sub
         || payload.nonce !== flow.nonce || payload.email_verified !== true || !emails.has(email)) return refuse(res);
       const session = random(), csrf = random();
-      sql('DELETE FROM admin_sessions WHERE token = ?').run(hash(cookieOf(req, SESSION)));
       sql('INSERT INTO admin_sessions VALUES (?, ?, ?, ?)').run(hash(session), email, csrf, now() + HOURS12);
-      return redirect(res, ROOT, { 'set-cookie': [cookie(FLOW, '', 0, CALLBACK), cookie(SESSION, session, HOURS12 / 1000)] });
+      if (flow.previous_session) sql('DELETE FROM admin_sessions WHERE token = ?').run(flow.previous_session);
+      return redirect(res, `${ROOT}${flow.return_hash}`, { 'set-cookie': [cookie(FLOW, '', 0, CALLBACK), cookie(SESSION, session, HOURS12 / 1000)] });
     } catch { return refuse(res); }
   };
 
@@ -220,6 +233,7 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
     }
     const p = url.pathname.slice(ROOT.length);
     if (p === '/login' && req.method === 'GET') return reply(res, 200, LOGIN, 'text/html; charset=utf-8');
+    if (p === '/login.js' && req.method === 'GET') return reply(res, 200, LOGIN_SCRIPT, 'text/javascript; charset=utf-8');
     if (p === '/login' && req.method === 'POST') {
       if (req.headers.origin !== siteOrigin) return refuse(res);
       sweep();
@@ -228,7 +242,10 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
       if (bucket?.n >= 10) return reply(res, 429, { error: 'Try sign-in again later.' }, undefined, { 'retry-after': '3600' });
       sql('INSERT INTO admin_login_limits VALUES (?, ?, 1) ON CONFLICT(network) DO UPDATE SET n = n + 1').run(key, now());
       const state = random(), browser = random(), verifier = random(), nonce = random();
-      sql('INSERT INTO admin_flows VALUES (?, ?, ?, ?, ?)').run(hash(state), hash(browser), verifier, nonce, now() + MINUTES10);
+      const target = url.searchParams.get('returnTo') || '';
+      const returnHash = RETURN_HASHES.some((pattern) => pattern.test(target)) ? target : '';
+      sql('INSERT INTO admin_flows (state, browser, verifier, nonce, expires, return_hash, previous_session) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        .run(hash(state), hash(browser), verifier, nonce, now() + MINUTES10, returnHash, getSession(req)?.token || '');
       const auth = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       auth.search = new URLSearchParams({ client_id: googleClientId, redirect_uri: `${siteOrigin}${CALLBACK}`, response_type: 'code',
         scope: 'openid email', state, nonce, code_challenge: hash(verifier), code_challenge_method: 'S256', prompt: 'select_account' }).toString();

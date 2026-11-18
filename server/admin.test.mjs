@@ -5,10 +5,11 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'n
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
-import { after, afterEach, before, test } from 'node:test';
+import { DatabaseSync } from 'node:sqlite';
+import { after, afterEach, test } from 'node:test';
 import vm from 'node:vm';
 import { gallery, fromEnv, modFacts } from './gallery.mjs';
-import { adminFileType } from './gallery-admin.mjs';
+import { adminFileType, galleryAdmin } from './gallery-admin.mjs';
 import { checkCode, describe, glaze } from '../scripts/looks.mjs';
 
 const ORIGIN = 'https://frostdev.io', ROOT = '/hq', CALLBACK = '/glaze/admin/callback';
@@ -41,14 +42,18 @@ const google = http.createServer((req, res) => {
       iat: clock / 1000, nonce: expected.nonce, email: EMAIL, email_verified: true, ...expected.claims }) }));
   });
 });
-before(async () => { await new Promise((r) => google.listen(0, '127.0.0.1', r)); googleBase = `http://127.0.0.1:${google.address().port}`; });
+let googleReady;
+const startGoogle = () => (googleReady ||= new Promise((resolve, reject) => {
+  google.once('error', reject);
+  google.listen(0, '127.0.0.1', () => { googleBase = `http://127.0.0.1:${google.address().port}`; resolve(); });
+}));
 after(() => { google.closeAllConnections(); google.close(); rmSync(tmp, { recursive: true, force: true }); });
 afterEach(async () => { await g?.close(); g = null; });
 const options = (over = {}) => ({ db: path.join(dir, 'gallery.db'), now: () => clock, ipHeader: 'x-real-ip',
   googleClientId: CLIENT, googleClientSecret: SECRET, adminEmails: ` ${EMAIL.toUpperCase()},second@example.edu `,
   googleFetch: (url, init) => { assert.equal(url, 'https://oauth2.googleapis.com/token'); assert.equal(init.redirect, 'error'); return fetch(`${googleBase}/token`, init); }, ...over });
 const open = async (over) => { g = gallery(options(over)); const a = await g.listen(0, '127.0.0.1'); base = `http://127.0.0.1:${a.port}`; };
-const start = async (over) => { dir = mkdtempSync(path.join(tmp, 'g-')); clock = Date.parse('2026-10-17T12:00:00Z'); codes.clear(); exchanges.length = 0; await open(over); };
+const start = async (over) => { await startGoogle(); dir = mkdtempSync(path.join(tmp, 'g-')); clock = Date.parse('2026-10-17T12:00:00Z'); codes.clear(); exchanges.length = 0; await open(over); };
 const at = (p, { cookie, method = 'GET', origin, csrf, body, headers = {} } = {}) => fetch(`${base}${p}`, {
   method, redirect: 'manual', headers: { ...(cookie && { cookie }), ...(origin !== undefined && { origin }), ...(csrf !== undefined && { 'x-csrf-token': csrf }),
     ...(body !== undefined && { 'content-type': 'application/json' }), ...headers }, ...(body !== undefined && { body: typeof body === 'string' ? body : JSON.stringify(body) }),
@@ -176,10 +181,45 @@ test('the sign-in page lets browsers send their Origin and follow the redirect t
   const html = await page.text();
   assert.match(html, /href="\/hq\/style\.css"/);
   assert.match(html, /<form method="post" action="\/hq\/login">/);
-  assert.doesNotMatch(html, /<script|<style|\sstyle=|\sonclick=/i);
+  assert.match(html, /<script src="\/hq\/login\.js" defer><\/script>/);
+  assert.doesNotMatch(html, /<script(?! src=)|<style|\sstyle=|\sonclick=/i);
   const css = await request('/style.css');
   assert.equal(css.status, 200);
   assert.match(css.headers.get('content-type'), /^text\/css/);
+});
+
+test('sign-in preserves a review link and rotates the prior HQ session without sending it to the callback', async (t) => {
+  const db = new DatabaseSync(':memory:');
+  t.after(() => db.close());
+  db.exec('CREATE TABLE admin_flows (state TEXT PRIMARY KEY, browser TEXT NOT NULL, verifier TEXT NOT NULL, nonce TEXT NOT NULL, expires INTEGER NOT NULL)');
+  const now = Date.parse('2026-10-17T12:00:00Z');
+  let nonce;
+  const admin = galleryAdmin({ db, siteOrigin: ORIGIN, now: () => now, clientKey: () => 'client', googleClientId: CLIENT,
+    googleClientSecret: SECRET, adminEmails: EMAIL, googleFetch: async () => Response.json({ id_token: token({
+      iss: 'https://accounts.google.com', aud: CLIENT, sub: '1234', exp: now / 1000 + 600, iat: now / 1000, nonce, email: EMAIL, email_verified: true,
+    }) }) });
+  const call = async (route, method = 'GET', headers = {}) => {
+    const response = { headers: {}, setHeader(k, v) { this.headers[k] = v; }, writeHead(status, h) { this.status = status; Object.assign(this.headers, h); }, end(body) { this.body = body; } };
+    await admin.handle({ method, headers }, response, new URL(route, ORIGIN));
+    return response;
+  };
+  const old = 'o'.repeat(43);
+  db.prepare('INSERT INTO admin_sessions VALUES (?, ?, ?, ?)').run(sha(old), EMAIL, 'csrf', now + 600e3);
+  const hash = '#looks/c-0000000001';
+  const script = await call('/hq/login.js');
+  const event = { currentTarget: {} };
+  vm.runInNewContext(script.body, { URLSearchParams, location: { hash }, document: { querySelector: () => ({ addEventListener: (_, fn) => fn(event) }) } });
+  const start = await call(event.currentTarget.action, 'POST', { origin: ORIGIN, cookie: `__Secure-fd_hq=${old}` });
+  assert.equal(start.status, 303);
+  const params = new URL(start.headers.location).searchParams;
+  nonce = params.get('nonce');
+  const callback = await call(`${CALLBACK}?state=${params.get('state')}&code=new`, 'GET', { cookie: start.headers['set-cookie'].split(';')[0] });
+  assert.equal(callback.status, 303);
+  assert.equal(callback.headers.location, `${ROOT}${hash}`);
+  assert.match(callback.headers['set-cookie'][0], /Path=\/glaze\/admin\/callback; Max-Age=0/);
+  assert.match(callback.headers['set-cookie'][1], /Path=\/hq; Max-Age=43200/);
+  assert.equal((await call('/hq', 'GET', { cookie: `__Secure-fd_hq=${old}` })).headers.location, '/hq/login');
+  assert.equal((await call('/hq', 'GET', { cookie: callback.headers['set-cookie'][1].split(';')[0] })).status, 200);
 });
 
 test('login starts require the site Origin and are limited per trusted client network, including IPv6 /64', async () => {
@@ -199,7 +239,7 @@ test('statistics files and the gallery numbers are private, read only by name fr
   const stats = mkdtempSync(path.join(tmp, 'stats-'));
   writeFileSync(path.join(stats, 'kiln.json'), JSON.stringify({ days: [{ day: '2026-11-17' }], rows: [], note: HOSTILE }));
   writeFileSync(path.join(stats, 'secret.json'), '{"no":1}');
-  await start({ statsDir: stats, reviewsPerDay: 300, modReviewsPerDay: 40, mailUrl: '' });
+  await start({ statsDir: stats, reviewsPerDay: 300, modReviewsPerDay: 40, mailUrl: 'smtp://mail.invalid' });
   for (const p of ['/api/stats/kiln', '/api/glaze']) assert.equal((await request(p)).status, 401, p);
   const who = await login();
   const kiln = await request('/api/stats/kiln', who);
@@ -208,14 +248,19 @@ test('statistics files and the gallery numbers are private, read only by name fr
   assert.equal((await kiln.json()).note, HOSTILE, 'the file is passed on as it is, not encoded twice');
   for (const name of ['secret', 'site', '..%2Fsecret', '../secret', 'KILN']) assert.equal((await request(`/api/stats/${name}`, who)).status, 404, name);
   seedLook('pending'); seedLook('published'); seedLook('published', { created: new Date(clock - 40 * 86400e3).toISOString() });
+  seedLook('published', { created: '2026-09-17' });
   g.db.prepare("INSERT INTO rejected VALUES ('Nope', 'x', ?, ?)").run(JSON.stringify({ first: { cost: 0.5 }, escalation: { cost: 0.25 } }), '2026-10-17');
-  await seedMod('published', { decision: JSON.stringify({ review: { cost: 1 } }) });
+  g.db.prepare("INSERT INTO rejected VALUES ('Old', 'x', ?, ?)").run(JSON.stringify({ first: { cost: 1 } }), '2026-09-17');
+  const mod = await seedMod('published', { decision: JSON.stringify({ review: { cost: 1 } }) });
   g.db.prepare("INSERT INTO quota VALUES ('all', '', '2026-10-17', 7)").run();
   const n = await (await request('/api/glaze', who)).json();
-  assert.deepEqual(n.looks, { pending: 1, published: 2 }); assert.deepEqual(n.mods, { published: 1 }); assert.equal(n.modsLive, 1);
+  assert.deepEqual(n.looks, { pending: 1, published: 3 }); assert.deepEqual(n.mods, { published: 1 }); assert.equal(n.modsLive, 1);
+  assert.equal(n.days['2026-09-17'], undefined);
   assert.equal(n.curated, readdirSync('src/data/looks').filter((f) => f.endsWith('.json')).length);
   assert.deepEqual(n.days['2026-10-17'], { looks: { pending: 1, published: 1, declined: 1 }, mods: { published: 1 } }, 'the 40-day-old Look is left out');
   assert.equal(n.spent30, 1.75); assert.equal(n.mail, false); assert.equal(n.limits, true);
+  g.db.prepare("INSERT INTO meta (k, v) VALUES ('blocklist', ?)").run(Buffer.from(JSON.stringify({ list: { seq: 1, mods: [mod.id], bundles: [], authors: [] } })));
+  assert.equal((await (await request('/api/glaze', who)).json()).modsLive, 0);
   assert.deepEqual(n.reviewsToday, { looks: 7, looksLimit: 300, mods: 0, modsLimit: 40 });
   assert.ok(!JSON.stringify(n).includes('private-submitter-token'));
   await g.close(); g = null;
@@ -482,6 +527,71 @@ test('browser UI keeps hostile names and reviews in text sinks, separates mods a
   assert.equal(posts[0].init.headers['x-csrf-token'], 'session-csrf'); assert.equal(posts[0].init.method, 'POST'); assert.deepEqual(JSON.parse(posts[0].init.body), { reason: HOSTILE });
 });
 
+test('HQ handles a malformed bookmark, opens old Look links, and reports failed sign-out', async () => {
+  const nodes = new Map(), events = {}, routes = [], assigned = [];
+  const node = () => ({ events: {}, classList: { remove() {} }, addEventListener(type, fn) { this.events[type] = fn; },
+    replaceChildren() {}, setAttribute() {}, removeAttribute() {} });
+  const getNode = (id) => { if (!nodes.has(id)) nodes.set(id, node()); return nodes.get(id); };
+  const location = { hash: '#%xx', assign: (path) => assigned.push(path) };
+  let logout = 403;
+  const context = vm.createContext({
+    document: { getElementById: getNode, querySelector: getNode, body: node() }, location,
+    history: { replaceState: (_, __, hash) => { location.hash = hash; } },
+    window: { addEventListener: (type, fn) => { events[type] = fn; } },
+    HQCharts: { el: node, fmt: String },
+    HQGallery: { start: async (ctx) => ctx.onData({ csrf: 'csrf', email: EMAIL, looks: [], mods: [] }), show: (r) => routes.push(r) },
+    fetch: async (url, init) => {
+      if (url !== '/hq/logout') return Response.json({ error: 'Not collected' }, { status: 404 });
+      assert.equal(init.headers['x-csrf-token'], 'csrf');
+      return Response.json(logout === 200 ? { ok: true } : { error: 'Request refused.' }, { status: logout });
+    }, setInterval() {}, setTimeout() {}, clearTimeout() {},
+  });
+  vm.runInContext(readFileSync('server/admin/app.js', 'utf8'), context);
+  await events.hashchange();
+  assert.match(context.document.title, /^Overview/);
+  location.hash = '#looks/c-1234567890';
+  await events.hashchange();
+  assert.equal(routes.at(-1).id, 'c-1234567890');
+  assert.equal(location.hash, '#glaze/looks/all/c-1234567890');
+  await getNode('logout').events.click();
+  assert.equal(getNode('message').textContent, 'Request refused.');
+  assert.equal(getNode('logout').disabled, false);
+  assert.deepEqual(assigned, []);
+  logout = 200;
+  await getNode('logout').events.click();
+  assert.deepEqual(assigned, ['/hq/login']);
+});
+
+test('refreshing an explorer keeps its filters and display mode and disconnects the old chart observer', () => {
+  const node = (tag) => ({ tag, children: [], events: {}, attrs: {}, style: {}, clientWidth: 800,
+    append(...children) { this.children.push(...children); }, replaceChildren(...children) { this.children = children; },
+    addEventListener(type, listener) { this.events[type] = listener; }, setAttribute(key, value) { this.attrs[key] = value; } });
+  let disconnected = 0;
+  const context = vm.createContext({ document: { createElement: node, createElementNS: (_, tag) => node(tag) },
+    ResizeObserver: class { observe() {} disconnect() { disconnected++; } } });
+  vm.runInContext(readFileSync('server/admin/charts.js', 'utf8'), context);
+  const find = (elm, predicate) => predicate(elm) ? elm : elm.children?.map((child) => find(child, predicate)).find(Boolean);
+  const host = node('main'), config = {
+    data: { days: Array.from({ length: 8 }, (_, i) => ({ day: `2026-10-0${i + 1}`, final: true })), generated: '2026-10-09T00:00:00Z',
+      countries: ['US'], clients: ['browser'], rows: [[7, 0, 0, 0, 0, 0, 2]] },
+    kinds: [{ id: 'people', name: 'People', clients: ['browser'] }], defaultKinds: ['people'],
+    selects: [{ id: 'group', label: 'Files', options: [['', 'All'], ['sdk', 'SDK']], test: () => true }],
+    item: { title: 'Files', head: 'File', of: () => ({ key: 0, name: 'SDK' }) }, tables: [],
+  };
+  const before = context.HQCharts.Explorer(host, config);
+  find(host, (elm) => elm.textContent === '7 days').events.click();
+  const select = find(host, (elm) => elm.tag === 'select');
+  select.value = 'sdk'; select.events.change();
+  find(host, (elm) => elm.textContent === 'Show as table').events.click();
+  before.destroy();
+  const after = context.HQCharts.Explorer(host, config, before.state);
+  assert.equal(disconnected, 1);
+  assert.equal(find(host, (elm) => elm.textContent === '7 days').attrs['aria-pressed'], 'true');
+  assert.equal(find(host, (elm) => elm.tag === 'select').value, 'sdk');
+  assert.ok(find(host, (elm) => elm.textContent === 'Show as chart'));
+  after.destroy();
+});
+
 test('byte sniffing permits only the explicit media formats; renamed active documents remain text', () => {
   const webp = Buffer.alloc(20); webp.write('RIFF'); webp.writeUInt32LE(12, 4); webp.write('WEBP', 8);
   const avif = Buffer.alloc(24); avif.writeUInt32BE(24); avif.write('ftypavif', 4);
@@ -550,5 +660,5 @@ test('highlighter renders hostile HTML, closing script tags and bidi as inert te
       else assert.equal(child.nodeType, 3);
     }
   }
-  for (const file of ['server/admin/app.js', 'server/admin/viewer.js']) assert.doesNotMatch(readFileSync(file, 'utf8'), /innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function\(|\.srcdoc/);
+  for (const file of ['app.js', 'charts.js', 'gallery.js', 'viewer.js']) assert.doesNotMatch(readFileSync(`server/admin/${file}`, 'utf8'), /innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function\(|\.srcdoc/);
 });
