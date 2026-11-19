@@ -1,19 +1,21 @@
 ---
 title: "Production stations and bases"
 nav: "Stations and bases"
-description: "Let a mod run a base's kilns, smelters and looms: fill them from the Magic chests, stop and start them, pick their recipe, collect what they made, and watch them."
+description: "Let a mod run a base's kilns, smelters and looms: fill them from the Magic chests, stop and start them, pick their recipe, collect what they made, lend their finished items to fills and crafts, and watch them."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 New in 0.2.0-dev.29.14 (mod API 0.2.6). A mod can keep a base's production stations going the way a player does with
 the station's own buttons: kilns, smelters, looms, grinders, seed beds, every station that crafts by itself.
 
 **For players:** nothing changes until a mod asks. A mod fills a station from your base's **Magic chests**, the same
-chests and the same rule as the game's "fill from chests" button. **Ordinary chests are never touched.** Stopping "now"
-works like the game's stop button (the running craft starts over, its materials go back into the station); "after the
-current craft" loses nothing. A Magic chest you set to not take deposits at the quick-stack station never receives a
-station's output.
+chests and the same rule as the game's "fill from chests" button. **Ordinary chests are never touched** unless a mod
+names them on a fill (since 0.2.0-dev.29.17). Stopping "now" works like the game's stop button (the running craft
+starts over, its materials go back into the station); "after the current craft" loses nothing. A Magic chest you set to
+not take deposits at the quick-stack station never receives a station's output. Since 0.2.0-dev.29.17 a mod can also
+let a station lend its finished items to its base: the charcoal still in a kiln can fill the forge next to it and pay
+for your crafts ([below](#station-outputs-as-stock)).
 
 ## In your project
 
@@ -91,7 +93,7 @@ if (!r.Ok) Log.Info($"fill: {r.Status} {r.Message}");
 
 | Action | What |
 |---|---|
-| `Fill` | the game's own "fill from chests": up to (`UpTo`) or `Add` N crafts, with reserves (`Keep`), all or nothing (`Exact`), a `DryRun`, water from the base's sources; never from a player's bag unless `Player` names one |
+| `Fill` | the game's own "fill from chests": up to (`UpTo`) or `Add` N crafts, with reserves (`Keep`), all or nothing (`Exact`), a `DryRun`, water from the base's sources; never from a player's bag unless `Player` names one. Since 0.2.0-dev.29.17 also from up to 64 ordinary chests of the base that `Chests` names, after the Magic chests, and from [station outputs](#station-outputs-as-stock) |
 | `Stop` | `Now` (the stop button: the running craft starts over) or `AfterCurrentCraft` (nothing lost; a later `Resume`, `Select` or `Stop` withdraws it; not saved over a restart) |
 | `Resume` | clears the stop |
 | `Select` | the recipe the station repeats; refused (`Locked`) when no player on the server has unlocked it, unless `allowLocked` |
@@ -103,6 +105,42 @@ Each action runs in the game's own transaction and answers one step later with a
 Players and the game act while you await: read the station again afterwards.
 
 The stop flag is the game's own and has no owner: players see the station stopped and can start it again.
+
+## Station outputs as stock
+
+New in 0.2.0-dev.29.17 (mod API 0.2.9, GitHub #68, proposed by bisdat). A station can lend its finished items to its
+own base: the charcoal still in a kiln fills the forge next to it.
+
+```csharp
+Stations.SetOutputSource(charcoalKiln);                         // opt in; kept with the save
+bool lends = Stations.IsOutputSource(charcoalKiln);
+IReadOnlyList<EntityId> lenders = Stations.OutputSources(home.Id);
+StationResult r = await Stations.Fill(forge, new FillOptions { Crafts = 5 });
+Log.Info($"{r.FromOutputs} item(s) came from station outputs");
+await Stations.Fill(forge, new FillOptions { Crafts = 5, UseStationOutputs = false });   // the game's sources only
+await Stations.Fill(forge, new FillOptions { Crafts = 5, Chests = [woodChest] });        // an ordinary chest too
+```
+
+- **Opt-in per station.** Nothing lends by default; a base with no station opted in fills exactly as the game does.
+- **Last.** A fill takes from the player's bag (when it names one), then the Magic chests, then the ordinary chests it
+  names, and from opted-in stations only what those can't cover. All or nothing, inside the game's own transaction.
+- **Only finished items**, and only to its own base: never a station's queued inputs (a kiln's logs stay), its
+  leftovers, or an output that is also an input of its recipe.
+- **A player's craft** at any crafting menu uses the same opt-in, after the bag and the Magic chests, with the game's own
+  base and permission checks. A Kiln player's crafting menu counts the outputs it may use; a player without Kiln sees
+  the game's normal counts and can still craft what the bag and chests cover.
+- **The station screen's fill button** still needs the bag and the Magic chests to cover a fill before it lights up:
+  station outputs serve `Stations.Fill` (a command, a Kiln menu) and crafts.
+- An opt-in is kept beside the save with the mod that set it, and comes back after a restart while that mod is loaded.
+  Touch `Stations` in `OnLoad` (an event subscription will do) so it starts in time.
+
+Rows `stations.output_sources`, `stations.craft_sources` (server) and `stations.craft_ui` (a Kiln client's counts).
+`Stations.Collect` and `Stations.CollectToBase` behave as before.
+
+**Native plugins** (`kiln_stations.h`, 0.2.0-dev.29.17): `base_stock_with_stations`, a native `collect` into the base's
+Magic chests, named chests on a fill request (the new request is 104 bytes; the old 88 still works),
+`set_output_source` and `output_sources` (per session), and the fill flag `KILN_STATION_FILL_NO_OUTPUTS`. Permission
+checks and display names stay managed only for now.
 
 ## Events
 
@@ -136,7 +174,10 @@ chests, stop now and resume, stop after the current craft, collect into a Magic 
 a player's stop press cancelled by a mod, ordinary chests never used, and a Magic chest switched off for deposits left
 out. Dedicated-server lab checks cover water stations, reserves, exact fills and restarts. Not yet seen in a real game:
 a dedicated server with joined players, water stations other than the seedling bed, and recipes with ingredient
-categories. The 29.15 names and panels are not yet seen in a real game.
+categories. The 29.15 names and panels are not yet seen in a real game. 0.2.0-dev.29.17's station outputs and named chests ran
+in lab checks on a dedicated server (fills and a character's craft paid partly from a kiln's charcoal while its queued
+logs stay); a Kiln player's crafting counts from station outputs, and a craft paid from them in a hosted game, are not
+yet seen in a real game.
 
 The full guide is in Kiln's repository, `docs/kiln/services/stations.md`, on
 [GitHub](https://github.com/frostdev-ops/kiln).

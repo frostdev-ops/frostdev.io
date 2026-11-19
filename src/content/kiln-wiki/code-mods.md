@@ -2,7 +2,7 @@
 title: "Code mods"
 description: "The Mod class, the tick thread, events, configs, commands, permissions, saved data, other mods, what a call does when it cannot work, and what waits for a game test."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 ## The mod
@@ -143,7 +143,7 @@ Each part of the game is a service. List the ones you use in `KilnServices`:
 | Items, Spawn, World | inventories, spawning, positions, teleport |
 | Combat, Gameplay | health, damage, deaths; interactions, crafting, loot, zones |
 | Time, Settings, Saves | time, weather, world settings, saved data, backups |
-| Content | [data packs](/kiln/wiki/data-packs), [game data](/kiln/wiki/game-data) |
+| Content | [data packs](/kiln/wiki/data-packs), [game data](/kiln/wiki/game-data), [the game's own texts](/kiln/wiki/languages#the-games-own-texts) (29.18) |
 | Creatures, Abilities | [creatures](/kiln/wiki/creatures), [abilities](/kiln/wiki/abilities), [gems](/kiln/wiki/gems) |
 | Skills, Quests | [talents](/kiln/wiki/talents), [quests](/kiln/wiki/quests), [NPCs](/kiln/wiki/npcs) |
 | Build, Terrain, Queries | [world edits, terrain overlays and questions about the world](/kiln/wiki/world-edits) |

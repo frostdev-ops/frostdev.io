@@ -3,7 +3,7 @@ title: "Hooks and patches"
 nav: "Hooks"
 description: "The advanced tier: detours, mid hooks, memory patches and symbols on game code, from C# or a native plugin, through Kiln's one hook registry."
 status: "pending"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 > **Changed in 0.2.0-dev.21.** Every hook Kiln places on the game exe now goes through one registry, kiln.hooks v2.
@@ -143,7 +143,8 @@ Order on one function: `before`/`after` constraints first, then priority (higher
 ## Native plugins: kiln_hook.hpp
 
 A native plugin uses the C table in `native/core/abi/services/kiln_hooks.h`, or the header-only C++ client
-`native/core/abi/kiln_hook.hpp`:
+`native/core/abi/kiln_hook.hpp`. Since 0.2.0-dev.29.17 `kiln_hook.hpp` and the other C++ helpers ship in the SDK's
+`native/include`, with `kiln_playerstate.h` (holding or cancelling a player's station action):
 
 ```cpp
 #include "kiln_hook.hpp"
