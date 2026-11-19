@@ -2,7 +2,7 @@
 title: "Debugging"
 description: "Why a mod didn't load, the support report to send, the fault policy, crash reports, and breakpoints in a running server."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 ## Start with kiln.log
@@ -63,15 +63,21 @@ launcher's **Logs** page and the admin **Crashes** page.
 | a mod you extracted into the game folder doesn't run | that framework's drop-in switch is off for the profile. The list on the launcher's **Play** shows the mod, marked **Game folder**, with **Load them** or **Add it** ([Profiles and mods](/kiln/wiki/profiles#in-the-game-folder)) |
 | an EML mod you added is missing while EML's own `dbghelp.dll` is installed | the launcher copies it into `mods/` when it sets up the profile. Start once from the launcher's **Play** ([Your other loader is installed too](/kiln/wiki/other-mods#your-other-loader-is-installed-too)) |
 | an EML mod doesn't apply while a ShroudForge mod is on | ShroudForge runs an EML mod only when its own switch for it is on. The launcher and the in-game Mods menu say why it doesn't run, and suggest a switch where one helps ([EML and ShroudForge together](/kiln/wiki/eml-shroudforge#eml-and-shroudforge-together)) |
-| none of ShroudForge's data mods apply | one EML mod failed inside ShroudForge, and ShroudForge dropped its whole startup pass. The in-game Mods menu shows them as failed; the launcher's **Engines** view can still say they run |
+| one ShroudForge startup mod doesn't apply, and the launcher names it | it failed in ShroudForge's startup pass, often because another mod changed the same data. Since 0.2.0-dev.29.18 the ShroudForge that comes with Kiln starts the game with the others; before, none of them applied. Turn that mod off or look for the clash ([When one startup mod fails](/kiln/wiki/eml-shroudforge#when-one-startup-mod-fails)) |
 | the in-game Mods page is empty next to ReShade or another overlay | since dev.24 Kiln takes the graphics device over when the game makes its swapchain, if the PC has one graphics device. When it can't, kiln.log says why |
 | Steam shows the game as running for about a minute after you quit (Linux) | Steam's networking library crashes while the game shuts down, and the system writes a crash dump of several gigabytes. No Kiln or mod code is in that crash |
 | a `.rar` is refused | no unrar, 7-Zip or bsdtar on the PC. Extract it and drop the folder |
 | the game slows down for seconds at each autosave, on a hard drive | fixed in 0.2.0-dev.29 and 0.2.0-dev.29.3 (GitHub issue 39): Kiln's save data is no longer written when no mod data changed, and Kiln.Saves does its file work on its own thread. The game's write of the world waits for Kiln's file at most 6 seconds; on a slower drive it goes ahead and kiln.log says so, with how long each part of a save took. If it still happens, send a support report: its `tick-stats.jsonl` tells a slow session from a stall at save time |
+| the game stutters for about 2 seconds every few minutes while you host, on a hard drive | fixed in 0.2.0-dev.29.17: Kiln's EMF part wrote its status file on the world's own thread about once a minute, even with no EMF mods, and the spawn service did the same when a world was first saved. Both now write on a thread of their own. If Kiln's step still takes over 100 ms, kiln.log names the parts that took the time (`slow tick: …`) |
 | the loading screen freezes for seconds at start, on a hard drive | fixed in 0.2.0-dev.29.16: Kiln's check for other mod loaders no longer reads the Windows folder's DLLs and runs on its own thread, and the mods' files are read ahead. Not yet checked on a real hard drive |
 | the game or server closes at its start and names mods | Kiln stopped the start on purpose, so a world doesn't lose its mods' progress: [When Kiln stops the start](/kiln/wiki/dedicated-servers#when-kiln-stops-the-start). Don't restart; fix the mod list |
 | the game crashes at its start with a frame generation mod (NVIDIA Streamline) | fixed in 0.2.0-dev.29: with Streamline installed Kiln leaves its overlay's drawing off (mod windows, on-screen drawing and screen effects), while key bindings, menu entries and mod loading keep working. `KILN_UI_OVERLAY=1` tries the drawing anyway, `KILN_UI_OVERLAY=0` switches it off. Not yet tried on a PC with such a mod |
-| the overlay stays off after a crash at start | if the game closes while Kiln's overlay starts, the next start leaves its drawing off and kiln.log says why; after a minute without it, the next start tries once more. Since 0.2.0-dev.29.3, adding, removing or replacing a graphics wrapper (a frame generation mod) also allows one new try. Remove `kiln/state/overlay-start.guard`, or set `KILN_UI_OVERLAY=1`, to try again yourself |
+| the overlay stays off after a crash at start | if the game closes while Kiln's overlay starts, the next start leaves its drawing off and kiln.log says why; after a minute without it, the next start tries once more. Since 0.2.0-dev.29.3, adding, removing or replacing a graphics wrapper (a frame generation mod) also allows one new try. Since 0.2.0-dev.29.18 a game that closes in the overlay's first frames counts too; on Windows a quit then costs one start without the overlay ([details](/kiln/wiki/in-game#kilns-overlay-next-to-other-tools)). Remove `kiln/state/overlay-start.guard`, or set `KILN_UI_OVERLAY=1`, to try again yourself |
+| Kiln's menu is missing next to OptiScaler, or the game closes right after the main menu with OptiScaler's frame generation | since 0.2.0-dev.29.18 Kiln's overlay steps aside for OptiScaler's own menu and frame generation, and a failure of the overlay no longer ends the game. To have Kiln's overlay, turn OptiScaler's menu and frame generation off in `OptiScaler.ini` ([Kiln's overlay next to other tools](/kiln/wiki/in-game#kilns-overlay-next-to-other-tools)) |
+| one of Kiln's files is missing, or an install ends with "Access is denied" (Windows) | usually an antivirus. Since 0.2.0-dev.29.18 the Runtime page names the file and offers **Repair** ([Antivirus](/kiln/wiki/install#antivirus-windows)) |
+| the launcher's window stays empty or black (Linux) | [A black launcher window](/kiln/wiki/install#a-black-launcher-window). Since 0.2.0-dev.29.18 the launcher shows a message with what is left to try |
+| the launcher refuses a server's modpack: "the modpack lacks what the server requires" | update the Kiln launcher to 0.2.0-dev.29.18 or newer: since then a server names its ShroudForge (and other engines') mods by their Library entry, which an older launcher doesn't match ([Join a modded server](/kiln/wiki/modpacks#install-the-servers-modpack)) |
+| another mod's chat command gets "Unknown command" from Kiln | fixed in 0.2.0-dev.29.17: a `/` line that names no Kiln command goes to the game and other mods ([Other mods' slash commands](/kiln/wiki/in-game#other-mods-slash-commands)) |
 | one key press opens and closes a mod's window at once | fixed in 0.2.0-dev.29.3 for a focus change while the key is held. If it still happens, kiln.log has a line `ui: key … went down again … ms after its last press`; send it |
 | a mod's settings page says its file couldn't be saved | a read-only folder or a full disk. Since 0.2.0-dev.29 the page says so until a later save works |
 
@@ -83,7 +89,8 @@ and what the last start did. If you help someone, ask them to send that zip.
 
 - **Launcher:** the **Logs** page, **Support report** above the tabs, then **Save report**. It asks where to put
   `kiln-report-<date>.zip`. **Copy summary** copies a few lines for a forum post. It works with no game found yet, and on
-  a server's Logs page.
+  a server's Logs page. Since 0.2.0-dev.29.18 **Send to Kiln support** there posts it for you in #support on the Kiln
+  Discord, after showing exactly what goes ([Kiln's Discord in the launcher](/kiln/wiki/install#kilns-discord-in-the-launcher)).
 - **Servers and manual installs:** `kilnctl report [NAME] [--dir D] [--out FILE] [--print]`. `NAME` is a server
   instance, `--dir` a server or game folder. With neither it uses the game Steam knows. `--print` writes the summary to
   the terminal instead of a zip.
@@ -97,7 +104,9 @@ It only reads. Nothing is written to the game folder, and the game may be runnin
 - the end of `kiln.log`, `proxy.log` and `eml.log`, and the newest crash report;
 - since 0.2.0-dev.29, the end of `kiln/logs/tick-stats.jsonl`: Kiln's step times per minute and world, so a slow session
   can be told apart from a stall at save time. It says how long the game's own wait for its world jobs, each Kiln
-  service or plugin and the slowest subscribers took, with a breakdown of each minute's worst step;
+  service or plugin and the slowest subscribers took, with a breakdown of each minute's worst step. Since
+  0.2.0-dev.29.17 `kilnctl tick-compare BEFORE AFTER [--json]` compares two such files: per-world step time, steps over
+  budget, and each mod's share (GitHub #57);
 - since 0.2.0-dev.29.8, `kiln/state/hooks.json` has a `codePatches` list: each place where the game's code in memory
   differs from the game file, which module changed it, and for a redirected call what it called before. It finds two
   mods that change the same spot;
@@ -106,12 +115,18 @@ It only reads. Nothing is written to the game folder, and the game may be runnin
 - Kiln's state files, and `profile.json`, `chain.ini` and `kiln.json` as they are, after the removals below;
 - the launcher's log, which since 0.2.0-dev.29.10 lists what each add to the Library took and each file it left out, with
   the reason;
-- lists of the game folder, Kiln's folder and each framework's mods folder: names, sizes and dates only.
+- lists of the game folder, Kiln's folder and each framework's mods folder: names, sizes and dates only;
+- since 0.2.0-dev.29.18, XHL-Core's own log (`XHL-Native-Plugin-Host.log`) when XHL-Core is installed, `OptiScaler.ini`
+  (and OptiScaler's log when it writes one) when OptiScaler is in the game folder, and on Linux a `WebKit sandbox:` line.
+  `report.json` has a `versions` object for tools (Kiln, the launcher, the system, the Proton or Wine build or Windows,
+  the game's build, how many mods are on, a Steam Deck); it names no mod.
 
 The report calls `steam_api64.dll` in the game folder Steam's own Steamworks DLL (since 0.2.0-dev.29.12; before, "an
 unknown DLL"), lists an EML mod that is on but could not be applied as "on, not applied" with the reason (since
 0.2.0-dev.29.8; before, "off"), and says what doesn't run of a mod that only partly runs under Kiln (since
-0.2.0-dev.29.16).
+0.2.0-dev.29.16). Since 0.2.0-dev.29.18 it says when one of Kiln's files is missing from the game folder or an
+antivirus blocked an install (also after the launcher was closed), names a ShroudForge startup mod that failed with its
+error, and counts ShroudForge's own errors and warnings.
 
 The zip is usually under 1 MiB, and cut at 6 MiB before compression.
 

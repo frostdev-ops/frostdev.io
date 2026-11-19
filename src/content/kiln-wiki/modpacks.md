@@ -3,7 +3,7 @@ title: "Join a modded server"
 nav: "Join a modded server"
 description: "What a modded server needs from your game, and how the launcher installs its modpack with your consent."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 ## What a server needs from you
@@ -66,6 +66,19 @@ Press **Launch** and join again. Nothing downloads until you agree. Dismiss the 
 offered again.
 
 This flow has run in a real game, on a server with `modSync` set to `refuse`.
+
+**ShroudForge mods and other engines' mods keep one hash** (0.2.0-dev.29.18). A server used to tell joining players a
+hash of such a mod's whole folder, with its settings and the files the mod writes there, so it changed every minute: the
+launcher never found the mod in a player's Library, and a modpack built from the server stopped matching a minute
+later. A server now names Kiln's copy of a mod by its Library entry, and its modpack still carries the mods with the
+owner's settings.
+
+- **Players:** if the launcher refuses a server's modpack with "the modpack lacks what the server requires", update the
+  Kiln launcher to 0.2.0-dev.29.18 or newer. If it is up to date, ask the server's owner to build the modpack again; the
+  message says so too.
+- **Server owners:** your modpack doesn't need building again for this update, but players need the updated launcher.
+
+Joining a server never checked these mods, and still doesn't. Not yet seen in a real game.
 
 ## Leaving a server
 
