@@ -39,7 +39,7 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
     <p>These features are in the Kiln Launcher from version 0.2.0-dev.29.18. They are optional. The Community page can be hidden in the launcher's settings, and then the launcher makes no request for any of them. With the page shown but you signed out, the only thing the launcher fetches is public: when you open the page, it downloads frostdev.io's news and a list of known problems.</p>
 
     <p><strong>Sign in with Discord.</strong> The sign-in goes through frostdev.io. You approve it on Discord's own page. On a Steam Deck you scan a code with your phone, sign in there, and then also press Approve on a frostdev.io page that shows the code from your Deck. The launcher and frostdev.io's service then learn your Discord user ID, username, display name and avatar. If you leave the box ticked, the sign-in also adds you to the Kiln Discord server. We don't receive your email address, your password or your messages, and we keep no Discord sign-in key, on your computer or on frostdev.io. On a Steam Deck with the box ticked, frostdev.io holds Discord's sign-in key in memory only, never on disk, until you press Approve (at most 10 minutes). It uses it once to add you to the server and then cancels it.</p>
-    <p>The launcher's sign-in is a key kept on your own computer. frostdev.io keeps only a fingerprint of it, so it can tell it is yours. Signing out removes both, and a sign-in you don't use ends after 90 days. A Steam Deck sign-in code lasts 10 minutes and works once. For those 10 minutes frostdev.io keeps a scrambled form of the network address the code came from, so it can warn you when the code came from another network than your phone.</p>
+    <p>The launcher's sign-in is a key kept on your own computer. frostdev.io keeps only a fingerprint of it, so it can tell it is yours. Signing out removes the key from your computer and asks frostdev.io to remove the fingerprint. If frostdev.io can't be reached at that moment, the launcher says so, and the fingerprint stays until it has gone 90 days unused. A sign-in you don't use ends after 90 days. A Steam Deck sign-in code lasts 10 minutes and works once. For those 10 minutes frostdev.io keeps a scrambled form of the network address the code came from, so it can warn you when the code came from another network than your phone.</p>
 
     <p><strong>Sending a report to Kiln support.</strong> A report is sent only when you press Send, after a screen has shown what will go:</p>
     <ul>
@@ -56,7 +56,7 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
       <li>Your posts: title, state, number of replies, and who replied last and when. Until you delete the post, or for 90 days after it is solved or closed.</li>
       <li>Steam Deck sign-in codes: for 10 minutes.</li>
       <li>Counters that limit how often reports can be sent: for a day.</li>
-      <li>If you volunteer as a tester: your hardware details and the test builds you sent results for, until you stop testing.</li>
+      <li>If you volunteer as a tester: your hardware details, what it can test, and the test builds you sent results for, until you stop testing.</li>
     </ul>
     <p>It keeps no log of requests, no Discord sign-in keys and no report files. "Sign out and forget me" deletes all of it at once.</p>
 
@@ -64,7 +64,9 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
 
     <p><strong>Replies.</strong> While you are signed in and the Community page is shown, the launcher asks that service every few minutes whether your posts have new replies, so it can show a notice. A system notification is off until you turn it on. The service learns who replied and when, not what was written. The conversation itself stays in Discord.</p>
 
-    <p><strong>Testing Kiln.</strong> If you volunteer as a tester, the launcher first shows you what it would share: your graphics card, its driver, the video memory, your operating system and how the game runs (Windows, or Proton on Linux). When you confirm, these go to the Kiln team and you get the Tester role in the server. Results you send for a test build are added to that build's post in the testers' channel, which testers and the Kiln team can read. A report file you attach goes to the Kiln team only. "Stop testing" removes the role and your hardware details.</p>
+    <p><strong>Testing Kiln.</strong> If you volunteer as a tester, the launcher first shows you what it would share: your graphics card, its driver, the video memory, your operating system, how the game runs (Windows, or Proton or Wine on Linux) and which of Kiln's graphics features your hardware can test (for example FSR 4). When you confirm, these go to the Kiln team and you get the Tester role in the server. Results you send for a test build are added to that build's post in the testers' channel, which testers and the Kiln team can read. A report file you attach goes to the Kiln team only. "Stop testing" removes the role and your hardware details.</p>
+
+    <p><strong>The launcher's own log.</strong> When you sign in, send a report, volunteer or send test results, the launcher writes one line about it to its own log file on your computer. The line has no names, IDs or keys. That log is part of the report file when you send one.</p>
 
     <p><strong>Showing Kiln on your profile.</strong> This is off until you turn it on. The launcher then tells the Discord app on your own computer that you are playing Enshrouded with Kiln, how many mods are on, and for how long. Discord shows that on your profile. It never includes a server name, a world name, a character name or the names of your mods, and nothing is sent to Frostdev for it.</p>
 
