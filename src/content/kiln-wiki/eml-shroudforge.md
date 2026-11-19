@@ -3,7 +3,7 @@ title: "EML and ShroudForge mods"
 nav: "EML and ShroudForge"
 description: "Kiln runs EML data mods and ShroudForge's Lua mods unchanged, with no extra loader and no Wine settings."
 status: "pending"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 EML (the Enshrouded Mod Loader) and ShroudForge are the frameworks with the most Enshrouded mods. Both come with Kiln
@@ -50,6 +50,10 @@ How it behaves:
   only "the EML run failed (Failed to create AppState)".
 - **Kiln asset packs win.** If a Kiln mod's assets and an EML mod change the same game resource, the Kiln mod's
   version is the one you see.
+- **A Kiln mod in EML's `mods` folder says so** (0.2.0-dev.29.18). A Kiln mod's folder or zip there, or one unzipped
+  loose, used to be listed as "skipped: no mod.json (not an EML mod)". Now kiln.log warns that it is a Kiln mod and to
+  add its zip in the launcher (Library, Add mods; on a server, unzip it into `kiln/mods/<mod>/`). Other zips without a
+  `mod.json` say so too, instead of "specified file not found in archive".
 - **EML installed too.** When EML's own loader runs, Kiln stands aside: EML has already applied the mods. When EML's file
   is there but didn't start (Proton without its setting), Kiln runs the mods. Since dev.22 Kiln checks that the
   `dbghelp.dll` is really the loaded code. Without a DLL override under Proton it isn't, so Kiln runs the mods. That
@@ -173,7 +177,9 @@ installed ShroudForge.
 3. Start the game or the server through Kiln.
 
 `kiln/logs/kiln.log` names the runtime that runs (`ShroudForge runtime: bundled ...`) and shows ShroudForge's own log
-as `[sf] ...` lines. On Linux and the Steam Deck you need no Wine setting beyond Kiln's own.
+as `[sf] ...` lines. Since 0.2.0-dev.29.18 ShroudForge's own errors and warnings keep their level there, so the support
+report's counts and the launcher's log filters include them. On Linux and the Steam Deck you need no Wine setting
+beyond Kiln's own.
 
 **Shortcuts** of ShroudForge mods work with the ShroudForge that Kiln brings along since dev.24; you no longer need
 ShroudForge installed for them. This is what broke steering with W and S on the glider with ShroudForge's Unlimited
@@ -221,6 +227,36 @@ Deck. ShroudForge now keeps a record beside its backup (`enshrouded.kfc.prepared
 mods, the game build, the game's data files and the exported files are as the last start left them. Any change, or
 anything it can't check, applies them again, and so does another program replacing the game's data file. Its status
 file is also written every 3 seconds instead of about 1.5 times a second. Not yet checked in a real game.
+
+### When one startup mod fails
+
+New in 0.2.0-dev.29.18. ShroudForge writes its startup mods (the ones that change game data) into the game files in one
+pass before the game starts. When one of them failed there, for example because another mod had changed the same data,
+ShroudForge put the game data back and the game started with none of them. The ShroudForge that comes with Kiln now
+runs that pass once more without the mod that failed (and without mods that need it), so the others load.
+
+- kiln.log names the mod and its error. The launcher (**Engines** from the list on Play, the Deck's Home) and the
+  support report warn with its name and error, and suggest turning it off or checking for a clash with another mod.
+  From there you can also send it to Kiln support ([Kiln's Discord in the launcher](/kiln/wiki/install#kilns-discord-in-the-launcher)).
+- It tries again only once, and not for failures that are not one mod's (access denied, the game's files). When the
+  second pass fails too, the game starts without the startup mods, as before.
+
+Tested on a dedicated lab server with one and with two failing mods; not yet on a game client.
+
+### Settings changed in the game, in copy mode
+
+Since 0.2.0-dev.29.18 ShroudForge mod settings changed in the game's Kiln menu (MODS) apply on a Steam Deck with the
+game on an SD card. There the launcher often runs the game in copy path mode, and the menu changed a second copy of the
+mod's settings that ShroudForge never reads: the values looked saved, the game started with the old ones, and the next
+profile update put that copy back. The menu now changes the copy ShroudForge runs (its FOLDER line names
+`mods\<mod>`), and profile updates keep what you set. A copy an older Kiln changed that way is kept in `kiln/backups/`
+at the next profile update, and the launcher says so. On a Deck, change a ShroudForge mod's settings in the game's Kiln
+menu, or in the launcher's desktop screens with the game closed: Deck mode itself has only on, off and remove for mods
+so far. Thanks to ljam for the report and the photos. Not yet checked on a Deck.
+
+**A ShroudForge mod with a `native-plugin.ini`** (Unified Tweaks) is listed once, under ShroudForge, since
+0.2.0-dev.29.18; before, the Mods page also listed it under XHL as "Not loaded". While a ShroudForge mod that is also an
+XHL-Core plugin is off, Kiln keeps XHL-Core from loading it ([XHL mods](/kiln/wiki/other-mods#xhl-mods)).
 
 ### ShroudForge's own loader in the game folder
 
@@ -285,9 +321,9 @@ other. So Kiln lets only one write per start:
   for the other side, or a file ShroudForge refuses. They suggest a switch only where a switch helps. A folder you put
   in ShroudForge's mods folder yourself is never written. Values you set in ShroudForge for an EML mod are kept when the
   mod is switched off, removed, or Kiln is uninstalled.
-- **One failing EML mod stops the whole pass.** When one EML mod fails inside ShroudForge, ShroudForge drops its whole
-  startup pass and none of its data mods apply that start. The in-game Mods menu shows them as failed; the launcher's
-  **Engines** view can still say they run.
+- **One failing mod no longer stops the whole pass** (0.2.0-dev.29.18). The ShroudForge that comes with Kiln runs its
+  startup pass again without the mod that failed, and the launcher names it
+  ([When one startup mod fails](#when-one-startup-mod-fails)).
 - **An EML mod you put into the game's `mods` folder yourself** runs from your folder while ShroudForge runs the EML
   mods. The launcher says so, and when ShroudForge has it switched off, where to switch it on: Kiln's in-game menu,
   **Mods**, **ShroudForge**, or ShroudForge's own Modloader. Kiln doesn't write into folders you installed.
@@ -312,6 +348,7 @@ data mods as the server; Kiln's join check doesn't compare them yet. See
   folder under Proton without a DLL override on a Steam Deck. Both ran with stand-in loader DLLs under Wine.
 - An EML mod on a `/home -> /var/home` host (Fedora Atomic, Bazzite).
 - EML mods that add new items, checked in a player's game.
+- 0.2.0-dev.29.18's second startup pass on a game client, and ShroudForge mod settings on a Steam Deck in copy mode.
 
 ## dev.20 pairing with EMF
 

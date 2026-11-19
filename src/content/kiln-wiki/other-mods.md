@@ -3,7 +3,7 @@ title: "Mods for other frameworks"
 nav: "Other frameworks"
 description: "Kiln runs mods made for EML, ShroudForge, EMF, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink, unchanged, next to Kiln mods."
 status: "partial"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 Kiln loads mods made for other Enshrouded mod frameworks without rewriting them. It supplies the runtimes listed
@@ -48,8 +48,9 @@ a plain DLL. Since dev.22 mods are taken the way they are shared:
   package is not installed, and that is one note in the result ("not needed, Kiln runs EML mods"), not an error. The
   same goes for a mod whose zip carries its own loader (Find with Greeneye Loader's `dbgcore.dll`, Creative Mode with
   Flame's): since 0.2.0-dev.27 the result says the loader is not needed. A tool
-  that runs on its own next to Kiln (ReShade, a mod menu) is left out whole, with what to do: copy its files into the
-  Enshrouded folder yourself.
+  that runs on its own next to Kiln (ReShade, a mod menu, and since 0.2.0-dev.29.18 OptiScaler) is left out whole, with
+  what to do: copy its files into the Enshrouded folder yourself. Kiln recognises OptiScaler there, and its overlay
+  steps aside for it ([Kiln's overlay next to other tools](/kiln/wiki/in-game#kilns-overlay-next-to-other-tools)).
 - **Ids with capitals or spaces.** An EML mod called `HoardersHelper` used to be refused as "not a valid mod id". Now the
   mod's files stay as they are, and the Library lists it under an id made from its own: `hoardershelper`, with the
   mod's own id shown next to it. ShroudForge packages with upper-case ids import the same way. Kiln's own mod kinds,
@@ -72,6 +73,10 @@ a plain DLL. Since dev.22 mods are taken the way they are shared:
 - **Mods that ship a modified EML loader** (Put Away Your Weapon's holster hotkey) are marked **Only partly runs** since
   0.2.0-dev.29.16: Kiln runs their EML part, not the loader's own code
   ([details](/kiln/wiki/eml-shroudforge#eml-mods-with-a-modified-loader)).
+- **EMF's whole download** (0.2.0-dev.29.18): its Lua mods are added as EMF mods, beside its DLL mods, and EMF's own
+  files (its core and tools) are no longer added as DLL mods ([EMF mods](/kiln/wiki/emf-mods#install-a-mod)).
+- **One DLL in two forms** (0.2.0-dev.29.17). When a package carries a mod both as a Kiln native mod and as an `.asi`,
+  the launcher places only the Kiln native mod and says so ([Kiln DLL mods](#kiln-dll-mods)).
 
 More on the library: [Profiles and mods](/kiln/wiki/profiles#the-library). Mods you extracted into the game folder by hand
 are in the same list, marked **Game folder** ([In the game folder](/kiln/wiki/profiles#in-the-game-folder)).
@@ -208,8 +213,9 @@ mods in your [modpack](/kiln/wiki/modpacks).
   main menu with ShroudForge mods on, W and S steering with ShroudForge's Unlimited Flight, and SET's tools were seen.
   Everything else was tested on Linux hosts, under Wine without a display and on dedicated test servers.
   [What works today](/kiln/wiki/status#new-in-020-dev24) has the list.
-- **One failing EML mod inside ShroudForge** makes ShroudForge drop its whole startup pass: none of its data mods apply
-  that start. The in-game Mods menu shows them as failed; the launcher's **Engines** view can still say they run.
+- **One failing mod in ShroudForge's startup pass** no longer costs you the others since 0.2.0-dev.29.18: the
+  ShroudForge that comes with Kiln runs the pass once more without it, and the launcher names it
+  ([ShroudForge mods](/kiln/wiki/eml-shroudforge#when-one-startup-mod-fails)).
 - **A loader that was already running.** Enshwick's own loader may see a mod copied while it was running only from the
   next start.
 - **EMF.** Kiln serves EMF 0.6.14's API v46 (since 0.2.0-dev.29.12; v42 since dev.28), so mods built
@@ -266,6 +272,12 @@ One or more DLLs, with a small `native.json` naming them and when they load:
 Add them in the launcher (they are listed on Play, and **Native and DLLs**, next to **Load order**, groups them by
 load time), or drop them into `kiln/native/<folder>/`. One that crashes while loading is
 marked failed with a crash report, and the game carries on. DLL mods never unload, so changes need a restart.
+
+**One DLL for Kiln and for Ultimate ASI Loader** (0.2.0-dev.29.17). Kiln hands its API only to a DLL it loaded itself.
+A mod that should also run without Kiln ships a `native.json`, so Kiln loads it, and keeps its ASI entry for a PC where
+Kiln isn't installed; one of the two starts the mod. Kiln's docs on
+[GitHub](https://github.com/frostdev-ops/kiln) have the pattern, with a C example. When a package carries both forms of one mod, the launcher places only the Kiln
+native mod and says so.
 
 The official launcher has no Nexus Catalog, account sign-in or Mod Manager Download handler.
 [Download the archive in your browser and import it](/kiln/wiki/install#mods-from-nexus-mods), whatever framework it uses.
@@ -398,10 +410,21 @@ loads them, Kiln never runs them.
   back from. A new version whose DLL has another name starts with its own `native-plugin.ini`, and Kiln says where yours
   waits.
 - **A folder you put there yourself** stays when you switch the mod off (Kiln never removes a folder it didn't place),
-  and XHL-Core still loads it: the launcher says so, and how to stop it. The same goes for a ShroudForge mod that is an
-  XHL-Core plugin too (Building Tools for ShroudForge): ShroudForge has it off, but XHL-Core still loads it.
+  and XHL-Core still loads it: the launcher says so, and how to stop it.
+- **A ShroudForge mod that is an XHL-Core plugin too** (Building Tools for ShroudForge) no longer runs through XHL-Core
+  when it is off (0.2.0-dev.29.18). Before, Kiln switched it off for ShroudForge, but its folder stayed in the game's
+  `mods` folder and XHL-Core still loaded its DLL; without its ShroudForge side the game could crash at every start.
+  While such a mod is off, or not in the profile, Kiln renames its `native-plugin.ini` to `native-plugin.ini.kiln-off`,
+  so XHL-Core skips the folder, and renames it back when you switch the mod on. Its settings in that file stay, also
+  through an update of the mod. Kiln does this only in copies it placed itself, never in a folder you put there. Where
+  the game has XHL-Core, a note says once what Kiln renamed.
+- **A ShroudForge mod with a `native-plugin.ini`** (Unified Tweaks) is listed once, under ShroudForge, since
+  0.2.0-dev.29.18: ShroudForge's own DLL loader loads it. Before, the Mods page listed it under XHL too, as "Not loaded".
+  XHL-Core's own mods stay under XHL.
 - **Kiln's in-game Mods page** (0.2.0-dev.29.8) says that XHL-Core loads such a plugin itself and where XHL-Core's own
   log is (`XHL-Native-Plugin-Host.log`). The yellow "Requires XHL-Core" line shows only when XHL-Core did not start.
+  Since 0.2.0-dev.29.18 the support report includes that log, with your paths and names taken out: it shows which XHL
+  plugins XHL-Core loaded, skipped or refused.
 - **XHL-Core's line in the main menu.** Since 0.2.0-dev.29.11 Kiln's own line takes its place, XHL-Core's warnings there
   ("Game updated", "Mod conflict") included. Kiln setting **mainMenuFooter** (Mods page, Kiln settings) turns Kiln's line
   off and brings XHL-Core's back ([Kiln in the game](/kiln/wiki/in-game)).

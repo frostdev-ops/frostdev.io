@@ -1,11 +1,11 @@
 ---
 title: "What works today"
 description: "What Kiln does in the current build, what is on but not yet confirmed in a real game, what's being built and what isn't, as of November 2026."
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.29.16** (mod API 0.2.8), the current development release; check the download's version before using its new APIs.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.29.18** (mod API 0.2.10), the current development release; check the download's version before using its new APIs.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026, or, for dev.24 and later, in the one real game the release's notes name (Linux,
@@ -16,11 +16,12 @@ listed under [Open in the game](#open-in-the-game); some have had fixes since th
 
 ## New in the 0.2.0-dev.29 patches
 
-After 0.2.0-dev.29, Kiln shipped sixteen patches. Most fix how Kiln runs other loaders' mods; four bring a new SDK
-(29.11, 29.14, 29.15 and 29.16), each additive: no public member was removed or changed. **29.15 and 29.16 are not yet
-checked in a real game** except 29.15's chest gems at the Shroud Forge and 29.16's chat history (both by bisdat): they
-passed Kiln's tests and lab checks on a dedicated server, and what a game client draws was checked against the game's
-code or in Kiln's preview renderer.
+After 0.2.0-dev.29, Kiln shipped eighteen patches. Most fix how Kiln runs other loaders' mods; six bring a new SDK
+(29.11, 29.14, 29.15, 29.16, 29.17 and 29.18), each additive: no public member was removed or changed. **29.15 to 29.18
+are not yet checked in a real game** except 29.15's chest gems at the Shroud Forge and 29.16's chat history (both by
+bisdat), and with 29.17 a player without Kiln joining a Kiln server whose mods need nothing of players: they passed
+Kiln's tests and lab checks on a dedicated server, and what a game client draws was checked against the game's code or
+in Kiln's preview renderer.
 
 | Patch | What it brought; evidence |
 |---|---|
@@ -31,6 +32,9 @@ code or in Kiln's preview renderer.
 | 29.14 | [production stations and bases](/kiln/wiki/stations) (mod API 0.2.6): fill from Magic chests, stop, resume, select, collect, station events. Seen in a hosted world (Linux, Proton); a dedicated server with joined players not yet |
 | 29.15 | (mod API 0.2.7) [item icons and names](/kiln/wiki/game-ui#item-icons-and-names), panels at production stations, [chest gems at the Shroud Forge](/kiln/wiki/gems#chest-gems-in-the-forges-gems-list) (GitHub #61), [new kinds of boot patches](/kiln/wiki/onboot#lists-and-template-components); Expeditions finds survivors again (EMF). Chest gems seen in a real game (bisdat, a hosted world on Linux under Proton, with the mod Gem Forge Magic Storage): the rows in the forge's GEMS list, socket, unsocket, upgrade paid from Magic chests, a refusal with nothing lost, recycle, withdrawn offers; two players at once, stale rows, cross-base permissions and a dedicated server with a joined player not yet. Everything else: lab checks only |
 | 29.16 | (mod API 0.2.8) [the game's look for Kiln's menus](/kiln/wiki/in-game#the-look-of-kilns-menus) and [themes and fonts for mods](/kiln/wiki/ui-looks), [Kiln in your language](/kiln/wiki/languages), [chat history](/kiln/wiki/in-game#chat-history) by bisdat (tested in the game by bisdat), the launcher's icon on Linux taskbars, faster starts on hard drives, ShroudForge no longer rebuilding its asset mods at every start, Linux configs edited in the launcher kept. The rest is not yet seen in a real game |
+| 29.17 | (mod API 0.2.9) [custom game folders](/kiln/wiki/install#custom-game-folders), started without Steam; [station outputs as stock](/kiln/wiki/stations#station-outputs-as-stock) for fills and players' crafts (GitHub #68, proposed by bisdat), and ordinary chests named on a fill; [resource patches that copy components, clear and replace lists](/kiln/wiki/onboot#lists-and-template-components) and [boot reads of any resource](/kiln/wiki/onboot#the-games-data-in-onboot); [other mods' slash commands](/kiln/wiki/in-game#other-mods-slash-commands) reach their mods; [no more stutters of about 2 seconds when hosting from a hard drive](/kiln/wiki/debugging#common-causes); `kilnctl tick-compare` (GitHub #57); [EMF's own answer for breaking blocks](/kiln/wiki/emf-mods#mods-built-for-emf-063-to-068), which Night Raids compares (GitHub #43); [one DLL as a Kiln native mod and an `.asi`](/kiln/wiki/other-mods#kiln-dll-mods). Lab checks on a dedicated server. A player without Kiln joining a Kiln dedicated server whose mods all say `"clients": "none"` was seen in a real game. Not yet seen in a real game: a Kiln player's crafting counts from station outputs, a craft paid from them in a hosted game, and custom game folders started directly |
+| 29.18 | (mod API 0.2.10) [Kiln in Simplified Chinese](/kiln/wiki/languages), translated by XiaoHuLi666; [Kiln's graphics tools](/kiln/wiki/in-game#graphics): a frame cap, DLSS settings and a readout; [AMD FSR 4, FSR 3.1 or Intel XeSS behind the game's FSR 3 option](/kiln/wiki/in-game#behind-the-games-fsr-3), their files downloaded on demand after you agree to their licence; [Kiln's Discord in the launcher](/kiln/wiki/install#kilns-discord-in-the-launcher) (Send to Kiln support, your posts and their replies, Rich Presence), all optional; [Kiln's overlay next to OptiScaler](/kiln/wiki/in-game#kilns-overlay-next-to-other-tools), the game going on when the overlay can't draw, and an overlay switch in the launcher; [ShroudForge's startup pass going on without a failing mod](/kiln/wiki/eml-shroudforge#when-one-startup-mod-fails); [EMF's Lua mods from EMF's download](/kiln/wiki/emf-mods#install-a-mod); [ShroudForge mod settings on a Steam Deck in copy mode](/kiln/wiki/eml-shroudforge#settings-changed-in-the-game-in-copy-mode) (reported by ljam); [Repair when an antivirus removed a Kiln file](/kiln/wiki/install#antivirus-windows); [the launcher's messages for an empty window and WebKit's sandbox on Linux](/kiln/wiki/install#a-black-launcher-window); [no launch option asked for with GE-Proton 11-11 and newer](/kiln/wiki/install#on-linux-proton), by bisdat; [XHL-Core no longer loading a ShroudForge mod you switched off](/kiln/wiki/other-mods#xhl-mods); [Play waiting while a profile is applied](/kiln/wiki/profiles#the-list-on-play); [one hash for a server's engine mods](/kiln/wiki/modpacks#install-the-servers-modpack). For mod authors: [the game's own texts](/kiln/wiki/languages#the-games-own-texts) and tooltip rows, [wraps in the prediction storage](/kiln/wiki/world-programs#wrapping-the-games-programs), [`TryReadWritable`](/kiln/wiki/world-programs#work-inside-the-callback), and [Kiln tasks](/kiln/wiki/tasks): mod work off the game thread, hops back to the server or client world's tick, experimental [world reads and writes from tasks](/kiln/wiki/tasks-world) (KILNX003). Kiln tasks ran only in Kiln's tests against stand-ins for the game; their exit steps have not run on native Windows. **Not yet checked in a real game**: host tests, lab checks on a dedicated server (ShroudForge's second pass with one and two failing mods, the game's texts refused on a server), the Graphics page in Kiln's preview renderer, and the release's 25 checks on a trial build, the launcher starting on a clean Ubuntu 22.04 among them. Kiln's own steps at the game's exit and the antivirus messages have not run on a Windows PC yet; the Discord features have not been used with the live service on the Kiln Discord yet |
+
 
 ## New in 0.2.0-dev.29
 

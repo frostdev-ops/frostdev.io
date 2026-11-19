@@ -3,7 +3,7 @@ title: "Lint and analyzers"
 nav: "Lint and analyzers"
 description: "kiln lint checks your mod's JSON before the game has to. The analyzers catch thread and hot-reload mistakes in your C#."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 ## kiln lint
@@ -93,6 +93,11 @@ The rules new in 0.2.0-dev.29 belong to [world programs and wraps](/kiln/wiki/wo
 [same-step natives](/kiln/wiki/impact#natives-that-answer-in-the-same-step) (KILN036, KILN037, KILN170 to KILN174) and
 [typed hooks](/kiln/wiki/hooks#typed-hooks-and-calls) (KILN180 to KILN182). `KILNX028`, the experimental mark on
 dev.28's capacity types, is gone: `NoWarn KILNX028` is no longer needed.
+
+**New warnings in existing code** (0.2.0-dev.29.18). KILN105 now also reports blocking waits (`Wait()`, `.Result`,
+`GetAwaiter().GetResult()`, `Thread.Sleep`) in `[Command]` methods, `Commands.Register` and `Executes` handlers and
+`Chat.Received` handlers: commands run on the server tick, and a blocking wait there freezes the server. Warnings only:
+a build stops only if your mod raised their severity.
 
 Adjust rules in `.editorconfig` (`dotnet_diagnostic.KILN105.severity = error`, or `none`), or with
 `#pragma warning disable KILN101`. `<KilnAnalyzers>false</KilnAnalyzers>` turns them off. They can't see everything, so

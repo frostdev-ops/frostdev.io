@@ -3,7 +3,7 @@ title: "Profiles and mods"
 nav: "Profiles and mods"
 description: "Every mod in one list on Play, saved sets of mods as profiles in Settings, the mods in your game folder, the library, update notices, rolling back an update, and mod settings in the launcher or in game."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 ## Profiles
@@ -71,6 +71,13 @@ its version, and a short note only when there is something to say ("Starts with 
 - **Above the list:** **Filter** and **Kind** (with more than six rows), **All on** and **All off**, **Notes**, **Load
   order**, **Engines** and **Add mods** (zip, 7z, rar and DLL files). Dropping a file anywhere on the window adds a mod
   too, switched on. Settings' **Switch new mods on** (on by default) decides that; switched off, new mods are added off.
+  Since 0.2.0-dev.29.18 a newer file of a mod you have says "Updated Night Owl: 1.2.0 → 1.3.0" instead of "Added", on the
+  desktop and on the Deck.
+- **Play waits while a profile is being applied** (0.2.0-dev.29.18). Loading a profile, adding a mod, installing a
+  modpack or updating Kiln writes your mods into the game folder, which can take a while. Play now says "Applying
+  profile…" (or "Installing Kiln…", "Removing Kiln…") and stays off until that work is done or has failed, whatever
+  started it, on the desktop and on the Deck. **Without mods** and the other ways to start wait too. Before, Play could
+  be pressed in the middle of it.
 - **What an add left out** (0.2.0-dev.29.10). When an add left a file out or found one not needed, its message stays
   until you close it. **Last adds** above the list shows your last 10 adds with those details, also after a restart, and
   `launcher.log` lists them, so a support report carries them.
@@ -210,6 +217,18 @@ values) are carried to the new version at an update, and kept in `kiln/kept-mod-
 Kiln is uninstalled. A folder you changed yourself stays where it is; the launcher says so, and whether that mod may
 still run.
 
+Since 0.2.0-dev.29.18:
+
+- **A changed mod copy is never thrown away without a word.** In copy path mode (on Linux, when the game can't reach
+  the Library through Wine's `Z:` drive: a Flatpak Steam, or often a Steam Deck with the game on an SD card), Kiln
+  keeps copies of your mods under `kiln/profiles/` in the game folder. A profile update used to replace such a copy
+  silently when it had been changed there. A copy whose only change is the mod's own settings file (an EML mod's
+  `config.txt`, say) now stays as it is. Any other changed copy goes to `kiln/backups/` before the Library's files go
+  in, and the launcher's notes name it.
+- **Mod files are never read-only.** A mod added from a folder kept a read-only file read-only, in the Library and in the
+  game, so its settings could not be saved. Kiln now makes those files writable for you (nothing else about their
+  permissions changes), and the next profile update fixes copies placed before.
+
 **Notes about mod folders.** Since 0.2.0-dev.26 the launcher tells you once about a folder it leaves alone, files it
 kept and its notes on your mods, not at every change to your mods. **Notes** above the list shows them again. In
 Settings, **Show notes about mod folders** turns them off; the one notice that still comes is the first about a
@@ -317,6 +336,7 @@ Since 0.2.0-dev.29.16:
 | Mods | the mods of every framework: version, state, errors and settings. Its **Kiln settings** row has Kiln's own settings: **Look** (since 0.2.0-dev.29.16), **Language** and Kiln's configs |
 | Network | the server's Kiln version, mods and warnings |
 | Keys | key bindings: click one, then press the new key, a mouse side or middle button, or turn the wheel. **Reset** puts the default back; since 0.2.0-dev.29.9 **Unbind** leaves an action without a key (not Kiln's own menu key, which would lock the menu away) |
+| Graphics | since 0.2.0-dev.29.18: the frame cap, DLSS settings, the readout and the upscaler behind the game's FSR 3, with what runs now ([Graphics](/kiln/wiki/in-game#graphics)) |
 | Overlay | display scale and a test message |
 
 It works with gamepad, mouse and keyboard. Since 0.2.0-dev.29.16 Kiln's menus use the game's colours and font; pick

@@ -3,7 +3,7 @@ title: "EMF mods"
 nav: "EMF mods"
 description: "Install EMF DLL and Lua mods with API v46 (EMF 0.6.14) support, current differences and server/client evidence limits."
 status: "partial"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 Kiln runs mods made for EMF (the Enshrouded Modding Framework), DLL and Lua mods, up to EMF 0.6.14 / API v46 since
@@ -26,6 +26,19 @@ and client checks are below.
 
 If EMF ran in this folder before, the first start takes your old values from EMF's own config. After that, edit Kiln's
 file: Kiln rewrites EMF's copy at each start.
+
+**EMF's whole download** (0.2.0-dev.29.18). Drop EMF's zip on the launcher and its Lua mods (Beastmaster, Bounty
+Board, Wandering Champion, Grave Keeper, Hand-over, Kill Counter, Life Skills, Minimap, Necromancer) come in as EMF mods,
+beside its DLL mods. Before, they were left out as "not a recognised mod package".
+
+- EMF's `lua` mod reads Lua mods only in `emf/mods`, so Kiln copies each one you switch on there. The Lua examples and
+  the starter in EMF's download are left out, as EMF doesn't install them either.
+- Lua mods you put into `emf/mods` yourself now show as loading instead of "Can't run". When EMF's `lua` mod is missing
+  or switched off, the launcher says that instead.
+- EMF's own files in its download (its core, its builder of EML content and its frame-time recorder) are no longer
+  added as DLL mods, which Kiln would have loaded at every start: they are part of EMF, and Kiln says so.
+
+Not yet checked in a real game.
 
 Which mods load:
 - A mod marked `client` doesn't load on a dedicated server.
@@ -51,7 +64,9 @@ EMF 0.6.13 (API v43) and 0.6.14 (v44 to v46) added seven functions: the game's o
 Villager Jobs 1.5 need the whole v46 table to start, so until **0.2.0-dev.29.12** they stayed off on Kiln ("this mod
 was built for EMF API v46; the core is v42"), and with that Lua mod every Lua mod. Since 0.2.0-dev.29.12 Kiln serves
 the v46 table; the seven functions answer "not available on Kiln yet" for now. So on Kiln, Night Raids' raiders
-don't break walls yet, and Villager Jobs lets only EMF's admins give jobs. Not yet run in a lab or a game.
+don't break walls yet, and Villager Jobs lets only EMF's admins give jobs. Not yet run in a lab or a game. Since
+0.2.0-dev.29.17 a mod that asks why breaking blocks is unavailable gets EMF's own "not available on this game version",
+which Night Raids 1.2.1 compares (GitHub #43).
 
 Kiln doesn't carry every function EMF added since. Chat lines without a speaker (`chat_tell_ex`, `chat_broadcast_ex`)
 and `world_to_screen` work. Player join, leave and death events, item and character names, hits and hit rules, buffs,

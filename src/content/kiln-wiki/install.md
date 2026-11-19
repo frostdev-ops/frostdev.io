@@ -1,8 +1,8 @@
 ---
 title: "Install Kiln"
-description: "Install Kiln for Enshrouded, import downloaded mod archives, and play with or without mods."
+description: "Install Kiln for Enshrouded, import downloaded mod archives, play with or without mods, play a copy of the game Steam doesn't know, Kiln's Discord in the launcher, and antivirus help."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 > **Early access.** Download the launcher: [Windows installer](/kiln/download/windows), [Linux AppImage](/kiln/download/linux)
@@ -11,7 +11,7 @@ updated: "2026-11-17"
 
 ## What you need
 
-- Enshrouded from Steam.
+- Enshrouded from Steam, or a copy of its folder ([Custom game folders](#custom-game-folders)).
 - Windows 10 or 11, or Linux with glibc 2.35 or newer: Steam Deck (SteamOS), Ubuntu 22.04 and later, Fedora, Mint,
   Debian 12, Arch.
 - The **Kiln Launcher** ([download](/kiln/download)): AppImage or .deb on Linux, an installer on Windows. It includes the Kiln runtime.
@@ -41,9 +41,10 @@ mods are in Settings ([Profiles and mods](/kiln/wiki/profiles)).
 Steam's Play button also starts Kiln, with the mods you switched on in the launcher.
 
 **Language and look** (0.2.0-dev.29.16). The launcher's **Settings**, **Language** picks the launcher's language
-(System by default) and Kiln's language in the game (the game's by default); English is the only one shipped so far
-([Kiln in your language](/kiln/wiki/languages)). **Settings** also has Kiln's in-game look
-([Kiln in the game](/kiln/wiki/in-game)).
+(System by default) and Kiln's language in the game (the game's by default): English, and since 0.2.0-dev.29.18
+Simplified Chinese ([Kiln in your language](/kiln/wiki/languages)). **Settings** also has Kiln's in-game look
+([Kiln in the game](/kiln/wiki/in-game)) and, since 0.2.0-dev.29.18, a **Graphics** card for Kiln's frame cap, DLSS
+settings, readout and the upscaler behind the game's FSR 3 ([Graphics](/kiln/wiki/in-game#graphics)).
 
 **The launcher's icon** (0.2.0-dev.29.16). The Linux AppImage adds its own app-menu entry and icons in your home folder,
 so taskbars and docks (GNOME, Hyprland and others) show Kiln's icon; **Settings**, **Appearance**, **Kiln Launcher in
@@ -60,6 +61,24 @@ another framework installed? Kiln keeps it, and copies your profile's mods for t
 copying over it (Ultimate ASI Loader, for example) replaces Kiln. Add the loader's download to the launcher like any
 mod instead; since 0.2.0-dev.29.4 Kiln places Ultimate ASI Loader as `xinput9_1_0.dll`
 ([Mods that run from the game folder](/kiln/wiki/other-mods#mods-that-run-from-the-game-folder)).
+
+### Custom game folders
+
+New in 0.2.0-dev.29.17. The launcher can play a copy of Enshrouded that no Steam library knows: an older build you keep
+for mods, a copy on another drive, a backup of the game folder. Add it on Play (**Add** under the game folder) or in
+**Settings**, **Games**. Such a folder starts directly: Kiln runs its `enshrouded.exe` itself (on Linux under umu-run,
+Proton or Wine, which you can pick), with the same profile, save backup, start progress, crash reports and support
+report as Steam's copy.
+
+- It needs no Steam: not installed, not running. Kiln never sets `SteamAppId`, never writes `steam_appid.txt` and never
+  touches `steam_api64.dll`. Whether a given copy of the game needs Steam to run is that copy's business.
+- Steam's own copy still starts through Steam by default. The choice is per game: **Starts directly** or **Starts
+  through Steam**, on the game folder's line on Play.
+- On Linux Kiln makes one Wine prefix per game, at the first start, in `~/.local/share/kiln-prefixes/`; the saves of that
+  copy live in it. The first start takes longer. Steam Deck Game Mode is not covered.
+- A game build Kiln doesn't know starts with Kiln idle: no mods load, and Play says so.
+
+Not yet checked in a real game.
 
 ## When you press Play
 
@@ -95,8 +114,8 @@ Cooking on Windows was compile-checked for this release, not yet run on a Window
 
 Since 0.2.0-dev.28 some mods put their content in before the game reads its data ([OnBoot](/kiln/wiki/onboot)), and
 some of those read the game's own data while they do. For them, **Play** copies that data from your game's files once
-after the cook: "Game data for OnBoot mods (about 200 MB, once per game build)". It takes about 30 to 45 seconds and
-200 MB in the game folder, once per game update. Without such a mod nothing runs. If the step fails, the game starts
+after the cook: "Game data for OnBoot mods (about 300 MB, once per game build)". It takes half a minute to a minute and
+about 300 MB in the game folder, once per game update (about 200 MB before 0.2.0-dev.29.17, which made it again once). Without such a mod nothing runs. If the step fails, the game starts
 anyway and the launcher says so in one line.
 
 Starting from Steam doesn't make it; one start through the launcher with the mod on does. Since 0.2.0-dev.29 boot mods
@@ -115,6 +134,9 @@ used with the controller alone, with a number pad for amounts and levels ("Open 
 Profiles are in Deck **Settings**, **Profile**.
 If Kiln doesn't load with your Proton, set the launch option below; Deck mode's **Help** shows the steps and whether it's
 set. Switch to the desktop screen in **Settings**, or start the launcher with `--desktop`.
+Since 0.2.0-dev.29.18 Deck **Settings** also has **Language**, the upscaler behind the game's FSR 3 with its files
+([Graphics](/kiln/wiki/in-game#graphics)) and **Show the Community page**, and a **Community** tab sits between
+**Editor** and **Help** ([Kiln's Discord in the launcher](#kilns-discord-in-the-launcher)).
 
 ## Updates
 
@@ -138,6 +160,12 @@ WINEDLLOVERRIDES="dinput8=n,b" %command%
 
 It does no harm where it isn't needed, so set it if you're unsure. The launcher shows what to change. It never edits
 Steam's settings.
+
+**No "One Steam setting" banner where it isn't needed** (0.2.0-dev.29.18, by bisdat, GitHub #77, pull request #78). The
+launcher now reads which Proton Steam uses for Enshrouded (the game's own choice, or Steam's default for all games).
+With GE-Proton 11-11 or newer, Play and the Deck's Help no longer ask for the launch option. Older and unknown Proton
+builds keep the advice, and if a start really runs without Kiln (**No Kiln**), the launch option is offered again as
+the fix, whatever the Proton.
 
 **With Ultimate ASI Loader chained** next to Kiln, Wine also needs `xinput9_1_0` set to native, builtin:
 `WINEDLLOVERRIDES="dinput8,xinput9_1_0=n,b" %command%`. Since 0.2.0-dev.29 the launcher's launch option names it and says
@@ -167,6 +195,26 @@ kiln-launcher --software-render
 from a terminal: its first line names its log (usually `~/.local/share/kiln/logs/launcher.log`). Send that file; its
 `render:` lines say how the window was drawn.
 
+Since 0.2.0-dev.29.18:
+
+- **The launcher says when its window can't start**, instead of leaving it empty. When its page has not come up 15
+  seconds after the window opened and it has nothing left to try by itself, a message from your system (not the
+  launcher's page) says what it tried and where `launcher.log` is, and offers what you can still try: "Start without
+  the GPU", "Start without WebKit's sandbox" (when WebKit runs it), "Open the log folder", "Quit". The cause of an empty
+  window is often not known, so each button is a try.
+- **WebKit's sandbox, your choice.** In a normal start WebKit doesn't use its sandbox for the launcher, so this changes
+  nothing for most players. Where it would use it and it can't start (WebKit would then end the launcher at once), a
+  message before the window offers "Turn the sandbox off and start" (where the launcher can), "Start anyway" or
+  "Quit", and names the proper fix. The launcher never turns the sandbox off by itself. **Settings**, **Appearance**,
+  **WebKit's sandbox** turns it off or back on for the next start; `--no-webkit-sandbox` or `--webkit-sandbox` do it for
+  one start.
+- **"Draw the launcher without the GPU" works at the start again.** Since 0.2.0-dev.29 the launcher didn't read that
+  setting when it started, so one that had fallen back to drawing without the GPU drew with it again each time. If the
+  setting is on for you (you turned it on, or the launcher did after a black window), the launcher now draws without the
+  GPU at every start. Turn it off in **Settings**, **Appearance** to draw with the GPU again.
+
+Not yet seen on a system that needs these messages.
+
 On Fedora Atomic and Bazzite, `/home` is a link to `/var/home`. Since dev.21 ShroudForge and SET placement and modpack
 installs accept that. Links inside Kiln's managed folders are still refused.
 
@@ -189,6 +237,66 @@ which shows **Vanilla**. On a Steam Deck, Home shows a **Kiln is not loading** b
    [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301) with these files: `kiln/logs/proxy.log` from the game
    folder (if it's missing, Steam never loaded Kiln), `kiln/logs/kiln.log`, and `~/.local/share/kiln/logs/launcher.log`.
    Add your Proton version, and whether you were in Game Mode or Desktop Mode.
+
+## Kiln's Discord in the launcher
+
+New in 0.2.0-dev.29.18, all of it optional. A **Community** page (after Servers) and, on the Steam Deck, a **Community**
+tab (between Editor and Help) bring the [Kiln Discord](https://discord.gg/7pjr8SMTfU) into the launcher.
+
+- **Send to Kiln support** writes the support post for you from a [support report](/kiln/wiki/debugging#save-a-support-report).
+  You write one line (on the Deck you pick what went wrong and when), the launcher shows exactly what will be posted and
+  which files go, and the post appears in #support on the Kiln Discord. Your logs go to the Kiln team only, unless you
+  choose to attach them to the post or not to send them. It is also on the Logs page, next to Play's problem banners
+  (after the fix they already suggest) and on a notice when the game closed while Kiln wrote a crash report. When a
+  report matches a known problem, its fix shows first, and you can still send.
+- **Your support posts and their replies** show on the page, with a number in the header for new replies. Each post has
+  Open in Discord, It's fixed and Delete my post. A system notification for replies is a switch, off until you turn it
+  on.
+- **Signing in.** Sending needs a Discord sign-in through frostdev.io: your browser on the desktop, a QR code for your
+  phone on the Deck. The launcher keeps only a Kiln key for it, never your Discord password or a Discord token.
+- **Rich Presence** shows "Playing Kiln, Enshrouded with Kiln, 12 mods on" and the time on your Discord profile while
+  you play, through the Discord app on your PC. It is off until you turn it on and never shows server, world, character
+  or mod names.
+- **Testers.** Players with hardware the team lacks can volunteer. The launcher first shows the hardware it would share,
+  and a test build's checklist shows on the page once the build has one.
+
+Nothing is sent until you press a button on a screen that shows what goes. Opening the page loads only Kiln's news and
+the list of known problems. **Settings**, **Launcher**, **Show the Community page** hides the page, the tab and every
+"Send to Kiln support", and the launcher then does nothing with Discord. What is sent and kept is on the page ("What is
+sent and kept") and at [frostdev.io/kiln/privacy](/kiln/privacy). Not yet used with the live service on the Kiln
+Discord.
+
+## Antivirus (Windows)
+
+Kiln works by putting DLL files into the game folder. Kiln's `dinput8.dll` has the name of a Windows file, and Kiln
+loads its other DLLs into the game and changes the game's code while it runs. Some malware works the same way, and
+Kiln's files are new and not code signed yet, so some antivirus programs flag them and remove them or move them to
+quarantine. Kiln, or a part of it, then doesn't load.
+
+Since 0.2.0-dev.29.18 the launcher says so:
+
+- **A Kiln file is missing.** The **Runtime** page says which ("1 of Kiln's files is missing:
+  kiln\plugins\kiln-greeneye.dll") and offers **Repair**, which installs the same Kiln version again and puts the
+  missing files back. When the file is a DLL, it says an antivirus may have removed it. A file that is there but changed
+  keeps the "Changed" banner, as before.
+- **An install was blocked.** When Windows didn't let Kiln write one of its files during an install, update or Repair,
+  the launcher showed only "Access is denied. (os error 5)", and the install was undone. The Runtime page, Play and the
+  launcher's message now say "Windows did not let Kiln write kiln\plugins\kiln-greeneye.dll. An antivirus or another
+  program may be blocking it.", with what to do. A file the game holds is not blamed on an antivirus: Kiln asks you to
+  quit the game. The support report says it too, also after the launcher was closed.
+
+What to do:
+
+1. **Add an exclusion for the game folder** first, or the antivirus removes the file again. In Windows Security: Virus &
+   threat protection, Manage settings, Exclusions, Add or remove exclusions, Add an exclusion, Folder, and pick the game
+   folder (in Steam: right click Enshrouded, Manage, Browse local files). Other antivirus programs call it Exclusions,
+   Exceptions or Allowed list. If it also removes files from your mods, add the launcher's data folder too.
+2. **Get the file back**: restore it from the quarantine (Windows Security: Protection history, the Kiln file's entry,
+   Actions, Restore), or close the game and choose **Repair** on the Runtime page.
+3. If the antivirus also took the launcher, or its uninstaller, restore those too or install the launcher again.
+
+You can also report the file to your antivirus's maker as a false positive. The receipt, `kiln\.install.json` in the
+game folder, lists every file Kiln installed with its SHA-256 checksum. Not yet run on a Windows PC.
 
 ## Mods from Nexus Mods
 

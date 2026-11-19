@@ -2,7 +2,7 @@
 title: "Game UI"
 description: "Menu entries, your own screens, crafting tabs and panels, HUD lines, toasts, key bindings, item icons and names, and values in the game's own UI."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 All client side. On a dedicated server `Ui.Available` is false and calls do nothing, so a `side: both` mod can call them freely.
@@ -168,3 +168,17 @@ Not yet seen in a real game: lab checks and host tests only.
 Every mod with a config gets a generated settings page in the Kiln menu. A slider there has a number field beside it, for
 values that are hard to reach by dragging on a wide `[Range]`. `Ui.Screens.Current` and `ScreenChangedEvent` tell you
 which screen is open. To draw shapes, text and markers over the game every frame, see [Drawing](/kiln/wiki/drawing).
+
+**When Kiln's overlay doesn't draw** (next to a frame generation mod, and since 0.2.0-dev.29.18 next to OptiScaler,
+with the launcher's overlay switch off or after the overlay failed during a session: [Kiln's overlay next to other
+tools](/kiln/wiki/in-game#kilns-overlay-next-to-other-tools)), windows and full screens stay closed (their `Show` and
+`Open` calls don't throw), HUDs, toasts and drawing don't show, `Ui.Status.Error` carries the reason, and the rows
+`ui.windows`, `ui.draw`, `ui.menu_page`, `render.draw` and `kiln.screen` are unavailable with it. Menu entries, key
+bindings and UI ticks keep working. Native plugins: `KilnUiStatus.error` gives the reason, frame and pre-overlay
+callbacks are no longer called, and `wheel_open` returns `KILN_ERR_UNAVAILABLE`.
+
+**Kiln's graphics tools** ([Graphics](/kiln/wiki/in-game#graphics), 0.2.0-dev.29.18) have no managed call in this
+release. Native plugins read what they do with `graphics_status` in `kiln_ui.h`: the cap, the frame rates, the DLSS in
+use, the upscaler behind the game's FSR 3 and a stable reason code when the chosen one doesn't run (the struct is 248
+bytes; a 72-byte caller still gets the fields it knows). `graphics_set` is Kiln's own: a plugin's call is refused.
+Tools such as the launcher read `kiln/state/graphics.json` in the game folder, written only when it changes.

@@ -3,7 +3,7 @@ title: "OnBoot: content on the first start"
 nav: "OnBoot and boot mods"
 description: "Boot mods: statuses, effects, items, spells, talents and changes to the game's own data that are there before the game reads them, from the very first start."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 > **New in 0.2.0-dev.28 on dedicated servers, and since 0.2.0-dev.29 in a player's game too** (a world they host and a
@@ -122,8 +122,13 @@ var logs = boot.GameData.Read("item:Material_T1_Wood_Logs");    // also template
 
 The game hasn't loaded anything yet, so the answers come from the **boot snapshot**: a copy of those records that Kiln
 makes from the game's files. The launcher makes it when it starts the game with an enabled mod that has `"boot"`:
-about 30 to 45 seconds and 200 MB, once per game update. On a server you start yourself, run
+half a minute to a minute and about 300 MB, once per game update. On a server you start yourself, run
 `kiln boot-snapshot --game <server folder>`.
+
+**Any resource** (0.2.0-dev.29.17). `names:resources/<qualified type name>` lists every resource of a type
+(`names:resources/keen::SceneResource`), and `resource:<GUID>/<type>/<part>` reads one of any type, not only items and
+templates. The snapshot holds them since 0.2.0-dev.29.17 (that is why it grew from about 200 MB); an older snapshot is
+made again once, at the next start through the launcher.
 
 - Without a snapshot of this game build, `mods.boot.game_data` is off and `Read` throws `KilnUnavailableException`.
   A mod that can do without it checks `Capabilities.Is("mods.boot.game_data")` first and keeps its own defaults.
@@ -214,17 +219,49 @@ New in 0.2.0-dev.29.15. Besides `set`, a patch can change the shape of a resourc
 ```
 
 On a template a path starts with a component's type name (`Gravity.isActive`; `Gravity#1.isActive` for a second one):
-that is how an added component's fields are filled in. Name components by type, never by their place in the list. On
-one resource, every `removeComponents` runs first, then `addComponents`, then `append`, then `set`, each in load order.
-In C#: `RemoveComponents`, `AddComponents` and `Append` (with `ResourceListAppend { Values = [3, 5, 10], AboveLast =
-true }`) on the `ResourcePatchBlock`.
+that is how an added component's fields are filled in. Name components by type, never by their place in the list. In C#:
+`RemoveComponents`, `AddComponents` and `Append` (with `ResourceListAppend { Values = [3, 5, 10], AboveLast = true }`)
+on the `ResourcePatchBlock`.
+
+Since 0.2.0-dev.29.17 three more:
+
+| Key | On | Does |
+|---|---|---|
+| `copyComponents` | a template | `{ "<component type>": "<template GUID>" }`: copies the whole component, with all its data, from that other template. Added when the template has none of that type, its own replaced when it has. The source is read as the game has it, before any patch of this start |
+| `clear` | lists of anything | `["<list path>", …]`: each list made empty |
+| `replace` | a list of numbers, bools or enum members | `{ "<list path>": { "values": [ … ] } }`: the list holds exactly these values afterwards, fewer or more than before |
+
+```json
+"area-deposit-chest": {
+  "resource": "65baa890-022a-454b-9cb7-b92cb8c06cd4",
+  "type": "keen::ecs::TemplateResource",
+  "copyComponents": { "InventoryCraftingStock": "955ba32f-08ea-414d-bd98-ac75990aef04" }
+},
+"damage-steps": {
+  "resource": "46e14df6-fb8f-4f66-9463-e23b9e19e48e",
+  "type": "keen::FbUiBundle",
+  "replace": { "difficultySettings.settingValues.enemyDamage.steps": { "values": [0.25, 0.5, 1, 2, 4] } }
+}
+```
+
+(The first gives an ordinary storage chest the Magic chest's crafting stock component.) In C#: `CopyComponents`,
+`Clear` and `Replace` (with `ResourceListReplace`). A list path of `clear`, `replace` or `append` names one list: `[i]`
+on the way is fine, `[*]` is not.
+
+**The order.** On one resource every patch's `removeComponents` come first, then every patch's `addComponents`, then
+`copyComponents`, `clear`, `replace`, `append` and last `set`, each group in load order. The order in which a patch
+writes its keys doesn't matter. Two mods are combined when they can't step on each other; when they can (both clear or
+replace one list with different values, one clears a list another appends to or sets inside, one copies a component and
+another counts on what it held), the later mod in the load order is refused before the game starts, and the report names
+both. Another mod's plain value `set` on a copied component is fine.
 
 **A patch applies whole or not at all** (since 0.2.0-dev.29.15): if any of its changes fails, none is kept, and the
 resource is what the other patches make it. kiln.log and `kiln/state/boot.json` name the mod, the patch and the reason.
 
 **Finding records by name.** In `OnBoot`, the game-data queries `names:items`, `names:templates`, `names:skills` and
-`names:materials` list the names a kind holds, and `names:templates/<component type>` (`names:templates/MiningNode`)
-the templates with that component ([The game's data in OnBoot](#the-games-data-in-onboot)).
+`names:materials` list the names a kind holds, `names:templates/<component type>` (`names:templates/MiningNode`)
+the templates with that component, and since 0.2.0-dev.29.17 `names:resources/<type>` every resource of a type
+([The game's data in OnBoot](#the-games-data-in-onboot)).
 
 - **Checked before the start**: the type, the path and the value. Two mods on one field are not combined: the later in
   the load order is refused, and the report names both.
