@@ -2,7 +2,7 @@
 title: "Testing"
 description: "Tests that run inside the server with Kiln.Testing, and unit tests with no game under dotnet test with Kiln.TestKit."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-18"
 ---
 
 Kiln.Testing runs tests in a running server, on the tick thread, so they can touch game state. It's Kiln's take on Forge's GameTest.
@@ -131,6 +131,11 @@ New fakes in 0.2.0-dev.29:
   Programs, attributes and their formulas stay offline.
 - **Component watches** (`KilnHarness.ComponentChanges`), **decisions**, **equipment sets**, and the **budgets** of
   world tables and material pools, by the services' own rules.
+
+New in 0.2.0-dev.29.18: **Kiln tasks** run on the kit's two worker threads, `kiln.Tasks.Settle()` runs them to their end,
+and `KilnHarnessOptions.Side` gives a joined or a hosting client's worlds ([Tasks](/kiln/wiki/tasks#testing)). Their
+world reads and writes run on the fake world, with `kiln.Entities.BusyReads` and `BusyWrites` for the retry paths
+([World reads and writes from tasks](/kiln/wiki/tasks-world#testing)).
 
 Not faked: the Shroud Forge's actions (`Gems.Socket`, `Unsocket`, `Upgrade`, `Recycle`, new in 0.2.0-dev.29.11) and
 production stations (`Stations`, new in 0.2.0-dev.29.14). Under the kit they answer unavailable, so test those in a server.

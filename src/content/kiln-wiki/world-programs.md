@@ -13,7 +13,8 @@ updated: "2026-11-19"
 
 Use ordinary tick events and service APIs when they express the work. A world program is for an ECS update with declared
 component and event access, running on the game's worker threads. `EcsPrograms.Available` checks boot declaration/binding
-support; `SupportsOtherWrites` checks tracked writes to another entity.
+support; `SupportsOtherWrites` checks tracked writes to another entity. Heavy work of your own that needs no place in the
+game's step (a search, path finding, IO) belongs in a [Kiln task](/kiln/wiki/tasks) instead, on Kiln's own workers.
 
 ## Declare before boot, bind in OnLoad
 
@@ -229,6 +230,8 @@ of it. Capability `world.tracked_writes`; `ComponentWrittenEvent` follows a chan
   dedicated server or a hosting game).
 - `World.TryWrite` still works and is obsolete: it is `World.WriteRaw` now, a raw store the game neither saves nor
   sends, for inputs the game reads in the coming step.
+- From a task's worker, a plain component the game neither saves nor sends can be changed between frames by
+  [compare-exchange](/kiln/wiki/tasks-world#writes-from-a-task) (0.2.0-dev.29.18, experimental).
 
 ## Hooks around game systems
 

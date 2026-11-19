@@ -41,6 +41,8 @@ steps. Game state may only be touched there.
   `await Context.Scheduler.NextTick()`.
 - Never block it (`.Result`, `.Wait()`, `Thread.Sleep`). Use `await`.
 - `Game.IsTickThread` tells you where you are.
+- Heavy work (a search, path finding, files, the network) can run off the tick in a Kiln task since 0.2.0-dev.29.18,
+  which hands its result back to the tick: [Tasks](/kiln/wiki/tasks).
 
 The client works the same way, with its main thread. See [Multiplayer](/kiln/wiki/multiplayer).
 
