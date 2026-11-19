@@ -61,7 +61,9 @@ if (!r.Ok) c.Reply($"not equipped: {r.Reason}");                                
 - **API version:** `Mods.RuntimeApiVersion` is the running Kiln's mod API (0.2.2 on dev.27). `Mods.ApiVersion` is
   obsolete: a const, copied into your mod at build time. Release builds carry their full version (`0.2.0-dev.27`).
 - **`[Experimental]` ids:** `KILNX001` lab and test members (hidden; a build error unless the project adds it to
-  `NoWarn`), `KILNX002` API not yet proven in a real client. Neither is covered by the additive-API promise.
+  `NoWarn`), `KILNX002` API not yet proven in a real client, `KILNX003` the task-thread world reads and writes
+  (`WorldConcurrent` and its types; opt in with `KILNX003`, not `KILNX001`). None is covered by the additive-API
+  promise.
 
 ## The mod
 ```csharp
