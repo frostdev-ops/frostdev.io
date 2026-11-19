@@ -19,15 +19,33 @@ the project folder is validated and copied. JSON with `//` comments and trailing
   },
   "loadAfter": ["some-mod"], "loadBefore": ["other-mod"],   // ordering only
   "incompatible": { "rival": "<3" },
-  "features": ["tick"],      // Kiln features this game build must have
+  "features": ["tick"],      // Kiln features this game build must have; dev.29.18+ "tasks.pool" for Kiln tasks
   "entryAssembly": "MyMod.dll",
   "entryType": "MyMod.MyModClass",   // default: the only public Mod subclass
   "exports": ["MyMod.Api.dll"],      // assemblies dependents compile against
   "advanced": false,
   "tests": { "autoRun": true, "timeoutSeconds": 20 },
-  "writes": ["Fuel"]         // dev.27+: component types written with World.Write/Update/WriteField/WriteAt (max 64)
+  "writes": ["Fuel"],        // dev.27+: component types written with World.Write/Update/WriteField/WriteAt (max 64)
+  "boot": false,             // dev.28+: true | "required": Mod.OnBoot runs before the game starts (boot.md)
+  "updates": { "provider": "github", "repository": "me/my-mod" },   // dev.28+: where new versions are published
+  "kilnBuild": { "version": "0.2.0-dev.29.18+…", "created": "…" }  // written by the build: the Kiln.Api it compiled against
 }
 ```
+`updates` (dev.28+): `github` (`repository`, `tagPattern` default `v{version}`, `asset`, `channel` `stable` or
+`prerelease`) or `nexus` (`gameId` 5811, `modId`, `fileChainId`). The launcher and `kiln updates check` show a notice;
+nothing is downloaded or installed, and an unreadable value is a warning, never a load failure. Kiln.Sdk:
+`KilnUpdatesRepository` and friends ([setup.md](setup.md)).
+
+`boot` (dev.28+): `required` stops the start (exit code 0x4B01) when the mod's boot content or one of its own data files
+fails. Dedicated servers since dev.28, game clients since dev.29. A boot mod enabled or changed after the start loads only
+after a restart (`RestartRequiredBoot`).
+
+`features`: only capabilities fixed at boot: sigdb features, `kiln.<service>` rows and core rows such as
+`anim.player_states` and `tasks.pool`. A row a managed service registers later, or one that depends on the session, is
+refused there: check it with `Capabilities.Is` at run time.
+
+dev.29+: `"systems": { "replaces": [...] }` is a declaration for tools; nothing reads it yet. `kilnBuild` lets Kiln and
+the launcher tell a player whose Kiln is older than the mod to update it.
 `writes`: Kiln.Sdk adds the types your code passes to `World.Write` / `World.Update`; list by hand what `WriteField` and
 `WriteAt` name as a string. Read when the server starts (a hot-loaded change counts from the next start). A list Kiln
 cannot read loads the mod with a warning and refuses only its tracked writes.
@@ -37,7 +55,7 @@ cannot read loads the mod with a warning and refuses only its tracked writes.
 |---|---|---|
 | `none` | nothing | server logic, chat commands, world edits, creature and loot changes, `"journal": "chat"` quests |
 | `kiln` | Kiln: the server sends definitions | new items, recipes, template clones from existing resources |
-| `mod` | this mod, from the server's modpack | icons, models, sounds with your audio, talents, quests, NPC clones, client code, key-bound abilities |
+| `mod` | this mod, from the server's modpack | icons, models, sounds with your audio, talents, quests, NPC clones, client code, key-bound abilities, boot mods the players need (resource patches), material pools |
 
 A stated `kiln` or `mod` makes the server refuse vanilla clients, unless `network.json` has `modSync: off`. A value from the `side`
 default doesn't, so state it. A Kiln client without a stated `mod` mod is refused by default and told which; `modSync: warn` or `off` lets it in (passes on test servers, not yet in a real game).

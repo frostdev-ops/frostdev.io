@@ -2,7 +2,8 @@
 
 Wiki: [dev kit](https://frostdev.io/kiln/wiki/dev-kit), [your first mod](https://frostdev.io/kiln/wiki/first-mod).
 
-`Kiln.Api`, `Kiln.Sdk` and `Kiln.Templates` share the full MDK pack version: `0.2.0-dev.27` for this release, or a unique
+`Kiln.Api`, `Kiln.Sdk`, `Kiln.Templates` and `Kiln.TestKit` share the full MDK pack version: `0.2.0-dev.29.18` for this release (the
+four `.nupkg` files on its GitHub release), or a unique
 `0.2.0-dev.local.<date>.<time>` for a local pack. `0.2.0` is only the source's base version. These packages use a local feed,
 not nuget.org: pass the MDK feed as `--feed` or `$KILN_FEED`. Use the actual pack version when editing a project by hand.
 
@@ -31,6 +32,11 @@ dotnet new kiln-mod -n MyMod --feed <feed> --server <server folder> --tests --se
 | dev.27+: `events`, `saved-data`, `rules` (NoClip too), `network` | one topic each | server, none; `network` both, mod |
 | dev.27+: `screen-effect` | screen effects as blocks | both; `clients` as the blocks need |
 | dev.27+ advanced: `hooks`, `shader`, `world-program` | a game-function detour, shader hooks, a program in the game's scheduler | `hooks`, `shader` advanced; `shader` both, mod |
+| dev.29+: `system-wrap` | a typed wrap of one of the game's programs (`Systems.Wrap<Ecs.Programs.FuelSetup>`, `AroundEach`) | server, none |
+| dev.29+: `client-program` | a program of the mod's own in the player's client world (`"world": "client"`, `EcsPrograms.TryBind`) | client, none |
+
+`kiln-service` in the list is for Kiln's own repository (a native service and its wrapper), not for mods. The `mod`
+template has `<KilnFeatures>tasks.pool</KilnFeatures>` as a comment (dev.29.18+, [tasks.md](tasks.md)).
 
 **dev.20+ block templates:** `item-blocks`, `world-blocks`, `creature-blocks`, `npc`, `cosmetic`,
 `building-material`, `ability-blocks`, `quest`; `ui --set blocks=true` selects UI as data. Use `kiln new --list` from the
@@ -40,13 +46,13 @@ installed MDK to confirm availability. These add typed blocks and/or `blocks/*.j
 **dev.26+:** `dotnet new kiln-unit-test -n MyMod.Tests --mod ../MyMod/MyMod.csproj` makes an xunit project on
 the `Kiln.TestKit` package ([testing.md](testing.md)). `Game` in `KilnServices` references `Kiln.Game` (`Kiln.Ecs` typed reads);
 the build then writes `kiln.gametypes.json` beside the mod, which Kiln checks at load. Release packs carry their full version
-(`0.2.0-dev.26`) and an SDK feed folder (`sdk/feed/`). The launcher can move its data folder (Settings, Library, Data
+(`0.2.0-dev.29.18`) and an SDK feed folder (`sdk/feed/`). The launcher can move its data folder (Settings, Library, Data
 folder); after a move, delete a native mod project's `build` folder once (CMake keeps the old SDK path). Not run in a real
 launcher window yet.
 
 The project file:
 ```xml
-<Project Sdk="Kiln.Sdk/0.2.0-dev.27">
+<Project Sdk="Kiln.Sdk/0.2.0-dev.29.18">
   <PropertyGroup>
     <KilnModId>my-mod</KilnModId>
     <Version>1.0.0</Version>
@@ -64,18 +70,20 @@ The project file:
 | `KilnModId` | lower-case `AssemblyName` | `id` |
 | `KilnModName`, `Version` | `AssemblyName`, 1.0.0 | `name`, `version` |
 | `Authors`, `Description`, `PackageLicenseExpression`, `PackageProjectUrl` | | `authors`, `description`, `license`, `url` |
-| `KilnApiVersion` | the SDK's (0.2.2) | `apiVersion` |
+| `KilnApiVersion` | the SDK's (0.2.10 for dev.29.18) | `apiVersion` |
 | `KilnSide` | server | `side` |
 | `KilnClients` | from the side: server none, else mod | `clients` |
 | `KilnEntryType` | the only public `Mod` subclass | `entryType` |
 | `KilnAdvanced` | false | `advanced` |
+| `KilnBoot` (dev.28+) | none | `boot`: `true` or `required` ([boot.md](boot.md)) |
+| `KilnUpdatesRepository` (dev.28+), `KilnUpdatesTagPattern`, `KilnUpdatesAsset`, `KilnUpdatesChannel`; `KilnUpdatesNexusModId`, `KilnUpdatesNexusFileChainId`; `KilnUpdatesProvider` | | `updates` ([manifest.md](manifest.md)) |
 | `KilnFeatures`, `KilnExports` | | `features`, `exports` (KILN121 counts `KilnFeatures` as asked) |
 | `KilnTestsAutoRun`, `KilnTestTimeoutSeconds` | | `tests` |
 
 Not in the manifest:
 | Property | Does |
 |---|---|
-| `KilnServices` | services to reference: Abilities, Assets, Audio, Blocks, Build, Chat, Client, Combat, Content, Creatures, Gameplay, Hooks, Items, Network, Permissions, PlayerAnim, Players, Quests, Rules, Saves, Settings, Skills, Spawn, Time, Ui, Vfx, World; `Game` (`Kiln.Ecs` types); and `Testing` |
+| `KilnServices` | services to reference: Abilities, Assets, Audio, Blocks, Build, Chat, Client, Combat, Content, Creatures, Gameplay, Hooks, Items, Network, Permissions, PlayerAnim, Players, Quests, Rules, Saves, Settings, Skills, Spawn, Time, Ui, Vfx, World; dev.28+ CreatureControl, Queries, Terrain; dev.29+ Systems, Sigs; dev.29.15+ Stations (Kiln.Blocks without Blocks' defaults); `Game` (`Kiln.Ecs` types); and `Testing`. Gems are in Abilities, Bases and Stations in Blocks, tasks in Kiln.Api |
 | `KilnServer`, `KilnModsDir` | deploy target |
 | `KilnReload` | KilnDeploy also reloads the mod |
 | `KilnModFolders` | data folders copied into the mod; includes `blocks`, content, assets, skills, quests, icons, Impact and audio sources; inspect the installed SDK for the full list |
@@ -84,6 +92,9 @@ Not in the manifest:
 | `KilnGameIds`, `KilnCatalog` | game-id constants |
 | `KilnBake` | dev.27+: false turns off baking code-defined quests, game-tree nodes, VFX and materials into the mod (on when `KilnServices` names Quests, Skills, Blocks or Vfx); `KilnBakeSteps`, `KilnBakeTimeoutSeconds`. `docs/kiln/modding/baked.md` |
 | `KilnWrites` | dev.27+: false stops the build adding `World.Write`/`Update` types to `"writes"` |
+| `KilnBakeWorldTables` | dev.29+: true bakes C# world-table blocks (material pools) into the mod for its first start |
+| `KilnGameTypes` | false: no layout stamp `kiln.gametypes.json` |
+| `KilnIncludeModFolders`, `KilnPackageOutputPath` | false: copy no data folder automatically; where `KilnPack` writes the zip |
 
 Items: `KilnDependency` (`Version`, `Optional`), `KilnLoadBefore`, `KilnLoadAfter`, `KilnIncompatible` (`Version`).
 
@@ -108,7 +119,8 @@ kiln/mods/my-mod/
   skills/*.json              talents
   blocks/*.json              building blocks (including quests/UI on dev.20+)
   quests/*.json              quests, NPCs, dialogue
-  kiln.programs.json          optional dev.20+ boot ECS declarations
+  kiln.programs.json         optional dev.20+ boot ECS declarations (dev.29+ also written from [Query] structs)
+  sigdb/server.json          optional dev.29+ typed-hook descriptors (client.json for the client)
   assets/assets.json         icons, textures, resources
   assets/cook.json           recipe; assets/cooked/ is made on the player's machine
   audio/  impact/  icons/    sources

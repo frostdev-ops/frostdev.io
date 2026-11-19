@@ -1,9 +1,13 @@
 # Particles, lights, the game's VFX
 
-Wiki: [vfx](https://frostdev.io/kiln/wiki/vfx). `kiln lint` checks all of it.
+Wiki: [blocks, VFX](https://frostdev.io/kiln/wiki/blocks#vfx), [shaders](https://frostdev.io/kiln/wiki/shaders). Page
+in the repository: `docs/kiln/modding/vfx.md`. `kiln lint` checks all of it.
 
 ## What's been seen in a real game
-Nothing built by Kiln, so far: files, budget and checks are proven offline, and effects have run on real GPUs in a test harness. Say "needs a client check" about how anything looks, or whether it shows. A dedicated server draws nothing. Kept current at
+The status page lists Kiln-built particle bursts with a light, the game's VFX by name, a flame that stays on the hand
+and many plays without a hitch as seen in the game; one VFX material drew magenta, and a coloured explosion showed
+magenta for its first frame (open). The dev.29 VFX budget and registration ran in host tests only. Say "needs a client
+check" about how a new effect looks, or whether it shows. A dedicated server draws nothing. Kept current at
 https://frostdev.io/kiln/wiki/status.
 
 ## Writing one
@@ -21,5 +25,8 @@ https://frostdev.io/kiln/wiki/status.
 ## Rules that matter
 - A new VFX needs `side` both and `clients` `mod` (KL211). Only naming the game's VFX doesn't.
 - All mods share room for 473 new VFX, 386 meshes, about 240 KB of mesh memory and 10 sounds in VFX (KL320). Past a limit Kiln refuses the whole mod.
+  dev.29+: `Vfx.ResourceBudget` reads what is left from the game's own table once a client world runs; asset-file and
+  native VFX count too. `Blocks.Define(name, vfxBlock, options)` answers registered, accepted for the next start, or
+  refused (`Blocks.GetVfxRegistration(id)`).
 - A VFX block's `sound` is counted but not played yet. No decals, fog, custom meshes or custom shaders yet.
 - From code, a play reaches only Kiln clients near it, and joiners don't see it. For what every player must see, attach it to data.

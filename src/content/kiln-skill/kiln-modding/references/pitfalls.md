@@ -113,3 +113,51 @@
 | `NoClip.Set` on a server that did not allow it | refused with a reason | `"allowNoClip": true` in `kiln/config/rules.json`; read the result |
 | Expecting NoClip to last through a death or a teleport | it ends (`PlayerNoClipEndedEvent`, `Death` / `Teleport`) and stays off | ask again: `NoClip.Set(player, true)` or `Update` on your rule set |
 | Code definitions (quests, game-tree nodes, VFX) that depend on settings, other mods or the game's data, with baking on | the build bakes what the code defined under the test kit, and that file wins at start | `KilnBake=false` for such a mod |
+
+## dev.28+ additions
+
+| Mistake | Result | Use instead |
+|---|---|---|
+| Changing data the game reads once at start (Flame Altars per level, experience per level, a template's components) in `OnLoad` or a data pack | too late: the game already read it | a resource patch in `OnBoot` or `blocks/*.json` with `"boot": true` ([boot.md](boot.md)) |
+| `Blocks.Define` (the run-time one) in `OnBoot` | KILN034 (error) | `BootDefinitions.For(boot).Define(...)` |
+| Editing a boot mod's files or the settings its `OnBoot` read, then hot-reloading | refused: `RestartRequiredBoot` | restart the game or the server |
+| `OnBoot` content that depends on a setting only the server or only the player has | the join finds the two sides' boot content differ (dev.29+) | read only shared settings; stage the same for every role |
+| `MoveTo` taken as pathfinding | it walks straight at the point | `Queries.FindPath`, then walk the points |
+| A voxel ray as "can it see the creature" | voxel rays see terrain and buildings, not props or creatures | combine with an entity check; `BudgetExceeded` means ask next step |
+| A world query on a world a player hosts on dev.28 | held (`game test pending`) | dev.29+, or `"preview"` on a test PC only |
+
+## dev.29+ additions
+
+| Mistake | Result | Use instead |
+|---|---|---|
+| A tick-thread API in a `Systems.Wrap` stage, a `Systems.Define` handler or a same-step native | throws: they run on the game's workers once a player is in the world (a lab without players can hide it) | copy values, `slice.Post` / `NativeContext.Post` |
+| `Spawn` or `Destroy` inside a wrap stage or a Kiln ECS program | refused | `slice.Post(...)` or `Context.Scheduler.Post(...)` |
+| A second `Replace` on one program | refused, naming the holder | `Before` / `After`, or agree with the other mod |
+| Changing a `[Query]` and hot-reloading | `Systems.Define` answers `Ok = false` | rebuild and restart the server |
+| Binding a client-world program off the game's main thread | `InvalidOperationException` (KILN109 warns) | `OnLoad` or `Client.Post` |
+| Expecting a client program's write to be saved or seen by others | client-world writes are marked for nothing | do it on the server, or accept it is local |
+| A `RegisterSync` native or attachment that blocks | holds the game's program and the mod's unload | return at once; post the rest |
+| More than 19 natives across all mods | refused with the reason | fewer natives, or one native with a mode argument |
+| Many buff clones defined from code while a world runs | each gets a table of its own | a data pack, or define them before the world loads |
+| Assuming a refused death keeps the entity at its old health | one or two steps at 0 health, then `SurvivalHealth` | set `SurvivalHealth`; the screen during those steps needs a client check |
+| An equipment set with several direct swaps | can be refused before anything changes (`UnsupportedSwaps`) | split it into two sets |
+| A resource-patch path like `components[3].isActive` | refused when a patch adds or removes components | the component's type name: `Gravity.isActive` |
+
+## dev.29.x additions
+
+| Mistake | Result | Use instead |
+|---|---|---|
+| Keeping per-base data under the base id (dev.29.14+) | the id is the smallest altar id: it changes when altars merge or split | key it by an altar's id; `BasesChangedEvent` |
+| Counting `ItemCraftedEvent` twice for an automated station (from dev.29.14) | it now comes once, at the cycle's end | count once |
+| `Blocks` in `KilnServices` for a mod that only automates stations (dev.29.15+) | players without Kiln cannot join its server | list `Stations` instead |
+| Expecting a mod window to keep Kiln's ember look (dev.29.16+) | the default is the player's look (`UiStyle.Player`) | `Style = UiStyle.Kiln` on the options, or a theme of your own |
+| Counting on Kiln's "Unknown command" reply (dev.29.17+) | an unknown `/` line now passes through to the game and other mods | handle your own commands; servers can set `"unknownCommands": "reply"` |
+| `.Result`, `.Wait()` or `Thread.Sleep` in a command handler (dev.29.18+) | KILN105 warns: commands run on the tick, the server freezes | `await`, or a Kiln task |
+| `KilnTask.Wait()` or `.Result` before it ended | `Wait()` is refused on game threads and in tasks; `.Result` throws | `await task` |
+| `ConfigureAwait(false)` inside a task | the code after it has left the task: `WorldConcurrent` refuses it (KILN105) | drop it; `await ctx.NextGateWindow()` before the next read |
+| `ctx.ToTick();` without `await` | nothing hops: the rest still runs on the worker (KILN105) | `await ctx.ToTick();` |
+| Moving items or spawning inside a task | tick-only APIs throw there; an unload between take and give loses items | return a plan, carry it out in tick code |
+| `KILNX001` in `NoWarn` to use `WorldConcurrent` | still `error KILNX003` | `<NoWarn>$(NoWarn);KILNX003</NoWarn>` |
+| `WorldConcurrent` with no tick fallback | `Unavailable` on every game build without an exact profile | `WorldConcurrent.OrOnTick(ctx, offTick, onTick)` |
+| `Content.Text` on a dedicated server, or off the client's main thread | null on a server | `Texts.Get` with a client catalog on a server; call it on the main thread |
+| A server wrap that changes what a player's own character does, with no prediction stage | that player's own screen does not show it | the same stage with `WorldKind.Prediction` (dev.29.18+) |

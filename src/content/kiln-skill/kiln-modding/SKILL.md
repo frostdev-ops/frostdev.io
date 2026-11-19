@@ -15,20 +15,13 @@ Enshrouded is a trademark of Keen Games GmbH. Kiln is unofficial.
 
 1. Read the page for what you're using: https://frostdev.io/kiln/wiki. [references/docs-map.md](references/docs-map.md) says
    which one.
-2. The current build is **0.2.0-dev.27**, with mod API 0.2.2 and the matching dev.27 MDK pack. References marked **dev.20+**
-   to **dev.27+** require that runtime and MDK or newer; dev.19 lacks the dev.20 additions. Check the installed build
-   (`Mods.RuntimeApiVersion`). Items marked **dev.26+** were released without a client pass, so none has been verified in a
-   player's game (contract and capabilities, typed ECS reads, `Kiln.TestKit`, `[ClientCheck]`, `SteamGuard`, `InstanceData`,
-   player animation states, weapon moves, the movable data folder).
-   Items marked **dev.27+** were proven on test servers with stand-ins for players; of them only NoClip switched on and
-   off and the scrolling pause menu were tried in a real game (one PC). Not seen by a player: buff removal, a player's
-   aim, kick and ban, event filters, equip, weather, tracked world writes, item data in players' games, affixes, baked
-   definitions, mouse key bindings. One dev.26 call shape no longer compiles: `Events.On<T>(handler, default)`.
-   Server/offline verification does not establish the pending client rendering, input or multiplayer checks. Many dev.21 to dev.24
-   paths were verified only under Wine (tests, dedicated-server labs), not on Windows, a Steam Deck or in a real client; of dev.24
-   only Kiln's main-menu entries with ShroudForge mods on, W and S steering with ShroudForge's Unlimited Flight and SET's
-   tools were seen in a real game (Linux, Proton, one client). The official dev.22 launcher has Nexus integration disabled:
-   import downloaded archives manually; no Catalog, account sign-in or `nxm://` handler.
+2. The current build is **0.2.0-dev.29.18**, with mod API 0.2.10 and the matching 0.2.0-dev.29.18 MDK. A mark like
+   **dev.20+**, **dev.28+** or **dev.29.17+** means that runtime and its MDK or newer; check the installed build
+   (`Mods.RuntimeApiVersion`). Which build added what, and what a real game has shown:
+   [references/versions.md](references/versions.md). Much of dev.28 to dev.29.18 ran only on test servers, in host tests
+   or under Wine: take the verification status from the release notes' "Checked" and "Not yet" text and never claim more.
+   Server/offline verification does not establish client rendering, input or multiplayer behavior. The official
+   launcher has Nexus integration switched off: import downloaded archives by hand.
 3. Decide the side and what players need, before writing code:
    - `side`: `server` (default), `client`, or `both`;
    - `clients`: `none` (vanilla players can join), `kiln` (players need Kiln; the server sends definitions), or `mod`
@@ -42,14 +35,18 @@ Enshrouded is a trademark of Keen Games GmbH. Kiln is unofficial.
    [references/blocks.md](references/blocks.md) for the block families, then [references/data-packs.md](references/data-packs.md),
    [references/quests-talents-sounds.md](references/quests-talents-sounds.md),
    [references/vfx.md](references/vfx.md),
-   [references/api.md](references/api.md).
+   [references/api.md](references/api.md),
+   [references/gameplay.md](references/gameplay.md) (queries, terrain, refusable events, stations, gems).
+   Data the game reads once at start (Flame Altars, experience per level): OnBoot and resource patches,
+   [references/boot.md](references/boot.md). Heavy work: Kiln tasks, [references/tasks.md](references/tasks.md).
 3. **Check names**: `kiln catalog search`. Never guess game ids or field paths.
 4. **Build and deploy** to a local test server: `kiln build && kiln deploy`, then `kiln run`.
 5. **Check the log**: `kiln logs --mod <id>` for `mod <id> <version> loaded in … ms`, or the reason it didn't load.
 6. **Hot reload** after each change: `kiln deploy --reload`.
 7. **Test** in the server with `[KilnTest]` methods: `kiln test`. dev.26+: the same methods offline under `dotnet test`
    (`Kiln.TestKit`), and `[ClientCheck]` for what a player must see. [references/testing.md](references/testing.md).
-8. **Package**: `kiln pack`.
+8. **Package**: `kiln pack`. dev.28+: `kiln publish` makes a GitHub release in steps you confirm, and `updates` in the
+   manifest gives players update notices ([references/devkit.md](references/devkit.md)).
 
 `--json` on any `kiln` command gives one JSON document; exit 0 ok, 1 failure, 2 usage.
 [references/devkit.md](references/devkit.md).
@@ -61,11 +58,12 @@ Never deploy to a server players are using. Use a separate local test server.
 - **Tick thread.** `OnLoad`, `OnUnload` and ordinary server event handlers run on the tick thread; their `await`
   continuations return there. Game state must be touched there. ECS/system-hook callbacks instead run on game workers;
   see [references/world-programs.md](references/world-programs.md). From other threads, use `Context.Scheduler.Post(...)`
-  or `await Context.Scheduler.NextTick()`. Never block the tick thread (`.Result`, `.Wait()`, `Thread.Sleep`).
+  or `await Context.Scheduler.NextTick()`. Never block the tick thread (`.Result`, `.Wait()`, `Thread.Sleep`); commands
+  run there too. dev.29.18+: move heavy work into a Kiln task (`Context.Tasks.Run`) and hand results back in small pieces.
 - **Client threads.** Client-world work runs on the main thread (`Client.Tick`, `Client.Post`). Draw functions run every frame:
   keep them short.
 - **Register in `OnLoad`, work later.** On a client `OnLoad` can run in the main menu. Do world work from
-  `ServerStartedEvent` or `Client.Tick`.
+  `ServerStartedEvent` or `Client.Tick`. What the game reads once at start is set in `OnBoot` (dev.28+), never in `OnLoad`.
 - **Registrations belong to one mod lifetime.** Do not retain callbacks or handles from an old load. Release threads, timers,
   sockets, files and static references held by non-mod code. ECS bindings drain callbacks at unload but keep an inert scheduler
   entry until restart; see [references/world-programs.md](references/world-programs.md).
@@ -78,7 +76,8 @@ Never deploy to a server players are using. Use a separate local test server.
   change after release. Saves keep them. For native quests and dialogue, names and option order feed the ids too.
 - **Fail soft.** Check `X.Available` and degrade: services can be missing on a build Kiln doesn't know. dev.26+:
   `Capabilities.Is(name)` / `Why(name)`; an off capability throws `KilnUnavailableException`. dev.27+: every service
-  does, and KILN121 warns when a `[RequiresCapability]` member is used with nothing asking first.
+  does, and KILN121 warns when a `[RequiresCapability]` member is used with nothing asking first. A mod that cannot work
+  without a row names it in `KilnFeatures` (`tasks.pool`), so Kiln does not load it where the row is off.
 - **Read every result (dev.27+).** A refusal by the game is a result with `Ok = false` and a `Reason`, not an exception.
   KILN120 warns when nobody reads one; pass the reason on to the player or the log.
 - **Never ship Kiln assemblies.** Kiln.Sdk references them with `ExcludeAssets=runtime`.
@@ -105,6 +104,7 @@ planned release: `docs/kiln/modding/limits.md`.
 ## When something isn't documented
 
 Don't guess at game internals. Read the wiki and the XML docs that ship with Kiln.Api. If a service doesn't offer what you need,
-say so instead of patching game memory. Low-level hooks are for mods that opt into the advanced tier (`"advanced": true`);
+say so instead of patching game memory. Wrapping one of the game's own ECS programs (`Kiln.Systems`, dev.29+) is a typed
+service, not the advanced tier: [references/world-programs.md](references/world-programs.md). Low-level hooks are for mods that opt into the advanced tier (`"advanced": true`);
 the short rules (kiln.hooks v2: link order, `caller()`, link slots, `hooks.json`; closed DLL mods and `[late]`; EML and EMF
 notes) are at the end of [api.md](references/api.md).

@@ -2,7 +2,8 @@
 
 Namespace `Kiln` for everything. Each service is its own assembly: list it in `KilnServices` (setup.md). Signatures here are the
 common ones; the XML docs and the wiki have the rest. Talents, quests, NPCs and sounds:
-[quests-talents-sounds.md](quests-talents-sounds.md).
+[quests-talents-sounds.md](quests-talents-sounds.md). Queries, terrain, refusable events, watches, stations and gems:
+[gameplay.md](gameplay.md). Kiln tasks: [tasks.md](tasks.md). OnBoot and resource patches: [boot.md](boot.md).
 
 ## Threads, in one table
 | Code | Thread |
@@ -11,8 +12,10 @@ common ones; the XML docs and the wiki have the rest. Talents, quests, NPCs and 
 | `Client.Tick`, `Client.Post`, network handlers on a client, key binding handlers | client main thread |
 | `Ui.Menus` clicks | game UI thread (main thread), after the frame |
 | screen draw functions, crafting panels, `Ui.Frame`, `Hud.Show` text functions | render thread, every frame: draw only |
-| `EcsPrograms.Bind` callbacks (dev.20+) | game worker thread; declared component/event access only |
-| `Abilities.Natives.Wrap`, `Abilities.OnDamage` | job thread inside the sim step: touch only the call |
+| `EcsPrograms.Bind` callbacks (dev.20+), `Systems.Wrap` stages and `Systems.Define` handlers (dev.29+) | game worker thread; declared component/event access only |
+| `Abilities.Natives.Wrap`, `Abilities.OnDamage`, dev.29+ `RegisterSync` natives and `Attach` handlers | the thread that runs the Impact program, inside the sim step: touch only the call |
+| `Context.Tasks.Run` work (dev.29.18+) | Kiln's worker threads: `[AnyThread]` APIs and `WorldConcurrent` only ([tasks.md](tasks.md)) |
+| `OnBoot` (dev.28+) | the boot thread, before the game is entered: no tick, world or service calls ([boot.md](boot.md)) |
 
 Back to the tick thread: `Context.Scheduler.Post(action)` or `await Context.Scheduler.NextTick()`. Check with
 `Game.IsTickThread` / `Game.AssertTickThread()`. On a client in the main menu there is no world: `Scheduler.Post`
@@ -34,6 +37,10 @@ if (!r.Ok) c.Reply($"not equipped: {r.Reason}");                                
 - **A change Kiln makes has an event** (dev.27+ also `CombatChangedEvent`, `TimeSpeedChangedEvent`,
   `ImpactVariableChangedEvent`, `PlayerProgressionChangedEvent`). A change made inside the handler of its own event is
   announced at the start of the next step, never recursively.
+- **Held rows (dev.28).** dev.28 shipped game-only features switched off: such a row reads unavailable with the reason
+  `policy` and the text `game test pending:`; `Capabilities.IsHeld(name)` tells "built, not tested" from "does not work
+  here", and `"preview"` in `kiln/kiln.json` (`true` or a list of names) switches them on for testing. dev.29+ holds
+  nothing.
 - **Capabilities.** `Capabilities.Is(name)`, `Get(name)` (`Capability`: `State`, `Reason`, `ReasonText`, `Source`,
   `SessionDependent`, `IsAvailable`), `Why(name)` (one sentence to log), `All`; any thread. `CapabilityChangedEvent`
   on the tick thread. `Game.HasFeature(name)` asks the same table. Names: every sigdb feature, `kiln.<service>`,
@@ -58,12 +65,13 @@ if (!r.Ok) c.Reply($"not equipped: {r.Reason}");                                
   simulated players only.
 - **Side and thread markers:** `[ServerOnly]`, `[ClientOnly]`, `[AnyThread]`, `[RenderThread]`, `[WorkerThread]`
   beside `[TickThreadOnly]`. Markers, read by the analyzers; dev.27+ the services' members carry them.
-- **API version:** `Mods.RuntimeApiVersion` is the running Kiln's mod API (0.2.2 on dev.27). `Mods.ApiVersion` is
-  obsolete: a const, copied into your mod at build time. Release builds carry their full version (`0.2.0-dev.27`).
+- **API version:** `Mods.RuntimeApiVersion` is the running Kiln's mod API (0.2.10 on dev.29.18; the table in
+  [versions.md](versions.md)). `Mods.ApiVersion` is obsolete: a const, copied into your mod at build time. Release
+  builds carry their full version (`0.2.0-dev.29.18`).
 - **`[Experimental]` ids:** `KILNX001` lab and test members (hidden; a build error unless the project adds it to
-  `NoWarn`), `KILNX002` API not yet proven in a real client, `KILNX003` the task-thread world reads and writes
-  (`WorldConcurrent` and its types; opt in with `KILNX003`, not `KILNX001`). None is covered by the additive-API
-  promise.
+  `NoWarn`), `KILNX002` API not yet proven in a real client, `KILNX003` (dev.29.18+) the task-thread world reads and
+  writes (`WorldConcurrent` and its types; opt in with `KILNX003`, not `KILNX001`). dev.28's `KILNX028` (capacity
+  types) is not needed from dev.29 on. None is covered by the additive-API promise.
 
 ## The mod
 ```csharp
@@ -82,7 +90,8 @@ public sealed class MyMod : Mod
 }
 ```
 - `Context`: `Info` (the whole manifest as `ModInfo`), `Log`, `Tick`, `GameLog`, `Scheduler`, `Messages`,
-  `DataDirectory` (`<dataDir>/<id>`: your files).
+  `DataDirectory` (`<dataDir>/<id>`: your files), dev.29.18+ `Tasks` ([tasks.md](tasks.md)).
+- `Mod.OnBoot(BootContext)` (dev.28+, with `"boot"` in the manifest) runs before the game is entered: [boot.md](boot.md).
 - `Game`: `KilnVersion`, `IsTickThread`, `HasFeature(name)`, `AssertTickThread()`. dev.26+: `HasFeature` is
   `Capabilities.Is`.
 - The dedicated server steps about 24.5 times a second (~41 ms). 1470 steps ≈ 1 minute.
@@ -116,7 +125,8 @@ held for it. `Events.On<T>(handler, default)` no longer compiles (priority or fi
 Priorities `Highest, High, Normal, Low, Lowest, Monitor`. `CancelableEvent.Cancel()`, `ResultEvent` (`Allow`,
 `Deny`). Build your own events only when `Events.HasSubscribers<T>()`. Each service page lists its events with
 thread, cancel meaning and writable fields: read it before relying on one. Some player-facing events are built but not yet
-confirmed with a real player.
+confirmed with a real player. dev.29+ events a mod can refuse (`EntityDyingEvent`, `ItemPickingUpEvent`,
+`PlayerEquippingEvent`) and component watches: [gameplay.md](gameplay.md).
 
 ## Configs
 ```csharp
@@ -131,6 +141,8 @@ _cfg.Changed += e => { };                      // or [Subscribe] ConfigChangedEv
 var n = _cfg.Value.MaxHomes;                   // always current
 ```
 Commented JSONC, validated, clamped, hot-reloaded on edit. Never build the config path yourself: `Config.Directory`.
+dev.28+: `ConfigFile.TrySet` returns false with the reason when the file cannot be written (`ConfigFile.LastWriteError`);
+before, it returned true. `Config.Register<T>()` and `.Value` also work in `OnBoot`.
 **dev.20+:** `Config.RegisterWorld<T>()` keeps one config per world in its sidecar; values switch before `WorldLoadedEvent`
 and use defaults with no world. `[RequiresRestart]` edits apply when that world next opens. `Context.Locale.Get(key, args)`
 reads this mod's `locales/<language>.json`, falling back to English/key; use it for mod text, not game-tag lookup.
@@ -148,11 +160,15 @@ if (Permissions.Has(player, "mymod.fly")) { }
 ```
 Arg types: `Int`, `Double`, `Bool`, `Word`, `String`, `Greedy`, `Enum<T>`, `Choice`, `Player(s)`, `Entity(ies)`
 (`@s @a @p @r @e[...]`), `Position` (`~` relative), `Item`, `Duration`, `TimeOfDay`. `/help` and completion are
-built in. Console: `kiln/control/console/*.cmd`.
+built in. Console: `kiln/control/console/*.cmd`. Commands run on the tick thread: dev.29.18+ KILN105 warns about any
+blocking wait in a `[Command]` method, a `Commands.Register`/`Executes` handler or a `Chat.Received` handler.
 
 ## Chat
 `Chat.Received += m => { m.Cancel = true; }`, `Chat.Broadcast(text)`, `Chat.Tell(player, text)`,
 `Chat.Say(player, text, to)`, `Chat.Players`, `Chat.FindPlayer(name)`. Tick thread for sends.
+dev.29.17+: a `/` line that names no Kiln command passes through untouched to the game and other mods (other loaders'
+slash commands work). `"unknownCommands": "reply"` in `kiln/config/chat.json` brings back Kiln's "Unknown command";
+`Commands.UnknownCommands` reads or sets it. Page `docs/kiln/services/chat.md`.
 
 ## Players and progression
 `Players.Available`, `Players.All`, `Players.Find(name | EntityId)`, `FindBySteamId`, `PositionOf`,
@@ -183,21 +199,26 @@ dev.27+ **NoClip** (one real game: switched on and off; death, teleport and othe
 `rules.noclip`. The character flies through terrain, blocks and props, with no other grant (no invulnerability). Off on
 every server until its `kiln/config/rules.json` has `"allowNoClip": true` (refused with a reason); the player's game needs
 Kiln dev.27. A death or a teleport ends it, and it must be asked for again; `PlayerNoClipEndedEvent` (`Reason`:
-`RuleEnded`, `Death`, `Teleport`; `RestoredTo` when Kiln moved the character back to open space first). Does nothing
-while the Creative Mode mod flies the character.
+`RuleEnded`, `Death`, `Teleport`, dev.28+ `Left`: the player left in NoClip and is put at the last free position next
+time; `RestoredTo` when Kiln moved the character back to open space first). Does nothing while the Creative Mode mod
+flies the character. dev.29+ fixed `/noclip` and `rules.json` handling from player reports.
 
 ## Items, spawn, world, time, settings, combat
 - Items: `Items.Lookup(name)`, `Items.Search`, `await Items.Give(target, id, n, gear, options)`,
   `Items.Read(inventory)`, `await Items.Take(...)`, `Items.FindInventories(kinds)`. dev.27+ equip, in
   [Inventory transfers](#inventory-transfers-dev20). A mod item with a model of its own lies on the ground as that model
-  (`ItemBlock.Dropped` names another); before dev.27 it took its base item's ground model.
+  (`VisualBlock.Dropped` names another); before dev.27 it took its base item's ground model. dev.29+ equipment sets,
+  dev.28+ tool wear: [gameplay.md](gameplay.md). dev.29.15+: `Items.DisplayName(id)` is the name in the player's
+  language, also on a joined client.
 - Spawn: `Spawn.Lookup(template)`, `await Spawn.Entity(template, pos, yaw, options)`, `Spawn.Item`,
   `Spawn.Group`, `Spawn.Inspect`, `Spawn.Destroy`, `Spawn.Tracked`, `Spawn.CleanupTracked(tag)`. Check
   `Spawn.WorldRunning` first. dev.20+: `SpawnOptions.Components` takes up to 64 `SpawnComponent.Of(name, bytes/value)`
   entries applied with the spawn, before its first tick; check `Spawn.SupportsComponents`. Exact reflected sizes are
   required, and `SpawnTime` needs `SpawnFlags.NoTrack`. This is distinct from queued component changes later.
 - World: positions are `WorldPosition` in metres; teleport and entity reads; dev.27+ `World.Query` gives entity sets.
-  Writes: [below](#tracked-world-writes-dev27).
+  Writes: [below](#tracked-world-writes-dev27). dev.28+ voxel rays, ground, line of sight, paths (Kiln.Queries), terrain
+  overlays (Kiln.Terrain) and `World.SetTransformScale`: [gameplay.md](gameplay.md). Reads from a Kiln task:
+  `WorldConcurrent` ([tasks.md](tasks.md)).
 - Time: `Time.State`, `Time.Set("19:45")`, `Time.ResetWeather()`. Set the time only after the world runs
   (`ServerStartedEvent`), or the save load overwrites it. dev.27+ weather: `await Time.SetWeather("rain",
   TimeSpan.FromMinutes(10))` → `WeatherResult` (by name, on every layer that has it, or `layer:`; no duration holds it
@@ -304,6 +325,16 @@ Registries: `Content.Items`, `Recipes`, `Loot`, `Drops`; game data: `Content.Tem
 `Buffs`, `Perks`, `Skills`. `entry.Get(path)`, `Original(path)`, `Set(path, value)`, `Reset(path)`.
 `Content.Dump()` writes every registry with its fields to `kiln/data/content/dump.json`: look names and paths up
 there instead of guessing. `Content.Status()`, `Content.PackReport()`.
+dev.29.18+ **the game's own texts:** on a game client, `Content.Text(locaTag)` (a string tag, a GUID or a loca id)
+gives the text the game shows now, in the player's language; `Content.TextAvailable`, `Content.TextLanguage`.
+Main thread of the game client only; null on a dedicated server (there `Texts.Get` stays, English, from a catalog).
+`Content.TooltipValues(itemId)` gives an item type's tooltip rows (`TooltipValue`: `Label`, `Value`, `Display`), and
+`GameDataEntry.TooltipValues` does the same for a perk, a buff or a skill node. Not yet checked in a real game. Page
+`docs/kiln/services/content.md` "The game's own texts".
+dev.29+ **buff clones:** room for 4,096 for all mods together (1,024 before); `Content.Buffs.GetBudget()` says what is
+left. `Content.Buffs.Define(clone, new DefinitionRegistrationOptions(...))` answers Registered, AcceptedNextStart or
+Refused with a reason instead of throwing; `GetRegistration(id)` reads it later. Define many buffs in a data pack or
+before the world loads.
 dev.21+: `Overrides.Claim`/`Release`/`RestoreAll` from a thread where no mod's code runs (`Task.Run`, a timer) throw
 `InvalidOperationException`; post to the tick thread with `Context.Scheduler.Post`. A `ReflectedResources` handle got in
 `OnLoad` stays your claim from any thread. `Assets.Reflect(key)` returns `null` on a build without kiln.types.
@@ -323,6 +354,8 @@ foreach (var e in Ecs.All<Ecs.Health>()) { }                  // also Ecs.Get<T>
   when a type it uses changed; an enum constant the compiler folds into a number is not stamped.
 - Reads only: a struct is a copy. Write with [tracked world writes](#tracked-world-writes-dev27) (dev.27+).
 - `Kiln.GameTypes.Components` and the nine old structs are obsolete (`Use Kiln.Ecs.`) and still work.
+- dev.28+: `GameType.ImpactName`, `GameTypes.ByImpactName` find a type by the name Impact scripts use (`ecs.Health`).
+  dev.29+: `Ecs.Programs.*` are typed views of the game's programs for `Systems.Wrap<T>` ([world-programs.md](world-programs.md)).
 - Server lab: typed reads equal raw bytes for 118 components; the rest and the client side are unproven.
   Page: `docs/kiln/typegen.md` §4.
 
@@ -380,19 +413,34 @@ Sequences enter them: a weapon's `Moves` or a cast's `Animation` names them ([bl
 overridden (`Assets.Override`/`Register` throw). Page: `docs/kiln/modding/animations.md` "Player states". A Kiln impact has no used item: give it
 its own `Damage1` config or it hits for 0.
 
+**Impact natives in the same step (dev.29+; server only; not confirmed in a real game).** `Abilities.Natives.RegisterSync(name, argc, handler)`
+answers inside the program's call (the older `Register` suspends the program for one step). `Abilities.Natives.Attach(program, native,
+stage, handler)` runs Before, Instead or After one vanilla native's calls in one program, without cloning it. Put
+`[ImpactNative]` on a static method with typed parameters and the build makes the registration, the typed
+`impact/natives.json` entry and a `Natives.<Name>` reference (KILN170 to KILN174 for shapes it cannot make; needs
+`Abilities` in `KilnServices`). `EffectBlock.Run` (JSON `"run"`) names such a native: the effect's program calls it
+first, with parameters bound by name (`self`, `target`, `attacker`, `caster`, `position`, `attackMod`, `damage`), so an
+extra hit can change its own `attackMod` (KL340 for a parameter that binds to nothing). Inside a native,
+`NativeContext.TryRead<T>` / `TryWrite<T>` reach components the program declares, on any entity; `NativeContext.Post`
+defers to the tick. All mods share 19 free native registry entries. Handlers must not block. Sample `FrostMark`; page
+`docs/kiln/modding/impact.md`; test kit `kiln.ImpactNatives`.
+
 ## World edits
 `await Build.Dig / Add / Flatten / Smooth / Paint / Replace(BuildShape.Sphere|Box|Cylinder(...))`,
 `Build.Read/Write(box, cells)`, `Build.PlaceProp(template, pos, rotation)`, `Schematic.CaptureAsync`, `.Paste`,
 `await Build.PlaceOnce(key, schematic, at)`, `await Build.Undo()`. Results carry `Refusal` (zone, base, not loaded).
 Vanilla clients see the edits and the game saves them.
 
+dev.28+: `Build.WriteIfUnchanged` writes only while the cells still are what you read. Terrain overlays:
+[gameplay.md](gameplay.md).
+
 **dev.20+ flame writes:** `await WorldProgress.SetFlameLevel(level)` (Quests) returns `FlameChange`: inspect `Ok`,
 `Reason`, `Marked` and `Mirrored`, not just queue acceptance. `LimitsAt(level)` reads derived limits. Client UI/fog/placement
 checks remain pending; a failed rollback is explicitly reported and may leave changed state.
 
 ## ECS world programs (dev.20+)
-For `kiln.programs.json` boot declarations and `EcsPrograms.Bind` in `OnLoad`, read
-[world-programs.md](world-programs.md). Ordinary `OnLoad` is too late to add a scheduler declaration. A callback is a worker
+For `kiln.programs.json` boot declarations and `EcsPrograms.Bind` in `OnLoad`, dev.29+ client-world programs, wraps of
+the game's programs (`Kiln.Systems`) and `Systems.Define`, read [world-programs.md](world-programs.md). Ordinary `OnLoad` is too late to add a scheduler declaration. A callback is a worker
 context, never a place to call tick-thread game services or retain component pointers.
 
 ## Game UI, HUD, keys
@@ -403,9 +451,35 @@ Key names: `F8`, `Ctrl+K`, `Shift+Alt+F2`, `Numpad5`, `None`; dev.27+ also the m
 `WheelUp`, `WheelDown`, `WheelLeft`, `WheelRight` with modifiers (`Ctrl+WheelUp`, `Shift+Mouse4`; one press per notch, a
 notch has no release). Left and right click cannot be bound (`Parse` throws, `TryParse` is false, as it is for every
 mouse name on a Kiln before dev.27). A taken press is kept from the game (Ctrl+WheelUp does not zoom the camera).
+dev.28+: every key has a name that reads back (`Key223` for a key with no name, `Oem8`, `IntlBackslash`); punctuation
+names such as `Backquote` mean the key at that place on any layout. dev.29.3+: one press never fires `OnPress` twice.
 dev.27+: with many entries the pause menu scrolls (`ui.menu_scroll`); where a menu cannot scroll (the main menu) and
 more than 3 mods add entries, theirs are listed on Kiln's Mods page instead, where `OnClick` runs the same way (the
-player's `modEntries` setting decides). Don't assume your entry is drawn in the game's menu.
+player's `modEntries` setting decides). Don't assume your entry is drawn in the game's menu. dev.29+: the pause menu's
+Auto shows every mod's entry whenever it can scroll.
+
+**Looks and themes (dev.29.16+; not yet seen in a real game).** `UiStyle.Player` (the look the player chose) is the
+default for `Ui.Window`, `Ui.Screen` and crafting panels; before, windows had Kiln's ember look. `ui.Palette` reads the
+look's colours by role. `Ui.Themes.Define(name, new UiThemeSpec { ... })` makes a theme for your own windows
+(`Theme =` on their options, or `using (ui.Theme(theme))`); `UiThemeSpec.OfferToPlayer = true` lets the player pick it
+for Kiln's UI. A mod
+never restyles other windows. `Ui.LoadFont(path)` and `ui.ModFont(font)` give your windows a font. Wiki
+[looks](https://frostdev.io/kiln/wiki/ui-looks); page `docs/kiln/ui.md`.
+
+**Item icons and names (dev.29.15+; not yet seen on screen).** `Ui.ItemImage(id)`, `ui.ItemIcon(...)`,
+`Ui.ItemIconsAvailable` draw the icon the game draws for an item (a new item shows its base item's icon until its own is
+served); dev.29.16+ `ItemIconTrimmed`, `ImageTrimmed`, `ImagePart`. A server has no icons. The overlay holds up to 960
+images. Crafting panels show at production stations only with `CraftingPanelOptions.AtFactories`; there read
+`CraftingScreen.Station`, not `Workshop`.
+
+**Values in the game's own UI (dev.28+, client; not confirmed in a real game).** `Ui.Values` replaces the numbers and bars
+the game draws for an item (`ItemBar`, `SlotBar`, `HeldBar`) and the local player's health, stamina and mana (`Hud`):
+the picture only, never the values. `Ui.Values.Slots()` / `SubscribeSlots` read the slots drawn each frame;
+dev.29.11+ `GemForgeCandidates()` the forge's GEMS list. Rows `ui.values.*`, `ui.slots.inspect`.
+
+**Graphics (dev.29.18+, client).** `kiln/state/graphics.json` (schema `schema/state-graphics.schema.json`) says what
+Kiln's graphics tools and the upscaler behind the game's FSR 3 do. Mods have no managed call for it; native plugins read
+`graphics_status` in kiln_ui.h.
 `Ui.Available` is false on a dedicated server. dev.20+: `WindowBlock`, `HudLineBlock`, `KeyBindingBlock` and the equivalent
 JSON sections bind config and safe `game.*` values without draw code: [blocks.md](blocks.md#ui-as-data).
 dev.20+: `StatusLines.Add(() => cachedText)` / `Set("state", text)` report mod status when asked, including on servers.
@@ -432,6 +506,8 @@ dev.27+: the launcher cooks a mod with a recipe on Play, and each cook records w
 (`<game>/kiln/state/cook-receipts`). A cooked file no receipt lists (shipped in a mod, copied in) loads with a warning
 (`"cooked": "warn"` in `kiln/kiln.json`, the default); `"local"` refuses it, `"any"` asks nothing (development). A mod's
 assets are read from its own folder only. Page: `docs/kiln/modding/cooking.md`.
+dev.28+: `Assets.OpenBlobCatalog` lists every content blob the game serves and whose bytes. dev.29.16+:
+`Assets.ReadResidentBlob(hash)` reads a resident blob from any thread (null until it is resident).
 
 ## Network
 ```csharp
@@ -442,6 +518,9 @@ ch.SendToServer(new Ping(...)); ch.SendTo(player, msg); ch.SendToAll(msg);
 ```
 Register messages in the same order on both sides. Server handlers on the tick thread, client handlers on the main
 thread. Content changes reach Kiln clients without any code (content sync); configs need `[Synced]`.
+dev.28+: `NetPeer.FramesIn` / `FramesOut` count Kiln-channel frames per player. A refused player whose refusal fails is
+kicked (`net.disconnect`). dev.29+: the join compares each `side: both` boot mod's committed content
+(`docs/kiln/network.md`).
 
 ## Client
 `Client.State` (`Menu`, `DedicatedServer`, `Hosting`, `Remote`), `Client.IsClient`, `IsHosting`, `LocalPlayer`,
@@ -501,6 +580,13 @@ and your mod. Your hook is a **link** in that function's chain. An address outsi
 - `kiln/state/hooks.json`: every function with its links in chain order, `foreignBefore`/`foreignOver` (other modules' hooks
   found before or over Kiln), `overlaps`, `rules`, `linkSlots` `{used, cap}`. kiln.log: `hooks: <label> (<owner>) chained over <module>+0x...`.
 
+**Typed hooks (dev.29+; not yet run in a game client).** A `sigdb/server.json` / `client.json` fragment in the mod
+describes game functions; the Kiln.Sigs generator makes a class per descriptor (`Hooks` in `KilnServices`; KILN180 to
+KILN182). A typed hook goes in only after Kiln checked every game thread: one asked for during a step is pending
+(`HookResult.Pending`, `HookHandle.State`, `HookHandle.Reason`), and `HookRefusedEvent` follows a refusal. `Invoke`
+checks its descriptor against the running game before it calls. An exception in a handler is caught and the game gets
+the original's result. Page `docs/kiln/services/hooks.md`; sample `TypedHookVolume`.
+
 **Closed-source DLL mods** (XHL-Core, Auto Loot Plus, trainers) hook in their `DllMain`, before Kiln, and Kiln chains over them.
 If a hosted engine needs Kiln's hook first, load the DLL late:
 - `kiln/chain.ini` `[late]` repeats the path of an entry that `[chain]`, `[profile]` or `dinput8-chain.ini` already holds. The
@@ -516,8 +602,10 @@ If a hosted engine needs Kiln's hook first, load the DLL late:
   own compat rules; the next normal start is back to the active profile's.
 - Overlaps: kiln.log `compat: overlap:` lines and `hooks.json` `overlaps[]` (`foreign-before`, `foreign-over`, `refused`) name both
   sides and a fix (`late` or `rule`).
-- `<configDir>/compat-rules.json` (after Kiln's `kiln/compat-rules.json`; the same `id` replaces it) rules can `warn`, load a
-  chain DLL `late`, or `disable` a chain DLL or a profile-listed mod. The launcher applies `late` and `disable` of chain entries
+- `<configDir>/compat-rules.json` (after Kiln's `kiln/compat-rules.json`, which every update ships since dev.29; the same
+  `id` replaces it) rules can `warn`, load a chain DLL `late`, dev.29+ load a `subject` `before` a `target`, or `disable` a
+  chain DLL or a profile-listed mod. Native-mod rules (`native/core/compat-rules.json`) also have `defer` (dev.29.4+) and
+  `original-code` (dev.29.6+) for Shroudtopia mods. The launcher applies `late` and `disable` of chain entries
   when it writes chain.ini; kiln-core logs `warn` rules, skips a disabled profile-listed mod and reports the rest as not applied,
   also `disable` of a native mod whose DLL the proxy already loaded (activate the profile again in the launcher).
 
@@ -531,4 +619,9 @@ If a hosted engine needs Kiln's hook first, load the DLL late:
   being drawn. It shows nothing until the drawing finishes, then the picture; no retry is needed. Called while the mod's DLL loads, it
   waits (at most 120 s for the whole start). kiln-eml's portrait cache codes: 5 busy and 7 cache I/O error (both tried again at
   the next start), 6 full (delete unused folders in `emf/cache/portraits`). Use kiln-emf and kiln-eml from the same release.
+- EMF: kiln-emf serves EmfApi v46 (EMF 0.6.14) since dev.29.12; v42 since dev.28. Some members answer EMF's documented
+  failure on Kiln (`docs/kiln/emf-parity.md`). dev.29+: EMF's `register_program`, `register_program_def` and `on_event`
+  with `EMF_WORLD_CLIENT` run in the client world. Wiki [EMF mods](https://frostdev.io/kiln/wiki/emf-mods).
+- ShroudForge and EML mods run unchanged next to Kiln mods (wiki [EML and ShroudForge](https://frostdev.io/kiln/wiki/eml-shroudforge)).
+  ShroudForge's spawn search falls back to the in-memory code when other loaders patched it; see the dev.29 notes.
 - Most of these paths were verified under Wine and on lab servers, not on a real client: report them as "needs a client check".

@@ -2,7 +2,8 @@
 
 Wiki: [data packs](https://frostdev.io/kiln/wiki/data-packs), [new items](https://frostdev.io/kiln/wiki/new-items),
 [game data](https://frostdev.io/kiln/wiki/game-data), [creatures](https://frostdev.io/kiln/wiki/creatures),
-[assets](https://frostdev.io/kiln/wiki/assets). Prefer a pack over code whenever the change is data. `kiln lint` checks them.
+[assets](https://frostdev.io/kiln/wiki/assets). Prefer a pack over code whenever the change is data. `kiln lint` checks them. Data the game reads once at start
+(Flame Altars per flame level, experience per level) is not a pack: use a resource patch ([boot.md](boot.md)).
 
 ## Where and when
 `<mod>/content/*.json`. Applied when the world's registries have loaded (before the save is read), in mod load order,
@@ -89,7 +90,10 @@ into config values (`"impactValues.ManaCost": 30`).
 - When a change shows: template-only data at once; spawned values (level, scale) at the next spawn; configs at the
   next cast or buff; costs at the next payment. Vanilla clients may show vanilla tooltips; Kiln clients get synced
   values.
-- Perk and buff clones (`"add"` in `perks` / `buffs`) get their own names per language.
+- Perk and buff clones (`"add"` in `perks` / `buffs`) get their own names per language. dev.29+: room for 4,096 buff
+  clones for all mods together; a pack publishes its buffs in one batch.
+- dev.29.11+: a gem can be cloned through kiln.content with its own `impactValues`, and `"gemSlotOverride": true` lets any
+  gear hold a socket ([gameplay.md](gameplay.md#gems-and-the-shroud-forge-kilnabilities-dev2911)).
 
 ## Creatures section
 ```json

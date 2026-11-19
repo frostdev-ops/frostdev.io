@@ -15,7 +15,8 @@ result as "needs a client check".
 `Lock(node, force)`, `Respec()`. They return `Task<ProgressionResult>`: refusals are `Ok = false`, only bad arguments throw.
 
 ## Talents (`skills/*.json`, service Skills)
-Both ways need `"side": "both"`, `"clients": "mod"`. Comments allowed, trailing commas not. Template: `kiln new talents`.
+Both ways need `"side": "both"`, `"clients": "mod"`. Comments allowed, trailing commas not. Template: `kiln new talents`. dev.28+: talents can be staged in `OnBoot`
+([boot.md](boot.md)); dev.29+ a game-tree node's `Icon` must be a file inside the mod's folder.
 ```json
 { "format": 1,
   "gameTree": { "nodes": [
@@ -97,7 +98,11 @@ Use `QuestBlock` / `DialogueBlock` or `quests` / `dialogues` inside `blocks/*.js
 `clone`, `roster`, and quests and dialogue in the game's UI need `"clients": "mod"`, `"side": "both"` (not `kiln`: the client
 builds them from the mod's files at boot, so changes need a restart).
 - `npcs.<id>.place`: `{near, distance}` or `{at}`, with `yaw`, `once`, `unlock`. Real ground outside bases (`inBase`, `exact` opt out). A game NPC's unlock is granted for that world and stays.
-- `clone`: `{guid, name}`, fixed. `roster`: `{unlock, roamingRange, summonItem}`. Limit 64 roster NPCs, 35 are the game's.
+- `clone`: `{guid, name}`, fixed. `roster`: `{unlock, roamingRange, summonItem}`. Roster limit: 128 entries, 35 of them
+  the game's, so 93 for all mods together (dev.29+; 64 before). A roster this game cannot hold stops the start (exit code
+  0x4B02). Past 64 entries is verified on dedicated servers only. Update Kiln on the server and every player's game before
+  adding a mod with more than 29 roster NPCs: an older Kiln loses their progress when it saves. A mod's NPCs are ordered by
+  key name. `NativeQuests.GetUnlock`, `GetRosterBudget` read unlock states and room (any thread).
 - `vendor.recipes`: shared with the base's workshop.
 - Dialogue: any `if` on any node (one knowledge check, the rest kept by the engine). `reply`, `once`, `close`, `hint`,
   `greetings`, `farewell`. Add options at the end of a node: positions feed the ids.
