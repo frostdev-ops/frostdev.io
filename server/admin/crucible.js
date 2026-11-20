@@ -91,14 +91,14 @@
 
   // ---- data ----------------------------------------------------------------------------------------------------------
   const SOURCES = {
-    stats: '/stats', reports: '/reports', public: '/packs?visibility=public', removed: '/packs?visibility=removed', hidden: '/packs?hidden=1', blocklist: '/blocklist',
+    stats: '/stats', reports: '/reports', public: '/packs?visibility=public', removed: '/packs?visibility=removed', hidden: '/packs?hidden=1', blocklist: '/blocklist', bans: '/bans',
   };
   async function load(which = ['all']) {
     const names = which.includes('all') ? Object.keys(SOURCES) : which;
     await Promise.all(names.map(async (name) => {
       try {
         const res = await call(SOURCES[name]);
-        data[name] = res.ok ? res.body : { __error: errorOf(res), setup: res.body?.setup };
+        data[name] = res.ok ? res.body : { __error: errorOf(res), status: res.status, setup: res.body?.setup };
       } catch (e) { data[name] = { __error: e.message }; }
     }));
     if (data.stats) ctx.onStats?.(data.stats);
@@ -118,13 +118,13 @@
       return;
     }
     if (!parts.root) build();
-    for (const [name, fn] of Object.entries({ numbers, reports, packs, hiddenList, blocklist })) parts[name].replaceChildren(...[fn()].flat().filter(Boolean));
+    for (const [name, fn] of Object.entries({ numbers, reports, packs, hiddenList, blocklist, bans })) parts[name].replaceChildren(...[fn()].flat().filter(Boolean));
     if (host.firstChild !== parts.root) host.replaceChildren(parts.root);
   }
 
   function build() {
     const refresh = button('Refresh', 'secondary', async (b) => { b.disabled = true; await load(); b.disabled = false; ctx.toast('Crucible refreshed.'); });
-    for (const n of ['numbers', 'reports', 'packs', 'hiddenList', 'blocklist']) parts[n] = el('div', { class: 'stack-v' });
+    for (const n of ['numbers', 'reports', 'packs', 'hiddenList', 'blocklist', 'bans']) parts[n] = el('div', { class: 'stack-v' });
     parts.root = el('div', {},
       ctx.head('Kiln', 'Crucible', 'Modpacks on frostdev.io/kiln/crucible: reports, takedowns, the file blocklist and accounts. Actions here are written to Activity.',
         el('div', { class: 'links' }, el('a', { href: '/kiln/crucible', text: 'Crucible ↗' }), el('a', { href: '/kiln/crucible/copyright', text: 'Copyright page ↗' })), refresh),
@@ -135,7 +135,7 @@
         section('hidden', 'Hidden and taken down', 'Hidden packs wait for you (reports or your Hide); taken-down packs are gone for good.', parts.hiddenList),
         el('div', { class: 'grid' },
           section('blocklist', 'File blocklist', 'Files Crucible refuses to store or serve, by sha256. Takedowns add their files here.', blockForm(), parts.blocklist),
-          section('bans', 'Account bans', 'A banned Discord account cannot share, publish, comment, vote or report. Crucible has no list of bans yet: ban or unban by id.', banForms()),
+          section('bans', 'Account bans', 'A banned Discord account cannot share, publish, comment, vote or report.', banForms(), parts.bans),
           section('forget', 'Delete a person’s data', 'For a deletion request: their packs (public ones are withdrawn for 30 days first), comments, upvotes and reports.', forgetForm()),
         ),
       ),
@@ -177,31 +177,48 @@
   function reportGroup(g) {
     const { type, id } = g.target;
     const pack = g.pack ? packById(g.pack) : null;
+    // subject: what the report is about, from Crucible (undefined from a Crucible older than 43bdc4a; null when it is gone)
+    const s = g.list.find((rep) => rep.subject !== undefined)?.subject;
     const reasons = {};
     for (const rep of g.list) reasons[rep.reason] = (reasons[rep.reason] || 0) + 1;
-    const label = pack ? pack.title : g.pack || id;
-    const name = type === 'pack' ? label : `${TARGETS[type]} ${id}${pack || g.pack ? ` on “${label}”` : ''}`;
+    const isPack = type === 'pack' || type === 'version';
+    const label = (isPack && s?.title) || pack?.title || g.pack || id;
+    const hidden = isPack && s ? s.hidden : type === 'comment' && s ? s.hidden : !!pack?.autoHidden;
+    const name = type === 'pack' ? label
+      : type === 'version' ? `Version ${s?.version || id}${s?.number ? ` (#${s.number})` : ''} of “${label}”`
+      : `Comment${pack || g.pack ? ` on “${label}”` : ` ${id}`}`;
+    const page = isPack && s?.slug ? packLink({ id: g.pack || id, slug: s.slug, title: s.title, visibility: s.visibility }) : pack ? packLink(pack) : null;
     const actions = [button(`Close ${g.list.length > 1 ? `all ${g.list.length}` : ''}`.trim(), 'secondary', (b) => closeAll(b, g))];
-    if (type === 'pack' || type === 'version') {
+    if (isPack && s !== null) {
       const packId = type === 'pack' ? id : g.pack;
-      if (packId && !pack?.autoHidden) actions.push(button('Hide pack', 'secondary', (b) => act(b, `/packs/${packId}/hide`, { done: 'Pack hidden from Crucible.' })));
-      if (packId && pack?.autoHidden) actions.push(button('Restore pack', 'secondary', (b) => act(b, `/packs/${packId}/restore`, { done: 'Pack restored; its reports are closed.' })));
-      if (type === 'version') actions.push(button('Take down version…', 'danger', (b) => act(b, `/versions/${id}/takedown`, { body: takedownBody, dialog: takedownDialog('this version', `${label}, version ${id}`), done: 'Version taken down.' })));
-      if (packId) actions.push(button('Take down pack…', 'danger', (b) => act(b, `/packs/${packId}/takedown`, { body: takedownBody, dialog: takedownDialog('this pack', label), done: 'Pack taken down.' })));
-    } else if (type === 'comment') {
+      const removed = s && (s.visibility === 'removed' || s.visibility === 'deleted');
+      if (packId && !removed && !hidden) actions.push(button('Hide pack', 'secondary', (b) => act(b, `/packs/${packId}/hide`, { done: 'Pack hidden from Crucible.' })));
+      if (packId && !removed && hidden) actions.push(button('Restore pack', 'secondary', (b) => act(b, `/packs/${packId}/restore`, { done: 'Pack restored; its reports are closed.' })));
+      if (type === 'version' && !removed) actions.push(button('Take down version…', 'danger', (b) => act(b, `/versions/${id}/takedown`, { body: takedownBody, dialog: takedownDialog('this version', name), done: 'Version taken down.' })));
+      if (packId && !removed) actions.push(button('Take down pack…', 'danger', (b) => act(b, `/packs/${packId}/takedown`, { body: takedownBody, dialog: takedownDialog('this pack', label), done: 'Pack taken down.' })));
+    } else if (type === 'comment' && s !== null && !s?.deleted) {
       actions.push(button('Keep comment', 'secondary', (b) => act(b, `/comments/${id}/restore`, { done: 'Comment shown again; its reports are closed.' })));
       actions.push(button('Remove comment…', 'danger', (b) => act(b, `/comments/${id}/remove`, { done: 'Comment removed.',
         dialog: { title: 'Remove this comment?', text: 'Its text is deleted and replaced by “removed”. Its reports are closed.', confirm: 'Remove' } })));
     }
+    const owner = pack && type !== 'comment' ? ` · by ${pack.owner?.name || 'unknown'}` : '';
+    const about = s === null ? el('p', { class: 'warn', text: `The reported ${(TARGETS[type] || type).toLowerCase()} is gone; close the report.` })
+      : type === 'comment' && s ? el('div', { class: 'quote subject' },
+        el('span', { class: 'sub', text: `Comment by ${s.by?.name || 'unknown'} (${s.by?.id || '?'})${s.deleted ? ' · deleted' : ''}` }),
+        el('p', { text: s.deleted || s.text === null ? '(deleted)' : s.text }))
+      : null;
+    const state = s?.visibility === 'removed' ? el('span', { class: 'badge removed', text: 'Taken down' }) : s?.visibility === 'deleted' ? el('span', { class: 'badge removed', text: 'Deleted' })
+      : hidden ? el('span', { class: 'badge pending', text: 'Hidden' }) : null;
     return el('li', { class: 'cr-item' },
       el('div', { class: 'cr-top' },
         el('div', {}, el('span', { class: 'badge pending', text: `${g.list.length} report${g.list.length === 1 ? '' : 's'}` }), ' ',
-          el('strong', { text: name }),
-          el('p', { class: 'sub', text: `${TARGETS[type] || type} · ${Object.entries(reasons).map(([k, n]) => `${REASONS[k] || k}${n > 1 ? ` ×${n}` : ''}`).join(', ')}${pack ? ` · by ${pack.owner?.name || 'unknown'}` : ''}` }),
-          pack ? el('p', { class: 'sub' }, type === 'pack' ? 'Page: ' : 'On ', packLink(pack)) : null),
+          el('strong', { text: name }), state,
+          el('p', { class: 'sub', text: `${TARGETS[type] || type} · ${Object.entries(reasons).map(([k, n]) => `${REASONS[k] || k}${n > 1 ? ` ×${n}` : ''}`).join(', ')}${owner}` }),
+          page ? el('p', { class: 'sub' }, type === 'pack' ? 'Page: ' : 'On ', page) : null),
         el('div', { class: 'actions' }, ...actions)),
+      about,
       el('ul', { class: 'cr-reports' }, ...g.list.map((rep) => el('li', {},
-        el('span', { class: 'sub', text: `${REASONS[rep.reason] || rep.reason} · ${rep.by?.name || 'unknown'} (${rep.by?.id || '?'}) · ${when(rep.created)}` }),
+        el('span', { class: 'sub', text: `${REASONS[rep.reason] || rep.reason} · reported by ${rep.by?.name || 'unknown'} (${rep.by?.id || '?'}) · ${when(rep.created)}` }),
         rep.text ? el('p', { class: 'quote', text: rep.text }) : null))));
   }
 
@@ -290,6 +307,19 @@
           dialog: { title: 'Unblock this file?', text: `${r.sha256} can be uploaded and served again.`, confirm: 'Unblock' } })))))))];
   }
 
+  function bans() {
+    const b = data.bans;
+    // a Crucible older than 43bdc4a has no list: ban and unban by id still work
+    if (b?.status === 404 || b?.status === 405) return el('p', { class: 'sub', text: 'This Crucible cannot list bans yet: unban by id above.' });
+    if (!ok(b)) return warn(`Bans: ${b?.__error || 'not available'}`);
+    if (!b.bans.length) return empty('Nobody is banned.');
+    return [el('h3', { text: `Banned (${fmt(b.bans.length)})` }),
+      el('ul', { class: 'cr-list' }, ...b.bans.map((u) => el('li', { class: 'cr-item' }, el('div', { class: 'cr-top' },
+        el('div', {}, el('strong', { text: u.name || 'unknown' }), el('p', { class: 'sub', text: `${u.id}${u.reason ? ` · ${u.reason}` : ''}${u.seen ? ` · last seen ${when(u.seen)}` : ''}` })),
+        el('div', { class: 'actions' }, button('Unban…', 'secondary', (btn) => act(btn, `/bans/${u.id}`, { method: 'DELETE', after: ['bans'], done: 'Account unbanned.',
+          dialog: { title: 'Unban this account?', text: `${u.name || u.id} (${u.id}) can share, publish, comment, vote and report again.`, confirm: 'Unban', danger: false } })))))))];
+  }
+
   const idInput = (name) => el('input', { name, required: '', inputmode: 'numeric', pattern: '[0-9]{17,20}', maxlength: '20', autocomplete: 'off', spellcheck: 'false', placeholder: 'Discord id, 17–20 digits' });
   const validId = (input, out) => { const v = input.value.trim(); if (/^\d{17,20}$/.test(v)) return v; out.textContent = 'A Discord id is 17 to 20 digits.'; input.focus(); return ''; };
 
@@ -300,7 +330,7 @@
     ban.addEventListener('submit', async (event) => {
       event.preventDefault();
       const id = validId(banId, out); if (!id) return;
-      const done = await act(banBtn, '/bans', { body: { userId: id, reason: why.value.trim() }, after: [], done: 'Account banned.',
+      const done = await act(banBtn, '/bans', { body: { userId: id, reason: why.value.trim() }, after: ['bans'], done: 'Account banned.',
         dialog: { title: 'Ban this account?', text: `Discord account ${id} can no longer share, publish, comment, vote or report on Crucible. Their packs stay; take them down separately.`, confirm: 'Ban' } });
       if (done) { out.textContent = `Banned ${id}.`; banId.value = ''; why.value = ''; }
     });
@@ -309,7 +339,7 @@
     unban.addEventListener('submit', async (event) => {
       event.preventDefault();
       const id = validId(unbanId, out); if (!id) return;
-      const done = await act(unbanBtn, `/bans/${id}`, { method: 'DELETE', after: [], done: 'Account unbanned.' });
+      const done = await act(unbanBtn, `/bans/${id}`, { method: 'DELETE', after: ['bans'], done: 'Account unbanned.' });
       if (done) { out.textContent = `Unbanned ${id}.`; unbanId.value = ''; }
     });
     return el('div', { class: 'stack-v' }, el('h3', { text: 'Ban' }), ban, el('h3', { text: 'Unban' }), unban, out);

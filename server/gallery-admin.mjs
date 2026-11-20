@@ -86,6 +86,7 @@ const CRUCIBLE_ROUTES = [
   { method: 'GET', path: /^\/blocklist$/ },
   { method: 'POST', path: /^\/blocklist$/, body: 'block', audit: 'blocked file' },
   { method: 'DELETE', path: /^\/blocklist\/([0-9a-f]{64})$/, audit: 'unblocked file' },
+  { method: 'GET', path: /^\/bans$/ },
   { method: 'POST', path: /^\/bans$/, body: 'ban', audit: 'banned account' },
   { method: 'DELETE', path: /^\/bans\/(\d{17,20})$/, audit: 'unbanned account' },
   { method: 'DELETE', path: /^\/users\/(\d{17,20})$/, audit: 'deleted the data of account' },

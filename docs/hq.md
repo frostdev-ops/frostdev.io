@@ -79,14 +79,16 @@ reports, public packs, installs today) and the open-report count beside "Crucibl
 
 - **Numbers**: public and link-only packs, open reports, hidden packs, installs today with the last 30 days, storage
   (files, versions), uploads not finished.
-- **Reports**: open reports grouped by what they are about (pack, version or comment), with each reporter, reason,
-  text and time. Close them (with an optional outcome), hide or restore the pack, take down the version or pack (a
+- **Reports**: open reports grouped by what they are about (pack, version or comment), with what that is (the
+  pack's title and state, the version, or the comment's text and writer; "gone" when it no longer exists) and each
+  reporter, reason, text and time. Close them (with an optional outcome), hide or restore the pack, take down the version or pack (a
   reason the creator sees, optionally blocking every file), keep or remove a comment.
 - **Recent public packs** (the 200 changed most recently; 50 shown) with Hide, Restore and Take down, linked to their
   public page `/kiln/crucible/<slug>`.
 - **Hidden and taken down**: packs hidden by reports or by Hide, and taken-down packs with their reason.
 - **File blocklist**: add a sha256 with a reason, filter, unblock.
-- **Account bans**: ban a Discord id with a reason, unban by id. Crucible has no list of bans yet.
+- **Account bans**: ban a Discord id with a reason; the banned accounts listed with Unban (an older Crucible without
+  `GET /admin/bans` leaves unban by id).
 - **Delete a person's data**: a Discord id's packs, comments, upvotes and reports, for a deletion request; the id
   must be typed again in the confirm dialog, and the counts deleted are shown.
 
@@ -99,7 +101,7 @@ HQ cookie, no CSRF token and no visitor address (Crucible refuses any request th
 X-Forwarded-For). Only Crucible's HQ routes pass (`CRUCIBLE_ROUTES`): `GET reports?state=`, `POST
 reports/:id/close`, `GET packs?visibility=|hidden=1`, `POST packs/:id/takedown`, `POST versions/:id/takedown`,
 `POST packs/:id/hide|restore`, `POST comments/:id/remove|restore`, `GET|POST blocklist`, `DELETE blocklist/:sha256`,
-`POST bans`, `DELETE bans/:id`, `DELETE users/:id`, `GET stats`. Ids are checked as Crucible checks them, the query
+`GET|POST bans`, `DELETE bans/:id`, `DELETE users/:id`, `GET stats`. Ids are checked as Crucible checks them, the query
 is rebuilt from known parameters and each body from known fields (reasons lose control characters and are cut to
 Crucible's lengths). POST and DELETE need HQ's Origin and CSRF checks, like the gallery's actions. Crucible's answers
 pass through; when it is not set up the view says so, when it does not answer within 10 s (30 s for changes) HQ says
