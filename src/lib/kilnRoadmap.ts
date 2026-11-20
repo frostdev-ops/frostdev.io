@@ -6,6 +6,8 @@
 // still the plan; replace it with what shipped (docs/public-pages.md, "Kiln roadmap"). The released entry of the release
 // kilnRelease.json names may leave out its date: it then takes that file's date (the release data and the roadmap move
 // in the same site push).
+// A minor patch (0.2.0-dev.29.18, "patch": true in the data) is a release of its own on a smaller scale: it has its own
+// entry and rail dot, styled as a patch of the dev release it follows (patchOf), and is not counted as a release.
 import data from '../data/kilnRoadmap.json';
 import { release as currentRelease } from './kilnDownloads';
 
@@ -45,8 +47,12 @@ export interface RoadmapRelease {
   version: string;
   /** The short name used on the page: dev.27. */
   short: string;
-  /** The anchor: dev-27. */
+  /** The anchor: dev-27 (dev-29-18 for a patch). */
   id: string;
+  /** A minor patch of a dev release (0.2.0-dev.29.18), shown smaller than a release. */
+  patch: boolean;
+  /** The release a patch belongs to, as on the page: dev.29. */
+  patchOf?: string;
   status: ReleaseStatus;
   /** YYYY-MM-DD, released ones only. */
   date?: string;
@@ -80,6 +86,7 @@ interface RawFeature {
 }
 interface RawRelease {
   version: string;
+  patch?: boolean;
   date?: string;
   title: string;
   summary: string;
@@ -129,8 +136,8 @@ function realDate(date: string | undefined) {
   return !Number.isNaN(day.getTime()) && day.toISOString().slice(0, 10) === date;
 }
 function short(version: string) {
-  const match = /^\d+\.\d+\.\d+-(dev\.\d+)$/.exec(version) ?? /^(\d+\.\d+\.\d+)$/.exec(version);
-  if (!match) fail(`"${version}" is not a Kiln version (0.2.0-dev.N or N.N.N)`);
+  const match = /^\d+\.\d+\.\d+-(dev\.\d+(?:\.\d+)?)$/.exec(version) ?? /^(\d+\.\d+\.\d+)$/.exec(version);
+  if (!match) fail(`"${version}" is not a Kiln version (0.2.0-dev.N, a patch 0.2.0-dev.N.M, or N.N.N)`);
   return match[1];
 }
 function release(raw: RawRelease, status: ReleaseStatus, where: string): RoadmapRelease {
@@ -145,10 +152,14 @@ function release(raw: RawRelease, status: ReleaseStatus, where: string): Roadmap
     );
   if (!Array.isArray(raw.features) || raw.features.length === 0) fail(`${version} lists no features`);
   const name = short(version);
+  const isPatch = /^dev\.\d+\.\d+$/.test(name);
+  if (isPatch !== (raw.patch === true)) fail(`${version}: "patch": true goes with a patch version (0.2.0-dev.N.M) and only there`);
   return {
     version,
     short: name,
-    id: name.replace('.', '-'),
+    id: name.replaceAll('.', '-'),
+    patch: isPatch,
+    patchOf: isPatch ? name.replace(/\.\d+$/, '') : undefined,
     status,
     date: status === 'released' ? date : undefined,
     title: text(raw.title, `${version} title`),
@@ -201,7 +212,8 @@ export const milestones: RoadmapMilestone[] = raw.milestones.map((m, i) => {
 });
 
 export const counts = {
-  released: released.length,
+  released: released.filter((r) => !r.patch).length,
+  patches: released.filter((r) => r.patch).length,
   shipped: released.reduce((n, r) => n + r.features.filter((f) => f.kind !== 'fix').length, 0),
   fixes: released.reduce((n, r) => n + r.features.filter((f) => f.kind === 'fix').length, 0),
   planned: upcoming.reduce((n, r) => n + r.features.length, 0) + laterFeatures.length,

@@ -308,7 +308,7 @@ body:has(.kiln-root) .skip-link { background: #0f0d0c; }
 .kiln-rm-hero .lead { max-width: 38rem; color: var(--k-text1); font-size: 1.05rem; line-height: 1.75; text-wrap: pretty; }
 .kiln-rm-hero .product-eyebrow a:hover { color: var(--k-text0); }
 .kiln-rm-hero .product-meta { color: var(--k-text2); }
-.kiln-rm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; max-width: 34rem; margin-top: 1.75rem; }
+.kiln-rm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr)); gap: 0.75rem; max-width: 40rem; margin-top: 1.75rem; }
 .kiln-rm-stats div { padding: 0.8rem 0.9rem; border: 1px solid var(--k-line); border-radius: 0.6rem; background: var(--k-bg1); }
 .kiln-rm-stats dt { color: var(--k-text2); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
 .kiln-rm-stats dd { margin-top: 0.2rem; color: var(--k-text0); font-family: var(--k-display); font-size: 1.6rem; font-weight: 560; font-variant-numeric: tabular-nums; }
@@ -343,6 +343,28 @@ body:has(.kiln-root) .skip-link { background: #0f0d0c; }
 .kiln-rm-rail [data-now] .kiln-rm-rail-d { color: var(--k-ember-300); font-weight: 600; }
 .kiln-rm-rail [data-status="next"] .kiln-rm-rail-d { color: var(--k-gold); }
 .kiln-rm-rail li[data-dim] a { opacity: 0.3; }
+/* Minor patches (0.2.0-dev.29.N): smaller rail dots and slimmer, indented entries beside the releases. */
+.kiln-rm-rail li[data-patch] a { min-width: 2.9rem; padding-inline: 0.15rem; }
+.kiln-rm-rail li[data-patch] .kiln-rm-rail-dot { width: 0.45rem; height: 0.45rem; margin: 0.175rem 0; box-shadow: 0 0 0 3px var(--k-bg0); }
+.kiln-rm-rail li[data-patch][data-now] .kiln-rm-rail-dot { width: 0.6rem; height: 0.6rem; margin: 0.1rem 0; box-shadow: 0 0 0 3px var(--k-bg0), 0 0 0 5px rgb(255 106 26 / 0.45); }
+.kiln-rm-rail li[data-patch][data-status="next"] .kiln-rm-rail-dot { border-width: 1.5px; }
+.kiln-rm-rail li[data-patch] .kiln-rm-rail-v { color: var(--k-text1); font-size: 0.68rem; font-weight: 500; }
+.kiln-rm-rail li[data-patch] .kiln-rm-rail-d { font-size: 0.6rem; }
+.kiln-rm-item[data-patch] { padding-left: 3.6rem; }
+.kiln-rm-item[data-patch] + .kiln-rm-item[data-patch] { margin-top: 0.4rem; }
+.kiln-rm-item[data-patch]::before { content: ''; position: absolute; left: 0.75rem; top: 1.3rem; width: 2.85rem; height: 1px; background: var(--k-line-strong); }
+.kiln-rm-item[data-patch] .kiln-rm-node { left: 0.3rem; top: 1.02rem; width: 0.6rem; height: 0.6rem; background: var(--k-bg0); border: 2px solid var(--k-ember-400); box-shadow: 0 0 0 3px var(--k-bg0); }
+.kiln-rm-release[data-patch] { border-color: var(--k-bg3); background: var(--k-bg0); }
+.kiln-rm-release[data-patch] > summary { grid-template-columns: 6rem minmax(0, 1fr) auto; gap: 0.8rem; padding: 0.7rem 1rem; }
+.kiln-rm-release[data-patch] .kiln-rm-version { color: var(--k-text1); font-size: 0.82rem; }
+.kiln-rm-release[data-patch] .kiln-rm-date { font-size: 0.7rem; }
+.kiln-rm-release[data-patch] .kiln-rm-head { gap: 0.2rem; }
+.kiln-rm-release[data-patch] .kiln-rm-head h3 { font-family: inherit; font-size: 0.95rem; font-weight: 600; }
+.kiln-rm-release[data-patch] .kiln-rm-summary { font-size: 0.8rem; line-height: 1.55; }
+.kiln-rm-release[data-patch] .kiln-rm-body { padding: 0 1rem 0.9rem; }
+.kiln-badge[data-kind="patch"] { border-color: var(--k-line); color: var(--k-text2); }
+.kiln-badge[data-kind="patch"]::before { background: var(--k-text2); }
+
 
 /* The filters: shown by the script. */
 .kiln-rm-tools { position: sticky; top: 0; z-index: 5; display: grid; gap: 0.7rem; margin: 0 -1rem 1.75rem; padding: 0.9rem 1rem; border: 1px solid var(--k-line); border-radius: 0.75rem; background: rgb(15 13 12 / 0.92); backdrop-filter: blur(8px); }
@@ -483,6 +505,9 @@ a.kiln-rm-chip:hover { border-color: var(--k-ember-400); color: var(--k-text0); 
   .kiln-rm-feature { grid-template-columns: minmax(0, 1fr) auto; }
   .kiln-rm-tag { grid-column: 1 / -1; }
   .kiln-rm-item { padding-left: 1.9rem; }
+  .kiln-rm-item[data-patch] { padding-left: 2.8rem; }
+  .kiln-rm-item[data-patch]::before { left: 0.55rem; width: 2.25rem; }
+  .kiln-rm-item[data-patch] .kiln-rm-node { left: 0.15rem; }
   .kiln-rm-releases::before { left: 0.45rem; }
   .kiln-rm-node { left: 0.02rem; }
   .kiln-rm-now { padding-left: 1.9rem; }

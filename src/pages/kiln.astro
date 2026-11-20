@@ -143,7 +143,7 @@ const download = fileHref;
       <div class="kiln-roadmap-teaser">
         {nextRelease && (
           <a class="product-card kiln-card-link" href={`/kiln/roadmap#${nextRelease.id}`}>
-            <span class="kiln-card-number" aria-hidden="true">Next · {nextRelease.short}</span>
+            <span class="kiln-card-number" aria-hidden="true">{nextRelease.patch ? 'Next minor patch' : 'Next'} · {nextRelease.short}</span>
             <h3>{nextRelease.title}</h3>
             <p>{nextRelease.summary}</p>
             <span class="product-text-link">What it brings <span aria-hidden="true">→</span></span>

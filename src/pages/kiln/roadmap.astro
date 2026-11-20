@@ -21,7 +21,9 @@ import {
 // release yet (src/data/kilnRoadmap.json through src/lib/kilnRoadmap.ts). Without JavaScript the page is the timeline,
 // each release a <details>; the script below adds search, area and status filters, a by-area view, the order switch and
 // links that keep the filters (?q=, ?area=, ?show=, ?fixes=, ?view=, ?order=). docs/public-pages.md: "Kiln roadmap".
-const where = (r: RoadmapRelease) => `${r.short} ${r.version} ${r.title} ${statusLabel[r.status]}`.toLowerCase();
+const where = (r: RoadmapRelease) => `${r.short} ${r.version} ${r.title} ${statusLabel[r.status]}${r.patch ? ' minor patch' : ''}`.toLowerCase();
+// A patch's label on the rail: 29.18 (its entry says dev.29.18 and "Minor patch").
+const railLabel = (r: RoadmapRelease) => (r.patch ? r.short.slice(4) : r.short);
 const statusOf = (r: RoadmapRelease) => (r.status === 'released' ? 'shipped' : 'coming');
 const featureCount = (r: RoadmapRelease) => r.features.filter((f) => f.kind !== 'fix').length;
 const fixCount = (r: RoadmapRelease) => r.features.filter((f) => f.kind === 'fix').length;
@@ -48,6 +50,7 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
         <p class="lead">What each Kiln release brought, what the next one brings, and everything planned after it. Plans after the next release can change, and the roadmap has no dates for them.</p>
         <dl class="kiln-rm-stats">
           <div><dt>Releases</dt><dd>{counts.released}</dd></div>
+          {counts.patches > 0 && <div><dt>Minor patches</dt><dd>{counts.patches}</dd></div>}
           <div><dt>Features</dt><dd>{counts.shipped}</dd></div>
           <div><dt>Fixes</dt><dd>{counts.fixes}</dd></div>
           <div><dt>Planned</dt><dd>{counts.planned}</dd></div>
@@ -56,7 +59,7 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
       </div>
       {nextRelease && (
         <a class="kiln-rm-next" href={`#${nextRelease.id}`} data-goto={nextRelease.id}>
-          <span class="kiln-rm-next-label">Next release · {nextRelease.short}</span>
+          <span class="kiln-rm-next-label">{nextRelease.patch ? 'Next minor patch' : 'Next release'} · {nextRelease.short}</span>
           <strong>{nextRelease.title}</strong>
           <span class="kiln-rm-next-theme">{nextRelease.summary}</span>
           <ul>{nextRelease.features.filter((f) => !f.groundwork && f.kind !== 'fix').slice(0, 4).map((f) => <li>{f.title}</li>)}</ul>
@@ -68,10 +71,10 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
     <nav class="kiln-rm-rail" aria-label="Releases, oldest to newest">
       <ol>
         {rail.map((r) => (
-          <li data-status={r.status} data-rail={r.id} data-now={r === latestRelease ? '' : undefined}>
-            <a href={`#${r.id}`} data-goto={r.id}>
+          <li data-status={r.status} data-rail={r.id} data-now={r === latestRelease ? '' : undefined} data-patch={r.patch ? '' : undefined}>
+            <a href={`#${r.id}`} data-goto={r.id} title={r.patch ? `Minor patch ${r.short}` : undefined}>
               <span class="kiln-rm-rail-dot" aria-hidden="true"></span>
-              <span class="kiln-rm-rail-v">{r.short}</span>
+              <span class="kiln-rm-rail-v">{railLabel(r)}</span>
               <span class="kiln-rm-rail-d">{r === latestRelease ? 'Now' : r.date ? railDate(r.date) : statusLabel[r.status]}</span>
             </a>
           </li>
@@ -140,8 +143,8 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
         <ol class="kiln-rm-releases" data-releases>
           {upcomingReleases.map((r) => (
             <>
-              <li class="kiln-rm-item" data-item>
-                <details class="kiln-rm-release" id={r.id} data-release data-status={r.status} open={r.status === 'next'} data-default-open={r.status === 'next' ? '' : undefined}>
+              <li class="kiln-rm-item" data-item data-patch={r.patch ? '' : undefined}>
+                <details class="kiln-rm-release" id={r.id} data-release data-status={r.status} data-patch={r.patch ? '' : undefined} open={r.status === 'next'} data-default-open={r.status === 'next' ? '' : undefined}>
                   <summary>
                     <span class="kiln-rm-node" aria-hidden="true"></span>
                     <span class="kiln-rm-when"><span class="kiln-rm-version">{r.short}</span><span class="kiln-rm-date">{statusLabel[r.status]}</span></span>
@@ -149,7 +152,7 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
                       <h3>{r.title}</h3>
                       <span class="kiln-rm-summary">{r.summary}</span>
                       <span class="kiln-rm-meta">
-                        <span class="kiln-badge" data-status={r.status === 'next' ? 'partial' : 'pending'}>{r.status === 'next' ? 'Next release' : 'Planned'}</span>
+                        <span class="kiln-badge" data-status={r.status === 'next' ? 'partial' : 'pending'}>{r.status === 'next' ? (r.patch ? `Next minor patch · ${r.patchOf}` : 'Next release') : r.patch ? `Planned minor patch · ${r.patchOf}` : 'Planned'}</span>
                         <span>{plural(r.features.length, 'item')}</span>
                         <span class="kiln-rm-match" data-match hidden></span>
                       </span>
@@ -208,8 +211,8 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
         <h2 id="kiln-rm-released">Released</h2>
         <ol class="kiln-rm-releases" data-releases>
           {releasedReleases.map((r, i) => (
-            <li class="kiln-rm-item" data-item>
-              <details class="kiln-rm-release" id={r.id} data-release data-status="released" open={i === 0} data-default-open={i === 0 ? '' : undefined}>
+            <li class="kiln-rm-item" data-item data-patch={r.patch ? '' : undefined}>
+              <details class="kiln-rm-release" id={r.id} data-release data-status="released" data-patch={r.patch ? '' : undefined} open={i === 0} data-default-open={i === 0 ? '' : undefined}>
                 <summary>
                   <span class="kiln-rm-node" aria-hidden="true"></span>
                   <span class="kiln-rm-when"><span class="kiln-rm-version">{r.short}</span><span class="kiln-rm-date"><time datetime={r.date}>{shortDate(r.date!)}</time></span></span>
@@ -218,6 +221,7 @@ const sortedForArea = [...upcomingReleases, ...releasedReleases];
                     <span class="kiln-rm-summary">{r.summary}</span>
                     <span class="kiln-rm-meta">
                       {i === 0 && <span class="kiln-badge">Current</span>}
+                      {r.patch && <span class="kiln-badge" data-kind="patch">Minor patch · {r.patchOf}</span>}
                       {featureCount(r) > 0 && <span>{plural(featureCount(r), 'feature')}</span>}
                       {fixCount(r) > 0 && <span>{plural(fixCount(r), 'fix', 'fixes')}</span>}
                       <span class="kiln-rm-match" data-match hidden></span>
