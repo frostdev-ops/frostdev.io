@@ -18,7 +18,7 @@ const size = file.size === undefined ? undefined : formatSize(file.size);
 
 {variant === 'card' ? (
   <li class="kiln-dl-card">
-    <a class:list={['product-button', 'kiln-dl-button', { secondary }]} href={href}>{file.label} <span aria-hidden="true">↓</span></a>
+    <a class:list={['product-button', 'kiln-dl-button', { secondary }]} href={href} data-kind={file.kind} data-name={name}>{file.label} <span aria-hidden="true">↓</span></a>
     {file.about && <p class="kiln-dl-about">{file.about}</p>}
     <p class="kiln-dl-file-name"><code>{name}</code>{size && <> · {size}</>}</p>
     {file.sha256 && (
@@ -31,7 +31,7 @@ const size = file.size === undefined ? undefined : formatSize(file.size);
 ) : (
   <li class:list={['kiln-dl-file', { compact: variant === 'compact' }]}>
     <div class="kiln-dl-line">
-      <a class="kiln-dl-name" href={href}>{file.label}</a>
+      <a class="kiln-dl-name" href={href} data-kind={file.kind} data-name={name}>{file.label}</a>
       {size && <span class="kiln-dl-size">{size}</span>}
     </div>
     {variant === 'row' && file.about && <p class="kiln-dl-about">{file.about}</p>}

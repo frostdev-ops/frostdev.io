@@ -102,7 +102,13 @@ The Crucible nav link shows on Crucible's pages only. **Legal drafts:** the copy
 (`src/pages/kiln/crucible/[legal].astro`) and the Crucible sections of `/kiln/privacy` and `/kiln/terms` are built
 only with `CRUCIBLE_LEGAL_DRAFTS=1` (`src/lib/crucible.ts`), for the owner to read; `ops/deploy.sh` refuses a build
 that has them. They go live, with new dates and an announcement in the Kiln Discord, once the owner approves the text
-and the DMCA agent is registered, before the launcher release that turns Crucible on. Local run and browser tests:
+and the DMCA agent is registered, before the launcher release that turns Crucible on. **Get Kiln resume:** the pack page's "Get Kiln" opens `/kiln/download?crucible=<CODE>`; with a valid code
+(`src/lib/crucibleResume.ts`, `src/scripts/kiln/crucibleResume.ts`) the download page shows "Step 2: start Kiln. It
+opens <pack>." (the title from the public `/codes` API, "the pack" when Crucible can't be reached), saves the Windows
+installer and the AppImage as `<name>.crucible-<CODE>.<ext>` (the `download` attribute; the files are on this
+origin) and copies the pack's link on a launcher download click. The launcher reads the code from its installer's or
+AppImage's name, or from the clipboard, once at its first start (Kiln's docs/kiln/launcher/crucible.md, "Come back
+after installing Kiln"). `npm run test:crucible` tests the names and codes. Local run and browser tests:
 the crucible repository's `scripts/web-dev.mjs --site dist` and `scripts/web-e2e-mac1.sh`.
 
 `/kiln/roadmap` is Kiln's roadmap: every release with what it brought (new, improved, fixes), the next release, the

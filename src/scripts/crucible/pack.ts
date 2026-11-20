@@ -145,6 +145,7 @@ function wireOpen() {
   const download = `/kiln/download?crucible=${encodeURIComponent(pack.code)}`;
   open.href = kiln;
   $<HTMLAnchorElement>('c-getkiln').href = download;
+  say($('c-nokiln-pack'), pack.title);
   $<HTMLAnchorElement>('c-getkiln2').href = download;
   open.addEventListener('click', () => {
     // When Kiln takes the link the browser loses focus or hides the page; still here after 2 s: show the steps.
