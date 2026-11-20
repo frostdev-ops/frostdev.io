@@ -3,7 +3,7 @@ title: "Tasks: work off the game thread"
 nav: "Tasks"
 description: "Run a mod's heavy work (a search, path finding, a big calculation, files, the network) on Kiln's worker threads, and hand the result back to the game's tick in small pieces."
 status: "pending"
-updated: "2026-11-18"
+updated: "2026-11-19"
 ---
 
 > **New in 0.2.0-dev.29.18** (mod API 0.2.10). Not yet checked in a real game: the C# side of tasks, the hops back to
@@ -403,6 +403,12 @@ if (tasks && tasks->header.size >= 56)   /* submit_in was appended: check the si
   not caught: the worker stays stuck, the watchdog names the task, only that plugin's slots are held, and the exit
   leaves the worker behind.
 - **At exit** a `done` is not promised: free what you must in `on_unload`, and don't wait for your own tasks there.
+- **Resident tasks** (`KILN_TASK_RESIDENT`, since 0.2.0-dev.29.19, pull request #100), for a body meant to run until it
+  is cancelled, such as a plugin's own service loop. Only together with `KILN_TASK_LONG_RUNNING`. The watchdog doesn't
+  report it as running too long until its cancellation is asked; its first start writes one line to kiln.log, and its
+  time adds nothing to `cpu_ms` and `wall_ms` in tick-stats. An owner has at most one. Poll `run->cancelled(run)` at
+  least every 50 ms: at exit the pool waits only 500 ms for running bodies. The table's version and size are unchanged,
+  and an older Kiln refuses the flag with `INVALID_ARGUMENT`, so you can retry without it.
 
 ## Not yet checked
 

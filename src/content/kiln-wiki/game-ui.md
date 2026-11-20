@@ -1,6 +1,6 @@
 ---
 title: "Game UI"
-description: "Menu entries, your own screens, crafting tabs and panels, HUD lines, toasts, key bindings, item icons and names, and values in the game's own UI."
+description: "Menu entries, your own screens, crafting tabs and panels, HUD lines, toasts, key bindings and raw key presses, item icons and names, and values in the game's own UI."
 status: "works"
 updated: "2026-11-19"
 ---
@@ -106,6 +106,32 @@ Letters, digits and every other key stay as before: `K` is the key that types K.
 somewhere else (AZERTY's `,`, Dvorak, the Japanese Yen key) counts as its code's US place. On a non-US layout a binding
 saved under a punctuation name in dev.27 may now be a different key: set it again in Kiln > Keys if it moved.
 Tested in unit and host tests; a UK layout in a real game is a guided check, not yet run.
+
+**Presses as they come: `KeyInput.Listen`** (Kiln.Ui, mod API 0.2.11, since 0.2.0-dev.29.19). For a mod that reads
+presses itself: its own "press a key" field, a key it handles by state, a shortcut layer of its own. An action the
+player should be able to remap stays a `KeyBindings.Register` binding.
+
+```csharp
+var listener = KeyInput.Listen(p =>
+{
+    if (!p.Down || p.Repeat || p.Captured || p.TextInput) return false;  // play only, presses only
+    Save(p.Chord.ToString());                 // "Ctrl+K", "Backquote", "Mouse4": the names the Keys page saves
+    return true;                              // keep this press from the game
+});
+if (!listener.Ok) Log.Info(listener.Reason!);  // no Kiln overlay here (a dedicated server)
+```
+
+- Each press has `Down` (false for a release), `Repeat`, `Captured` (a Kiln menu, screen or text field has the input),
+  `TextInput`, `Mods` (Ctrl, Shift, Alt), and `Code` and `Chord` as the Keys page stores them.
+  `KeyInput.PressCode(vk, scan)` gives that code for a key.
+- With `KeyListenFlags.Mouse` (the default) the middle and side mouse buttons and the wheel come too;
+  `KeyListenFlags.None` gets keyboard keys only.
+- It runs on the game's window thread before the game gets the press: keep it short. Returning true keeps the press
+  from the game; every listener still gets every press.
+- The listener ends when the mod unloads (or call `Dispose()`). A handler that throws is logged under its mod. Where
+  there is no Kiln overlay, `Listen` returns a listener that is not `Ok`, with a `Reason`, and never throws for that.
+
+Not yet used in a real game.
 
 ## Values in the game's own UI
 

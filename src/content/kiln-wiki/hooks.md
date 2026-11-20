@@ -1,7 +1,7 @@
 ---
 title: "Hooks and patches"
 nav: "Hooks"
-description: "The advanced tier: detours, mid hooks, memory patches and symbols on game code, from C# or a native plugin, through Kiln's one hook registry."
+description: "The advanced tier: detours, mid hooks, memory patches and symbols on game code and inside other mods' DLLs, from C# or a native plugin, through Kiln's one hook registry."
 status: "pending"
 updated: "2026-11-19"
 ---
@@ -126,6 +126,36 @@ public override void OnLoad()
 }
 ```
 
+## Hooks inside another mod's DLL
+
+New in 0.2.0-dev.29.19 (mod API 0.2.11), for mods that extend other mods, such as a fix for Creative Mode's search.
+Every hook still goes into the game's own code: an address inside another DLL is refused unless you open that module
+first.
+
+```csharp
+var creative = Hooks.Module("creative.dll");             // by file name; KeyNotFoundException while it isn't loaded
+Hooks.Mid(creative.At(0x15F5F7), (ref Registers r) => { /* ... */ });
+var at = creative.Find("48 8B ?? ?? 41 B8");            // keeps working when the DLL is updated
+```
+
+- `Hooks.Module(name)` opens a loaded module by its file name and never loads it. For a DLL that loads later than your
+  mod, `Hooks.TryModule(name, out var m)` and try again from a later tick. `Hooks.FindInModule(name, pattern)` does
+  both steps.
+- `HookModule.At(offset)` turns an offset from the module's base into an address in its code, and checks it. `Find`
+  and `FindAll` search its live code with the same pattern syntax as the game's. A pattern keeps working when the DLL is
+  updated and its code moves; a fixed offset does not.
+- Kiln **pins** the module: it stays loaded until the game exits, because a detour must never outlive the code it was
+  written into. Kiln's own modules can't be opened: use their APIs.
+- Typed hooks (`Kiln.Sigs`) stay the game's only.
+- kiln.log names the module once and every link in it as module+offset with the module's file
+  (`creative.dll+0x15f5f7 [mods/creative/creative.dll]`); `kiln/state/hooks.json` lists such a target with
+  `"module"` and `"offset"`.
+- The capability row is `hooks.foreign_modules`. On an older Kiln `Hooks.Module` throws
+  `KilnUnavailableException`: check the row, or catch it, when your mod should also load there.
+
+Native plugins get `open_module` and `module_scan` in kiln.hooks ([below](#native-plugins-kiln_hookhpp)). Run in
+Kiln's hook tests under Wine and natively on Windows; not yet in a real game.
+
 ## One registry for every hook
 
 Since dev.21, Kiln places **one** detour per game function. Every handler on that function is a **link** in one chain:
@@ -169,6 +199,9 @@ if (!g_add.install(api, owner, target, reinterpret_cast<void*>(&hk_chat_add), "c
 | `mid2` (`kiln::MidHook2`) | registers at one address, with safetyhook's stack rules |
 | `caller()` | the game's return address for this call. Use it instead of `_ReturnAddress()` |
 | `map_json` | the same text as `state/hooks.json` |
+| `open_module`, `module_scan` | (0.2.0-dev.29.19) open another loaded module for hooks, and search its code ([above](#hooks-inside-another-mods-dll)) |
+| `read_original` | (0.2.0-dev.29.19) the exe file's bytes at an address, never live memory: a hooked function reads as the game shipped it |
+| `code_state` | (0.2.0-dev.29.19) whether the live code there is still the file's: `KILN_CODE_ORIGINAL`, `KILN_CODE_MANAGED` (every byte that differs is Kiln's own detour or patch), `KILN_CODE_FOREIGN` or `KILN_CODE_UNKNOWN`, with a generation counter for the whole process |
 
 Rules:
 
@@ -179,6 +212,9 @@ Rules:
 - Installing the same raw handler on a function again replaces the earlier link in one step.
 - A `MidHook2` installed again while live can run its handler twice for one call at that moment.
 - Dropping a `RawHook` object does not remove its link. Call `revoke()`, or `revoke_owner(owner)`.
+- `read_original` and `code_state` (pull request #101) are appended to the v2 table, whose version stays 2: check
+  `header.size` and the capability rows `hooks.read_original` and `hooks.code_state`. Both take a range inside the
+  exe's code of at most 64 KiB, need no world, and run on any thread, on a dedicated server and on a client.
 - Order: `KilnHookOrder` takes a priority, `before` and `after` (comma-separated owner names, for example `kiln.chat`).
   With `flags = KILN_HOOK_NEWEST_FIRST`, flagged links at one priority run newest first.
 
@@ -200,6 +236,9 @@ kiln.log says when another DLL hooked first, or hooked over Kiln:
 [kiln] hooks: chat/ChatLogAdd (kiln-chat) chained over enshwick.dll+0x11ea80
 [kiln] hooks: xhl.dll+0x4410 hooked over Kiln's chat/ChatLogAdd (kiln-chat) (Kiln's detour stays armed; it is reached through their jump)
 ```
+
+Since 0.2.0-dev.29.19 they name the other module's file in brackets after its name, for example
+`xhl.dll+0x4410 [mods/xhl/xhl.dll]`, and `hooks.json` carries it as `path`.
 
 Since 0.2.0-dev.29 these lines name Kiln's hook and its owner, for example `content/ItemRegistryFind (kiln-content)`,
 instead of another service's name for the same function.

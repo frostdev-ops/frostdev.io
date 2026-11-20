@@ -129,12 +129,20 @@ await Stations.Fill(forge, new FillOptions { Crafts = 5, Chests = [woodChest] })
 - **A player's craft** at any crafting menu uses the same opt-in, after the bag and the Magic chests, with the game's own
   base and permission checks. A Kiln player's crafting menu counts the outputs it may use; a player without Kiln sees
   the game's normal counts and can still craft what the bag and chests cover.
-- **The station screen's fill button** still needs the bag and the Magic chests to cover a fill before it lights up:
-  station outputs serve `Stations.Fill` (a command, a Kiln menu) and crafts.
+- **The station screen's fill buttons** (since 0.2.0-dev.29.19, GitHub #68). On a Kiln client with a Kiln server, a
+  production station's "+1" and "+10" light up when station outputs cover the fill, and pressing them fills from them.
+  The server checks every press again; a press that no longer fits (the outputs were taken meanwhile) is refused by the
+  game and nothing moves. The ingredients' **Available** counts, on the station screen and in the crafting menu,
+  include those items too. A game without Kiln keeps the game's own buttons and counts, and other screens (building
+  costs) keep the game's counts. With Creative Mode running, Kiln's crafting-menu counts stand aside. Up to
+  0.2.0-dev.29.18 the buttons needed the bag and the Magic chests to cover a fill.
 - An opt-in is kept beside the save with the mod that set it, and comes back after a restart while that mod is loaded.
   Touch `Stations` in `OnLoad` (an event subscription will do) so it starts in time.
 
-Rows `stations.output_sources`, `stations.craft_sources` (server) and `stations.craft_ui` (a Kiln client's counts).
+Rows `stations.output_sources`, `stations.craft_sources` (server), `stations.craft_ui` (a Kiln client's counts), and
+since 0.2.0-dev.29.19 `stations.stock_ui` and `stations.fill_ui` (a Kiln client's station screen and ingredient rows).
+Their hooks go in only once a Kiln server's craft-stock snapshot is on, so a game with a vanilla server, or with nothing
+lent, gets none of them.
 `Stations.Collect` and `Stations.CollectToBase` behave as before.
 
 **Native plugins** (`kiln_stations.h`, 0.2.0-dev.29.17): `base_stock_with_stations`, a native `collect` into the base's
@@ -177,7 +185,7 @@ a dedicated server with joined players, water stations other than the seedling b
 categories. The 29.15 names and panels are not yet seen in a real game. 0.2.0-dev.29.17's station outputs and named chests ran
 in lab checks on a dedicated server (fills and a character's craft paid partly from a kiln's charcoal while its queued
 logs stay); a Kiln player's crafting counts from station outputs, and a craft paid from them in a hosted game, are not
-yet seen in a real game.
+yet seen in a real game. Neither are 0.2.0-dev.29.19's station screen counts and fill buttons with station outputs.
 
 The full guide is in Kiln's repository, `docs/kiln/services/stations.md`, on
 [GitHub](https://github.com/frostdev-ops/kiln).
