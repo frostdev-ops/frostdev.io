@@ -292,6 +292,35 @@ pre.source { margin: 0; max-height: 65vh; padding: .5rem 0; overflow: auto; bord
 .image-stage.fit img { width: auto !important; max-width: 100%; max-height: 60vh; margin: auto; object-fit: contain; }
 .image-stage.pixelated img { image-rendering: pixelated; }
 
+/* Crucible (crucible.js): lists of packs and reports with their actions, small forms, the confirm dialog. */
+.crucible { display: grid; gap: 1rem; }
+.crucible .card h3 { margin: .75rem 0 .35rem; color: var(--dim); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+.crucible .card h3:first-child { margin-top: 0; }
+.crucible h2:focus { outline: none; }
+.crucible h2:focus-visible { outline: 2px solid var(--bright); outline-offset: 3px; }
+.cr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.cr-item { padding: .7rem .85rem; border: 1px solid var(--line); border-radius: .6rem; background: var(--surface); min-width: 0; }
+.cr-top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: .6rem 1rem; }
+.cr-top > div:first-child { min-width: 0; flex: 1 1 18rem; overflow-wrap: anywhere; }
+.cr-top strong, .cr-top a { font-weight: 650; }
+.cr-top .badge { margin-left: .4rem; vertical-align: middle; }
+.cr-top .badge:first-child { margin-left: 0; }
+.cr-top .actions button { min-height: 36px; padding: .4rem .8rem; font-size: .8rem; }
+.cr-reports { list-style: none; margin: .6rem 0 0; padding: .5rem 0 0; border-top: 1px solid var(--line); display: grid; gap: .5rem; }
+.quote { margin-top: .2rem; padding-left: .7rem; border-left: 2px solid var(--strong-line); color: var(--muted); font-size: .85rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.cr-form { display: grid; gap: .65rem; }
+.cr-form .row, .dialog .row { display: flex; flex-wrap: wrap; gap: .5rem; }
+.cr-form input[pattern]:invalid:not(:placeholder-shown) { border-color: var(--danger); }
+.result { color: var(--muted); font-size: .82rem; min-height: 1.2em; overflow-wrap: anywhere; }
+.dialog { width: min(92vw, 30rem); padding: 1.4rem; border: 1px solid var(--strong-line); border-radius: .8rem; background: var(--surface); color: var(--text); box-shadow: 0 30px 80px #000c; }
+.dialog::backdrop { background: rgb(2 6 13 / .7); }
+.dialog form { display: grid; gap: .85rem; }
+.dialog p { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+.dialog .problem { color: var(--danger); font-size: .82rem; }
+.dialog .problem:empty { display: none; }
+label.check { display: flex; align-items: center; gap: .55rem; font-weight: 500; }
+label.check input { width: 1.1rem; min-height: 1.1rem; margin: 0; accent-color: var(--accent); }
+
 @media (max-width: 960px) {
   body.app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .6rem 1rem; border-bottom: 1px solid var(--line); background: rgb(6 13 24 / .85); backdrop-filter: blur(16px); }
@@ -310,6 +339,8 @@ pre.source { margin: 0; max-height: 65vh; padding: .5rem 0; overflow: auto; bord
   .audit li { grid-template-columns: minmax(0, 1fr); gap: .2rem; }
   .grid, .grid.two { grid-template-columns: minmax(0, 1fr); }
   .bars-h .row { grid-template-columns: 6.5rem minmax(0, 1fr) 3rem; }
+  .cr-top .actions { width: 100%; }
+  .cr-top .actions button { flex: 1 1 auto; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .detail > *, .panel > *, .view > * { animation: rise .22s ease-out both; }

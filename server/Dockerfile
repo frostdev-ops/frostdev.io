@@ -8,7 +8,8 @@
 #     --env-file /etc/glaze-gallery.env glaze-gallery
 # /etc/glaze-gallery.env (mode 600): OPENROUTER_API_KEY=…, and optionally DECISION_MODEL, ESCALATION_MODEL,
 # REVIEWS_PER_DAY, MAIL_URL=smtps://…, MAIL_FROM, MAIL_TO, and BLOCKLIST_KEY (the owner's public key for the mod
-# blocklist; it is public). docs/looks-gallery.md has the rest.
+# blocklist; it is public), CRUCIBLE_ADMIN_SECRET (HQ's Crucible view, the value in /etc/crucible.env) and optionally
+# CRUCIBLE_ADMIN_URL. docs/looks-gallery.md and docs/hq.md have the rest.
 FROM node:24-alpine
 WORKDIR /app
 COPY package.json package-lock.json ./

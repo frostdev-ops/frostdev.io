@@ -1,7 +1,7 @@
 # frostdev HQ
 
-`https://frostdev.io/hq` is the owner's private dashboard for everything behind the site: Kiln's downloads, Glaze's
-numbers and its gallery's review queue, and the public site's page views. Google sign-in lands here. It replaced the
+`https://frostdev.io/hq` is the owner's private dashboard for everything behind the site: Kiln's downloads, Crucible's
+moderation (Kiln's modpacks), Glaze's numbers and its gallery's review queue, and the public site's page views. Google sign-in lands here. It replaced the
 gallery dashboard at `/glaze/admin` and the Kiln statistics page at `/kiln/stats`; both addresses send the browser to
 HQ (a review email's `#looks/<id>` still opens that Look).
 
@@ -14,6 +14,7 @@ has its own path and links there instead. Rimeward has its own accounts and sign
 |---|---|---|
 | Overview | `/hq#overview` | Everything below in tiles; what needs you; the health of the collections, mail, submit limits and the mod blocklist |
 | Kiln · Downloads | `/hq#kiln` | `kiln.json` (Cloudflare, [Kiln download statistics](kiln-download-stats.md)), Nexus and GitHub from `public.json` |
+| Kiln · Crucible | `/hq#crucible` (`#kiln/crucible` too) | Crucible's local admin API through `/hq/api/crucible/...` (below) |
 | Glaze · Numbers | `/hq#glaze` | `public.json` (Chrome Web Store, Firefox Add-ons, GitHub releases) and the gallery's own records (`/hq/api/glaze`) |
 | Glaze · Mods, Looks | `/hq#glaze/mods/<filter>/<id>/<hash>`, `/hq#glaze/looks/<filter>/<id>` | The gallery review, unchanged ([Looks gallery](looks-gallery.md), Admin dashboard) |
 | Glaze · Activity | `/hq#activity` | The audit log of every decision |
@@ -61,13 +62,59 @@ nginx: location = /hq and ^~ /hq/ (ops/public-site.nginx.conf)
 - The public numbers keep the latest answer of each source per day in `public/<day>.json`, so the tiles grow trend
   lines. GitHub's open issue count includes pull requests. The Chrome Web Store has no API: the count comes from its
   listing page and is reported as an error when the page stops saying it.
-- `server/gallery-admin.mjs` serves HQ: the sign-in, the session, the review (unchanged), `GET /hq/api/stats/<name>`
+- `server/gallery-admin.mjs` serves HQ: the sign-in, the session, the review (unchanged), Crucible's admin routes
+  (`/hq/api/crucible/...`, above), `GET /hq/api/stats/<name>`
   (only `kiln`, `site`, `public` and `status`, read from `STATS_DIR`) and `GET /hq/api/glaze` (counts by status, the
   last 30 days' submissions and how they ended, the review models' cost over those days, today's review allowance,
   whether review mail is on). The page is `server/admin/` (`index.html`, `style.css`, `app.js` for the shell and
-  views, `charts.js`, `gallery.js` for the review, `viewer.js`); no inline script or style, no outside resources.
+  views, `charts.js`, `gallery.js` for the review, `crucible.js` for Crucible, `viewer.js`); no inline script or style, no outside resources.
 - Chart colors are fixed per kind of program and were checked with the dataviz palette validator for the dark
   surface: people `#139fd2`, launcher updates `#d95926`, tools `#9085e9`, automated `#c98500`.
+
+## Crucible
+
+Crucible is Kiln's modpack service (frostdev.io/kiln/crucible, its own repository and `crucible.service` on
+loothing-vps, 127.0.0.1:8792). Its moderation lives in HQ at `/hq#crucible`, with a tile on the overview (open
+reports, public packs, installs today) and the open-report count beside "Crucible" in the rail:
+
+- **Numbers**: public and link-only packs, open reports, hidden packs, installs today with the last 30 days, storage
+  (files, versions), uploads not finished.
+- **Reports**: open reports grouped by what they are about (pack, version or comment), with each reporter, reason,
+  text and time. Close them (with an optional outcome), hide or restore the pack, take down the version or pack (a
+  reason the creator sees, optionally blocking every file), keep or remove a comment.
+- **Recent public packs** (the 200 changed most recently; 50 shown) with Hide, Restore and Take down, linked to their
+  public page `/kiln/crucible/<slug>`.
+- **Hidden and taken down**: packs hidden by reports or by Hide, and taken-down packs with their reason.
+- **File blocklist**: add a sha256 with a reason, filter, unblock.
+- **Account bans**: ban a Discord id with a reason, unban by id. Crucible has no list of bans yet.
+- **Delete a person's data**: a Discord id's packs, comments, upvotes and reports, for a deletion request; the id
+  must be typed again in the confirm dialog, and the counts deleted are shown.
+
+Every destructive action asks first in a modal dialog. Each successful change is written to HQ's audit log (Activity)
+as `crucible: <what>` with the signed-in email, the id and the reason.
+
+How it reaches Crucible: the page calls `/hq/api/crucible/<route>` and `gallery-admin.mjs` forwards it to
+`CRUCIBLE_ADMIN_URL` with the header `X-Crucible-Admin: CRUCIBLE_ADMIN_SECRET` and nothing else from the request: no
+HQ cookie, no CSRF token and no visitor address (Crucible refuses any request that carries X-Real-IP or
+X-Forwarded-For). Only Crucible's HQ routes pass (`CRUCIBLE_ROUTES`): `GET reports?state=`, `POST
+reports/:id/close`, `GET packs?visibility=|hidden=1`, `POST packs/:id/takedown`, `POST versions/:id/takedown`,
+`POST packs/:id/hide|restore`, `POST comments/:id/remove|restore`, `GET|POST blocklist`, `DELETE blocklist/:sha256`,
+`POST bans`, `DELETE bans/:id`, `DELETE users/:id`, `GET stats`. Ids are checked as Crucible checks them, the query
+is rebuilt from known parameters and each body from known fields (reasons lose control characters and are cut to
+Crucible's lengths). POST and DELETE need HQ's Origin and CSRF checks, like the gallery's actions. Crucible's answers
+pass through; when it is not set up the view says so, when it does not answer within 10 s (30 s for changes) HQ says
+it isn't answering, and a refused secret is reported as a mismatch, never as HQ's own sign-in.
+
+Settings, in `/etc/glaze-gallery.env` (root, mode 600):
+
+```ini
+CRUCIBLE_ADMIN_SECRET=<the same value as CRUCIBLE_ADMIN_SECRET in /etc/crucible.env>
+# only when Crucible does not listen on 127.0.0.1:8792 (the gallery container runs with --network host)
+# CRUCIBLE_ADMIN_URL=http://127.0.0.1:8792/admin
+```
+
+Then `ops/deploy-gallery.sh` (recreating the container loads the env file). Without the secret the Crucible view shows
+"Crucible isn't set up" and nothing is sent.
 
 ### Sign-in
 
@@ -91,6 +138,7 @@ two differences:
    installs `frostdev-stats.service` and `.timer` and runs one collection. It switches off the old `kiln-stats` timer
    after the first successful run and keeps the legacy page available until nginx is updated.
 3. `ops/deploy-gallery.sh`: the gallery server, now with `-v /var/lib/frostdev-stats/out:/stats:ro -e STATS_DIR=/stats`.
+   For the Crucible view, `CRUCIBLE_ADMIN_SECRET` in `/etc/glaze-gallery.env` first (Crucible, above).
 4. nginx: the `/hq` locations and the new `/kiln/stats` redirect from `ops/public-site.nginx.conf` into
    `/etc/nginx/snippets/frostdev-public.conf` (the installed file stays byte-identical to the repository's): back up,
    `nginx -t`, `systemctl reload nginx`. The old Kiln statistics locations and their `auth_request` are gone.
