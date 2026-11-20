@@ -1,0 +1,30 @@
+---
+// The bar on every Crucible page: the Crucible lockup, "Got a code?" and the account (src/scripts/crucible/account.ts
+// fills it in: "Sign in with Discord", or the signed-in name with My packs, Sign out and "Sign out and forget me").
+---
+
+<div class="c-bar">
+  <a class="c-brand" href="/kiln/crucible">
+    <img class="mark" src="/projects/crucible/mark-64.png" width="64" height="64" alt="" />
+    <img class="word" src="/projects/crucible/wordmark-dark.webp" width="640" height="140" alt="Crucible" />
+  </a>
+  <form class="c-code" id="c-code-form" action="/kiln/crucible" method="get" novalidate>
+    <label class="visually-hidden" for="c-code-input">Got a code? Enter a share code</label>
+    <input id="c-code-input" type="text" name="code" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" placeholder="Got a code?" aria-describedby="c-code-error" />
+    <button class="c-btn secondary small" type="submit">Open</button>
+  </form>
+  <div class="c-account" id="c-account" aria-live="polite"></div>
+  <p class="c-error c-status" id="c-code-error" role="alert"></p>
+</div>
+
+<dialog class="c-dialog" id="c-forget-dialog" aria-labelledby="c-forget-title">
+  <form method="dialog">
+    <h2 id="c-forget-title">Sign out and forget me?</h2>
+    <p>This signs you out of Crucible and the Kiln Launcher and deletes what frostdev.io keeps about you: your packs, comments, upvotes and reports. Public packs stay installable for 30 days for people who have them, then go. This can't be undone.</p>
+    <p class="c-error" id="c-forget-error" role="alert"></p>
+    <div class="row">
+      <button class="c-btn ghost" value="cancel" type="submit">Cancel</button>
+      <button class="c-btn primary" id="c-forget-confirm" value="confirm" type="button">Delete my data and sign out</button>
+    </div>
+  </form>
+</dialog>

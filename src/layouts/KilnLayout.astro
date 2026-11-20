@@ -10,12 +10,13 @@ interface Props {
   description: string;
   path: string;
   image?: string;
+  shell?: boolean;
 }
 
-const { title, description, path, image = '/projects/kiln/kiln-og.webp' } = Astro.props;
+const { title, description, path, image = '/projects/kiln/kiln-og.webp', shell = false } = Astro.props;
 ---
 
-<MarketingLayout title={title} description={description} path={path} image={image} ambient={false}>
+<MarketingLayout title={title} description={description} path={path} image={image} ambient={false} shell={shell}>
   <slot name="head" slot="head" />
   <div class="kiln-root">
     <slot />

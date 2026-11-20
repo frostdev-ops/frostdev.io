@@ -1,0 +1,61 @@
+---
+import KilnLayout from '../../../layouts/KilnLayout.astro';
+import CrucibleBar from '../../../components/crucible/CrucibleBar.astro';
+import { legalDrafts } from '../../../lib/crucible';
+import '../../../styles/crucible.css';
+
+// Crucible's copyright page (DESIGN.md 10.3). DRAFT: built only with CRUCIBLE_LEGAL_DRAFTS=1 until the owner approves
+// the text and the registered DMCA agent's details are in (src/lib/crucible.ts). The live build has no such page; the
+// Crucible service answers /kiln/crucible/copyright from this file once it is built.
+export function getStaticPaths() {
+  return legalDrafts ? [{ params: { legal: 'copyright' } }] : [];
+}
+---
+
+<KilnLayout
+  title="Copyright on Crucible"
+  description="How mod authors and other rights holders ask for a pack on Crucible to be taken down, and how creators answer."
+  path="/kiln/crucible/copyright"
+>
+  <div class="crucible" data-crucible-draft>
+    <CrucibleBar />
+    <article class="product-page reading-page">
+      <p class="c-note warn"><strong>Draft.</strong> Not published. Waiting for the owner's approval and the registered agent's details.</p>
+      <p class="article-meta"><a href="/kiln/crucible">Crucible</a> · Updated <time datetime="2026-11-20">November 20, 2026</time></p>
+      <h1>Copyright on Crucible.</h1>
+      <p>Crucible is where Enshrouded players share modpacks. A pack carries the files of the mods in it, uploaded by the pack's creator, and every public pack credits each mod's author with a link to where the mod comes from. If a pack shares your work without your permission, tell us and we take it down.</p>
+
+      <h2 id="notice">Sending a notice</h2>
+      <p>Write to our designated agent at <a href="mailto:admin@frostdev.io">admin@frostdev.io</a>. Please include:</p>
+      <ul>
+        <li>the work you own or represent (for example, your mod and where you publish it);</li>
+        <li>the address of the pack on Crucible (frostdev.io/kiln/crucible/…) or its share code, and which mod in it;</li>
+        <li>your name, and an email address or other way to reach you;</li>
+        <li>a statement that you believe in good faith that the use is not allowed by you, your agent or the law;</li>
+        <li>a statement that the information in your notice is accurate and, under penalty of perjury, that you are the owner or allowed to act for the owner;</li>
+        <li>your physical or electronic signature (typing your full name is fine).</li>
+      </ul>
+      <p>Designated agent: <em>[name and postal address appear here once the agent is registered with the U.S. Copyright Office]</em>.</p>
+
+      <h2 id="what-happens">What happens next</h2>
+      <ul>
+        <li>We take down the pack version that holds the work, usually within a day. Its files are blocked, so they can't be uploaded to Crucible again.</li>
+        <li>We tell the pack's creator, with the reason and a copy of your notice (we leave out your contact details if you ask).</li>
+        <li>People who installed the pack keep the copy on their computer; Crucible stops offering it and its updates.</li>
+      </ul>
+
+      <h2 id="counter">Counter-notices</h2>
+      <p>If you made the pack and think it was taken down by mistake, or you have the mod author's permission, write to the same address with: the pack's address and the files taken down; a statement under penalty of perjury that you believe in good faith they were removed by mistake or misidentification; your name, address and phone number; a statement that you consent to the jurisdiction of the federal court for your address (or, outside the United States, any judicial district where Frostdev may be found) and will accept service from the person who sent the notice; and your signature. We forward it to the person who sent the notice and may restore the files after 10 to 14 business days unless they tell us they have filed a court action.</p>
+
+      <h2 id="repeat">Repeat infringers</h2>
+      <p>An account whose packs are taken down for copyright again and again loses the ability to share packs on Crucible.</p>
+
+      <h2 id="authors">For mod authors</h2>
+      <p>If you'd rather your mod were not shared in packs at all, say so in the notice or in your mod's description; we add its files to Crucible's blocklist. If you are fine with packs but the credit is wrong, write to us or report the pack on its page, and we correct it.</p>
+      <p><a href="/kiln/terms">Terms</a> · <a href="/kiln/privacy">Privacy</a></p>
+    </article>
+  </div>
+</KilnLayout>
+<script>
+  import '../../../scripts/crucible/missing.ts';
+</script>

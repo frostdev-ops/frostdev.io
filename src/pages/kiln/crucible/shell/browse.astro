@@ -1,0 +1,82 @@
+---
+import KilnLayout from '../../../../layouts/KilnLayout.astro';
+import CrucibleBar from '../../../../components/crucible/CrucibleBar.astro';
+import '../../../../styles/crucible.css';
+
+// A Crucible shell (src/lib/crucible.ts): served only through the Crucible service, which fills in the title, the Open
+// Graph tags (at the crucible-head marker) and the data (the crucible-data script) for each page.
+---
+
+<KilnLayout title="Crucible: Enshrouded modpacks" description="Find and share Enshrouded modpacks. Every mod credited, installed with the Kiln Launcher in a click." path="/kiln/crucible" shell>
+  <div class="crucible" data-page="browse">
+    <CrucibleBar />
+    <section class="c-hero" aria-labelledby="c-hero-title">
+      <h1 id="c-hero-title">Find a modpack. Press install. Play.</h1>
+      <p>Enshrouded modpacks made by players, every mod credited to its author. Open one in the Kiln Launcher and it installs as its own profile.</p>
+      <form class="c-search" id="c-search" role="search" action="/kiln/crucible" method="get">
+        <label class="visually-hidden" for="c-q">Search packs</label>
+        <input id="c-q" type="search" name="q" maxlength="200" placeholder="Search packs, mods or creators" autocomplete="off" />
+        <button class="c-btn primary" type="submit">Search</button>
+      </form>
+    </section>
+
+    <div class="c-browse">
+      <details class="c-filters" id="c-filters" open>
+        <summary>Filters</summary>
+        <form id="c-facets" aria-label="Filter packs">
+          <fieldset id="c-tags">
+            <legend>Tags</legend>
+            <p class="muted" id="c-tags-empty">No tags yet.</p>
+          </fieldset>
+          <fieldset>
+            <legend>Game build</legend>
+            <label class="visually-hidden" for="c-build">Made for game build</label>
+            <select id="c-build" name="build"><option value="">Any build</option></select>
+          </fieldset>
+          <fieldset>
+            <legend>Where it runs</legend>
+            <label><input type="radio" name="side" value="" checked /> Anywhere</label>
+            <label><input type="radio" name="side" value="client" /> For your game</label>
+            <label><input type="radio" name="side" value="server" /> For a dedicated server</label>
+            <label><input type="checkbox" name="server" value="1" /> Has a server pack</label>
+          </fieldset>
+          <fieldset>
+            <legend>Mods in the pack</legend>
+            <label><input type="radio" name="mods" value="" checked /> Any number</label>
+            <label><input type="radio" name="mods" value="lt10" /> Fewer than 10</label>
+            <label><input type="radio" name="mods" value="10-30" /> 10 to 30</label>
+            <label><input type="radio" name="mods" value="30+" /> More than 30</label>
+          </fieldset>
+          <button class="c-btn ghost small" type="reset" id="c-clear">Clear filters</button>
+        </form>
+      </details>
+
+      <section aria-labelledby="c-results-title">
+        <div class="c-results-head">
+          <h2 id="c-results-title" class="visually-hidden">Packs</h2>
+          <p class="muted c-status" id="c-count" role="status" aria-live="polite">Loading packs…</p>
+          <label>Sort
+            <select id="c-sort" name="sort">
+              <option value="top">Top this month</option>
+              <option value="new">Newest</option>
+              <option value="updated">Recently updated</option>
+              <option value="installs">Most installed</option>
+            </select>
+          </label>
+        </div>
+        <ul class="c-grid" id="c-results"></ul>
+        <div class="c-empty" id="c-empty" hidden>
+          <img src="/projects/crucible/empty.webp" width="480" height="360" alt="" />
+          <p id="c-empty-text">No packs match. Try other words or fewer filters.</p>
+        </div>
+        <div class="c-more"><button class="c-btn secondary" id="c-more" type="button" hidden>Show more packs</button></div>
+        <noscript><p class="c-note">Crucible's pages need JavaScript to list packs. The Kiln Launcher's Crucible page works without a browser.</p></noscript>
+      </section>
+    </div>
+  </div>
+  <script is:inline type="application/json" id="crucible-data">null</script>
+</KilnLayout>
+
+<script>
+  import '../../../../scripts/crucible/browse.ts';
+</script>

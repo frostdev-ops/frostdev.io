@@ -1,0 +1,25 @@
+---
+import KilnLayout from '../../../../layouts/KilnLayout.astro';
+import CrucibleBar from '../../../../components/crucible/CrucibleBar.astro';
+import '../../../../styles/crucible.css';
+
+// A Crucible shell (src/lib/crucible.ts): served only through the Crucible service, which fills in the title, the Open
+// Graph tags (at the crucible-head marker) and the data (the crucible-data script) for each page.
+---
+
+<KilnLayout title="Not found · Crucible" description="This pack is not on Crucible." path="/kiln/crucible/missing" shell>
+  <div class="crucible" data-page="missing">
+    <CrucibleBar />
+    <section class="c-empty" aria-labelledby="c-missing-h">
+      <img src="/projects/crucible/empty.webp" width="480" height="360" alt="" />
+      <h1 id="c-missing-h">This pack is not on Crucible</h1>
+      <p>We couldn't find that pack. Codes look like H7QK-3MZP. A pack that was taken down or deleted is no longer here; copies people installed keep working.</p>
+      <p><a class="c-btn secondary" href="/kiln/crucible">Browse packs</a></p>
+    </section>
+  </div>
+  <script is:inline type="application/json" id="crucible-data">null</script>
+</KilnLayout>
+
+<script>
+  import '../../../../scripts/crucible/missing.ts';
+</script>

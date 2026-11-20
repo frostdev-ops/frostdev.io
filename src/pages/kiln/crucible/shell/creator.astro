@@ -1,0 +1,36 @@
+---
+import KilnLayout from '../../../../layouts/KilnLayout.astro';
+import CrucibleBar from '../../../../components/crucible/CrucibleBar.astro';
+import '../../../../styles/crucible.css';
+
+// A Crucible shell (src/lib/crucible.ts): served only through the Crucible service, which fills in the title, the Open
+// Graph tags (at the crucible-head marker) and the data (the crucible-data script) for each page.
+---
+
+<KilnLayout title="Modpacks by a creator · Crucible" description="Enshrouded modpacks by one creator on Crucible." path="/kiln/crucible/creator" shell>
+  <div class="crucible" data-page="creator">
+    <CrucibleBar />
+    <section aria-labelledby="c-creator-name">
+      <div class="c-creator">
+        <img id="c-avatar" src="/projects/crucible/mark-128.webp" width="128" height="128" alt="" />
+        <div>
+          <h1 id="c-creator-name">Creator</h1>
+          <p class="muted" id="c-creator-stats"></p>
+        </div>
+      </div>
+      <h2>Public packs</h2>
+      <ul class="c-grid" id="c-results"></ul>
+      <div class="c-empty" id="c-empty" hidden><p>No public packs yet.</p></div>
+    </section>
+    <section id="c-mine" aria-labelledby="c-mine-h" hidden>
+      <h2 id="c-mine-h">Shared by link (only you see these)</h2>
+      <p class="muted">Packs you shared by link aren't listed for others. A link pack nobody installs or changes for a year is deleted.</p>
+      <ul class="c-grid" id="c-mine-list"></ul>
+    </section>
+  </div>
+  <script is:inline type="application/json" id="crucible-data">null</script>
+</KilnLayout>
+
+<script>
+  import '../../../../scripts/crucible/creator.ts';
+</script>

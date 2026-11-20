@@ -1,5 +1,6 @@
 ---
 import KilnLayout from '../../layouts/KilnLayout.astro';
+import { legalDrafts } from '../../lib/crucible';
 
 // Terms of service of the Kiln app on Discord and of the Kiln Launcher's Discord features. Linked from the app's
 // settings in Discord's developer portal (Terms of Service URL), from /kiln/discord and /kiln/privacy.
@@ -44,6 +45,14 @@ const source = 'https://github.com/frostdev-ops/kiln';
     <h2 id="ours">What we may do</h2>
     <p>We may remove posts, and limit or block someone's use of the app or of report sending, when these terms or the server's rules are broken or when the service is being misused. We may change, pause or end features. Support is given as well as we can: we don't promise a reply, a fix or a time for either.</p>
 
+    {legalDrafts && (
+      <section data-crucible-draft aria-labelledby="crucible">
+        <p class="kiln-draft-note"><strong>Draft (Crucible).</strong> Not published: waits for the owner's approval (DESIGN.md 10.2).</p>
+        <h2 id="crucible">Crucible</h2>
+        <p>Share packs only with mods you may share, and credit every mod and its author with a link to where it comes from. If a mod's author does not allow sharing their files, leave it out. Packs contain code from other people: Crucible checks packs automatically but does not review them, and you install them at your own risk; read the comments and the checks. Don't put malware, hidden data collection, other people's private information or ads in a pack. Comments must follow the Kiln Discord's rules: no harassment, slurs, spam or links to harmful files. We may hide or remove packs, versions, files and comments and stop an account from sharing or commenting. You let Frostdev store, show and distribute what you upload, as needed to run Crucible. No warranty, as for the rest of Kiln. Copyright notices: <a href="/kiln/crucible/copyright">Copyright on Crucible</a>.</p>
+      </section>
+    )}
+
     <h2 id="warranty">No warranty</h2>
     <p>The Kiln app and the launcher's Discord features are provided as they are, without warranty, as far as the law allows. Mods can break a game or a save. Back up your saves before you try something new. As far as the law allows, Frostdev is not liable for loss or damage from using them. Rights that the law gives you and that cannot be waived stay in place.</p>
 
@@ -55,3 +64,7 @@ const source = 'https://github.com/frostdev-ops/kiln';
     <p><a href="/kiln/privacy">Privacy for Kiln on Discord</a> · <a href="/kiln/discord">Kiln on Discord</a></p>
   </article>
 </KilnLayout>
+
+<style>
+  .kiln-draft-note { padding: 0.6rem 0.9rem; border: 1px dashed #ffcc66; border-radius: 0.5rem; color: #ffcc66; }
+</style>
