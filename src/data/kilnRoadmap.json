@@ -1,6 +1,39 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.29.23",
+      "date": "2026-11-20",
+      "title": "A safer save editor",
+      "summary": "The launcher's save editor in your language, read-only when it can't read a save for sure, other mods' hidden items shown as locked tiles, and the game's own skill-point count.",
+      "patch": true,
+      "features": [
+        {
+          "title": "The save editor in your language",
+          "text": "The editor's texts follow the launcher's 11 languages; item and skill names stay the game's.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "No guessing at a backpack",
+          "text": "A save the editor can't read for sure, or one holding another mod's data, opens read-only with the reason, so nothing is written at a guessed place.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Other mods' hidden items as locked tiles",
+          "text": "An item Kiln doesn't know shows as a locked tile with a note naming its slot, and is kept untouched.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "The game's own skill-point count",
+          "text": "Available skill points are worked out the way the game does at each load, and a skill tree that spends more than that is not saved.",
+          "area": "launcher",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.29.22",
       "date": "2026-11-20",
       "title": "Chat completion and clearer reports",
