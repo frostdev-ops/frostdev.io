@@ -789,3 +789,27 @@ test('crucible: clear messages when it is not set up, down, refusing the secret 
   assert.equal((await request('/crucible.js', who)).status, 200);
   assert.equal((await request('/crucible.js')).status, 401);
 });
+
+test('crucible: lists bans and passes report subjects on; an older Crucible without GET /bans answers 404', async () => {
+  const who = await startCrucible();
+  const BANS = { bans: [{ id: '123456789012345678', name: 'Spammer', reason: 'spam', seen: '2026-11-20T10:00:00.000Z' }] };
+  const REPORTS = { reports: [
+    { id: 'rpt_' + 'a'.repeat(26), target: { type: 'comment', id: 'cm_1' }, pack: 'pk_abc123', by: { id: '223456789012345678', name: 'R', avatarUrl: null }, reason: 'offensive', text: '',
+      subject: { text: HOSTILE, by: { id: '323456789012345678', name: 'W', avatarUrl: null }, deleted: false, hidden: true } },
+    { id: 'rpt_' + 'b'.repeat(26), target: { type: 'version', id: 'pv_' + 'c'.repeat(26) }, pack: 'pk_abc123', by: null, reason: 'broken', text: '',
+      subject: { title: 'Pack', slug: 'pack', visibility: 'public', hidden: false, version: '1.2', number: 3 } },
+    { id: 'rpt_' + 'd'.repeat(26), target: { type: 'pack', id: 'pk_gone' }, pack: null, by: null, reason: 'other', text: '', subject: null },
+  ] };
+  crucibleAnswer = (req) => (req.url === '/admin/bans' ? [200, BANS] : [200, REPORTS]);
+  let r = await cr('/bans', who);
+  assert.equal(r.status, 200); assert.deepEqual(await r.json(), BANS);
+  r = await cr('/reports', who);
+  assert.deepEqual(await r.json(), REPORTS, 'subjects pass through unchanged');
+  assert.deepEqual(crucibleSeen.map((s) => [s.method, s.url]), [['GET', '/admin/bans'], ['GET', '/admin/reports']]);
+  assert.equal((await cr('/bans?all=1', who)).status, 400);
+  assert.equal((await cr('/bans', who, { method: 'PUT' })).status, 405);
+  crucibleAnswer = () => [404, { error: 'not-found', message: 'There is no such endpoint.' }];
+  r = await cr('/bans', who);
+  assert.equal(r.status, 404, 'the page shows its by-id fallback on a 404');
+  assert.match((await r.json()).error, /no such endpoint/);
+});
