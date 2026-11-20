@@ -82,6 +82,35 @@ launcher), the privacy policy URL and the terms of service URL. Plain reading pa
 (`src/pages/kiln/discord.astro`, `privacy.astro`, `terms.astro`), no scripts. The privacy page must stay true to what
 the app and the launcher do: update it, with its date, before a launcher release that changes what is sent or kept.
 
+**Crucible.** `/kiln/crucible` is Crucible, Kiln's modpack platform (design: the dev.29 modpack-share DESIGN.md in the
+Kiln wave folder). Its pages are served by the Crucible service (crucible repository; Docker crucible on 127.0.0.1:8792,
+nginx `location ^~ /kiln/crucible/` and `= /kiln/crucible` in `ops/public-site.nginx.conf`), but they are this site's:
+`src/pages/kiln/crucible/shell/{browse,pack,creator,missing}.astro` build page shells (`KilnLayout` with `shell`: no
+canonical or Open Graph tags of their own, a `crucible-head` marker and an empty `crucible-data` script instead), the
+service reads them from `/opt/frostdev-public/current` and fills in each page's title, Open Graph tags (the pack's
+1200x630 card for Discord unfurls) and data, and `src/scripts/crucible/*.ts` render the page from that data and the
+public API (`/kiln/crucible/api/v1`): browse and search with facets (tags, game build, where it runs, server pack,
+number of mods, sort; the address keeps the query), a pack's page (cover, creator, version, download size, game build,
+Kiln range, "Open in Kiln" via `kiln://crucible/<code>` with the "Get Kiln" steps when nothing opens after 2 s, the
+share code, mods and credits with links, versions, checks, comments with one level of replies, upvotes, reports), a
+creator's packs (`/kiln/crucible/u/<discord id>`; to the creator also their link packs), "Got a code?" on every page,
+and the account: "Sign in with Discord" goes to the Kiln relay's `/kiln/signin/web?return=<page>`, which sets the
+`__Secure-crucible` cookie (Path=/kiln/crucible, HttpOnly, 30 days); Sign out and "Sign out and forget me" call the
+service. Text from people is only ever set as text. Look: `src/styles/crucible.css` (the Crucible art's navy, cyan,
+indigo and molten orange inside Kiln's frame), art in `public/projects/crucible/` (webp from the Crucible brand art).
+The Crucible nav link shows on Crucible's pages only. **Legal drafts:** the copyright page
+(`src/pages/kiln/crucible/[legal].astro`) and the Crucible sections of `/kiln/privacy` and `/kiln/terms` are built
+only with `CRUCIBLE_LEGAL_DRAFTS=1` (`src/lib/crucible.ts`), for the owner to read; `ops/deploy.sh` refuses a build
+that has them. They go live, with new dates and an announcement in the Kiln Discord, once the owner approves the text
+and the DMCA agent is registered, before the launcher release that turns Crucible on. **Get Kiln resume:** the pack page's "Get Kiln" opens `/kiln/download?crucible=<CODE>`; with a valid code
+(`src/lib/crucibleResume.ts`, `src/scripts/kiln/crucibleResume.ts`) the download page shows "Step 2: start Kiln. It
+opens <pack>." (the title from the public `/codes` API, "the pack" when Crucible can't be reached), saves the Windows
+installer and the AppImage as `<name>.crucible-<CODE>.<ext>` (the `download` attribute; the files are on this
+origin) and copies the pack's link on a launcher download click. The launcher reads the code from its installer's or
+AppImage's name, or from the clipboard, once at its first start (Kiln's docs/kiln/launcher/crucible.md, "Come back
+after installing Kiln"). `npm run test:crucible` tests the names and codes. Local run and browser tests:
+the crucible repository's `scripts/web-dev.mjs --site dist` and `scripts/web-e2e-mac1.sh`.
+
 `/kiln/roadmap` is Kiln's roadmap: every release with what it brought (new, improved, fixes), the next release, the
 planned ones after it, the 1.0 milestone and planned features with no release yet. Its data is
 `src/data/kilnRoadmap.json`, read and checked by `src/lib/kilnRoadmap.ts` (an unknown area, kind or status, a release

@@ -31,6 +31,15 @@ const sums = fileHref(release.files.sums);
     </header>
 
     <section class="kiln-dl-section" id="launcher" aria-labelledby="launcher-title">
+      <div class="kiln-dl-crucible" id="kiln-crucible" role="region" aria-labelledby="kiln-crucible-title" hidden>
+        <p class="product-eyebrow" id="kiln-crucible-title">Getting Kiln for a modpack</p>
+        <ol>
+          <li><strong>Step 1:</strong> download the launcher below and install it.</li>
+          <li><strong>Step 2:</strong> start Kiln. It opens <a id="kiln-crucible-pack" href="/kiln/crucible">the pack</a>.</li>
+        </ol>
+        <p class="kiln-dl-crucible-note">Started Kiln before? Then go back to <a id="kiln-crucible-back" href="/kiln/crucible">the pack's page</a> and press Open in Kiln.</p>
+        <p class="kiln-dl-crucible-status" id="kiln-crucible-status" role="status" aria-live="polite"></p>
+      </div>
       <div class="kiln-prose">
         <h2 id="launcher-title">{launcher.title}</h2>
         <p>{launcher.about}</p>
@@ -98,3 +107,17 @@ const sums = fileHref(release.files.sums);
     </section>
   </div>
 </KilnLayout>
+
+<script>
+  import '../../../scripts/kiln/crucibleResume.ts';
+</script>
+
+<style>
+  .kiln-dl-crucible { margin: 0 0 1.75rem; padding: 1.1rem 1.25rem; border: 1px solid var(--k-ember-400); border-radius: 0.75rem; background: radial-gradient(ellipse at 0 0, rgb(255 106 26 / 0.12), transparent 70%), var(--k-bg1); color: var(--k-text1); }
+  .kiln-dl-crucible ol { margin: 0.5rem 0 0.75rem; padding-left: 1.25rem; list-style: decimal; }
+  .kiln-dl-crucible li + li { margin-top: 0.35rem; }
+  .kiln-dl-crucible strong { color: var(--k-text0); }
+  .kiln-dl-crucible a { color: var(--k-ember-300); text-decoration: underline; text-underline-offset: 0.18em; }
+  .kiln-dl-crucible-note { font-size: 0.9rem; }
+  .kiln-dl-crucible-status:not(:empty) { margin-top: 0.6rem; padding: 0.5rem 0.75rem; border-radius: 0.5rem; background: var(--k-bg2); color: var(--k-text0); }
+</style>

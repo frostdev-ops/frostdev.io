@@ -13,6 +13,7 @@
   <script src="/hq/viewer.js" defer></script>
   <script src="/hq/charts.js" defer></script>
   <script src="/hq/gallery.js" defer></script>
+  <script src="/hq/crucible.js" defer></script>
   <script src="/hq/app.js" defer></script>
 </head>
 <body class="app">
@@ -28,6 +29,7 @@
       <a id="nav-overview" href="#overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4zM14 20h6v-9h-6zM14 4v3h6V4zM4 20h6v-3H4z"/></svg>Overview</a>
       <p class="group">Kiln</p>
       <a id="nav-kiln" href="#kiln"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>Downloads</a>
+      <a id="nav-crucible" href="#crucible"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14l-1.5 9a5.5 5.5 0 0 1-11 0zM9 21h6M12 20.5V20M8 3c0 1 1 1.5 1 2.5M12 2.5c0 1 1 1.5 1 2.5M16 3c0 1-1 1.5-1 2.5"/></svg>Crucible <span class="count" id="count-crucible"></span></a>
       <p class="group">Glaze</p>
       <a id="nav-glaze" href="#glaze"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H3"/></svg>Numbers</a>
       <a id="nav-mods" href="#glaze/mods"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/></svg>Mods <span class="count" id="count-mods"></span></a>
@@ -47,6 +49,7 @@
   <main id="main" tabindex="-1">
     <section id="view-overview" class="view" aria-label="Overview" hidden></section>
     <section id="view-kiln" class="view" aria-label="Kiln downloads" hidden></section>
+    <section id="view-crucible" class="view" aria-label="Crucible moderation" hidden></section>
     <section id="view-glaze" class="view" aria-label="Glaze numbers" hidden></section>
     <section id="view-site" class="view" aria-label="frostdev.io page views" hidden></section>
     <section id="view-gallery" class="view gallery" aria-label="Glaze gallery review" hidden>

@@ -268,7 +268,7 @@
     ])];
   }
 
-  const auditRow = (a) => h('li', {}, h('time', {}, when(a.at)), h('span', {}, `${a.email} ${a.action} ${a.kind === 'mods' ? 'mod' : 'Look'} ${a.id}${a.reason ? ` — “${a.reason}”` : ''}`));
+  const auditRow = (a) => h('li', {}, h('time', {}, when(a.at)), h('span', {}, `${a.email} ${a.action} ${a.kind === 'mods' ? 'mod ' : a.kind === 'looks' ? 'Look ' : ''}${a.id}${a.reason ? ` — “${a.reason}”` : ''}`));
   function renderActivity() {
     $('limits').textContent = data.limits ? 'Submit limits are on.' : 'Submit limits are OFF (SUBMIT_LIMITS=off): anyone can submit without daily limits.';
     $('audit').replaceChildren(...(data.audit.length ? data.audit.map(auditRow) : [h('li', {}, 'No decisions yet.')]));

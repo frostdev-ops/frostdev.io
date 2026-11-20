@@ -1,5 +1,6 @@
 ---
 import KilnLayout from '../../layouts/KilnLayout.astro';
+import { legalDrafts } from '../../lib/crucible';
 
 // Privacy policy of the Kiln app on Discord (the bot in the Kiln Discord server) and of the Kiln Launcher's Discord
 // features. Linked from the app's settings in Discord's developer portal (Privacy Policy URL), from /kiln/discord and
@@ -70,6 +71,20 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
 
     <p><strong>Showing Kiln on your profile.</strong> This is off until you turn it on. The launcher then tells the Discord app on your own computer that you are playing Enshrouded with Kiln, how many mods are on, and for how long. Discord shows that on your profile. It never includes a server name, a world name, a character name or the names of your mods, and nothing is sent to Frostdev for it.</p>
 
+    {legalDrafts && (
+      <section data-crucible-draft aria-labelledby="crucible">
+        <p class="kiln-draft-note"><strong>Draft (Crucible).</strong> Not published: this section and the marked edits wait for the owner's approval (DESIGN.md 10.1) and go live with an announcement in the Kiln Discord, before the launcher release that turns Crucible on.</p>
+        <h2 id="crucible">Crucible</h2>
+        <p><strong>Crucible.</strong> When you share a pack, the launcher uploads it in full: the mods in it, the pack's own data, and the settings files you leave ticked. Files and images are stored with Cloudflare R2. frostdev.io keeps the pack with your Discord user ID, display name and avatar, so it shows who made it and only you can change it. Anyone with the link or code can open a pack; public packs are listed for everyone, with the credits you gave for each mod.</p>
+        <p><strong>Comments and upvotes.</strong> Comments you write and packs you upvote are kept with your Discord user ID; comments show your Discord display name and avatar to everyone. You can delete your comments and take back upvotes at any time.</p>
+        <p><strong>Signing in on the website.</strong> To comment or upvote on frostdev.io you sign in with Discord there, the same way as in the launcher. frostdev.io then sets one cookie in your browser for its Crucible pages only (__Secure-crucible). It holds your sign-in and nothing else, and ends after 30 days without use or when you sign out.</p>
+        <p>We keep your packs until you delete them; a pack shared only by link is deleted after a year without use. "Sign out and forget me" deletes your packs, comments, upvotes and reports; public packs stay installable for people who have them for 30 days, then go.</p>
+        <p><strong>Opening and installing.</strong> You don't need to be signed in. After an install the launcher tells frostdev.io once that a version was installed, without your account; we count installs per version and day and keep a scrambled form of your network address for one day. You can turn this off in Settings.</p>
+        <p><strong>Discord.</strong> /modpack in Discord and the "Get this modpack" button on your Discord profile work as described there; Discord tells us your user ID when you use the command; we keep nothing about it. Reports keep your Discord user ID until handled and 30 days after.</p>
+        <p class="kiln-draft-note">Draft edits elsewhere on this page, once approved: "Your name and avatar: while you are signed in" becomes "… or while you have packs, comments or upvotes on Crucible"; "What frostdev.io keeps" adds packs, comments, upvotes, reports and install counts; the signed-out sentence adds "and the Crucible pages and packs you open"; "Who else is involved" adds Cloudflare R2; the date at the top changes.</p>
+      </section>
+    )}
+
     <h2 id="others">Who else is involved</h2>
     <ul>
       <li><strong>Discord</strong> stores your account, your messages and your posts. See <a href="https://discord.com/privacy">Discord's privacy policy</a>.</li>
@@ -96,3 +111,7 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
     <p><a href="/kiln/terms">Terms for Kiln on Discord</a> · <a href="/kiln/discord">Kiln on Discord</a></p>
   </article>
 </KilnLayout>
+
+<style>
+  .kiln-draft-note { padding: 0.6rem 0.9rem; border: 1px dashed #ffcc66; border-radius: 0.5rem; color: #ffcc66; }
+</style>

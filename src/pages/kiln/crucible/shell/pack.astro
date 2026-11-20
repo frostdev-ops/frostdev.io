@@ -1,0 +1,98 @@
+---
+import KilnLayout from '../../../../layouts/KilnLayout.astro';
+import CrucibleBar from '../../../../components/crucible/CrucibleBar.astro';
+import '../../../../styles/crucible.css';
+
+// A Crucible shell (src/lib/crucible.ts): served only through the Crucible service, which fills in the title, the Open
+// Graph tags (at the crucible-head marker) and the data (the crucible-data script) for each page.
+---
+
+<KilnLayout title="A modpack on Crucible" description="An Enshrouded modpack on Crucible. Install with the Kiln Launcher." path="/kiln/crucible/pack" shell>
+  <div class="crucible" data-page="pack">
+    <CrucibleBar />
+    <article id="c-pack" aria-busy="true">
+      <div class="c-pack-head">
+        <div>
+          <img class="c-cover" id="c-cover" src="/projects/crucible/cover-forge.webp" width="1280" height="720" alt="" />
+          <h1 class="c-title" id="c-title">Loading the pack…</h1>
+          <p><a class="c-owner" id="c-owner" href="/kiln/crucible"></a> <span class="muted" id="c-version"></span></p>
+          <p class="c-summary" id="c-summary"></p>
+          <ul class="c-tags" id="c-tagsline" aria-label="Tags"></ul>
+        </div>
+        <aside class="c-side" aria-label="Install">
+          <a class="c-btn primary" id="c-open" href="/kiln/download">Open in Kiln</a>
+          <div class="c-nokiln" id="c-nokiln" role="status" hidden>
+            <strong>No Kiln yet?</strong>
+            <ol>
+              <li><a id="c-getkiln" href="/kiln/download">Get Kiln</a> and install it.</li>
+              <li>Start Kiln. It opens <span id="c-nokiln-pack">this pack</span>.</li>
+            </ol>
+            <p class="muted">Started Kiln before? Come back and press Open in Kiln.</p>
+            <p class="muted">Kiln installed but nothing happened? Update Kiln, then press Open in Kiln again.</p>
+          </div>
+          <a class="c-btn secondary" id="c-getkiln2" href="/kiln/download">Get Kiln</a>
+          <div class="c-sharecode">
+            <span>Code <code id="c-code">····-····</code></span>
+            <button class="c-btn ghost small" type="button" id="c-copy" aria-describedby="c-copied">Copy link</button>
+          </div>
+          <p class="muted c-status" id="c-copied" role="status" aria-live="polite"></p>
+          <dl class="c-facts" id="c-facts"></dl>
+          <div class="c-actions-row">
+            <button class="c-btn secondary" type="button" id="c-upvote" aria-pressed="false">▲ <span id="c-upvotes">0</span><span class="visually-hidden"> upvotes</span></button>
+            <button class="c-btn ghost" type="button" id="c-report">Report</button>
+          </div>
+          <p class="c-status muted" id="c-upvote-msg" role="status" aria-live="polite"></p>
+          <p class="c-note warn">This pack contains mods, including code, from other people. Crucible checks packs automatically but does not review them. Read the checks and the comments before you install.</p>
+        </aside>
+      </div>
+
+      <nav class="c-toc" aria-label="On this page">
+        <a href="#about">About</a>
+        <a href="#mods">Mods and credits</a>
+        <a href="#versions">Versions</a>
+        <a href="#checks">Checks</a>
+        <a href="#comments">Comments</a>
+      </nav>
+
+      <div class="c-sections">
+        <section class="c-section" id="about" aria-labelledby="about-h"><h2 id="about-h">About this pack</h2><div class="c-prose" id="c-body"></div></section>
+        <section class="c-section" id="mods" aria-labelledby="mods-h"><h2 id="mods-h">Mods and credits</h2><div id="c-credits"></div></section>
+        <section class="c-section" id="versions" aria-labelledby="versions-h"><h2 id="versions-h">Versions</h2><ol class="c-versions" id="c-versions"></ol></section>
+        <section class="c-section" id="checks" aria-labelledby="checks-h"><h2 id="checks-h">Checks</h2><div id="c-checks"></div></section>
+        <section class="c-section" id="comments" aria-labelledby="comments-h">
+          <h2 id="comments-h">Comments</h2>
+          <div id="c-compose-area"></div>
+          <ol class="c-comments" id="c-comments"></ol>
+          <div class="c-more"><button class="c-btn secondary" id="c-more-comments" type="button" hidden>Show more comments</button></div>
+        </section>
+      </div>
+    </article>
+
+    <dialog class="c-dialog" id="c-report-dialog" aria-labelledby="c-report-title">
+      <form id="c-report-form" method="dialog">
+        <h2 id="c-report-title">Report this pack</h2>
+        <fieldset>
+          <legend>What is wrong?</legend>
+          <label><input type="radio" name="reason" value="malware" required /> It contains malware or harmful code</label>
+          <label><input type="radio" name="reason" value="stolen" /> It shares someone's work without credit or permission</label>
+          <label><input type="radio" name="reason" value="broken" /> It is broken</label>
+          <label><input type="radio" name="reason" value="offensive" /> It is offensive</label>
+          <label><input type="radio" name="reason" value="other" /> Something else</label>
+        </fieldset>
+        <label for="c-report-text">Details (optional, 300 characters)</label>
+        <textarea id="c-report-text" name="text" maxlength="300"></textarea>
+        <p class="c-error" id="c-report-error" role="alert"></p>
+        <div class="row">
+          <button class="c-btn ghost" value="cancel" formnovalidate type="submit">Cancel</button>
+          <button class="c-btn primary" id="c-report-send" type="button">Send report</button>
+        </div>
+      </form>
+    </dialog>
+    <noscript><p class="c-note">This page needs JavaScript to show the pack. The Kiln Launcher can open the pack's code without a browser.</p></noscript>
+  </div>
+  <script is:inline type="application/json" id="crucible-data">null</script>
+</KilnLayout>
+
+<script>
+  import '../../../../scripts/crucible/pack.ts';
+</script>

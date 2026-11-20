@@ -31,7 +31,7 @@ if [[ $mode != activate ]]; then
     npm run build
     node --input-type=module <<'NODE'
 import assert from 'node:assert/strict';
-import { readdirSync, statSync, lstatSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, lstatSync } from 'node:fs';
 const pages = ['', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'glaze/privacy', 'glaze/terms', 'glaze/looks', 'glaze/looks/submit', 'glaze/mods', 'glaze/mods/submit', 'privacy', 'guides',
   'guides/rimeward-first-workspace', 'guides/crosspane-two-computers',
   'guides/rimewire-agent-handoffs', 'guides/frostsim-first-simulation',
@@ -43,6 +43,11 @@ for (const page of pages) assert(statSync(`dist/${page ? page + '/' : ''}index.h
 for (const file of ['robots.txt', 'sitemap.xml', 'ads.txt']) assert(statSync(`dist/${file}`).size > 0);
 for (const file of ['kiln/agents/kiln-modding.zip', 'kiln/agents/kiln-modding/SKILL.md']) assert(statSync(`dist/${file}`).size > 0);
 assert(statSync('dist/_site').isDirectory());
+// Crucible's page shells, read by the Crucible service (src/lib/crucible.ts). Its legal text (the copyright page and
+// the Crucible sections of /kiln/privacy and /kiln/terms) is a draft until the owner approves it: a build made with
+// CRUCIBLE_LEGAL_DRAFTS=1 never goes live.
+for (const shell of ['browse', 'pack', 'creator', 'missing']) assert(statSync(`dist/kiln/crucible/shell/${shell}/index.html`).size > 0);
+assert(!existsSync('dist/kiln/crucible/copyright'), 'Crucible legal drafts in the build (unset CRUCIBLE_LEGAL_DRAFTS)');
 const allowed = new Set(['index.html', '404.html', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'kiln',
   'privacy', 'guides', '_site', 'projects', 'robots.txt', 'sitemap.xml', 'ads.txt']);
 for (const name of readdirSync('dist')) assert(allowed.has(name), `Unexpected static output: ${name}`);
@@ -54,6 +59,7 @@ function inspect(path) {
     assert(!/(^\.env($|\.)|\.(db|sqlite|sqlite3)$)/i.test(name), `Private artifact: ${file}`);
     if (entry.isDirectory()) inspect(file);
     else assert(entry.isFile(), `Unexpected file type: ${file}`);
+    if (name.endsWith('.html')) assert(!readFileSync(file, 'utf8').includes('data-crucible-draft'), `Crucible legal draft in ${file}`);
   }
 }
 inspect('dist');

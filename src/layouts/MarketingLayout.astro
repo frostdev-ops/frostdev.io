@@ -7,20 +7,26 @@ interface Props {
   path?: string;
   image?: string;
   ambient?: boolean;
+  /** A Crucible shell (src/pages/kiln/crucible/shell): the Crucible service fills in its canonical link and Open Graph
+   *  tags per page at the meta marker, so the layout leaves its own out. */
+  shell?: boolean;
 }
-const { title, description, path = '/', image = '/projects/frostdev-wordmark-crystal.webp', ambient = true } = Astro.props;
+const { title, description, path = '/', image = '/projects/frostdev-wordmark-crystal.webp', ambient = true, shell = false } = Astro.props;
+const crucible = path === '/kiln/crucible' || path.startsWith('/kiln/crucible/');
 const glaze = path === '/glaze' || path.startsWith('/glaze/') || path.startsWith('/guides/glaze-');
 const kiln = path === '/kiln' || path.startsWith('/kiln/');
 ---
 
 <BaseLayout title={title} description={description}>
-  <link slot="head" rel="canonical" href={`https://frostdev.io${path}`} />
-  <meta slot="head" property="og:title" content={title} />
-  <meta slot="head" property="og:description" content={description} />
-  <meta slot="head" property="og:url" content={`https://frostdev.io${path}`} />
-  <meta slot="head" property="og:type" content="website" />
-  <meta slot="head" property="og:image" content={`https://frostdev.io${image}`} />
-  <meta slot="head" name="twitter:card" content="summary_large_image" />
+  {shell ? <meta slot="head" name="crucible-head" /> : <>
+    <link slot="head" rel="canonical" href={`https://frostdev.io${path}`} />
+    <meta slot="head" property="og:title" content={title} />
+    <meta slot="head" property="og:description" content={description} />
+    <meta slot="head" property="og:url" content={`https://frostdev.io${path}`} />
+    <meta slot="head" property="og:type" content="website" />
+    <meta slot="head" property="og:image" content={`https://frostdev.io${image}`} />
+    <meta slot="head" name="twitter:card" content="summary_large_image" />
+  </>}
   <meta slot="head" name="google-adsense-account" content="ca-pub-1806642805052030" />
   <slot name="head" slot="head" />
 
@@ -38,6 +44,7 @@ const kiln = path === '/kiln' || path.startsWith('/kiln/');
         <a href="/guides">Guides</a>
         {glaze && <a href="/glaze/looks" aria-current={path === '/glaze/looks' ? 'page' : undefined}>Looks</a>}
         {glaze && <a href="/glaze/mods" aria-current={path === '/glaze/mods' ? 'page' : undefined}>Mods</a>}
+        {crucible && <a href="/kiln/crucible" aria-current={path === '/kiln/crucible' ? 'page' : undefined}>Crucible</a>}
         {kiln && <a href="/kiln/download" aria-current={path === '/kiln/download' || path.startsWith('/kiln/download/') ? 'page' : undefined}>Download</a>}
         {kiln && <a href="/kiln/wiki" aria-current={path === '/kiln/wiki' || path.startsWith('/kiln/wiki/') ? 'page' : undefined}>Wiki</a>}
         {kiln && <a href="/kiln/roadmap" aria-current={path === '/kiln/roadmap' ? 'page' : undefined}>Roadmap</a>}
