@@ -294,6 +294,20 @@ pre.source { margin: 0; max-height: 65vh; padding: .5rem 0; overflow: auto; bord
 
 /* Crucible (crucible.js): lists of packs and reports with their actions, small forms, the confirm dialog. */
 .crucible { display: grid; gap: 1rem; }
+/* The Crucible view and its dialogs wear Kiln's palette, as Crucible's pages on frostdev.io do. */
+.kiln-palette, .dialog.kiln {
+  /* Kiln's palette (frostdev.io src/styles/kiln.css: charcoal, ember, gold), as Crucible's pages on frostdev.io wear it. */
+  --surface: #171413; --surface-2: #1f1b19; --raised: #2a2421; --glass: rgb(23 20 19 / .82);
+  --ink: #f4ece6; --text: #cdbfb5; --muted: #b0a196; --dim: #a8998d; --line: #3a312c; --strong-line: #4d413a;
+  --accent: #ff6a1a; --bright: #ffa56b; --accent-ink: #0f0d0c; --hover: #ff8540; --wash: rgb(255 106 26 / .07);
+  --warn: #f9c74f; --warn-bg: #2a2214; --good: #7cc47f; --good-bg: #17241a; --danger: #ff9a8b; --danger-bg: #301b17;
+}
+.kiln-palette .card { background: var(--surface); border-color: var(--line); backdrop-filter: none; }
+.kiln-palette .tile.attention { border-color: rgb(249 199 79 / .45); }
+.kiln-palette input, .kiln-palette select, .kiln-palette textarea { background: var(--surface-2); border-color: var(--strong-line); color: var(--ink); }
+.kiln-palette :focus-visible, .dialog.kiln :focus-visible { outline-color: var(--bright); }
+.dialog.kiln input, .dialog.kiln textarea { background: var(--surface-2); border-color: var(--strong-line); color: var(--ink); }
+.dialog.kiln::backdrop { background: rgb(8 6 5 / .72); }
 .crucible .card h3 { margin: .75rem 0 .35rem; color: var(--dim); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
 .crucible .card h3:first-child { margin-top: 0; }
 .crucible h2:focus { outline: none; }

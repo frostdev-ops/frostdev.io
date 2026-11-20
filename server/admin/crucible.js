@@ -36,7 +36,7 @@
   /** opts: { title, text, confirm, danger, reason: { label, required, max }, check: { label } } -> { reason, check } or null */
   function ask({ title, text, confirm = 'Confirm', danger = true, reason, check, match }) {
     return new Promise((resolve) => {
-      const d = el('dialog', { class: 'dialog', 'aria-labelledby': 'dialog-title', 'aria-describedby': 'dialog-text' });
+      const d = el('dialog', { class: 'dialog kiln', 'aria-labelledby': 'dialog-title', 'aria-describedby': 'dialog-text' });
       const why = reason ? el('textarea', { rows: '3', maxlength: String(reason.max || 500), required: reason.required ? '' : null }) : null;
       const box = check ? el('input', { type: 'checkbox' }) : null;
       const typed = match ? el('input', { type: 'text', autocomplete: 'off', spellcheck: 'false', inputmode: 'numeric' }) : null;
@@ -112,9 +112,9 @@
     if (!host) return;
     const setupMissing = Object.values(data).some((v) => v?.setup === false);
     if (setupMissing) {
-      host.replaceChildren(ctx.head('Kiln', 'Crucible', 'Modpacks on frostdev.io/kiln/crucible.'),
+      host.replaceChildren(el('div', { class: 'kiln-palette' }, ctx.head('Kiln', 'Crucible', 'Modpacks on frostdev.io/kiln/crucible.'),
         section('setup', 'Crucible isn’t set up here', 'HQ reaches Crucible’s local admin API with a shared secret.',
-          el('p', { text: 'Put CRUCIBLE_ADMIN_SECRET in /etc/glaze-gallery.env, the same value as in /etc/crucible.env, and redeploy the gallery server. CRUCIBLE_ADMIN_URL is only needed when Crucible does not listen on 127.0.0.1:8792.' })));
+          el('p', { text: 'Put CRUCIBLE_ADMIN_SECRET in /etc/glaze-gallery.env, the same value as in /etc/crucible.env, and redeploy the gallery server. CRUCIBLE_ADMIN_URL is only needed when Crucible does not listen on 127.0.0.1:8792.' }))));
       return;
     }
     if (!parts.root) build();
@@ -125,7 +125,7 @@
   function build() {
     const refresh = button('Refresh', 'secondary', async (b) => { b.disabled = true; await load(); b.disabled = false; ctx.toast('Crucible refreshed.'); });
     for (const n of ['numbers', 'reports', 'packs', 'hiddenList', 'blocklist', 'bans']) parts[n] = el('div', { class: 'stack-v' });
-    parts.root = el('div', {},
+    parts.root = el('div', { class: 'kiln-palette' },
       ctx.head('Kiln', 'Crucible', 'Modpacks on frostdev.io/kiln/crucible: reports, takedowns, the file blocklist and accounts. Actions here are written to Activity.',
         el('div', { class: 'links' }, el('a', { href: '/kiln/crucible', text: 'Crucible ↗' }), el('a', { href: '/kiln/crucible/copyright', text: 'Copyright page ↗' })), refresh),
       parts.numbers,
