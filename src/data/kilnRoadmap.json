@@ -1,6 +1,28 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.29.21",
+      "date": "2026-11-20",
+      "title": "FSR 4 without the extra extensions",
+      "summary": "AMD FSR 4 runs on the game's graphics device without six Vulkan extensions Kiln added for it, a new try at its dark scenes, and a fix for Kiln tasks.",
+      "patch": true,
+      "features": [
+        {
+          "title": "AMD FSR 4 should no longer draw dark scenes too dark",
+          "text": "Kiln no longer adds six Vulkan extensions to the game's device for FSR 4, as in a working FSR 4 setup in this game. AMD FSR's Auto stays on FSR 3.1 until FSR 4 is confirmed on an RX 9000 card.",
+          "area": "core",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "A Kiln task's crash stops its mod first",
+          "text": "When a mod's task crashes, Kiln stops the mod's tasks before it reports the failure, so the mod can no longer start another task in between.",
+          "area": "api",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.29.20",
       "date": "2026-11-20",
       "title": "AMD FSR 3.1 by default",
