@@ -1,6 +1,144 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.29.19",
+      "date": "2026-11-20",
+      "title": "Other loaders and languages",
+      "summary": "Mods for AndyPimms' Enshrouded ModLoader, Kiln with XHL-Core, station screens that count station outputs, nine more languages and fixes from players' reports.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Mods for AndyPimms' Enshrouded ModLoader",
+          "text": "Mods for Enshrouded ModLoader, such as CarryOn and Belt Lantern, run in Kiln without that loader: add the zip and switch it on. Game client only, single player and hosting.",
+          "area": "compat",
+          "gamePending": true
+        },
+        {
+          "title": "Kiln with XHL-Core",
+          "text": "With XHL-Core installed, the main menu reads \"Kiln with XHL-Core\" and XHL-Core's warning line shows under it again; Kiln warns when one XHL mod is on twice.",
+          "area": "compat",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "Station screens count station outputs",
+          "text": "On a Kiln client with a Kiln server, a production station's fill buttons and the Available counts include the finished items other stations lend (GitHub #68).",
+          "area": "content",
+          "kind": "improved"
+        },
+        {
+          "title": "Nine more languages",
+          "text": "Kiln in German, Russian, French, Spanish, Brazilian Portuguese, Japanese, Polish, Italian and Korean: machine translations, corrections welcome on GitHub (#90 to #98).",
+          "area": "launcher",
+          "gamePending": true
+        },
+        {
+          "title": "Kiln's language and keys for mods",
+          "text": "Mods can read Kiln's language and listen to key and mouse presses through public API instead of reading Kiln's internals (mod API 0.2.11).",
+          "area": "api",
+          "kind": "improved"
+        },
+        {
+          "title": "Resident tasks for native plugins",
+          "text": "A native plugin can mark one long-lived task as resident (KILN_TASK_RESIDENT), so Kiln's watchdog does not report it as stuck; kiln.log notes when it starts.",
+          "area": "api"
+        },
+        {
+          "title": "AMD FSR on AMD cards",
+          "text": "Kiln's AMD FSR runs on AMD graphics cards, and a change of upscaler applies at once while FSR 3 runs in a world (a choice that needs a game restart says so first).",
+          "area": "core",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "AMD FSR 4 in dark scenes",
+          "text": "FSR 4 measures the picture's exposure itself and gets new inputs for the game's dark scenes. Not yet confirmed on an RX 9000 card. FSR 3.1 stays a choice under AMD FSR version.",
+          "area": "core",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Hooks inside other mods' DLLs",
+          "text": "A Kiln mod can hook code inside another mod's DLL once it opens it (Hooks.Module), for mods that extend other mods, such as a fix for Creative Mode's search.",
+          "area": "api",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "The game's original code for native plugins",
+          "text": "Native plugins can read the game's original code at an address and see whether another module patched it (kiln.hooks read_original and code_state).",
+          "area": "api"
+        },
+        {
+          "title": "ShroudLink's chest-name scan",
+          "text": "ShroudLink's chest-name scan no longer makes the game stutter on PCs with few cores or a page file on a hard drive.",
+          "area": "compat",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Client and server copies in one download",
+          "text": "A download holding a game copy and a server copy of the same version, such as Town Portals, puts the game copy into your profile.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Discord's own refusals",
+          "text": "When Discord itself refuses a support post, the launcher says so with Discord's reason.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "A paused world is not a stall",
+          "text": "Kiln's tick statistics tell a paused single-player world apart from a stall.",
+          "area": "servers",
+          "kind": "improved"
+        },
+        {
+          "title": "Open in Discord opens the app",
+          "text": "\"Open in Discord\" on your support posts and test results opens the Discord app when it's installed, the browser otherwise.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "A smoother launcher on Linux",
+          "text": "The Linux launcher draws with the GPU's compositing again, so it stays smooth in large windows; if a PC can't start that way, it switches back by itself and remembers it.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "A lighter launcher behind its pages",
+          "text": "Behind an open page the launcher's fire draws only the header band, and without compositing the flames and torch hold still.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "Clearer logs and reports for support",
+          "text": "kiln.log names the file another mod's hook comes from, and support reports include Building Tools', ShroudLink's and Auto Loot Plus' logs.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "No Nexus Mods choices without Nexus Mods",
+          "text": "In builds with Nexus Mods switched off, a mod's Updates dialog offers only GitHub and the update hint no longer mentions a Nexus sign-in.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "A warning before the game runs out of impact memory",
+          "area": "core",
+          "text": "kiln.log warns when the game's impact memory runs low and names what fills it, which helps find the cause of late-session slow motion and crashes.",
+          "kind": "improved"
+        },
+        {
+          "title": "The overlay's crash guard clears on update",
+          "text": "A lock an older Kiln left after a failed overlay start no longer keeps the overlay off once you update.",
+          "area": "core",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.29.18",
       "date": "2026-11-19",
       "title": "Graphics tools, Kiln tasks and Discord",
@@ -2486,123 +2624,8 @@
   ],
   "upcoming": [
     {
-      "version": "0.2.0-dev.29.19",
-      "status": "next",
-      "title": "Other loaders and languages",
-      "summary": "Mods for AndyPimms' Enshrouded ModLoader, Kiln with XHL-Core, station screens that count station outputs, nine more languages and fixes from players' reports.",
-      "patch": true,
-      "note": "The next minor patch, in beta: test builds of it are on the launcher's beta channel since Nov 19 (Settings, Updates, Channel). Everything listed is in Kiln's code now; the patch itself has no date yet.",
-      "features": [
-        {
-          "title": "Mods for AndyPimms' Enshrouded ModLoader",
-          "text": "Mods for Enshrouded ModLoader, such as CarryOn and Belt Lantern, run in Kiln without that loader: add the zip and switch it on. Game client only, single player and hosting.",
-          "area": "compat",
-          "gamePending": true
-        },
-        {
-          "title": "Kiln with XHL-Core",
-          "text": "With XHL-Core installed, the main menu reads \"Kiln with XHL-Core\" and XHL-Core's warning line shows under it again; Kiln warns when one XHL mod is on twice.",
-          "area": "compat",
-          "kind": "improved",
-          "gamePending": true
-        },
-        {
-          "title": "Station screens count station outputs",
-          "text": "On a Kiln client with a Kiln server, a production station's fill buttons and the Available counts include the finished items other stations lend (GitHub #68).",
-          "area": "content",
-          "kind": "improved",
-          "gamePending": true
-        },
-        {
-          "title": "Nine more languages",
-          "text": "Kiln in German, Russian, French, Spanish, Brazilian Portuguese, Japanese, Polish, Italian and Korean: machine translations, corrections welcome on GitHub (#90 to #98).",
-          "area": "launcher",
-          "gamePending": true
-        },
-        {
-          "title": "Kiln's language and keys for mods",
-          "text": "Mods can read Kiln's language and listen to key and mouse presses through public API instead of reading Kiln's internals (mod API 0.2.11).",
-          "area": "api",
-          "kind": "improved"
-        },
-        {
-          "title": "Resident tasks for native plugins",
-          "text": "A native plugin can mark one long-lived task as resident (KILN_TASK_RESIDENT), so Kiln's watchdog does not report it as stuck; kiln.log notes when it starts.",
-          "area": "api"
-        },
-        {
-          "title": "AMD FSR on AMD cards",
-          "text": "Kiln's AMD FSR runs on AMD graphics cards, FSR 4 included (with AMD's auto-exposure), and a change of upscaler applies at once while FSR 3 runs in a world.",
-          "area": "core",
-          "kind": "fix",
-          "gamePending": true
-        },
-        {
-          "title": "Hooks inside other mods' DLLs",
-          "text": "A Kiln mod can hook code inside another mod's DLL once it opens it (Hooks.Module), for mods that extend other mods, such as a fix for Creative Mode's search.",
-          "area": "api",
-          "kind": "improved",
-          "gamePending": true
-        },
-        {
-          "title": "The game's original code for native plugins",
-          "text": "Native plugins can read the game's original code at an address and see whether another module patched it (kiln.hooks read_original and code_state).",
-          "area": "api"
-        },
-        {
-          "title": "ShroudLink's chest-name scan",
-          "text": "ShroudLink's chest-name scan no longer makes the game stutter on PCs with few cores or a page file on a hard drive.",
-          "area": "compat",
-          "kind": "fix",
-          "gamePending": true
-        },
-        {
-          "title": "Client and server copies in one download",
-          "text": "A download holding a game copy and a server copy of the same version, such as Town Portals, puts the game copy into your profile.",
-          "area": "launcher",
-          "kind": "fix"
-        },
-        {
-          "title": "Discord's own refusals",
-          "text": "When Discord itself refuses a support post, the launcher says so with Discord's reason.",
-          "area": "launcher",
-          "kind": "fix"
-        },
-        {
-          "title": "A paused world is not a stall",
-          "text": "Kiln's tick statistics tell a paused single-player world apart from a stall.",
-          "area": "servers",
-          "kind": "improved"
-        },
-        {
-          "title": "Open in Discord opens the app",
-          "text": "\"Open in Discord\" on your support posts and test results opens the Discord app when it's installed, the browser otherwise.",
-          "area": "launcher",
-          "kind": "improved"
-        },
-        {
-          "title": "A smoother launcher on Linux",
-          "text": "With the animated fire on, the Linux launcher redraws far less, so typing and hovering keep up in large windows.",
-          "area": "launcher",
-          "kind": "improved"
-        },
-        {
-          "title": "Clearer logs and reports for support",
-          "text": "kiln.log names the file another mod's hook comes from, and support reports include Building Tools', ShroudLink's and Auto Loot Plus' logs.",
-          "area": "launcher",
-          "kind": "improved"
-        },
-        {
-          "title": "The overlay's crash guard clears on update",
-          "text": "A lock an older Kiln left after a failed overlay start no longer keeps the overlay off once you update.",
-          "area": "core",
-          "kind": "fix"
-        }
-      ]
-    },
-    {
       "version": "0.2.0-dev.30",
-      "status": "planned",
+      "status": "next",
       "title": "ShroudForge on Kiln, equipment and tasks",
       "summary": "ShroudForge and EML mods on Kiln's own engine, an equipment API for item rarity, values, tooltips and upgrades, and Kiln tasks checked in real games and no longer experimental.",
       "note": "No date: this release ships when it is ready. Items marked as waiting for a game test are built and checked, but not yet seen in a real game. Fixes keep coming as 0.2.0-dev.29 patches until then.",
