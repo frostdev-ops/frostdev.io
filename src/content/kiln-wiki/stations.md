@@ -134,7 +134,9 @@ await Stations.Fill(forge, new FillOptions { Crafts = 5, Chests = [woodChest] })
   The server checks every press again; a press that no longer fits (the outputs were taken meanwhile) is refused by the
   game and nothing moves. The ingredients' **Available** counts, on the station screen and in the crafting menu,
   include those items too. A game without Kiln keeps the game's own buttons and counts, and other screens (building
-  costs) keep the game's counts. With Creative Mode running, Kiln's crafting-menu counts stand aside. Up to
+  costs) keep the game's counts. With Creative Mode running, Kiln's crafting-menu counts stand aside. Seen in a real
+  game on a test build: a Charcoal Kiln's charcoal counted as Available at a Forge, and Fill took it straight from the
+  kiln; other station types, the crafting menu and players without Kiln are not checked yet. Up to
   0.2.0-dev.29.18 the buttons needed the bag and the Magic chests to cover a fill.
 - An opt-in is kept beside the save with the mod that set it, and comes back after a restart while that mod is loaded.
   Touch `Stations` in `OnLoad` (an event subscription will do) so it starts in time.
