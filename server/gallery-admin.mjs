@@ -34,14 +34,14 @@ const STATS = new Set(['kiln', 'site', 'public', 'status']);
 const ASSETS = {
   '': ['index.html', 'text/html; charset=utf-8'], '/': ['index.html', 'text/html; charset=utf-8'],
   '/app.js': ['app.js', 'text/javascript; charset=utf-8'], '/charts.js': ['charts.js', 'text/javascript; charset=utf-8'],
-  '/gallery.js': ['gallery.js', 'text/javascript; charset=utf-8'], '/viewer.js': ['viewer.js', 'text/javascript; charset=utf-8'],
+  '/gallery.js': ['gallery.js', 'text/javascript; charset=utf-8'], '/crucible.js': ['crucible.js', 'text/javascript; charset=utf-8'], '/viewer.js': ['viewer.js', 'text/javascript; charset=utf-8'],
   '/style.css': ['style.css', 'text/css; charset=utf-8'],
 };
 // No secret, and the sign-in page needs them before there is a session.
 const PUBLIC_ASSETS = new Set(['/style.css', '/frostdev-icon.webp']);
 const FILTER_HASH = '(?:/(?:pending|review|published|declined|removed|all))?';
 const RETURN_HASHES = [
-  /^#(?:overview|kiln|glaze|site|activity)$/,
+  /^#(?:overview|kiln|kiln\/crucible|crucible|glaze|site|activity)$/,
   new RegExp(`^#(?:glaze/)?looks${FILTER_HASH}(?:/c-[0-9a-f]{10})?$`),
   new RegExp(`^#(?:glaze/)?mods${FILTER_HASH}(?:/[a-z2-7]{16}/[\\w-]{43})?$`),
 ];
@@ -69,6 +69,58 @@ const LOGIN = `<!doctype html>
   <footer class="login-foot"><a href="/">frostdev.io</a><span>Work · Play · Create</span></footer>
 </body></html>`;
 
+// Crucible (Kiln's modpacks, frostdev.io/kiln/crucible) is moderated from HQ through its local admin API (docs/hq.md,
+// Crucible). Only these routes and methods pass, with their ids checked as Crucible checks them, a query rebuilt from
+// known parameters and a body rebuilt from known fields. Crucible refuses any request carrying X-Real-IP or
+// X-Forwarded-For, and gets neither, nor HQ's cookie: only its admin secret.
+const CRUCIBLE_ROUTES = [
+  { method: 'GET', path: /^\/reports$/, query: { state: /^(?:open|closed)$/ } },
+  { method: 'POST', path: /^\/reports\/(rpt_[a-z2-7]{26})\/close$/, body: 'close', audit: 'closed report' },
+  { method: 'GET', path: /^\/packs$/, query: { visibility: /^(?:public|link|removed|deleted)$/, hidden: /^1$/ } },
+  { method: 'POST', path: /^\/packs\/([A-Za-z0-9_-]{3,64})\/takedown$/, body: 'takedown', audit: 'took down pack' },
+  { method: 'POST', path: /^\/versions\/(pv_[a-z2-7]{26})\/takedown$/, body: 'takedown', audit: 'took down version' },
+  { method: 'POST', path: /^\/packs\/([A-Za-z0-9_-]{3,64})\/hide$/, audit: 'hid pack' },
+  { method: 'POST', path: /^\/packs\/([A-Za-z0-9_-]{3,64})\/restore$/, audit: 'restored pack' },
+  { method: 'POST', path: /^\/comments\/([A-Za-z0-9_]{3,64})\/remove$/, audit: 'removed comment' },
+  { method: 'POST', path: /^\/comments\/([A-Za-z0-9_]{3,64})\/restore$/, audit: 'restored comment' },
+  { method: 'GET', path: /^\/blocklist$/ },
+  { method: 'POST', path: /^\/blocklist$/, body: 'block', audit: 'blocked file' },
+  { method: 'DELETE', path: /^\/blocklist\/([0-9a-f]{64})$/, audit: 'unblocked file' },
+  { method: 'POST', path: /^\/bans$/, body: 'ban', audit: 'banned account' },
+  { method: 'DELETE', path: /^\/bans\/(\d{17,20})$/, audit: 'unbanned account' },
+  { method: 'DELETE', path: /^\/users\/(\d{17,20})$/, audit: 'deleted the data of account' },
+  { method: 'GET', path: /^\/stats$/ },
+];
+const CRUCIBLE_MAX = 8 << 20;
+// Words a person typed for a reason: no control or format characters, trimmed, at most `max` characters.
+const words = (v, max) => (typeof v === 'string' ? v.replace(/[\p{Cc}\p{Cf}]/gu, ' ').trim() : null)?.slice(0, max) ?? null;
+/** The body Crucible gets for a route, rebuilt from known fields, or { error } for a 400. */
+export function crucibleBody(kind, b) {
+  if (kind === 'close') {
+    const outcome = b.outcome === undefined ? 'closed' : words(b.outcome, 200);
+    return outcome ? { body: { outcome } } : { error: 'The outcome must be text.' };
+  }
+  if (kind === 'takedown') {
+    const reason = words(b.reason, 500);
+    if (!reason) return { error: 'Give a reason; the creator is told.' };
+    if (b.blockAll !== undefined && typeof b.blockAll !== 'boolean') return { error: 'blockAll is true or false.' };
+    return { body: { reason, blockAll: b.blockAll === true }, reason };
+  }
+  if (kind === 'block') {
+    if (typeof b.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(b.sha256)) return { error: 'A sha256 is 64 lowercase hex characters.' };
+    const reason = words(b.reason, 500);
+    if (!reason) return { error: 'Give a reason for blocking the file.' };
+    return { body: { sha256: b.sha256, reason }, id: b.sha256, reason };
+  }
+  if (kind === 'ban') {
+    if (typeof b.userId !== 'string' || !/^\d{17,20}$/.test(b.userId)) return { error: 'A Discord id is 17 to 20 digits.' };
+    const reason = b.reason === undefined ? '' : words(b.reason, 300);
+    if (reason === null) return { error: 'The reason must be text.' };
+    return { body: { userId: b.userId, reason }, id: b.userId, reason };
+  }
+  return { body: {} };
+}
+
 // Byte signatures, never a submitter's extension or MIME. Active formats (including SVG and Lottie) stay text.
 export function adminFileType(bytes) {
   const b = Buffer.from(bytes);
@@ -87,7 +139,9 @@ export function adminFileType(bytes) {
 
 export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide, decideMod, readMod, readLookMedia, permissionWords, live = () => new Map(),
   limits, blocklist, googleClientId, googleClientSecret, adminEmails, googleFetch = fetch, statsDir = '', reviewsPerDay = 0, modReviewsPerDay = 0,
-  mailOn = false, curated = () => 0, publicModCount = () => 0 }) {
+  mailOn = false, curated = () => 0, publicModCount = () => 0,
+  crucibleAdminUrl = '', crucibleAdminSecret = '', crucibleFetch = fetch }) {
+  const crucibleBase = String(crucibleAdminUrl || 'http://127.0.0.1:8792/admin').replace(/\/+$/, '');
   const emails = new Set(String(adminEmails || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean));
   const enabled = !!(googleClientId && googleClientSecret && emails.size);
   db.exec(`CREATE TABLE IF NOT EXISTS admin_sessions (token TEXT PRIMARY KEY, email TEXT NOT NULL, csrf TEXT NOT NULL, expires INTEGER NOT NULL);
@@ -220,6 +274,52 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
     } catch { return refuse(res); }
   };
 
+  // HQ's Crucible view: one allowlisted admin route, forwarded with Crucible's secret only (CRUCIBLE_ROUTES above).
+  const crucible = async (req, res, sub, url, session) => {
+    const routes = CRUCIBLE_ROUTES.filter((r) => r.path.test(sub));
+    if (!routes.length) return reply(res, 404, { error: 'Crucible has no such admin route.' });
+    const route = routes.find((r) => r.method === req.method);
+    if (!route) return reply(res, 405, { error: 'That method is not allowed here.' }, undefined, { allow: routes.map((r) => r.method).join(', ') });
+    if (req.method !== 'GET' && (req.headers.origin !== siteOrigin || req.headers['x-csrf-token'] !== session.csrf)) return reply(res, 403, { error: 'Request refused.' });
+    const query = new URLSearchParams();
+    for (const [name, value] of url.searchParams) {
+      const allowed = route.query?.[name];
+      if (!allowed || !allowed.test(value) || query.has(name)) return reply(res, 400, { error: `Invalid parameter ${name}.` });
+      query.set(name, value);
+    }
+    let sent = null;
+    if (route.body) {
+      const built = crucibleBody(route.body, await readJson(req, 4096));
+      if (built.error) return reply(res, 400, { error: built.error });
+      sent = built;
+    }
+    if (!crucibleAdminSecret) return reply(res, 503, { error: 'Crucible isn’t set up on this server: CRUCIBLE_ADMIN_SECRET is missing from /etc/glaze-gallery.env.', setup: false });
+    const target = `${crucibleBase}${sub}${query.size ? `?${query}` : ''}`;
+    let response, text;
+    try {
+      response = await crucibleFetch(target, { method: req.method, redirect: 'error', signal: AbortSignal.timeout(req.method === 'GET' ? 10e3 : 30e3),
+        headers: { 'x-crucible-admin': crucibleAdminSecret, accept: 'application/json', ...(sent && { 'content-type': 'application/json' }) },
+        ...(sent && { body: JSON.stringify(sent.body) }) });
+      if (Number(response.headers.get('content-length')) > CRUCIBLE_MAX) throw new Error('too big');
+      text = await response.text();
+      if (text.length > CRUCIBLE_MAX) throw new Error('too big');
+    } catch {
+      return reply(res, 503, { error: `Crucible isn’t answering at ${new URL(crucibleBase).host}. Is crucible.service running?` });
+    }
+    let body;
+    try { body = JSON.parse(text); } catch { body = undefined; }
+    if (!body || typeof body !== 'object') return reply(res, 502, { error: `Crucible answered ${response.status} without JSON.` });
+    if (response.ok) {
+      if (route.audit) audit(session.email, `crucible: ${route.audit}`, 'crucible', sent?.id || sub.match(route.path)[1] || '', '', sent?.reason || '');
+      return reply(res, 200, body);
+    }
+    const said = typeof body.message === 'string' ? body.message.slice(0, 300) : typeof body.error === 'string' ? body.error.slice(0, 300) : '';
+    // Never a 401: the page would take it for HQ's own sign-in running out.
+    if (response.status === 401 || response.status === 403) return reply(res, 502, { error: 'Crucible refused HQ’s admin secret: CRUCIBLE_ADMIN_SECRET in /etc/glaze-gallery.env must match /etc/crucible.env.' });
+    if (response.status >= 500) return reply(res, 502, { error: `Crucible failed (${response.status})${said ? `: ${said}` : '.'}` });
+    return reply(res, [400, 404, 405, 409, 413, 429].includes(response.status) ? response.status : 400, { error: said || `Crucible refused (${response.status}).` });
+  };
+
   const handle = async (req, res, url) => {
     res.setHeader('cache-control', 'no-store');
     res.setHeader('content-security-policy', CSP);
@@ -255,6 +355,7 @@ export function galleryAdmin({ db, siteOrigin, now, clientKey, readJson, decide,
     if (PUBLIC_ASSETS.has(p) && req.method === 'GET') return reply(res, 200, readFileSync(new URL(`./admin${p}`, import.meta.url)), p.endsWith('.css') ? 'text/css; charset=utf-8' : 'image/webp');
     const session = getSession(req);
     if (!session) return (p === '' || p === '/') && req.method === 'GET' ? redirect(res, `${ROOT}/login`) : reply(res, 401, { error: 'Sign in to continue.' });
+    if (p === '/api/crucible' || p.startsWith('/api/crucible/')) return crucible(req, res, p.slice('/api/crucible'.length), url, session);
     if (req.method === 'POST') {
       if (req.headers.origin !== siteOrigin || req.headers['x-csrf-token'] !== session.csrf) return reply(res, 403, { error: 'Request refused.' });
       if (p === '/logout') {

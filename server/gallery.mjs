@@ -21,6 +21,8 @@
 //                                               GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ADMIN_EMAILS enable the private
 //                                               dashboard, frostdev HQ (/hq; /glaze/admin sends there). STATS_DIR: the
 //                                               folder of stats/collect.mjs's JSON files it draws (docs/hq.md).
+//                                               CRUCIBLE_ADMIN_SECRET (as in /etc/crucible.env) and CRUCIBLE_ADMIN_URL
+//                                               (http://127.0.0.1:8792/admin): HQ's Crucible view.
 //   node server/gallery.mjs --list              published, pending and removed community Looks
 //   node server/gallery.mjs --pending           Looks waiting for a person, and whether their mail went out
 //   node server/gallery.mjs --show <id>         a Look's review: both reviewers' numbers, decision, reason and rationale
@@ -535,6 +537,7 @@ export function gallery({
   apiKey = '', decisionModel = 'liquid/d1-ultra', escalationModel = 'openai/gpt-6-luna-pro:exacto', openrouter = 'https://openrouter.ai/api',
   reviewsPerDay = 300, modReviewsPerDay = 40, limits = true, mailUrl = '', mailFrom = '', mailTo = 'admin@frostdev.io', blocklistKey = '', bundles = '', now = () => Date.now(),
   googleClientId = '', googleClientSecret = '', adminEmails = '', googleFetch = fetch, statsDir = '',
+  crucibleAdminUrl = '', crucibleAdminSecret = '', crucibleFetch = fetch,
 } = {}) {
   const db = new DatabaseSync(file);
   // Mod bundles are files next to the database (/data/mods in the image), named by their bundle hash; SQLite holds the rest.
@@ -1469,7 +1472,7 @@ export function gallery({
   };
   const admin = galleryAdmin({ db, siteOrigin, now, readJson, decide, decideMod, readMod: readStoredMod, readLookMedia: readMedia,
     permissionWords, limits, blocklist, live: () => live, googleClientId, googleClientSecret, adminEmails, googleFetch,
-    statsDir, reviewsPerDay, modReviewsPerDay, mailOn: !!(mailUrl && mailFrom), curated: () => curated.length,
+    statsDir, crucibleAdminUrl, crucibleAdminSecret, crucibleFetch, reviewsPerDay, modReviewsPerDay, mailOn: !!(mailUrl && mailFrom), curated: () => curated.length,
     publicModCount: () => new Set(publicMods().map((r) => r.id)).size,
     clientKey: (req) => hmac(saltOf(today(now())), clientOf(req)),
   });
@@ -1628,7 +1631,7 @@ export const fromEnv = (env) => ({
   mailUrl: env.MAIL_URL || '', mailFrom: env.MAIL_FROM || '', mailTo: env.MAIL_TO || undefined, blocklistKey: env.BLOCKLIST_KEY || '',
   modReviewsPerDay: Number(env.MOD_REVIEWS_PER_DAY) || undefined, limits: env.SUBMIT_LIMITS !== 'off',
   googleClientId: env.GOOGLE_CLIENT_ID || '', googleClientSecret: env.GOOGLE_CLIENT_SECRET || '', adminEmails: env.ADMIN_EMAILS || '',
-  statsDir: env.STATS_DIR || '',
+  statsDir: env.STATS_DIR || '', crucibleAdminUrl: env.CRUCIBLE_ADMIN_URL || '', crucibleAdminSecret: env.CRUCIBLE_ADMIN_SECRET || '',
 });
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

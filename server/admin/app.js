@@ -1,5 +1,5 @@
-/* frostdev HQ, the shell: the rail, the routes and the views that are not the gallery's review (gallery.js) — the
-   overview, Kiln's downloads, Glaze's numbers and the site's page views. Their numbers come from stats/collect.mjs's
+/* frostdev HQ, the shell: the rail, the routes and the views that are not the gallery's review (gallery.js) or
+   Crucible's moderation (crucible.js) — the overview, Kiln's downloads, Glaze's numbers and the site's page views. Their numbers come from stats/collect.mjs's
    files (/hq/api/stats/<name>) and the gallery's own records (/hq/api/glaze). Text from data goes in as text only. */
 'use strict';
 (() => {
@@ -7,8 +7,8 @@
   const C = globalThis.HQCharts;
   const { el, fmt, compact, spark, tile, dayLabel } = C;
   const $ = (id) => document.getElementById(id);
-  const VIEWS = ['overview', 'kiln', 'glaze', 'site', 'gallery', 'activity'];
-  const NAV = { overview: 'nav-overview', kiln: 'nav-kiln', glaze: 'nav-glaze', site: 'nav-site', mods: 'nav-mods', looks: 'nav-looks', activity: 'nav-activity' };
+  const VIEWS = ['overview', 'kiln', 'crucible', 'glaze', 'site', 'gallery', 'activity'];
+  const NAV = { overview: 'nav-overview', kiln: 'nav-kiln', crucible: 'nav-crucible', glaze: 'nav-glaze', site: 'nav-site', mods: 'nav-mods', looks: 'nav-looks', activity: 'nav-activity' };
   let csrf = '', gallery = null, route = { view: 'overview' }, needsShown = -1;
   const cache = {};
   const explorers = {}, explorerState = {};
@@ -27,11 +27,15 @@
   const get = async (name, fresh = false) => {
     const hit = cache[name];
     if (hit && !fresh && Date.now() - hit.at < 600e3) return hit.value;
-    const value = await api(name === 'glaze' ? '/api/glaze' : `/api/stats/${name}`).catch((e) => ({ __error: e.message }));
+    const value = await (name === 'crucible' ? crucibleStats() : api(name === 'glaze' ? '/api/glaze' : `/api/stats/${name}`)).catch((e) => ({ __error: e.message }));
     cache[name] = { at: Date.now(), value };
     return value;
   };
   const ok = (v) => v && !v.__error;
+  // Crucible's open reports beside its name in the rail
+  const crucibleCount = (s) => { $('count-crucible').textContent = ok(s) && s.openReports ? String(s.openReports) : ''; };
+  const crucibleCtx = () => ({ csrf: () => csrf, toast, head, onStats: crucibleCount });
+  const crucibleStats = async () => { const s = await globalThis.HQCrucible.stats(crucibleCtx()); crucibleCount(s); return s; };
   const money = (n) => `$${(Number(n) || 0).toFixed(Number(n) >= 100 ? 0 : 2)}`;
   const ago = (iso) => {
     const s = (Date.now() - Date.parse(iso)) / 1000;
@@ -82,7 +86,7 @@
 
   // ---- overview ----------------------------------------------------------------------------------------------------
   async function overview(host) {
-    const [kiln, site, pub, status, glaze] = await Promise.all(['kiln', 'site', 'public', 'status', 'glaze'].map((n) => get(n)));
+    const [kiln, site, pub, status, glaze, crucible] = await Promise.all(['kiln', 'site', 'public', 'status', 'glaze', 'crucible'].map((n) => get(n)));
     const g = gallery?.data();
     const kilnDays = ok(kiln) ? perDay(kiln, ['browser', 'launcher', 'tool']) : [];
     const siteDays = ok(site) ? perDay(site, ['browser']) : [];
@@ -97,6 +101,8 @@
       el('section', { class: 'tiles', 'aria-label': 'At a glance' },
         numberTile('Glaze', 'Needs you', g ? needs : null, { note: needs ? 'Gallery submissions a reviewer handed to a person.' : 'Nothing in the gallery is waiting for you.', href: needs ? (g.mods.some((r) => r.status === 'pending') ? '#glaze/mods/pending' : '#glaze/looks/pending') : '', attention: needs > 0 }),
         numberTile('Kiln', 'Downloads, 30 days', ok(kiln) ? sum(kilnDays) : null, { values: kilnDays, note: 'People, launcher updates and tools on frostdev.io.', href: '#kiln' }),
+        numberTile('Kiln', 'Crucible reports', ok(crucible) ? crucible.openReports : null, { href: '#crucible', attention: ok(crucible) && crucible.openReports > 0,
+          note: ok(crucible) ? `${fmt(crucible.packs.public)} public packs · ${fmt(crucible.installsToday)} installs today` : crucible?.setup === false ? 'Not set up: CRUCIBLE_ADMIN_SECRET is missing.' : 'Crucible isn’t answering.' }),
         numberTile('Kiln', 'Nexus downloads', nexus?.downloads ?? null, { values: nexusDays, note: nexus ? `${fmt(nexus.endorsements || 0)} endorsements · ${nexus.version || ''}` : '', href: '#kiln' }),
         numberTile('Glaze', 'Chrome Web Store users', cws?.users ?? null, { note: `Firefox daily users ${amo?.users != null ? fmt(amo.users) : '—'}`, href: '#glaze' }),
         numberTile('Glaze', 'Release downloads', ghGlaze?.downloads ?? null, { values: trend(pub, 'github:glaze', 'downloads'), note: 'Every GitHub release, all time.', href: '#glaze' }),
@@ -257,6 +263,9 @@
     host.replaceChildren(...parts);
   }
 
+  // ---- Crucible: crucible.js draws it ----------------------------------------------------------------------------
+  const crucibleView = (host) => globalThis.HQCrucible.view(host, crucibleCtx());
+
   // ---- the site ----------------------------------------------------------------------------------------------------
   const SECTIONS = [['', 'All pages'], ['home', 'Home'], ['kiln', 'Kiln (not the wiki)'], ['wiki', 'Kiln wiki and API reference'], ['guides', 'Guides'], ['products', 'Crosspane, Rimeward, Rimewire'], ['privacy', 'Privacy']];
   const sectionOf = (page) => (page === '/' ? 'home' : /^\/kiln\/(wiki|downloads)/.test(page) ? 'wiki' : page.startsWith('/kiln') ? 'kiln' : page.startsWith('/guides') ? 'guides'
@@ -287,7 +296,7 @@
   }
 
   // ---- routes ------------------------------------------------------------------------------------------------------
-  // #overview · #kiln · #glaze · #site · #activity · #glaze/mods/<filter>/<id>/<hash> · #glaze/looks/<filter>/<id>
+  // #overview · #kiln · #crucible · #glaze · #site · #activity · #glaze/mods/<filter>/<id>/<hash> · #glaze/looks/<filter>/<id>
   // The old dashboard's #mods/... and #looks/... (emails already sent) still open their item.
   function readRoute() {
     let parts;
@@ -305,10 +314,12 @@
       return { view: 'gallery', section, filter, id: valid ? id : '', hash: valid && section === 'mods' ? hash : '' };
     }
     if (parts[0] === 'activity') return { view: 'activity', section: 'activity' };
+    // the design's address for Crucible
+    if (parts[0] === 'kiln' && parts[1] === 'crucible') { history.replaceState(null, '', '#crucible'); return { view: 'crucible' }; }
     return { view: VIEWS.includes(parts[0]) && parts[0] !== 'gallery' ? parts[0] : 'overview' };
   }
   const drawn = {};
-  const views = { overview, kiln: kilnView, glaze: glazeView, site: siteView };
+  const views = { overview, kiln: kilnView, crucible: crucibleView, glaze: glazeView, site: siteView };
   async function refreshView(view) {
     if (!Object.hasOwn(views, view)) return;
     const host = $(`view-${view}`);
@@ -322,7 +333,7 @@
     for (const v of VIEWS) { const node = v === 'activity' ? $('activity') : $(`view-${v}`); node.hidden = route.view !== v; }
     const current = route.view === 'gallery' ? route.section : route.view;
     for (const [key, id] of Object.entries(NAV)) { const a = $(id); if (key === current) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
-    document.title = `${{ overview: 'Overview', kiln: 'Kiln downloads', glaze: 'Glaze numbers', site: 'Page views', activity: 'Activity', mods: 'Mods', looks: 'Looks' }[current] || 'HQ'} · frostdev HQ`;
+    document.title = `${{ overview: 'Overview', kiln: 'Kiln downloads', crucible: 'Crucible', glaze: 'Glaze numbers', site: 'Page views', activity: 'Activity', mods: 'Mods', looks: 'Looks' }[current] || 'HQ'} · frostdev HQ`;
     gallery?.show(route.view === 'gallery' || route.view === 'activity' ? route : null);
     await refreshView(route.view);
   }

@@ -660,5 +660,132 @@ test('highlighter renders hostile HTML, closing script tags and bidi as inert te
       else assert.equal(child.nodeType, 3);
     }
   }
-  for (const file of ['app.js', 'charts.js', 'gallery.js', 'viewer.js']) assert.doesNotMatch(readFileSync(`server/admin/${file}`, 'utf8'), /innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function\(|\.srcdoc/);
+  for (const file of ['app.js', 'charts.js', 'crucible.js', 'gallery.js', 'viewer.js']) assert.doesNotMatch(readFileSync(`server/admin/${file}`, 'utf8'), /innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function\(|\.srcdoc/);
+});
+
+// ---- Crucible: HQ forwards an allowlist of Crucible's local admin routes (a fake Crucible here) -------------------------
+const CRUCIBLE_SECRET = 'crucible-admin-secret';
+const crucibleSeen = [];
+let crucibleAnswer = () => [200, { ok: true }];
+const fakeCrucible = http.createServer((req, res) => {
+  let body = '';
+  req.on('data', (b) => { body += b; });
+  req.on('end', () => {
+    crucibleSeen.push({ method: req.method, url: req.url, headers: req.headers, body: body ? JSON.parse(body) : null });
+    const [status, answer] = crucibleAnswer(req);
+    res.writeHead(status, { 'content-type': 'application/json' }); res.end(typeof answer === 'string' ? answer : JSON.stringify(answer));
+  });
+});
+let crucibleBase;
+const crucibleReady = new Promise((resolve) => fakeCrucible.listen(0, '127.0.0.1', () => { crucibleBase = `http://127.0.0.1:${fakeCrucible.address().port}/admin`; resolve(); }));
+after(() => { fakeCrucible.closeAllConnections(); fakeCrucible.close(); });
+const startCrucible = async (over = {}) => {
+  await crucibleReady; crucibleSeen.length = 0; crucibleAnswer = () => [200, { ok: true }];
+  await start({ crucibleAdminUrl: crucibleBase, crucibleAdminSecret: CRUCIBLE_SECRET, ...over });
+  return login();
+};
+const cr = (p, who, { method = 'GET', body, ...rest } = {}) => request(`/api/crucible${p}`, { method, ...who, ...(method !== 'GET' && { origin: ORIGIN }), ...(body !== undefined && { body }), ...rest });
+const STATS = { packs: { public: 3, link: 9, hidden: 1 }, versions: 14, files: 40, storageBytes: 123456789, installsToday: 5, installsByDay: [{ day: '2026-11-20', n: 5 }], openReports: 2, uploadsPending: 0 };
+
+test('crucible: needs HQ sign-in, sends only the admin secret (no cookie, no visitor IP) and passes the answer on', async () => {
+  const who = await startCrucible();
+  crucibleAnswer = () => [200, STATS];
+  assert.equal((await request('/api/crucible/stats')).status, 401);
+  assert.equal((await request('/api/crucible/stats', { method: 'POST', origin: ORIGIN, body: {} })).status, 401);
+  assert.equal(crucibleSeen.length, 0, 'nothing reaches Crucible without a session');
+  const r = await cr('/stats', who, { headers: { 'x-real-ip': '203.0.113.9', 'x-forwarded-for': '203.0.113.9', 'x-crucible-admin': 'visitor-guess' } });
+  assert.equal(r.status, 200);
+  assert.deepEqual(await r.json(), STATS);
+  assert.equal(crucibleSeen.length, 1);
+  const [seen] = crucibleSeen;
+  assert.equal(seen.method, 'GET'); assert.equal(seen.url, '/admin/stats');
+  assert.equal(seen.headers['x-crucible-admin'], CRUCIBLE_SECRET);
+  for (const h of ['x-real-ip', 'x-forwarded-for', 'cookie', 'x-csrf-token', 'origin', 'forwarded']) assert.equal(seen.headers[h], undefined, h);
+  // the query is rebuilt from known parameters only
+  assert.equal((await cr('/packs?visibility=public', who)).status, 200);
+  assert.equal((await cr('/packs?hidden=1', who)).status, 200);
+  assert.equal((await cr('/reports?state=closed', who)).status, 200);
+  assert.deepEqual(crucibleSeen.slice(1).map((s) => s.url), ['/admin/packs?visibility=public', '/admin/packs?hidden=1', '/admin/reports?state=closed']);
+});
+
+test('crucible: only allowlisted routes and methods, ids checked, mutations need Origin and CSRF', async () => {
+  const who = await startCrucible();
+  const pack = 'pk_abc123', version = `pv_${'a'.repeat(26)}`, report = `rpt_${'b'.repeat(26)}`, sha256 = 'c'.repeat(64), user = '123456789012345678';
+  const refused = [
+    ['/internal/forget', 'POST', 404], ['/../internal/forget', 'GET', 404], ['/health', 'GET', 404], ['/packs/pk_abc123', 'GET', 404],
+    ['/users/123456789012345678', 'GET', 405], ['/stats', 'POST', 405], ['/stats', 'PUT', 405], ['/blocklist', 'PATCH', 405], ['/reports', 'DELETE', 405],
+    ['/packs/a!b/hide', 'POST', 404], ['/packs/ab/hide', 'POST', 404], ['/versions/pv_SHOUT/takedown', 'POST', 404], ['/reports/rpt_1/close', 'POST', 404],
+    ['/comments/a-b/remove', 'POST', 404], ['/blocklist/ABC', 'DELETE', 404], [`/blocklist/${'C'.repeat(64)}`, 'DELETE', 404], ['/bans/12345', 'DELETE', 404],
+    ['/users/abc', 'DELETE', 404], ['/packs%2F..%2Fstats', 'GET', 404],
+    ['/packs?visibility=evil', 'GET', 400], ['/packs?other=1', 'GET', 400], ['/packs?hidden=1&hidden=1', 'GET', 400], ['/stats?x=1', 'GET', 400], ['/reports?state=open%0a', 'GET', 400],
+  ];
+  for (const [p, method, status] of refused) assert.equal((await cr(p, who, { method, ...(method === 'POST' && { body: {} }) })).status, status, `${method} ${p}`);
+  const bodies = [
+    [`/packs/${pack}/takedown`, {}], [`/packs/${pack}/takedown`, { reason: ' \u0000 ' }], [`/versions/${version}/takedown`, { reason: 'x', blockAll: 'yes' }],
+    ['/blocklist', { sha256: 'C'.repeat(64), reason: 'r' }], ['/blocklist', { sha256, reason: '' }], ['/bans', { userId: '42', reason: 'spam' }], ['/bans', { userId: user, reason: 7 }],
+    [`/reports/${report}/close`, { outcome: 5 }],
+  ];
+  for (const [p, body] of bodies) assert.equal((await cr(p, who, { method: 'POST', body })).status, 400, `${p} ${JSON.stringify(body)}`);
+  // CSRF and Origin, as the gallery's own actions
+  for (const headers of [{ ...who, csrf: '' }, { ...who, csrf: 'wrong' }]) {
+    assert.equal((await request(`/api/crucible/packs/${pack}/hide`, { method: 'POST', origin: ORIGIN, ...headers, body: {} })).status, 403);
+    assert.equal((await request(`/api/crucible/bans/${user}`, { method: 'DELETE', origin: ORIGIN, ...headers })).status, 403);
+  }
+  for (const origin of ['https://evil.example', 'null']) assert.equal((await request(`/api/crucible/users/${user}`, { method: 'DELETE', origin, ...who })).status, 403);
+  assert.equal((await request(`/api/crucible/users/${user}`, { method: 'DELETE', ...who })).status, 403, 'no Origin');
+  assert.equal(crucibleSeen.length, 0, 'nothing refused reached Crucible');
+  // every allowed mutation goes through, with a body rebuilt from known fields
+  const allowed = [
+    ['POST', `/reports/${report}/close`, { outcome: 'dealt with', extra: 1 }, { outcome: 'dealt with' }],
+    ['POST', `/packs/${pack}/takedown`, { reason: ' Stolen work\u202e ', blockAll: true, owner: 'x' }, { reason: 'Stolen work', blockAll: true }],
+    ['POST', `/versions/${version}/takedown`, { reason: 'Malware' }, { reason: 'Malware', blockAll: false }],
+    ['POST', `/packs/${pack}/hide`, {}, null], ['POST', `/packs/${pack}/restore`, {}, null],
+    ['POST', '/comments/cm_1/remove', {}, null], ['POST', '/comments/cm_1/restore', {}, null],
+    ['POST', '/blocklist', { sha256, reason: 'bad file' }, { sha256, reason: 'bad file' }], ['DELETE', `/blocklist/${sha256}`, undefined, null],
+    ['POST', '/bans', { userId: user, reason: 'spam' }, { userId: user, reason: 'spam' }], ['DELETE', `/bans/${user}`, undefined, null], ['DELETE', `/users/${user}`, undefined, null],
+  ];
+  for (const [method, p, body] of allowed) assert.equal((await cr(p, who, { method, body })).status, 200, `${method} ${p}`);
+  assert.deepEqual(crucibleSeen.map((s) => [s.method, s.url, s.body]), allowed.map(([m, p, , sent]) => [m, `/admin${p}`, sent]));
+  assert.ok(crucibleSeen.every((s) => s.headers['x-crucible-admin'] === CRUCIBLE_SECRET && !s.headers['x-real-ip'] && !s.headers.cookie));
+  const audit = g.db.prepare("SELECT * FROM admin_audit WHERE kind = 'crucible' ORDER BY seq").all();
+  assert.equal(audit.length, allowed.length);
+  assert.ok(audit.every((a) => a.email === EMAIL));
+  assert.deepEqual([audit[1].action, audit[1].id, audit[1].reason], ['crucible: took down pack', pack, 'Stolen work']);
+  assert.deepEqual([audit[11].action, audit[11].id], ['crucible: deleted the data of account', user]);
+});
+
+test('crucible: clear messages when it is not set up, down, refusing the secret or failing', async () => {
+  let who = await startCrucible({ crucibleAdminSecret: '' });
+  let r = await cr('/stats', who);
+  assert.equal(r.status, 503);
+  const body = await r.json();
+  assert.equal(body.setup, false); assert.match(body.error, /CRUCIBLE_ADMIN_SECRET/);
+  assert.equal(crucibleSeen.length, 0);
+  await g.close();
+  // a port nothing listens on
+  const closed = http.createServer(); await new Promise((resolve) => closed.listen(0, '127.0.0.1', resolve));
+  const port = closed.address().port; await new Promise((resolve) => closed.close(resolve));
+  who = await startCrucible({ crucibleAdminUrl: `http://127.0.0.1:${port}/admin` });
+  r = await cr('/stats', who);
+  assert.equal(r.status, 503); assert.match((await r.json()).error, /isn’t answering/);
+  await g.close();
+  who = await startCrucible();
+  const mapped = [
+    [[403, { error: 'refused', message: 'Wrong secret.' }], 502, /must match \/etc\/crucible\.env/],
+    [[401, { error: 'x' }], 502, /admin secret/],
+    [[404, { error: 'not-found', message: 'There is no such pack.' }], 404, /^There is no such pack\.$/],
+    [[409, { error: 'conflict', message: 'Already gone.' }], 409, /^Already gone\.$/],
+    [[500, { error: 'internal', message: 'Something broke.' }], 502, /Crucible failed \(500\): Something broke\./],
+    [[200, 'not json'], 502, /without JSON/],
+  ];
+  for (const [answer, status, message] of mapped) {
+    crucibleAnswer = () => answer;
+    const res = await cr('/packs/pk_abc123/hide', who, { method: 'POST', body: {} });
+    assert.equal(res.status, status, JSON.stringify(answer));
+    assert.match((await res.json()).error, message);
+  }
+  assert.equal(g.db.prepare("SELECT COUNT(*) n FROM admin_audit WHERE kind = 'crucible'").get().n, 0, 'failed actions are not audited');
+  // the page's script is served to a session only
+  assert.equal((await request('/crucible.js', who)).status, 200);
+  assert.equal((await request('/crucible.js')).status, 401);
 });
