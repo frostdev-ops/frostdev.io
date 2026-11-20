@@ -1,7 +1,7 @@
 ---
 title: "Kiln in the game"
 nav: "In the game"
-description: "Kiln's line on the main menu, the look of Kiln's menus, Kiln's graphics tools and the upscalers behind the game's FSR 3, Kiln's overlay next to OptiScaler, chat history, other mods' slash commands, and the keys of Kiln's menus."
+description: "Kiln's line on the main menu (also with XHL-Core), the look of Kiln's menus, Kiln's graphics tools and the upscalers behind the game's FSR 3, Kiln's overlay next to OptiScaler, chat history, other mods' slash commands, and the keys of Kiln's menus."
 status: "pending"
 updated: "2026-11-19"
 ---
@@ -11,13 +11,17 @@ What Kiln adds to the game itself, besides your mods. The Kiln menu and its page
 
 ## The line on the main menu
 
-Since 0.2.0-dev.29.11 the main menu shows Kiln's mark and **Kiln 0.2.0-dev.29.18 - N Mods Loaded** above the game's
+Since 0.2.0-dev.29.11 the main menu shows Kiln's mark and **Kiln 0.2.0-dev.29.19 - N Mods Loaded** above the game's
 build number, in the game's own footer style. N counts every mod that started, of any kind: Kiln mods, native mods and
 the mods of every other loader Kiln runs. A mod that is off, waiting or failed doesn't count.
 
-With XHL-Core installed, Kiln's line takes the place of XHL-Core's ("All mods loaded", or its warnings such as "Game
-updated" and "Mod conflict"). To get XHL-Core's line back, switch **mainMenuFooter** off under **Mods > Kiln
-settings**. (29.15 lost the mark in front of the line; 29.16 brings it back.)
+With XHL-Core installed, Kiln's line names it since 0.2.0-dev.29.19: **Kiln 0.2.0-dev.29.19 with XHL-Core - N Mods
+Loaded**. While XHL-Core reports a problem, its red line ("XHL: Game updated · Click to view", "Mod conflict detected.
+Click to view") shows under Kiln's, in XHL-Core's words and colour, and a click, the keyboard or a pad opens XHL-Core's
+diagnostics, as without Kiln. XHL-Core's green "All mods loaded" is left out, since Kiln's line says that XHL-Core runs.
+Where Kiln can't read XHL-Core's state, XHL-Core's line is always drawn, so a warning is never hidden. (From 29.11 to
+29.18 Kiln's line took the place of XHL-Core's.) To hide Kiln's line, switch **mainMenuFooter** off under **Mods > Kiln
+settings**: the game's footer then shows XHL-Core's line as it always did. Not yet checked in a real game. (29.15 lost the mark in front of the line; 29.16 brings it back.)
 
 ## The look of Kiln's menus
 
@@ -49,7 +53,8 @@ something looks wrong, send `kiln/logs/kiln.log`.
 
 New in 0.2.0-dev.29.18: Kiln's own graphics tools, on the Kiln menu's **Graphics** tab (Insert) and on the launcher's
 **Settings**, **Graphics** card. They do what players used extra mods for. **Everything is off until you turn it on**,
-and nothing changes for anyone who doesn't. Not yet checked in a real game.
+and nothing changes for anyone who doesn't. Not yet checked in a real game, except AMD FSR running on an RX 9070 XT
+([below](#behind-the-games-fsr-3)).
 
 - **Frame cap.** Paces the frames the game renders, from 20 to 500 a second: the finished frame shows at once, and the
   game starts its next one on time. The lowest limit wins, so the game's own frame limit or V-Sync at a lower rate
@@ -71,11 +76,14 @@ Choose **FSR 3** as the upscaler in the game's graphics settings, then choose wh
 | Choice | What runs |
 |---|---|
 | The game's FSR 3 (the default) | the game's own FSR 3: nothing changes |
-| AMD FSR | FSR 4 where your graphics card and driver run it (AMD's own choice: RX 9000, RX 7000, RX 6000 and recent AMD handhelds), else FSR 3.1. You can keep it on FSR 3.1 |
+| AMD FSR | FSR 4 where your graphics card and driver run it (AMD's own choice: RX 9000, RX 7000, RX 6000 and recent AMD handhelds), else FSR 3.1. You can keep it on FSR 3.1 under **AMD FSR version** |
 | Intel XeSS | Intel XeSS, on Intel, AMD and NVIDIA cards |
 
-- A change applies when the game next sets FSR up: a world load, or a change of FSR's quality, the resolution or the 3D
-  render scale. The first choice while the game runs applies from the next game start.
+- Since 0.2.0-dev.29.19 a new choice applies at the next frame while a world runs with FSR 3. (Before, it waited for the
+  game to set FSR up again, which the game doesn't do for every quality change.) A choice that needs a game restart (the
+  game started with its own FSR 3, and you then chose AMD FSR or Intel XeSS) says so first: "Restart the game to use AMD
+  FSR" leads the readout, sits right under the choice on the Graphics tab, and leads the launcher's Graphics card and
+  the Deck's row.
 - The game's FSR quality and render scale still decide the render size. Upscaling only: no frame generation yet.
 - Kiln shows what runs now and, when your choice doesn't run, why: files not downloaded, a missing graphics feature,
   another upscaler tool installed, and so on. Then the game's own FSR 3 runs. The launcher shows the same while the game
@@ -90,6 +98,21 @@ licence in full (AMD's files are under the MIT licence, Intel's under Intel's ow
 right stick scrolls it. Then you see the progress, and **Remove** takes the files out again. Kiln checks every file
 against the size and SHA-256 it pinned, and the game checks them again before it loads them. They go into the game's
 `kiln/vendor` folder, never next to the game. The `"preview": ["upscalers"]` setting is no longer needed.
+
+**AMD FSR on AMD cards** (0.2.0-dev.29.19). In 0.2.0-dev.29.18 the game's own FSR 3 ran on AMD cards instead of AMD
+FSR, because Kiln didn't pass on one graphics feature AMD FSR needs. It does now, so AMD FSR runs on AMD cards too: FSR
+4 where AMD's selection picks it, else FSR 3.1. A tester saw it run on an RX 9070 XT.
+
+**FSR 4 in dark scenes.** On that card, FSR 4 drew dark scenes far too dark in this patch's test builds. 0.2.0-dev.29.19
+tries a fix: AMD FSR now measures the picture's exposure itself, as AMD recommends, and FSR 4 gets the inputs that drew
+right through OptiScaler. FSR 3.1 keeps the game's values. **This change is not yet confirmed on an RX 9000 card.** If
+dark scenes still look too dark for you, choose **FSR 3.1** under **AMD FSR version**, on the Graphics tab or the
+launcher's **Settings**, **Graphics** card, and tell us on GitHub or Discord.
+
+**For testers:** a text file `kiln/control/amd` in the game folder takes one setting per line, to compare each part of
+that change: `exposure`, `preexposure`, `reactive`, `transparency`, `masks`, `dynres`, `planes`, `hdr` and
+`colour`, each with its value (for example `exposure one`). Kiln reads it at each FSR set-up, and kiln.log's AMD FSR
+set-up line names what FSR gets. Players don't need this file.
 
 We are looking for testers with AMD, Intel and NVIDIA cards and the Steam Deck: the launcher's Community page has
 "Help test Kiln" ([Kiln's Discord in the launcher](/kiln/wiki/install#kilns-discord-in-the-launcher)).
@@ -145,6 +168,9 @@ same, and two of them in one frame can clash.
   quit doesn't count on Linux and the Steam Deck. On Windows Kiln doesn't see a normal quit yet, so a quit in those
   moments (about a second at 60 frames a second, or those 30 seconds) costs one start without the overlay; the start
   after tries it again.
+- **The crash guard starts fresh after an update** (0.2.0-dev.29.19). A lock an older Kiln left after two failed
+  overlay starts kept the overlay's drawing off after an update, also when the update fixed the cause. The guard now
+  notes the Kiln version that wrote it, and a record of another version starts fresh; kiln.log says so.
 
 Not yet checked on a PC with OptiScaler. If Kiln's menu is missing or the game closes, send a
 [support report](/kiln/wiki/debugging#save-a-support-report): it includes `OptiScaler.ini`.

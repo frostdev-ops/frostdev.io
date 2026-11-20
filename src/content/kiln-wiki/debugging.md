@@ -1,6 +1,6 @@
 ---
 title: "Debugging"
-description: "Why a mod didn't load, the support report to send, the fault policy, crash reports, and breakpoints in a running server."
+description: "Why a mod didn't load, the support report to send, the fault policy, crash reports, the game's impact memory, and breakpoints in a running server."
 status: "works"
 updated: "2026-11-19"
 ---
@@ -66,6 +66,7 @@ launcher's **Logs** page and the admin **Crashes** page.
 | one ShroudForge startup mod doesn't apply, and the launcher names it | it failed in ShroudForge's startup pass, often because another mod changed the same data. Since 0.2.0-dev.29.18 the ShroudForge that comes with Kiln starts the game with the others; before, none of them applied. Turn that mod off or look for the clash ([When one startup mod fails](/kiln/wiki/eml-shroudforge#when-one-startup-mod-fails)) |
 | the in-game Mods page is empty next to ReShade or another overlay | since dev.24 Kiln takes the graphics device over when the game makes its swapchain, if the PC has one graphics device. When it can't, kiln.log says why |
 | Steam shows the game as running for about a minute after you quit (Linux) | Steam's networking library crashes while the game shuts down, and the system writes a crash dump of several gigabytes. No Kiln or mod code is in that crash |
+| a long session ends in slow motion, teleporting, then a crash | the game's impact memory filled up. Since 0.2.0-dev.29.19 kiln.log warns before it runs out and names what fills it ([The game's impact memory](#the-games-impact-memory)) |
 | a `.rar` is refused | no unrar, 7-Zip or bsdtar on the PC. Extract it and drop the folder |
 | the game slows down for seconds at each autosave, on a hard drive | fixed in 0.2.0-dev.29 and 0.2.0-dev.29.3 (GitHub issue 39): Kiln's save data is no longer written when no mod data changed, and Kiln.Saves does its file work on its own thread. The game's write of the world waits for Kiln's file at most 6 seconds; on a slower drive it goes ahead and kiln.log says so, with how long each part of a save took. If it still happens, send a support report: its `tick-stats.jsonl` tells a slow session from a stall at save time |
 | the game stutters for about 2 seconds every few minutes while you host, on a hard drive | fixed in 0.2.0-dev.29.17: Kiln's EMF part wrote its status file on the world's own thread about once a minute, even with no EMF mods, and the spawn service did the same when a world was first saved. Both now write on a thread of their own. If Kiln's step still takes over 100 ms, kiln.log names the parts that took the time (`slow tick: …`) |
@@ -106,7 +107,9 @@ It only reads. Nothing is written to the game folder, and the game may be runnin
   can be told apart from a stall at save time. It says how long the game's own wait for its world jobs, each Kiln
   service or plugin and the slowest subscribers took, with a breakdown of each minute's worst step. Since
   0.2.0-dev.29.17 `kilnctl tick-compare BEFORE AFTER [--json]` compares two such files: per-world step time, steps over
-  budget, and each mod's share (GitHub #57);
+  budget, and each mod's share (GitHub #57). Since 0.2.0-dev.29.19 a single-player world's pauses (the game's menu
+  open) go into their own `paused_ms` field instead of reading as stalls, and each world's minute line ends with the
+  fill of the game's [impact memory](#the-games-impact-memory);
 - since 0.2.0-dev.29.8, `kiln/state/hooks.json` has a `codePatches` list: each place where the game's code in memory
   differs from the game file, which module changed it, and for a redirected call what it called before. It finds two
   mods that change the same spot;
@@ -119,7 +122,12 @@ It only reads. Nothing is written to the game folder, and the game may be runnin
 - since 0.2.0-dev.29.18, XHL-Core's own log (`XHL-Native-Plugin-Host.log`) when XHL-Core is installed, `OptiScaler.ini`
   (and OptiScaler's log when it writes one) when OptiScaler is in the game folder, and on Linux a `WebKit sandbox:` line.
   `report.json` has a `versions` object for tools (Kiln, the launcher, the system, the Proton or Wine build or Windows,
-  the game's build, how many mods are on, a Steam Deck); it names no mod.
+  the game's build, how many mods are on, a Steam Deck); it names no mod;
+- since 0.2.0-dev.29.19, other mods' own logs from the game folder, when they are there: Building Tools'
+  (`BuildingTools.log`, `BuildingTools.prev.log`), ShroudLink's (`shroudlink.log`) and Auto Loot Plus'
+  (`auto-loot-plus.log`), the last 192 KiB of each, with your paths and names taken out as in Kiln's own logs. Their
+  settings are not read. On Linux it also says how the launcher's window was drawn
+  ([A black launcher window](/kiln/wiki/install#a-black-launcher-window)).
 
 The report calls `steam_api64.dll` in the game folder Steam's own Steamworks DLL (since 0.2.0-dev.29.12; before, "an
 unknown DLL"), lists an EML mod that is on but could not be applied as "on, not applied" with the reason (since
@@ -145,6 +153,21 @@ If something is broken, the report still works: no Kiln, no game folder, a damag
 lines under "Not readable", and the rest is written. Tested with unit tests and the launcher's own tests; a report made
 on a real Windows PC or Steam Deck is not checked yet.
 
+## The game's impact memory
+
+New in 0.2.0-dev.29.19. The game keeps every hit and attack in one 16 MiB pool per world. When the pool is full, new
+hits fail, the world slows down and the game can crash; a player's two-hour session ended that way. Kiln now watches
+the pool. It only reads it and changes nothing in the game, on a player's game and on dedicated servers.
+
+- kiln.log warns the first time the pool is **50, 75 and 90 %** full in a session, and names the five programs that
+  fill it most (one that isn't the game's own is marked "a mod's program"). At 75 % it also lists the oldest hits still
+  alive, which is what to send us.
+- `kiln/logs/tick-stats.jsonl` carries each world's fill in its minute line (`"impact": {"used_pct": ..., "peak_pct": ...}`).
+- A text file `kiln/control/impacts` in the game folder with `dump` lists the top programs and the oldest hits once
+  while the game runs; with `off` the watch is off until you remove the file.
+
+Not yet seen in a real game. If kiln.log warns, send it with a [support report](#save-a-support-report).
+
 ## Hooks and other DLLs
 
 When a feature stops working next to another DLL mod, check the hook lines in kiln.log (new in dev.21):
@@ -156,7 +179,9 @@ When a feature stops working next to another DLL mod, check the hook lines in ki
 ```
 
 `kiln/state/hooks.json` lists every hooked function, its links in order, overlaps, the compat rules that fired and
-(since 0.2.0-dev.29.8) `codePatches`, every place another module changed the game's code. The
+(since 0.2.0-dev.29.8) `codePatches`, every place another module changed the game's code. Since 0.2.0-dev.29.19 these
+lines name the other module's file after its name, for example `xhl.dll+0x4410 [mods/xhl/xhl.dll]`, and `hooks.json`
+carries it as `path`. The
 fix for an overlap is usually to load the other DLL late:
 [closed-source DLL mods](/kiln/wiki/other-mods#closed-source-dll-mods). For your own hooks: [Hooks and patches](/kiln/wiki/hooks).
 

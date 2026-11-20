@@ -215,6 +215,20 @@ Since 0.2.0-dev.29.18:
 
 Not yet seen on a system that needs these messages.
 
+**The launcher draws with the GPU's compositing again** (0.2.0-dev.29.19). Up to 0.2.0-dev.29.18 the Linux launcher
+always turned WebKit's DMA-BUF renderer off, against a start-up error seen on GNOME with NVIDIA cards ("Gdk Error 71").
+That also turned WebKit's compositing off, so large windows lagged. It is on again by default, so the launcher stays
+smooth in large windows, with a way back by itself:
+
+- If a start with it ends early, the next start goes without it, says so in `launcher.log`, and remembers it.
+- If the window stays empty, the launcher tries again without the DMA-BUF renderer first, then without the GPU.
+- Turning **Settings**, **Appearance**, **Draw the launcher without the GPU** off tries the default again.
+- `--no-dmabuf` or `KILN_LAUNCHER_DMABUF=off` starts once without it. `launcher.log` and the support report say what
+  was chosen and why.
+
+Not yet seen on a PC where the old start-up error happened. Behind an open page the launcher's fire now draws only the
+header band, and where WebKit draws without compositing the flames hold still, so the launcher is lighter there too.
+
 On Fedora Atomic and Bazzite, `/home` is a link to `/var/home`. Since dev.21 ShroudForge and SET placement and modpack
 installs accept that. Links inside Kiln's managed folders are still refused.
 
@@ -319,6 +333,10 @@ It cleans up what dev.19 left behind:
 
 [Kiln's Nexus page](https://www.nexusmods.com/enshrouded/mods/301) remains available for downloads and reports.
 Downloading the launcher from Nexus and having Nexus integration inside the launcher are separate things.
+
+Since 0.2.0-dev.29.19 a mod's **Updates** dialog in this build offers only GitHub as a source. A Nexus Mods source you
+saved before stays saved, with a note that this build doesn't check it, and the daily update check no longer mentions a
+Nexus Mods sign-in.
 
 A future Nexus-enabled build will use browser authorization with OAuth 2.0 + PKCE. The registration request has been sent;
 approval, public client ID, scopes, redirect configuration and real-provider sign-in/refresh/sign-out/download proof remain

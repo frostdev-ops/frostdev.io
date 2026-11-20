@@ -1,9 +1,9 @@
 ---
 title: "Greeneye, Enshwick, SET and more"
 nav: "More frameworks"
-description: "How Kiln runs mods for SET, Greeneye Loader, Creative Mode's Flame, Shroudtopia, Enshwick, shroudlink and Ember."
+description: "How Kiln runs mods for SET, Greeneye Loader, Creative Mode's Flame, Shroudtopia, Enshwick, shroudlink, Enshrouded ModLoader and Ember."
 status: "pending"
-updated: "2026-11-17"
+updated: "2026-11-19"
 ---
 
 Kiln has a part for each of these frameworks. All of them come with Kiln, so you don't install the framework. Each
@@ -191,6 +191,34 @@ kit.
 
 Status: works on a test server (shroudlink's own self-test passed). With players joined: untested. The MODS tab after
 dropping the addon on the launcher: not seen in a real client yet.
+
+## Enshrouded ModLoader
+
+New in 0.2.0-dev.29.19. Kiln runs mods made for AndyPimms' **Enshrouded ModLoader** itself: **CarryOn** (move chests
+with their contents, furniture, doors and wells), **Belt Lantern** (a lantern equipment slot) and its other mods. Thanks
+to AndyPimms for the loader and its documented SDK, which Kiln follows.
+
+- **Install:** add the mod's release zip in the launcher and switch it on. You don't need the loader's `dinput8.dll`,
+  and you don't run its `Install.cmd` for Kiln. Kiln places the mod in `Mods/EnshroudedModLoader/<id>/` in the game
+  folder, where the loader reads its mods, and files a mod writes there (Belt Lantern's `characters/`) are kept across
+  updates.
+- **Where:** in the game, on game build 26430625, in single player and when you host. Not on a dedicated server: these
+  mods have no server side, and players who join you need nothing.
+- **When:** as with the loader, when a world of your own starts, once per game session and for one world. Another world
+  needs a restart of Enshrouded, and joining another player's world with these mods on is refused with a message.
+- **A mod that can't start** keeps the world from starting, with a message box that names it: a world opened without
+  it can lose that mod's items when it saves. Switch it off in the launcher, or restart the game.
+- **Settings** (CarryOn's Chests, Decor, Usable objects): from Kiln's file for the mod, `kiln/config/dllmod/<id>.ini`,
+  in the loader's format; else from what the loader saved for that world; else the mod's defaults. The launcher has no
+  settings page for them yet. To play one world with a mod and another without it, use two profiles.
+- Kiln's in-game Mods page lists them with their state, and `kiln/state/dllmod.json` holds it.
+- **With Enshrouded ModLoader installed too** (its own `dinput8.dll`, or since ModLoader 0.6.15 as a Kiln native mod),
+  Kiln steps aside and leaves its mods and its files to the loader: switch them on in the world's Edit, MODS page.
+  kiln.log says `stepped aside`. Such a mod's DLL is also no longer imported as a plain DLL mod: loaded that way, the
+  loader refused every world with it.
+
+Tested in Kiln's tests and with test mods in a stand-in game; not yet checked in a real game. If something goes wrong,
+send `kiln/logs/kiln.log`: each mod's lines start with `[dllmod:<id>]`.
 
 ## Ember
 

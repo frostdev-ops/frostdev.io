@@ -1,7 +1,7 @@
 ---
 title: "Mods for other frameworks"
 nav: "Other frameworks"
-description: "Kiln runs mods made for EML, ShroudForge, EMF, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick and shroudlink, unchanged, next to Kiln mods."
+description: "Kiln runs mods made for EML, ShroudForge, EMF, SET, Greeneye, Creative Mode, Shroudtopia, Enshwick, shroudlink and Enshrouded ModLoader, unchanged, next to Kiln mods."
 status: "partial"
 updated: "2026-11-19"
 ---
@@ -28,6 +28,7 @@ run on test servers. Where no player has seen it in the game yet, the table says
 | **Enshwick** 1.0.0-alpha.14 | DLL, Luau and data-pack mods | runs Enshwick's own loader. Kiln ships it, so you don't need Enshwick | untested in game (works on test servers) | drop the mod in, or import it. [More frameworks](/kiln/wiki/more-frameworks#enshwick) |
 | **shroudlink** 0.8.0 | server mods: chestsort, assistants, storage, meter, gemforge | runs shroudlink's own server part. Its client addon (the in-game MODS tab) imports as a mod of its own | works on a test server; with players: untested | put the mods on the server, or import them. [More frameworks](/kiln/wiki/more-frameworks#shroudlink) |
 | **Ember** (server SDK) | private-chests | finds and lists the mods; doesn't run them | not yet: Ember hasn't published its loader | nothing to do yet. [More frameworks](/kiln/wiki/more-frameworks#ember) |
+| **Enshrouded ModLoader** (AndyPimms) | CarryOn, Belt Lantern and the loader's other mods | runs them itself, without the loader's `dinput8.dll`, when a world of your own starts (since 0.2.0-dev.29.19). Game client only | not yet checked in a real game | add the mod's zip in the launcher and switch it on. [More frameworks](/kiln/wiki/more-frameworks#enshrouded-modloader) |
 | Stand-alone `dinput8.dll` mods | one DLL each | loads them next to Kiln | works | install Kiln; it keeps them. [Below](#stand-alone-dinput8-mods) |
 | Closed-source DLL mods (XHL-Core, Auto Loot Plus, trainers) | one or more DLLs | loads them next to Kiln, early or after Kiln | late loading: untested in game | switch on **Load after Kiln and ShroudForge** if they clash. [Below](#closed-source-dll-mods) |
 | Kiln DLL mods | DLLs with a `native.json` | loads them at the time you choose | works | add them in the launcher. [Below](#kiln-dll-mods) |
@@ -420,14 +421,20 @@ loads them, Kiln never runs them.
   the game has XHL-Core, a note says once what Kiln renamed.
 - **A ShroudForge mod with a `native-plugin.ini`** (Unified Tweaks) is listed once, under ShroudForge, since
   0.2.0-dev.29.18: ShroudForge's own DLL loader loads it. Before, the Mods page listed it under XHL too, as "Not loaded".
-  XHL-Core's own mods stay under XHL.
+  XHL-Core's own mods stay under XHL. Since 0.2.0-dev.29.19 such a mod that XHL-Core would not run is also a
+  ShroudForge package in the Library, not an XHL-Core plugin.
+- **The Kiln build and the XHL-Core plugin of one mod** (0.2.0-dev.29.19). With both switched on and XHL-Core in the
+  game, the mod would run twice. Applying the profile now says so for each such pair and asks you to switch one of them
+  off. It changes nothing by itself.
 - **Kiln's in-game Mods page** (0.2.0-dev.29.8) says that XHL-Core loads such a plugin itself and where XHL-Core's own
   log is (`XHL-Native-Plugin-Host.log`). The yellow "Requires XHL-Core" line shows only when XHL-Core did not start.
   Since 0.2.0-dev.29.18 the support report includes that log, with your paths and names taken out: it shows which XHL
   plugins XHL-Core loaded, skipped or refused.
-- **XHL-Core's line in the main menu.** Since 0.2.0-dev.29.11 Kiln's own line takes its place, XHL-Core's warnings there
-  ("Game updated", "Mod conflict") included. Kiln setting **mainMenuFooter** (Mods page, Kiln settings) turns Kiln's line
-  off and brings XHL-Core's back ([Kiln in the game](/kiln/wiki/in-game)).
+- **XHL-Core's line in the main menu.** Since 0.2.0-dev.29.19 Kiln's line reads "Kiln 0.2.0-dev.29.19 with XHL-Core - N
+  Mods Loaded", and while XHL-Core reports a problem ("Game updated", "Mod conflict") its red line shows under Kiln's
+  again and opens XHL-Core's diagnostics, as without Kiln ([Kiln in the game](/kiln/wiki/in-game#the-line-on-the-main-menu)).
+  From 0.2.0-dev.29.11 to 29.18 Kiln's line took the place of XHL-Core's. Kiln setting **mainMenuFooter** (Mods page,
+  Kiln settings) turns Kiln's line off and leaves XHL-Core's as it is.
 
 ## Logs
 

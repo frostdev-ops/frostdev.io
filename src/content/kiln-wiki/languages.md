@@ -1,7 +1,7 @@
 ---
 title: "Kiln in your language"
 nav: "Languages"
-description: "Pick the launcher's and Kiln's in-game language (English or Simplified Chinese), help translate Kiln, give your own mod texts in several languages, and read the game's own texts."
+description: "Pick the launcher's and Kiln's in-game language (English, Simplified Chinese and nine more), help translate Kiln, give your own mod texts in several languages, follow Kiln's language in a mod, and read the game's own texts."
 status: "pending"
 updated: "2026-11-19"
 ---
@@ -13,15 +13,34 @@ translated. A text a translation doesn't have yet shows in English, so a transla
 and all of Kiln's own texts in the game, translated by XiaoHuLi666 (XHL). Thank you, XiaoHuLi666! Messages that come
 from Kiln itself in the launcher (errors, task names) are still English.
 
+**Nine more languages** since 0.2.0-dev.29.19: **Deutsch, Español, Français, Italiano, 日本語, 한국어, Polski, Português
+(Brasil) and Русский**, again the whole launcher and all of Kiln's own texts in the game. They are machine translations:
+complete, but not yet read by native speakers. If one of them is your language, its review issue on GitHub says what to
+look at first, and a comment there or a pull request is all it takes:
+
+| Language | Tag | Review issue |
+|---|---|---|
+| Deutsch (German) | `de` | [#90](https://github.com/frostdev-ops/kiln/issues/90) |
+| Русский (Russian) | `ru` | [#91](https://github.com/frostdev-ops/kiln/issues/91) |
+| Français (French) | `fr` | [#92](https://github.com/frostdev-ops/kiln/issues/92) |
+| Español (Spanish) | `es` | [#93](https://github.com/frostdev-ops/kiln/issues/93) |
+| Português (Brasil) (Brazilian Portuguese) | `pt-BR` | [#94](https://github.com/frostdev-ops/kiln/issues/94) |
+| 日本語 (Japanese) | `ja` | [#95](https://github.com/frostdev-ops/kiln/issues/95) |
+| Polski (Polish) | `pl` | [#96](https://github.com/frostdev-ops/kiln/issues/96) |
+| Italiano (Italian) | `it` | [#97](https://github.com/frostdev-ops/kiln/issues/97) |
+| 한국어 (Korean) | `ko` | [#98](https://github.com/frostdev-ops/kiln/issues/98) |
+
+You choose them as Simplified Chinese, below. Russian and Polish plurals read right in the game since 0.2.0-dev.29.19.
+
 ## Choose a language
 
 In the launcher, **Settings > Language**:
 
-- **Launcher:** the launcher's own language. **System** (the default) follows your computer's, so a Chinese system
-  gets the launcher in Chinese. Dates and numbers follow the language. On a Steam Deck, Deck mode's **Settings** has a
+- **Launcher:** the launcher's own language. **System** (the default) follows your computer's, so a Chinese or German
+  system gets the launcher in Chinese or German. Dates and numbers follow the language. On a Steam Deck, Deck mode's **Settings** has a
   **Language** row for it (0.2.0-dev.29.18).
 - **Kiln in game:** Kiln's texts in the game. **Same as the game** (the default) follows the game's text language,
-  and changes with it. Pick a language to force it, for example Chinese menus in an English game.
+  and changes with it. Pick a language to force it, for example Chinese or French menus in an English game.
 
 In the game, **Mods > Kiln settings > Language** (under Look) sets the same, and a change shows at once. Both write
 `"ui": {"language": "auto"}` in `kiln/kiln.json` (`auto`, or a tag such as `"zh-CN"`).
@@ -31,6 +50,10 @@ Mods' own texts follow the game's language, whatever Kiln's is.
 **Chinese, Japanese and Korean** use the game's own font for that language, read from your game (Kiln ships no font).
 Until it is loaded, a moment after the language is picked, Kiln's texts are English rather than boxes; if it can't be
 read, they stay English and kiln.log says why. Until then the game's Language entry lists Chinese as `zh-CN`.
+
+**Russian** (and other Cyrillic text) uses the game's own Cyrillic font since 0.2.0-dev.29.19, the same way: until it
+is loaded, Kiln's texts in the overlay stay English rather than question marks. Kiln's overlay also draws Thai with the
+game's fonts now, for Kiln's texts and a mod's.
 
 ## Translate Kiln
 
@@ -76,6 +99,22 @@ A mod keeps its texts in `locales/<language>.json` beside its manifest, in the s
 and window titles can take `UiText.Of(("en", "My mod"), ("de", "Mein Mod"))`. See
 [Code mods](/kiln/wiki/code-mods#configs).
 
+**Following Kiln's language** (`KilnLanguage`, mod API 0.2.11, since 0.2.0-dev.29.19). A mod's texts follow the game's
+language. A mod whose pages sit beside Kiln's (a settings panel in the Kiln menu's style, a shared core for several
+mods) can follow Kiln's instead:
+
+```csharp
+var lang = KilnLanguage.Current;           // "zh-cn", "en-us": Kiln's language as a lower-case tag
+var text = Context.Locale.GetIn(KilnLanguage.OverlayInEnglish ? "en" : lang, "panel.title");
+KilnLanguage.Changed += () => Relabel();   // another language, the English fallback switched, or a reload
+```
+
+- `Setting` is `ui.language` as set (`"auto"` or the tag). On a dedicated server both follow its game language.
+- `OverlayInEnglish` is true while Kiln's overlay shows its texts in English because that language's font is not
+  loaded yet. Text in that language shows as boxes meanwhile: show English too.
+- `Changed` runs on the thread that made the change, after the new values are in place; keep it short. A handler that
+  throws is logged under its mod, and a mod's handlers are dropped when it unloads.
+
 ## The game's own texts
 
 New in 0.2.0-dev.29.18 (mod API 0.2.10). On a game client, `Content.Text` gives the text the game shows for a loca tag,
@@ -105,7 +144,7 @@ Not yet checked in a real game: a dedicated lab server reported it as not availa
 
 The translated menus and the Chinese, Japanese and Korean fonts were rendered with Kiln's preview tool using the game's
 real fonts, and pass the translation checks; nobody has seen them in the game yet. That includes the Chinese of
-0.2.0-dev.29.18.
+0.2.0-dev.29.18 and the nine languages of 0.2.0-dev.29.19, with Cyrillic in the game, and `KilnLanguage` in a mod.
 
 The translators' guides are in Kiln's repository, `docs/kiln/translating.md` and `docs/kiln/translating-game.md`, on
 [GitHub](https://github.com/frostdev-ops/kiln).
