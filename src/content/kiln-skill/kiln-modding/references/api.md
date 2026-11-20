@@ -65,9 +65,9 @@ if (!r.Ok) c.Reply($"not equipped: {r.Reason}");                                
   simulated players only.
 - **Side and thread markers:** `[ServerOnly]`, `[ClientOnly]`, `[AnyThread]`, `[RenderThread]`, `[WorkerThread]`
   beside `[TickThreadOnly]`. Markers, read by the analyzers; dev.27+ the services' members carry them.
-- **API version:** `Mods.RuntimeApiVersion` is the running Kiln's mod API (0.2.10 on dev.29.18; the table in
+- **API version:** `Mods.RuntimeApiVersion` is the running Kiln's mod API (0.2.11 on dev.29.19; the table in
   [versions.md](versions.md)). `Mods.ApiVersion` is obsolete: a const, copied into your mod at build time. Release
-  builds carry their full version (`0.2.0-dev.29.18`).
+  builds carry their full version (`0.2.0-dev.29.19`).
 - **`[Experimental]` ids:** `KILNX001` lab and test members (hidden; a build error unless the project adds it to
   `NoWarn`), `KILNX002` API not yet proven in a real client, `KILNX003` (dev.29.18+) the task-thread world reads and
   writes (`WorldConcurrent` and its types; opt in with `KILNX003`, not `KILNX001`). dev.28's `KILNX028` (capacity
@@ -146,6 +146,10 @@ before, it returned true. `Config.Register<T>()` and `.Value` also work in `OnBo
 **dev.20+:** `Config.RegisterWorld<T>()` keeps one config per world in its sidecar; values switch before `WorldLoadedEvent`
 and use defaults with no world. `[RequiresRestart]` edits apply when that world next opens. `Context.Locale.Get(key, args)`
 reads this mod's `locales/<language>.json`, falling back to English/key; use it for mod text, not game-tag lookup.
+dev.29.19+ `KilnLanguage` (Kiln.Api, any thread) for a mod whose pages should read in Kiln's UI language, not the game's:
+`Current` (a lower-case tag, `"zh-cn"`), `Setting` (`ui.language`: `"auto"` or the tag), `OverlayInEnglish` (Kiln's overlay
+cannot draw that script yet: show English too), event `Changed` (on the thread that changed it; keep it short; dropped at
+unload). `Context.Locale.GetIn(KilnLanguage.OverlayInEnglish ? "en" : KilnLanguage.Current, key)`.
 
 ## Commands and permissions
 ```csharp
@@ -458,6 +462,16 @@ more than 3 mods add entries, theirs are listed on Kiln's Mods page instead, whe
 player's `modEntries` setting decides). Don't assume your entry is drawn in the game's menu. dev.29+: the pause menu's
 Auto shows every mod's entry whenever it can scroll.
 
+**Presses as they come (dev.29.19+, Kiln.Ui; not yet seen in a mod in a real game).** For a mod's own "press a key"
+field or shortcut layer; an action the player should remap stays a `KeyBindings.Register` binding.
+`KeyInput.Listen(p => ..., KeyListenFlags.Mouse)` (the default flag adds the middle and side buttons and the wheel)
+returns a `KeyListener` (`Ok`, `Reason`, `Mouse`, `Dispose()`; it also ends at unload). The handler gets every
+`KeyPress` (`Down`, `Repeat`, `Captured`, `TextInput`, `Mods`, `IsMouse`, `Code`, `Chord`) on the game's window thread
+before the game: keep it short, return true to keep the press from the game. Where there is no overlay (a dedicated
+server) the listener is not `Ok`, with a `Reason`; it never throws for that. `KeyInput.PressCode(vk, scan)` and
+`p.Chord.ToString()` are what the Keys page stores. Don't read Kiln's internals (`KilnText`, `UiNative`, `KeyNames`) by
+reflection: `KilnLanguage` and `KeyInput` are the public members for them (`docs/kiln/ui.md`, the XHL-Core table).
+
 **Looks and themes (dev.29.16+; not yet seen in a real game).** `UiStyle.Player` (the look the player chose) is the
 default for `Ui.Window`, `Ui.Screen` and crafting panels; before, windows had Kiln's ember look. `ui.Palette` reads the
 look's colours by role. `Ui.Themes.Define(name, new UiThemeSpec { ... })` makes a theme for your own windows
@@ -538,7 +552,8 @@ Only when no service does the job, and only with `"advanced": true`. dev.26+: th
 `InvalidOperationException`. An unloaded mod can no longer install hooks. Since dev.21 every hook Kiln places on the game exe goes
 through one registry, `kiln.hooks` v2: one detour per game function, shared by Kiln's services, EMF and Shroudtopia mod hooks
 and your mod. Your hook is a **link** in that function's chain. An address outside the game image is refused
-(`KILN_ERR_INVALID_ARGUMENT`); hooks on system DLL exports and EMF/Shroudtopia hooks outside the exe stay plain safetyhook.
+(`KILN_ERR_INVALID_ARGUMENT`) unless the mod opened that module (dev.29.19+, below); hooks on system DLL exports and
+EMF/Shroudtopia hooks outside the exe stay plain safetyhook.
 - **Order on one function:** `before`/`after` constraints, then priority (higher first), then registration order. EMF mods'
   `hook`/`hook_pattern`/`hook_address` and Shroudtopia's `CreateDetour` are links owned by `emf:<id>` and `shroudtopia:<mod>` at
   priority 1 with `KILN_HOOK_NEWEST_FIRST`: they run newest first, before Kiln's priority-0 links. To run ahead of them, take a
@@ -578,7 +593,33 @@ and your mod. Your hook is a **link** in that function's chain. An address outsi
 - Dropping a hook object does not remove the link: `revoke()` or `revoke_owner(owner)`. Reordering links already installed is not
   atomic: a call in flight at that moment can skip a link or run one twice (no crash).
 - `kiln/state/hooks.json`: every function with its links in chain order, `foreignBefore`/`foreignOver` (other modules' hooks
-  found before or over Kiln), `overlaps`, `rules`, `linkSlots` `{used, cap}`. kiln.log: `hooks: <label> (<owner>) chained over <module>+0x...`.
+  found before or over Kiln), `overlaps`, `rules`, `linkSlots` `{used, cap}`; dev.29.19+ another module's file as `path`. kiln.log: `hooks: <label>
+  (<owner>) chained over <module>+0x...`, dev.29.19+ with the file in brackets (`xhl.dll+0x4410 [mods/xhl/xhl.dll]`).
+
+**Hooks inside another mod's DLL (dev.29.19+; Kiln's hook tests under Wine and on Windows, not yet in a real game).**
+For mods that extend other mods (a fix for Creative Mode's search). `Hooks.Module("creative.dll")` (advanced tier, row
+`hooks.foreign_modules`: `KilnUnavailableException` on an older Kiln) opens a loaded module by its file name and pins it
+until the game exits. It never loads it: `KeyNotFoundException` while it is not there; `Hooks.TryModule(name, out var m)`
+and try again from a later tick. Then addresses in its executable code are targets for `Hooks.Detour` and `Hooks.Mid`:
+`m.At(offset)` (the RVA a disassembler shows; throws outside its code), `m.Find(pattern)` (exactly one match, else it
+throws), `m.FindAll(pattern, max)`, `Hooks.FindInModule(name, pattern)`. Patterns search the live bytes and survive an
+update of the DLL; a fixed offset does not. An address in a module nobody opened is refused (`base + offset` alone
+is not enough: open it first). Kiln's
+own `kiln-*.dll` are refused (`InvalidOperationException`); typed hooks stay the game's. kiln.log names the module and
+each link as module+offset; `hooks.json` lists the target with `"module"`, `"offset"` and `"rva": null`.
+
+**Native plugins (dev.29.19+, appended to the kiln.hooks v2 table; the version stays 2).** Check `header.size` covers
+the member, that it is not NULL, then its row.
+- `open_module(owner, name, &m)` / `module_scan(base, pattern, out, cap, &count)` (row `hooks.foreign_modules`):
+  the native form of the above; `detour`, `mid`, `raw_detour`, `detour2`, `mid2`, `mid2_checked` then take addresses in
+  that module's executable sections. `KILN_ERR_NOT_FOUND` while it is not loaded.
+- `read_original(address, out, size)` copies the exe file's bytes there (never live memory: a hooked function reads as
+  shipped); `code_state(address, size, &state, &generation)` answers `KILN_CODE_ORIGINAL`, `KILN_CODE_MANAGED` (every
+  byte that differs is Kiln's own detour or patch), `KILN_CODE_FOREIGN` or `KILN_CODE_UNKNOWN`. Rows
+  `hooks.read_original`, `hooks.code_state`. A range inside the exe's `.text`, at most 64 KiB
+  (`KILN_HOOKS_CODE_RANGE_MAX`); an address in an opened module is `KILN_ERR_INVALID_ARGUMENT`. Any thread, both
+  sides, but not under the loader lock (`DllMain`). `generation` is one counter for the whole process: another value
+  means "ask again", not "changed". It is no lock.
 
 **Typed hooks (dev.29+; not yet run in a game client).** A `sigdb/server.json` / `client.json` fragment in the mod
 describes game functions; the Kiln.Sigs generator makes a class per descriptor (`Hooks` in `KilnServices`; KILN180 to
@@ -624,4 +665,9 @@ If a hosted engine needs Kiln's hook first, load the DLL late:
   with `EMF_WORLD_CLIENT` run in the client world. Wiki [EMF mods](https://frostdev.io/kiln/wiki/emf-mods).
 - ShroudForge and EML mods run unchanged next to Kiln mods (wiki [EML and ShroudForge](https://frostdev.io/kiln/wiki/eml-shroudforge)).
   ShroudForge's spawn search falls back to the in-memory code when other loaders patched it; see the dev.29 notes.
+- Enshrouded ModLoader (AndyPimms; dev.29.19+): its packages are the Library kind `dllmod`, run by `kiln-dllmod.dll` in
+  `kiln/plugins/` at a local world's start (game client 26430625 only; settings in `kiln/config/dllmod/<id>.ini`, state in
+  `kiln/state/dllmod.json`). With the loader itself installed Kiln steps aside. Page `docs/kiln/engines/dllmod.md`.
+- XHL-Core: a Kiln mod and an XHL-Core plugin of the same id, both on with XHL-Core in the game, run twice; profile
+  activation names the pair (dev.29.19+).
 - Most of these paths were verified under Wine and on lab servers, not on a real client: report them as "needs a client check".

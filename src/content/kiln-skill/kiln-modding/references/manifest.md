@@ -28,7 +28,7 @@ the project folder is validated and copied. JSON with `//` comments and trailing
   "writes": ["Fuel"],        // dev.27+: component types written with World.Write/Update/WriteField/WriteAt (max 64)
   "boot": false,             // dev.28+: true | "required": Mod.OnBoot runs before the game starts (boot.md)
   "updates": { "provider": "github", "repository": "me/my-mod" },   // dev.28+: where new versions are published
-  "kilnBuild": { "version": "0.2.0-dev.29.18+…", "created": "…" }  // written by the build: the Kiln.Api it compiled against
+  "kilnBuild": { "version": "0.2.0-dev.29.19+…", "created": "…" }  // written by the build: the Kiln.Api it compiled against
 }
 ```
 `updates` (dev.28+): `github` (`repository`, `tagPattern` default `v{version}`, `asset`, `channel` `stable` or

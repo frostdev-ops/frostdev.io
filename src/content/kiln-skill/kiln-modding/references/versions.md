@@ -19,6 +19,7 @@ been seen in a game.
 | dev.29.16 | 0.2.8 | dev.29.16 | looks and themes (`UiStyle.Player` default), trimmed icons, `Assets.ReadResidentBlob` |
 | dev.29.17 | 0.2.9 | dev.29.17 | station outputs as stock, ordinary chests in a fill, patches `copyComponents`, `clear`, `replace`, boot reads of any resource, `kilnctl tick-compare`; unknown slash commands pass through |
 | dev.29.18 | 0.2.10 | dev.29.18 | Kiln tasks, `WorldConcurrent` (KILNX003), `Content.Text` / `TooltipValues`, wraps in the prediction storage, `TryReadWritable`, KILN105 on commands, `graphics.json` |
+| dev.29.19 | 0.2.11 | dev.29.19 | `KilnLanguage`, `KeyInput.Listen`, `Hooks.Module` (hooks inside another mod's DLL), `KilnHarness.LogFile` / `ReadLogFile`; native: kiln.hooks `read_original`, `code_state`, `open_module`, `module_scan`, `KILN_TASK_RESIDENT`; station outputs on Kiln clients' station screens; the impact memory watch |
 
 Every API bump since dev.27 was additive: no public member was removed or changed.
 
@@ -51,6 +52,9 @@ do not prove what a player sees, hears or does.
 - **dev.29.18:** seen on Linux (Proton, NVIDIA): Kiln tasks on a hosting client, a mod's program in the player's own
   world and a wrap's write there, prediction wraps. Not seen: the game's texts and tooltip rows for mods, Kiln tasks on a
   dedicated server and their world writes, anything on Windows.
+- **dev.29.19:** host tests; the hook tests under Wine and natively on Windows. Not seen in a real game: `KilnLanguage`
+  and `KeyInput` in a mod, a mod's hooks inside another mod's DLL, the station screens' counts and fill buttons with
+  station outputs, the impact memory warning, mods for Enshrouded ModLoader run by Kiln.
 
 The official launcher has Nexus integration switched off: import downloaded archives by hand (no Catalog, no account
 sign-in, no `nxm://` handler).

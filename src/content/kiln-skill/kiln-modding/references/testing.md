@@ -119,7 +119,8 @@ var n = kiln.Run(() => Players.Count);          // Kiln API only through Run/As:
   `KilnHarness.ComponentChanges`, `kiln.ImpactNatives` (`[ImpactNative]` methods, `RegisterSync`, attachments), world-table
   and buff budgets; dev.29.18+ `kiln.Tasks.Settle()` / `Live` and `KilnHarnessOptions.Side` (dedicated server, hosting
   or joined client; `EnterWorld`, `LeaveWorld`, `OnMainThread`), `FakeWorld.BusyReads`/`BusyWrites` (KILNX003)
-  ([tasks.md](tasks.md)).
+  ([tasks.md](tasks.md)); dev.29.19+ `kiln.LogFile` and `kiln.ReadLogFile()` read the harness's kiln.log while it is
+  written (`File.ReadAllText` on it fails on Windows).
 - Gaps: a service that caches "no table" (`Kiln.Ui` render, `kiln.net` at the first channel) is asked once per process, so
   a later test can pass where it should be skipped: read the service's `Available` in the test. No client/server pair.
   One harness per process. A blocked test is stopped by the watchdog (Linux tested, Windows not).
@@ -155,7 +156,17 @@ public async Task Frost_flash(CheckContext c)
 `kiln/logs/tick-stats.jsonl` (dev.29+) has each step's time per Kiln service and plugin, the slowest Pre subscribers and
 each minute's worst step; kiln.log's per-mod stats line splits `max Z ms (pre A / post B)`, and dev.29.16+ the load
 line splits `loaded in T ms (layout check A ms, assemblies B ms, OnLoad C ms)`. Compare two runs with
-`kilnctl tick-compare BEFORE AFTER` (dev.29.17+).
+`kilnctl tick-compare BEFORE AFTER` (dev.29.17+). dev.29.19+: a single-player world's pauses (the game's menu) go into
+`paused_ms`, not `interval_ms`.
+
+**Impact memory (dev.29.19+, read-only watch; not yet seen in a real game).** The game keeps every hit in one 16 MiB
+pool per world; full, new hits fail, the world crawls and the game can crash. kiln.log warns at the first 50, 75 and
+90 % of a session (`kiln.abilities: the server world's impact memory is 75% full ...`) and names the top 5 programs by live instances ("a
+mod's program" for one not in the game's list); at 75 % it lists the oldest live instances of the top one: hits
+hundreds of seconds old are the leak. Each world's minute line in `tick-stats.jsonl` ends with
+`"impact":{"used_pct","peak_pct","capacity_mib","live","live_peak"}`. `kiln/control/impacts` with `dump` logs it once,
+`off` turns the watch off. A mod's impact program in the top list after a long session is the first suspect. Page
+`docs/kiln/services/abilities.md` "Impact memory watch".
 
 ## Reading the logs
 `kiln logs [-f] [--mod ID] [--level E] [-n N]`, or:
@@ -169,7 +180,7 @@ line splits `loaded in T ms (layout check A ms, assemblies B ms, OnLoad C ms)`. 
 | the game's own log | `logs/enshrouded_server.log` in the server folder; `Context.GameLog.Line` mirrors it |
 
 Players send a support report zip; dev.29.18+ its `report.json` has a `versions` object (Kiln, launcher, system, runner,
-game build, how many mods are on).
+game build, how many mods are on); dev.29.19+ it also holds Building Tools', ShroudLink's and Auto Loot Plus' logs.
 Success looks like `mod my-mod 0.1.0 loaded in … ms`. A fault looks like
 `[E] [host] mod x threw in Pre (4/5): …`; after the limit, `disabled after 5 faults within 60 s; reload x to try
 again; crash report …`. Fault settings live in `kiln/kiln.json` `mods` (`fault_limit`, `fault_window_s`,

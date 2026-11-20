@@ -15,10 +15,10 @@ Enshrouded is a trademark of Keen Games GmbH. Kiln is unofficial.
 
 1. Read the page for what you're using: https://frostdev.io/kiln/wiki. [references/docs-map.md](references/docs-map.md) says
    which one.
-2. The current build is **0.2.0-dev.29.18**, with mod API 0.2.10 and the matching 0.2.0-dev.29.18 MDK. A mark like
-   **dev.20+**, **dev.28+** or **dev.29.17+** means that runtime and its MDK or newer; check the installed build
+2. The current build is **0.2.0-dev.29.19**, with mod API 0.2.11 and the matching 0.2.0-dev.29.19 MDK. A mark like
+   **dev.20+**, **dev.28+** or **dev.29.19+** means that runtime and its MDK or newer; check the installed build
    (`Mods.RuntimeApiVersion`). Which build added what, and what a real game has shown:
-   [references/versions.md](references/versions.md). Much of dev.28 to dev.29.18 ran only on test servers, in host tests
+   [references/versions.md](references/versions.md). Much of dev.28 to dev.29.19 ran only on test servers, in host tests
    or under Wine: take the verification status from the release notes' "Checked" and "Not yet" text and never claim more.
    Server/offline verification does not establish client rendering, input or multiplayer behavior. The official
    launcher has Nexus integration switched off: import downloaded archives by hand.
@@ -106,5 +106,6 @@ planned release: `docs/kiln/modding/limits.md`.
 Don't guess at game internals. Read the wiki and the XML docs that ship with Kiln.Api. If a service doesn't offer what you need,
 say so instead of patching game memory. Wrapping one of the game's own ECS programs (`Kiln.Systems`, dev.29+) is a typed
 service, not the advanced tier: [references/world-programs.md](references/world-programs.md). Low-level hooks are for mods that opt into the advanced tier (`"advanced": true`);
-the short rules (kiln.hooks v2: link order, `caller()`, link slots, `hooks.json`; closed DLL mods and `[late]`; EML and EMF
-notes) are at the end of [api.md](references/api.md).
+the short rules (kiln.hooks v2: link order, `caller()`, link slots, `hooks.json`; dev.29.19+ hooks inside another mod's DLL
+(`Hooks.Module`) and, for native plugins, the game's original code; closed DLL mods and `[late]`; EML, EMF and Enshrouded
+ModLoader notes) are at the end of [api.md](references/api.md).

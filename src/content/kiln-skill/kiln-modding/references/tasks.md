@@ -38,7 +38,7 @@ private string Scan(CommandContext c, Player player)
   and inside a task; `.Result` throws until it has ended.
 - `KilnTaskOptions(LongRunning: true)` for work of seconds or a loop until cancelled; `Priority` orders the mod's own
   queue. Limits: 2 running tasks per mod on the shared workers, 1024 not yet ended (`KilnTaskQueueFullException`),
-  2 long-running per mod.
+  2 long-running per mod (8 in all).
 - `task.Cancel()` reaches the work through `ctx.Cancellation`. Kiln cancels a mod's tasks when it unloads. A task's fault
   is logged once and does not count toward the mod's fault limit.
 
@@ -82,6 +82,15 @@ Kiln.TestKit runs a mod's tasks on its own pool: `kiln.Tasks.Settle()` waits for
 wait for the tick; `kiln.Tasks.Live` counts the running ones. `KilnHarnessOptions.Side` picks a dedicated server, a
 hosting client or a joined client (`EnterWorld`, `LeaveWorld`, `OnMainThread`). `FakeWorld.BusyReads` / `BusyWrites`
 (KILNX003) make the next reads or writes answer busy.
+
+## Native plugins (`kiln_tasks.h`)
+The same pool. dev.29.19+ `KILN_TASK_RESIDENT`, only together with `KILN_TASK_LONG_RUNNING` (else
+`KILN_ERR_INVALID_ARGUMENT` + `KILN_TASK_REFUSAL_ARGUMENT`), is for a body meant to run until it is cancelled (a
+plugin's service loop). It holds one of the owner's two LongRunning threads; an owner has at most one resident task (a
+second is refused the same way). The watchdog's running-too-long warning counts only from its cancellation, its first
+start writes one kiln.log line, and its time is not in tick-stats' `cpu_ms` / `wall_ms`. Poll `run->cancelled(run)` at
+least every 50 ms. The table's version and size are unchanged: an older Kiln refuses the flag with the same
+`INVALID_ARGUMENT`, so retry without it. C# `KilnTaskOptions` has no resident flag.
 
 ## Not
 Raw threads, `Task.Run` and code after `ConfigureAwait(false)` have no task scope: Kiln does not cancel them at unload,

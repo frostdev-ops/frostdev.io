@@ -161,3 +161,11 @@
 | `WorldConcurrent` with no tick fallback | `Unavailable` on every game build without an exact profile | `WorldConcurrent.OrOnTick(ctx, offTick, onTick)` |
 | `Content.Text` on a dedicated server, or off the client's main thread | null on a server | `Texts.Get` with a client catalog on a server; call it on the main thread |
 | A server wrap that changes what a player's own character does, with no prediction stage | that player's own screen does not show it | the same stage with `WorldKind.Prediction` (dev.29.18+) |
+| `Hooks.Mid(creativeBase + 0x15F5F7, ...)`: an absolute address inside another mod's DLL (dev.29.19+) | refused (invalid argument): hooks go into the game's code only | `Hooks.Mid(Hooks.Module("creative.dll").At(0x15F5F7), ...)`, better `Hooks.FindInModule(name, pattern)` |
+| `Hooks.Module` in `OnLoad` for a DLL that loads later | `KeyNotFoundException` | `Hooks.TryModule`, again from a later tick |
+| Reading Kiln's internals by reflection (`KilnText.Language`, `UiNative`, `KeyNames.PressCode`, `ModContext.Owner`) | breaks when Kiln changes them; not covered by the API promise | `KilnLanguage`, `KeyInput.Listen`, `KeyInput.PressCode` (dev.29.19+) |
+| `KeyInput.Listen` for an action players should rebind | it is not on the Keys page | `KeyBindings.Register`; `KeyInput` for your own capture field or state |
+| Slow work in a `KeyInput` handler or `KilnLanguage.Changed` | runs on the game's window or render thread: the game stalls | copy the press, post the rest |
+| `KILN_TASK_RESIDENT` alone, or a second resident task per owner (native) | `INVALID_ARGUMENT` | with `KILN_TASK_LONG_RUNNING`, one per owner; retry without the flag on an older Kiln |
+| `File.ReadAllText` on the harness's kiln.log (Kiln.TestKit) | fails on Windows while the harness writes it | `kiln.ReadLogFile()` (dev.29.19+) |
+| `read_original` / `code_state` on an address in an opened module (native) | `KILN_ERR_INVALID_ARGUMENT`: they cover the exe's `.text` only | `module_scan` for the module; compare its bytes yourself |

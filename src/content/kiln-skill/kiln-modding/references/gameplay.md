@@ -63,7 +63,10 @@ Wiki [stations](https://frostdev.io/kiln/wiki/stations); page `docs/kiln/service
   Kiln. Names in the player's language: `Stations.WorkshopName`, `RecipeName`. `Bases.StockWithStations(id)`.
 - dev.29.17+: `Stations.SetOutputSource(station)` lends a station's finished items to its base, after the bag and the
   Magic chests, in fills (`FillOptions.UseStationOutputs`, default true) and in a player's craft. `FillOptions.Chests`
-  names up to 64 ordinary chests, used after the Magic chests.
+  names up to 64 ordinary chests, used after the Magic chests. dev.29.19+: on a Kiln client with a Kiln server the
+  station screen's "+1" / "+10" fill buttons and the ingredients' Available counts include opted-in outputs (rows
+  `stations.stock_ui`, `stations.fill_ui`; their hooks go in only once the server's craft-stock snapshot is on); the
+  server checks every press again. Not yet seen in a real game.
 - dev.29.14+: an automated station's craft fires `ItemCraftedEvent` once, at its end.
 
 ## Gems and the Shroud Forge (Kiln.Abilities, dev.29.11+)

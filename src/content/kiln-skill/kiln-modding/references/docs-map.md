@@ -16,7 +16,7 @@ The wiki: https://frostdev.io/kiln/wiki/<page>.
 | Permission nodes and groups | `permissions` |
 | Hot reload, the control folder | `hot-reload` |
 | In-server tests | `testing` |
-| Why a mod didn't load, faults, breakpoints | `debugging` |
+| Why a mod didn't load, faults, breakpoints, the game's impact memory | `debugging` |
 | Linter and analyzers | `lint` |
 | VS Code | `vscode` |
 | Game ids | `catalogs` |
@@ -125,6 +125,12 @@ dev.28+ and dev.29+ (pages in the repository's `docs/kiln/`):
 | Unknown slash commands, `chat.json` | `services/chat.md` |
 | Graphics status | `graphics.md` |
 | EMF parity | `emf.md`, `emf-parity.md` |
+| dev.29.19+: Kiln's language (`KilnLanguage`), presses as they come (`KeyInput`), XHL-Core's reflection reads | `ui.md` |
+| dev.29.19+: hooks inside another mod's DLL (`Hooks.Module`); native `open_module`, `module_scan`, `read_original`, `code_state` | `hooks.md`, `services/hooks.md` |
+| dev.29.19+: resident native tasks (`KILN_TASK_RESIDENT`) | `services/tasks.md` |
+| dev.29.19+: the impact memory watch | `services/abilities.md`; wiki `debugging` |
+| dev.29.19+: station screens with station outputs | `services/stations.md` |
+| dev.29.19+: Enshrouded ModLoader's mods in Kiln (`dllmod`) | `engines/dllmod.md` |
 
 dev.28+ and dev.29+ samples: boot-gallery, OreVein, TerrainSample, TransformScale, BlobCatalog, BlockKinds,
 CreatureControlSample, CreatureAi, Decisions, WaterWorks, TypedHookVolume, FrostMark, equipment-sets, MaterialPools,
