@@ -1,6 +1,22 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.29.20",
+      "date": "2026-11-20",
+      "title": "AMD FSR 3.1 by default",
+      "summary": "AMD FSR's Auto runs FSR 3.1 until FSR 4 is confirmed in this game, and FSR 4 becomes an experimental choice of its own.",
+      "patch": true,
+      "features": [
+        {
+          "title": "AMD FSR Auto runs FSR 3.1 for now",
+          "text": "AMD FSR's Auto runs FSR 3.1 on every card until FSR 4 is confirmed in this game. FSR 4 stays a choice of its own, FSR 4 (experimental), which may render dark scenes too dark.",
+          "area": "core",
+          "kind": "fix",
+          "gamePending": true
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.29.19",
       "date": "2026-11-20",
       "title": "Other loaders and languages",
@@ -2626,8 +2642,8 @@
     {
       "version": "0.2.0-dev.30",
       "status": "next",
-      "title": "ShroudForge on Kiln, equipment and tasks",
-      "summary": "ShroudForge and EML mods on Kiln's own engine, an equipment API for item rarity, values, tooltips and upgrades, and Kiln tasks checked in real games and no longer experimental.",
+      "title": "ShroudForge on Kiln, equipment, tasks and the game's UI",
+      "summary": "ShroudForge and EML mods on Kiln's own engine, an equipment API for item rarity, values, tooltips and upgrades, hooks into the game's own UI and client, and Kiln tasks checked in real games and no longer experimental.",
       "note": "No date: this release ships when it is ready. Items marked as waiting for a game test are built and checked, but not yet seen in a real game. Fixes keep coming as 0.2.0-dev.29 patches until then.",
       "features": [
         {
@@ -2670,6 +2686,18 @@
           "title": "Rarity rolls at crafting and loot",
           "text": "Items a mod names can roll their rarity when they are crafted or found as loot.",
           "area": "content",
+          "gamePending": true
+        },
+        {
+          "title": "Hooks into the game's own UI",
+          "area": "api",
+          "text": "Mods can add to the game's own screens and react to them: buttons in a chest or station screen, marks and clicks on inventory slots that know the item they hold, and extra elements in the game's menus.",
+          "gamePending": true
+        },
+        {
+          "title": "Client hooks for mods",
+          "area": "api",
+          "text": "Mods can hook the game client's own code on players' games, with the same safety checks as server hooks, for what only a player's game does: its screens, input and what the player sees.",
           "gamePending": true
         },
         {
