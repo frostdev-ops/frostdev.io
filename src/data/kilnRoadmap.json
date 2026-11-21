@@ -1,6 +1,169 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.30",
+      "date": "2026-11-20",
+      "title": "Crucible modpacks, equipment and the game's UI",
+      "summary": "Crucible, modpacks on frostdev.io you share with a link or a code and install in two clicks, with Pack Studio for pack makers; an equipment API for item rarity, values, tooltips and upgrades; hooks into the game's own inventory screens and client hooks for mods; Kiln tasks in the main menu; ShroudForge 1.8.1 bundled; and signed Windows files.",
+      "features": [
+        {
+          "title": "Share your mods as a link",
+          "text": "Share to Crucible turns a profile into a pack with a link and a short code for your friends; only files Crucible doesn't have yet are uploaded, and a changed profile updates the same link.",
+          "area": "launcher"
+        },
+        {
+          "title": "Install a pack from a code",
+          "text": "A pack link or code shows the pack first (size, game build, a warning about other people's code), then installs it as a profile of its own, with your saves backed up first.",
+          "area": "launcher"
+        },
+        {
+          "title": "Pack updates keep your changes",
+          "text": "Updates keep the settings you changed, the mods you added and your own data edits, ask when you and the creator changed the same setting, and can be undone.",
+          "area": "launcher",
+          "gamePending": true
+        },
+        {
+          "title": "Pack Studio",
+          "text": "Pack makers build packs in the launcher: mods and optional mods, captured settings, data editors, load order and conflicts, a test copy, credits, and publishing link-only or public.",
+          "area": "tools",
+          "gamePending": true
+        },
+        {
+          "title": "Packs are checked",
+          "text": "Crucible checks every pack version on upload (structure, known-bad files, code, conflicting data), and the launcher runs the same checks on a pack file before it installs.",
+          "area": "launcher"
+        },
+        {
+          "title": "Crucible on frostdev.io",
+          "text": "Public packs on frostdev.io with search and filters, pack pages with versions, credits, comments, upvotes and reports, and a Get Kiln button that opens the pack once Kiln is installed.",
+          "area": "launcher"
+        },
+        {
+          "title": "Your Crucible pack on Discord",
+          "text": "An opt-in switch shows the Crucible pack you play on your Discord profile with a Get this modpack button, and a pack link pasted into Discord shows a card with its name and cover.",
+          "area": "launcher"
+        },
+        {
+          "title": "Packs on servers",
+          "text": "A published pack goes onto one of your servers in one step, with its server mods and game settings, and joining players get its mods offered; passwords and bans never travel in a pack.",
+          "area": "servers",
+          "gamePending": true
+        },
+        {
+          "title": "An item's rarity",
+          "text": "Mods can read and set an item's rarity, its unlocked enhancements and its level, on the item itself.",
+          "area": "api",
+          "gamePending": true
+        },
+        {
+          "title": "Stronger single items",
+          "text": "Mods can make one item stronger, tougher or longer lasting than others of its type, and it keeps that wherever it goes.",
+          "area": "api",
+          "gamePending": true
+        },
+        {
+          "title": "Any item value, with or without code",
+          "text": "Data packs can set any item's values without code, in the numbers the tooltip shows (power, damage, armour, speed, perks, socket, durability), and mods can do the same from C#.",
+          "area": "content",
+          "gamePending": true
+        },
+        {
+          "title": "Modded values in the game's tooltips",
+          "text": "The game's own item tooltips show modded values and extra lines from mods, in the game's colours.",
+          "area": "content",
+          "gamePending": true
+        },
+        {
+          "title": "Rarity upgrades",
+          "text": "Mods can upgrade an item's rarity from code or with a station or forge action, at the cost and chance they choose; an upgraded item gets its next enhancement slot.",
+          "area": "content",
+          "gamePending": true
+        },
+        {
+          "title": "Rarity rolls at crafting and loot",
+          "text": "Items a mod names can roll their rarity when they are crafted or found as loot.",
+          "area": "content",
+          "gamePending": true
+        },
+        {
+          "title": "Hooks into the game's own inventory screens",
+          "area": "api",
+          "text": "Mods can mark the game's inventory slots, take clicks on them that know the item they hold, and dock a panel with buttons beside the backpack and a chest's screen, knowing which chest is open.",
+          "gamePending": true
+        },
+        {
+          "title": "Client hooks for mods",
+          "area": "api",
+          "text": "Mods can hook the game client's own code on players' games, with the same safety checks as server hooks, for what only a player's game does: its screens, input and what the player sees."
+        },
+        {
+          "title": "Kiln tasks, checked in a real game",
+          "text": "Kiln tasks and their world reads and writes (since 0.2.0-dev.29.18) are checked on dedicated servers, on Windows and in a world you host. They stay experimental for now.",
+          "area": "api"
+        },
+        {
+          "title": "Kiln tasks in the main menu",
+          "text": "Mods' tasks can hop to the main menu and run there while no world is loaded (GitHub #83).",
+          "area": "api"
+        },
+        {
+          "title": "Kiln's save writing on the task pool",
+          "text": "Kiln's own save writing runs on Kiln's task pool, in the same order as before, with everything queued written whole when you quit.",
+          "area": "core",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "Data conflicts between mods",
+          "text": "Kiln's lint and the pack checks name every game value two mods set differently, and which one wins.",
+          "area": "tools"
+        },
+        {
+          "title": "Signed Windows files",
+          "text": "Kiln's Windows files are signed (Authenticode, publisher Frostdev), which should stop most antivirus false positives.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "Joining a server with mod buffs",
+          "text": "Joining a server whose mods add buffs works again; update Kiln on the server and on every player's game.",
+          "area": "servers",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "No freeze at a first start under Wine",
+          "text": "A first start no longer freezes now and then under Wine or Proton while Kiln sets up its hooks.",
+          "area": "core",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Play once with EML mods on ShroudForge",
+          "text": "Play once works again for a profile with Enshrouded ModLoader mods that run on ShroudForge.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Launcher fixes from player reports",
+          "text": "Add Mod is no longer undone now and then, support reports are always written, the launcher no longer checks the game folder while in the background, and files still downloading are waited for. Thanks to HadToRegister.",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "X11 when the launcher is slow on Wayland",
+          "text": "On Linux, the launcher restarts once through X11 when it can't use the GPU on Wayland, and remembers it; it can be turned off in Settings. Thanks to Oryx593.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "ShroudForge 1.8.1",
+          "text": "Kiln bundles ShroudForge 1.8.1 (was 1.7.9), so ShroudForge mods made for 1.8, like the current Unified Tweaks, run on Kiln; \"Use my installed ShroudForge\" also accepts 1.8.0 and 1.8.1.",
+          "area": "compat"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.29.23",
       "date": "2026-11-20",
       "title": "A safer save editor",
@@ -2754,15 +2917,16 @@
   ],
   "upcoming": [
     {
-      "version": "0.2.0-dev.30",
+      "version": "0.2.0-dev.30.1",
       "status": "next",
-      "title": "ShroudForge on Kiln, equipment, tasks and the game's UI",
-      "summary": "ShroudForge and EML mods on Kiln's own engine, an equipment API for item rarity, values, tooltips and upgrades, hooks into the game's own UI and client, and Kiln tasks checked in real games and no longer experimental.",
-      "note": "No date: this release ships when it is ready. Items marked as waiting for a game test are built and checked, but not yet seen in a real game. Fixes keep coming as 0.2.0-dev.29 patches until then.",
+      "title": "ShroudForge and EML on Kiln's own engine",
+      "summary": "ShroudForge and EML mods on Kiln's own engine, in a patch after 0.2.0-dev.30. ShroudForge's own runtime (1.8.1 since dev.30) stays available as before.",
+      "patch": true,
+      "note": "Comes as a dev.30 patch in the next few days.",
       "features": [
         {
           "title": "ShroudForge mods on Kiln's own engine",
-          "text": "Kiln can run ShroudForge mods (Lua packages, EML packages and package DLLs made for ShroudForge 1.7.9) on its own engine. ShroudForge's own runtime stays available as today.",
+          "text": "Kiln can run ShroudForge mods (Lua packages, EML packages and package DLLs made for ShroudForge 1.7.9) on its own engine. ShroudForge's own runtime (1.8.1 since dev.30) stays available as before.",
           "area": "compat",
           "gamePending": true
         },
@@ -2773,51 +2937,10 @@
           "gamePending": true
         },
         {
-          "title": "An item's rarity",
-          "text": "Mods can read and set an item's rarity, its unlocked enhancements and its level, on the item itself.",
-          "area": "api",
+          "title": "ShroudForge's glider pitch under Kiln",
+          "text": "ShroudForge 1.8's native glider pitch patch (Unlimited Flight's Upward Gliding) also works with Kiln's own glide steering.",
+          "area": "compat",
           "gamePending": true
-        },
-        {
-          "title": "Any item value, with or without code",
-          "text": "Data packs can set any item's values without code, in the numbers the tooltip shows (power, damage, armour, speed, perks, socket, durability), and mods can do the same from C#.",
-          "area": "content",
-          "gamePending": true
-        },
-        {
-          "title": "Modded values in the game's tooltips",
-          "text": "The game's own item tooltips show modded values and extra lines from mods, in the game's colours.",
-          "area": "content",
-          "gamePending": true
-        },
-        {
-          "title": "Rarity upgrades",
-          "text": "Mods can upgrade an item's rarity from code or with a station or forge action, at the cost and chance they choose; an upgraded item gets its next enhancement slot.",
-          "area": "content",
-          "gamePending": true
-        },
-        {
-          "title": "Rarity rolls at crafting and loot",
-          "text": "Items a mod names can roll their rarity when they are crafted or found as loot.",
-          "area": "content",
-          "gamePending": true
-        },
-        {
-          "title": "Hooks into the game's own UI",
-          "area": "api",
-          "text": "Mods can add to the game's own screens and react to them: buttons in a chest or station screen, marks and clicks on inventory slots that know the item they hold, and extra elements in the game's menus.",
-          "gamePending": true
-        },
-        {
-          "title": "Client hooks for mods",
-          "area": "api",
-          "text": "Mods can hook the game client's own code on players' games, with the same safety checks as server hooks, for what only a player's game does: its screens, input and what the player sees.",
-          "gamePending": true
-        },
-        {
-          "title": "Kiln tasks, checked and no longer experimental",
-          "text": "Kiln tasks and their world reads and writes (since 0.2.0-dev.29.18) are checked in real games, on dedicated servers and on Windows, and are no longer experimental. Kiln's own save writing runs on the task pool.",
-          "area": "api"
         }
       ]
     },
