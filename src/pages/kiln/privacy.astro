@@ -1,6 +1,5 @@
 ---
 import KilnLayout from '../../layouts/KilnLayout.astro';
-import { legalDrafts } from '../../lib/crucible';
 
 // Privacy policy of the Kiln app on Discord (the bot in the Kiln Discord server) and of the Kiln Launcher's Discord
 // features. Linked from the app's settings in Discord's developer portal (Privacy Policy URL), from /kiln/discord and
@@ -14,7 +13,7 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
   path="/kiln/privacy"
 >
   <article class="product-page reading-page">
-    <p class="article-meta"><a href="/kiln">Kiln</a> · Updated <time datetime="2026-11-19">November 19, 2026</time></p>
+    <p class="article-meta"><a href="/kiln">Kiln</a> · Updated <time datetime="2026-11-20">November 20, 2026</time></p>
     <h1>Kiln on Discord: privacy.</h1>
     <p>This page covers two things that Frostdev runs: the <strong>Kiln app on Discord</strong> (the bot in the <a href={invite}>Kiln Discord server</a>, named KilnBot until November 2026) and the <strong>Discord features of the Kiln Launcher</strong>. Discord itself handles your account and your messages under <a href="https://discord.com/privacy">Discord's privacy policy</a>. This website has its own <a href="/privacy">privacy page</a>.</p>
 
@@ -37,7 +36,7 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
     <p>A separate bot in the server, Wallu, answers questions from Kiln's documentation when a message starts with its name. Wallu is run by its own provider under its own privacy policy.</p>
 
     <h2 id="launcher">Discord features in the Kiln Launcher</h2>
-    <p>These features are in the Kiln Launcher from version 0.2.0-dev.29.18. They are optional. The Community page can be hidden in the launcher's settings, and then the launcher makes no request for any of them. With the page shown but you signed out, the only thing the launcher fetches is public: when you open the page, it downloads frostdev.io's news and a list of known problems.</p>
+    <p>These features are in the Kiln Launcher from version 0.2.0-dev.29.18. They are optional. The Community page can be hidden in the launcher's settings, and then the launcher makes no request for any of them. With the page shown but you signed out, the only thing the launcher fetches is public: when you open the page, it downloads frostdev.io's news and a list of known problems, and the Crucible pages and packs you open.</p>
 
     <p><strong>Sign in with Discord.</strong> The sign-in goes through frostdev.io. You approve it on Discord's own page. On a Steam Deck you scan a code with your phone, sign in there, and then also press Approve on a frostdev.io page that shows the code from your Deck. The launcher and frostdev.io's service then learn your Discord user ID, username, display name and avatar. If you leave the box ticked, the sign-in also adds you to the Kiln Discord server. We don't receive your email address, your password or your messages, and we keep no Discord sign-in key, on your computer or on frostdev.io. On a Steam Deck with the box ticked, frostdev.io holds Discord's sign-in key in memory only, never on disk, until you press Approve (at most 10 minutes). It uses it once to add you to the server and then cancels it.</p>
     <p>The launcher's sign-in is a key kept on your own computer. frostdev.io keeps only a fingerprint of it, so it can tell it is yours. Signing out removes the key from your computer and asks frostdev.io to remove the fingerprint. If frostdev.io can't be reached at that moment, the launcher says so, and the fingerprint stays until it has gone 90 days unused. A sign-in you don't use ends after 90 days. A Steam Deck sign-in code lasts 10 minutes and works once. For those 10 minutes frostdev.io keeps a scrambled form of the network address the code came from, so it can warn you when the code came from another network than your phone.</p>
@@ -53,11 +52,13 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
     <p id="keeps"><strong>What frostdev.io keeps.</strong></p>
     <ul>
       <li>A fingerprint of your sign-in: until you sign out, or for 90 days without use.</li>
-      <li>Your name and avatar: while you are signed in.</li>
+      <li>Your name and avatar: while you are signed in, or while you have packs, comments or upvotes on Crucible.</li>
       <li>Your posts: title, state, number of replies, and who replied last and when. Until you delete the post, or for 90 days after it is solved or closed.</li>
       <li>Steam Deck sign-in codes: for 10 minutes.</li>
       <li>Counters that limit how often reports can be sent: for a day.</li>
       <li>If you volunteer as a tester: your hardware details, what it can test, and the test builds you sent results for, until you stop testing.</li>
+      <li>Your Crucible packs, comments and upvotes, and the reports you send about packs, as described under <a href="#crucible">Crucible</a> below.</li>
+      <li>Crucible install counts: per version and day, without your account.</li>
     </ul>
     <p>It keeps no log of requests, no Discord sign-in keys and no report files. "Sign out and forget me" deletes all of it at once.</p>
 
@@ -71,24 +72,21 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
 
     <p><strong>Showing Kiln on your profile.</strong> This is off until you turn it on. The launcher then tells the Discord app on your own computer that you are playing Enshrouded with Kiln, how many mods are on, and for how long. Discord shows that on your profile. It never includes a server name, a world name, a character name or the names of your mods, and nothing is sent to Frostdev for it.</p>
 
-    {legalDrafts && (
-      <section data-crucible-draft aria-labelledby="crucible">
-        <p class="kiln-draft-note"><strong>Draft (Crucible).</strong> Not published: this section and the marked edits wait for the owner's approval (DESIGN.md 10.1) and go live with an announcement in the Kiln Discord, before the launcher release that turns Crucible on.</p>
-        <h2 id="crucible">Crucible</h2>
-        <p><strong>Crucible.</strong> When you share a pack, the launcher uploads it in full: the mods in it, the pack's own data, and the settings files you leave ticked. Files and images are stored with Cloudflare R2. frostdev.io keeps the pack with your Discord user ID, display name and avatar, so it shows who made it and only you can change it. Anyone with the link or code can open a pack; public packs are listed for everyone, with the credits you gave for each mod.</p>
-        <p><strong>Comments and upvotes.</strong> Comments you write and packs you upvote are kept with your Discord user ID; comments show your Discord display name and avatar to everyone. You can delete your comments and take back upvotes at any time.</p>
-        <p><strong>Signing in on the website.</strong> To comment or upvote on frostdev.io you sign in with Discord there, the same way as in the launcher. frostdev.io then sets one cookie in your browser for its Crucible pages only (__Secure-crucible). It holds your sign-in and nothing else, and ends after 30 days without use or when you sign out.</p>
-        <p>We keep your packs until you delete them; a pack shared only by link is deleted after a year without use. "Sign out and forget me" deletes your packs, comments, upvotes and reports; public packs stay installable for people who have them for 30 days, then go.</p>
-        <p><strong>Opening and installing.</strong> You don't need to be signed in. After an install the launcher tells frostdev.io once that a version was installed, without your account; we count installs per version and day and keep a scrambled form of your network address for one day. You can turn this off in Settings.</p>
-        <p><strong>Discord.</strong> /modpack in Discord and the "Get this modpack" button on your Discord profile work as described there; Discord tells us your user ID when you use the command; we keep nothing about it. Reports keep your Discord user ID until handled and 30 days after.</p>
-        <p class="kiln-draft-note">Draft edits elsewhere on this page, once approved: "Your name and avatar: while you are signed in" becomes "… or while you have packs, comments or upvotes on Crucible"; "What frostdev.io keeps" adds packs, comments, upvotes, reports and install counts; the signed-out sentence adds "and the Crucible pages and packs you open"; "Who else is involved" adds Cloudflare R2; the date at the top changes.</p>
-      </section>
-    )}
+    <section aria-labelledby="crucible">
+      <h2 id="crucible">Crucible</h2>
+      <p><strong>Crucible.</strong> When you share a pack, the launcher uploads it in full: the mods in it, the pack's own data, and the settings files you leave ticked. Files and images are stored with Cloudflare R2. frostdev.io keeps the pack with your Discord user ID, display name and avatar, so it shows who made it and only you can change it. Anyone with the link or code can open a pack; public packs are listed for everyone, with the credits you gave for each mod.</p>
+      <p><strong>Comments and upvotes.</strong> Comments you write and packs you upvote are kept with your Discord user ID; comments show your Discord display name and avatar to everyone. You can delete your comments and take back upvotes at any time.</p>
+      <p><strong>Signing in on the website.</strong> To comment or upvote on frostdev.io you sign in with Discord there, the same way as in the launcher. frostdev.io then sets one cookie in your browser for its Crucible pages only (__Secure-crucible). It holds your sign-in and nothing else, and ends after 30 days without use or when you sign out.</p>
+      <p>We keep your packs until you delete them; a pack shared only by link is deleted after a year without use. "Sign out and forget me" deletes your packs, comments, upvotes and reports; public packs stay installable for people who have them for 30 days, then go.</p>
+      <p><strong>Opening and installing.</strong> You don't need to be signed in. After an install the launcher tells frostdev.io once that a version was installed, without your account; we count installs per version and day and keep a scrambled form of your network address for one day. You can turn this off in Settings.</p>
+      <p><strong>Discord.</strong> /modpack in Discord and the "Get this modpack" button on your Discord profile work as described there; Discord tells us your user ID when you use the command; we keep nothing about it. Reports keep your Discord user ID until handled and 30 days after.</p>
+    </section>
 
     <h2 id="others">Who else is involved</h2>
     <ul>
       <li><strong>Discord</strong> stores your account, your messages and your posts. See <a href="https://discord.com/privacy">Discord's privacy policy</a>.</li>
       <li><strong>Cloudflare</strong> delivers frostdev.io, as the <a href="/privacy">site's privacy page</a> describes.</li>
+      <li><strong>Cloudflare R2</strong> stores Crucible's pack files and images, as described under <a href="#crucible">Crucible</a> above.</li>
       <li><strong>GitHub</strong>, when you open an issue in Kiln's repository yourself.</li>
       <li><strong>Anthropic</strong> and <strong>Wallu</strong>, as described under <a href="#ai">AI assistants</a> above.</li>
     </ul>
@@ -111,7 +109,3 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
     <p><a href="/kiln/terms">Terms for Kiln on Discord</a> · <a href="/kiln/discord">Kiln on Discord</a></p>
   </article>
 </KilnLayout>
-
-<style>
-  .kiln-draft-note { padding: 0.6rem 0.9rem; border: 1px dashed #ffcc66; border-radius: 0.5rem; color: #ffcc66; }
-</style>

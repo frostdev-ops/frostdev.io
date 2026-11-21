@@ -204,5 +204,4 @@ dialog.c-dialog .row { display: flex; justify-content: flex-end; gap: 0.5rem; ma
 .c-actions-row { display: flex; gap: 0.5rem; }
 .c-actions-row .c-btn { width: auto; flex: 1; }
 .c-card .body > p.muted { position: relative; z-index: 1; }
-.kiln-draft-note { padding: 0.6rem 0.9rem; border: 1px dashed #f9c74f; border-radius: 0.5rem; color: #f9c74f; }
 .c-prose a, .c-comment .text a, .c-note a, .c-nokiln a, #c-upvote-msg a, #c-compose-area a, .c-table a { text-decoration: underline; text-underline-offset: 0.18em; }

@@ -98,11 +98,11 @@ and the account: "Sign in with Discord" goes to the Kiln relay's `/kiln/signin/w
 `__Secure-crucible` cookie (Path=/kiln/crucible, HttpOnly, 30 days); Sign out and "Sign out and forget me" call the
 service. Text from people is only ever set as text. Look: `src/styles/crucible.css` (the Crucible art's navy, cyan,
 indigo and molten orange inside Kiln's frame), art in `public/projects/crucible/` (webp from the Crucible brand art).
-The Crucible nav link shows on Crucible's pages only. **Legal drafts:** the copyright page
-(`src/pages/kiln/crucible/[legal].astro`) and the Crucible sections of `/kiln/privacy` and `/kiln/terms` are built
-only with `CRUCIBLE_LEGAL_DRAFTS=1` (`src/lib/crucible.ts`), for the owner to read; `ops/deploy.sh` refuses a build
-that has them. They go live, with new dates and an announcement in the Kiln Discord, once the owner approves the text
-and the DMCA agent is registered, before the launcher release that turns Crucible on. **Get Kiln resume:** the pack page's "Get Kiln" opens `/kiln/download?crucible=<CODE>`; with a valid code
+The Crucible nav link shows on Crucible's pages only. **Legal text:** the copyright page
+(`src/pages/kiln/crucible/[legal].astro`, served by the Crucible service at `/kiln/crucible/copyright`) and the Crucible
+sections of `/kiln/privacy` and `/kiln/terms` (`#crucible`) are live since 2026-11-20 (owner-approved). The designated
+agent's registration with the U.S. Copyright Office is pending: the page names the agent but claims no registration
+until it is confirmed. **Get Kiln resume:** the pack page's "Get Kiln" opens `/kiln/download?crucible=<CODE>`; with a valid code
 (`src/lib/crucibleResume.ts`, `src/scripts/kiln/crucibleResume.ts`) the download page shows "Step 2: start Kiln. It
 opens <pack>." (the title from the public `/codes` API, "the pack" when Crucible can't be reached), saves the Windows
 installer and the AppImage as `<name>.crucible-<CODE>.<ext>` (the `download` attribute; the files are on this

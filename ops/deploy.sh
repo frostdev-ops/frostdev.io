@@ -43,11 +43,10 @@ for (const page of pages) assert(statSync(`dist/${page ? page + '/' : ''}index.h
 for (const file of ['robots.txt', 'sitemap.xml', 'ads.txt']) assert(statSync(`dist/${file}`).size > 0);
 for (const file of ['kiln/agents/kiln-modding.zip', 'kiln/agents/kiln-modding/SKILL.md']) assert(statSync(`dist/${file}`).size > 0);
 assert(statSync('dist/_site').isDirectory());
-// Crucible's page shells, read by the Crucible service (src/lib/crucible.ts). Its legal text (the copyright page and
-// the Crucible sections of /kiln/privacy and /kiln/terms) is a draft until the owner approves it: a build made with
-// CRUCIBLE_LEGAL_DRAFTS=1 never goes live.
+// Crucible's page shells and its copyright page, read by the Crucible service (src/lib/crucible.ts).
 for (const shell of ['browse', 'pack', 'creator', 'missing']) assert(statSync(`dist/kiln/crucible/shell/${shell}/index.html`).size > 0);
-assert(!existsSync('dist/kiln/crucible/copyright'), 'Crucible legal drafts in the build (unset CRUCIBLE_LEGAL_DRAFTS)');
+assert(statSync('dist/kiln/crucible/copyright/index.html').size > 0);
+for (const page of ['kiln/privacy', 'kiln/terms']) assert(readFileSync(`dist/${page}/index.html`, 'utf8').includes('id="crucible"'), `No Crucible section in ${page}`);
 const allowed = new Set(['index.html', '404.html', 'rimeward', 'rimewire', 'crosspane', 'glaze', 'kiln',
   'privacy', 'guides', '_site', 'projects', 'robots.txt', 'sitemap.xml', 'ads.txt']);
 for (const name of readdirSync('dist')) assert(allowed.has(name), `Unexpected static output: ${name}`);

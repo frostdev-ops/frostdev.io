@@ -1,14 +1,13 @@
 ---
 import KilnLayout from '../../../layouts/KilnLayout.astro';
 import CrucibleBar from '../../../components/crucible/CrucibleBar.astro';
-import { legalDrafts } from '../../../lib/crucible';
 import '../../../styles/crucible.css';
 
-// Crucible's copyright page (DESIGN.md 10.3). DRAFT: built only with CRUCIBLE_LEGAL_DRAFTS=1 until the owner approves
-// the text and the registered DMCA agent's details are in (src/lib/crucible.ts). The live build has no such page; the
-// Crucible service answers /kiln/crucible/copyright from this file once it is built.
+// Crucible's copyright page (DESIGN.md 10.3), approved by the owner on 2026-11-20. The Crucible service answers
+// /kiln/crucible/copyright from this file's build (dist/kiln/crucible/copyright/index.html). The designated agent's
+// registration with the U.S. Copyright Office is pending: name no registration here until it is confirmed.
 export function getStaticPaths() {
-  return legalDrafts ? [{ params: { legal: 'copyright' } }] : [];
+  return [{ params: { legal: 'copyright' } }];
 }
 ---
 
@@ -17,10 +16,9 @@ export function getStaticPaths() {
   description="How mod authors and other rights holders ask for a pack on Crucible to be taken down, and how creators answer."
   path="/kiln/crucible/copyright"
 >
-  <div class="crucible" data-crucible-draft>
+  <div class="crucible">
     <CrucibleBar />
     <article class="product-page reading-page">
-      <p class="c-note warn"><strong>Draft.</strong> Not published. Waiting for the owner's approval and the registered agent's details.</p>
       <p class="article-meta"><a href="/kiln/crucible">Crucible</a> · Updated <time datetime="2026-11-20">November 20, 2026</time></p>
       <h1>Copyright on Crucible.</h1>
       <p>Crucible is where Enshrouded players share modpacks. A pack carries the files of the mods in it, uploaded by the pack's creator, and every public pack credits each mod's author with a link to where the mod comes from. If a pack shares your work without your permission, tell us and we take it down.</p>
@@ -35,7 +33,7 @@ export function getStaticPaths() {
         <li>a statement that the information in your notice is accurate and, under penalty of perjury, that you are the owner or allowed to act for the owner;</li>
         <li>your physical or electronic signature (typing your full name is fine).</li>
       </ul>
-      <p>Designated agent: <em>[name and postal address appear here once the agent is registered with the U.S. Copyright Office]</em>.</p>
+      <p>Designated agent: James Kueller, 46 Jamesburg Rd, Hewitt, NJ 07421, <a href="mailto:admin@frostdev.io">admin@frostdev.io</a>.</p>
 
       <h2 id="what-happens">What happens next</h2>
       <ul>
