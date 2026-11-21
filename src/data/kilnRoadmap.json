@@ -1,6 +1,68 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.30.2",
+      "date": "2026-11-21",
+      "title": "ShroudForge mods on Kiln's own engine and Crucible polish",
+      "summary": "ShroudForge mods on Kiln's own engine as a choice in Settings, off by default (Kiln's bundled ShroudForge 1.8.1 stays the default); Crucible asks before a first share, installs a pack without playing and looks like Kiln; Kiln's overlay works next to ReShade; Pack Studio reads the game's items by itself.",
+      "patch": true,
+      "features": [
+        {
+          "title": "ShroudForge mods on Kiln's own engine",
+          "text": "Kiln can run ShroudForge mods (Lua packages, EML packages that need ShroudForge's runtime, and package DLLs made for ShroudForge 1.7.9) on its own engine. It is off by default: Kiln's bundled ShroudForge (1.8.1 since dev.30) stays the default, and kiln mode is a choice on the ShroudForge card in Settings.",
+          "area": "compat",
+          "gamePending": true
+        },
+        {
+          "title": "EML packages and textures in kiln mode",
+          "text": "In kiln mode, EML packages that need ShroudForge's runtime run on the same engine, and these packages can decode and encode game textures in Lua as ShroudForge's image functions do. Plain EML mods keep running on Kiln's EML engine as before.",
+          "area": "compat",
+          "gamePending": true
+        },
+        {
+          "title": "Share to Crucible asks first",
+          "text": "The first share of a profile shows what goes up (the mod list and files Crucible doesn't have yet), what stays on your PC (mod settings, your own data edits) and that saves are never sent; What is Crucible? explains the rest.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "Install a pack without playing",
+          "text": "The pack preview has Install next to Install and play: the pack becomes its own profile, named after the pack and its creator, without starting the game, even while Enshrouded runs.",
+          "area": "launcher"
+        },
+        {
+          "title": "Crucible looks like Kiln",
+          "text": "Share, pack codes, the pack preview, updates and Pack Studio use Kiln's colours and plainer words; the preview shows Crucible's checks for packs from a code or link too.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "A missing EMF mod is named before Play",
+          "text": "An EMF mod whose required mod isn't installed says so on its row before you play, with how to get EMF's own mods such as lua.",
+          "area": "launcher",
+          "kind": "improved"
+        },
+        {
+          "title": "Kiln's overlay next to ReShade",
+          "text": "The overlay crash guard no longer turns Kiln's overlay off after ReShade's slow first frames, and an unseen Kiln menu falls back to the game's own Mods rows.",
+          "area": "core",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Pack Studio reads the game's items",
+          "text": "Pack Studio reads the game's items when it opens, so the Items, Recipes and Loot pickers list them without a command-line step, and it hides the game's old and test entries unless you ask.",
+          "area": "tools",
+          "kind": "improved"
+        },
+        {
+          "title": "\"Any of a group\" recipe inputs",
+          "text": "Pack Studio's recipe inputs can be any item of a group of the game's items, like any wood or any stone, chosen by typing any item of the group.",
+          "area": "tools"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.30.1",
       "date": "2026-11-20",
       "title": "Clipboard prompt and ShroudForge's glider pitch",
@@ -2936,24 +2998,32 @@
   ],
   "upcoming": [
     {
-      "version": "0.2.0-dev.30.2",
+      "version": "0.2.0-dev.30.3",
       "status": "next",
-      "title": "ShroudForge and EML on Kiln's own engine",
-      "summary": "ShroudForge and EML mods on Kiln's own engine, in a patch after 0.2.0-dev.30.1. ShroudForge's own runtime (1.8.1 since dev.30) stays available as before.",
+      "title": "More of ShroudForge on Kiln's own engine",
+      "summary": "The parts of ShroudForge's API that kiln mode does not have in 0.2.0-dev.30.2, and textures in code for Kiln mods.",
       "patch": true,
-      "note": "Comes as a dev.30 patch in the next few days.",
       "features": [
         {
-          "title": "ShroudForge mods on Kiln's own engine",
-          "text": "Kiln can run ShroudForge mods (Lua packages, EML packages and package DLLs made for ShroudForge 1.7.9) on its own engine. ShroudForge's own runtime (1.8.1 since dev.30) stays available as before.",
-          "area": "compat",
-          "gamePending": true
+          "title": "Mod keyboard shortcuts in kiln mode",
+          "text": "ShroudForge mods' keyboard shortcuts (shroudforge.input) work in kiln mode.",
+          "area": "compat"
         },
         {
-          "title": "EML mods on Kiln's own engine",
-          "text": "EML mods run on the same engine, and EML and Kiln mods can decode and encode game textures in code.",
+          "title": "In-game world changes in kiln mode",
+          "text": "ShroudForge mods can query and change entities, props and voxels in the game in kiln mode.",
+          "area": "compat"
+        },
+        {
+          "title": "Kiln mode's own fallback notice",
+          "text": "When Kiln's UI is missing, kiln mode still tells you which ShroudForge mods were skipped and why.",
           "area": "compat",
-          "gamePending": true
+          "kind": "improved"
+        },
+        {
+          "title": "Textures in code for Kiln mods",
+          "text": "Kiln (C#) mods can decode and encode game textures in code.",
+          "area": "api"
         }
       ]
     },
