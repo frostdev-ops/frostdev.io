@@ -1,13 +1,14 @@
 ---
 title: "Kiln mode for ShroudForge mods"
 nav: "Kiln mode"
-description: "Kiln can run ShroudForge mods on its own interpreter. A preview, off by default in 0.2.0-dev.30.2: how to turn it on, what works, what doesn't yet, and what a mod author can see."
+description: "Kiln can run ShroudForge mods on its own interpreter. New in 0.2.0-dev.30.2 and off by default: how to turn it on, what works, what doesn't yet, and what a mod author can see."
 status: "pending"
 updated: "2026-11-21"
 ---
 
-> **New in 0.2.0-dev.30.2, as a preview.** Kiln mode is off by default and stays off unless you turn it on. It passed
-> Kiln's tests, but nobody has checked it in a real game yet.
+> **New in 0.2.0-dev.30.2.** Kiln mode is off by default and stays off unless you choose it. It passed Kiln's tests,
+> but it has not been checked in a real game yet. Want to help test it? [Testing kiln mode](https://github.com/frostdev-ops/kiln/blob/main/docs/kiln/shroudforge-kiln-mode-testing.md)
+> lists seven things to try on a copied world and what to send us.
 
 Kiln mode is a second way to run ShroudForge mods. Kiln reads your mod and runs it on its own interpreter, with no
 separate ShroudForge runtime in the game. The default does not change: Kiln's bundled ShroudForge runs ShroudForge mods
@@ -18,16 +19,8 @@ For how players install ShroudForge mods and how Kiln runs them by default, see
 
 ## Turn it on
 
-1. Add the preview line to `kiln/kiln.json` in the game folder (no trailing comma):
-
-   ```json
-   { "preview": ["kiln-sfi.interpreter"] }
-   ```
-
-   If the file already has other keys, add `"preview"` next to them.
-2. In the launcher, open **Settings** and choose **Kiln's interpreter** on the **ShroudForge** card. The choice is
-   greyed out until the preview line is there.
-3. Start the game through Kiln. The choice is per game and applies from the next start; the card shows what the last
+1. In the launcher, open **Settings** and choose **Kiln's interpreter** on the **ShroudForge** card.
+2. Start the game through Kiln. The choice is per game and applies from the next start; the card shows what the last
    start used.
 
 To go back, choose **Kiln's bundled ShroudForge** on the same card. Your mods, their settings and your own mod folders

@@ -85,6 +85,16 @@ with a **Station** (or **Crafted by hand**), inputs and outputs.
 
 ![Saved: content/recipes.json, and the live check "Lint: 0 errors, 0 warnings"](/projects/kiln/shots/studio-recipes-saved.webp)
 
+#### Any of a group
+
+Many of the game's recipes take any item of a group, such as any wood or any stone. Your recipes can too: in a recipe's
+inputs, press **+ Any of a group**, type any item of the group (for example "pine" or "limestone") and choose it. The
+chip shows the group in plain words, like "Any of: Wood Logs, Hardwood, Palm Wood Logs, +2 more"; its arrow lists every
+item of the group and the game recipes that already use it. When an input item belongs to exactly one group, the editor
+offers **Accept any of its group?**. Outputs are always single items. New in 0.2.0-dev.30.2.
+
+![A new recipe whose inputs are any wood (expanded: its items and the game recipes that take it) and any stone](/projects/kiln/shots/studio-recipes-category.webp)
+
 ### Live checks
 
 The line at the top right (**Lint: 0 errors, 0 warnings**) checks the whole layer after every save, with Kiln's own

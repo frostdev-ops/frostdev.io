@@ -3,7 +3,7 @@ title: "EMF mods"
 nav: "EMF mods"
 description: "Install EMF DLL and Lua mods with API v46 (EMF 0.6.14) support, current differences and server/client evidence limits."
 status: "partial"
-updated: "2026-11-19"
+updated: "2026-11-21"
 ---
 
 Kiln runs mods made for EMF (the Enshrouded Modding Framework), DLL and Lua mods, up to EMF 0.6.14 / API v46 since
@@ -35,6 +35,11 @@ beside its DLL mods. Before, they were left out as "not a recognised mod package
   the starter in EMF's download are left out, as EMF doesn't install them either.
 - Lua mods you put into `emf/mods` yourself now show as loading instead of "Can't run". When EMF's `lua` mod is missing
   or switched off, the launcher says that instead.
+- **A missing required mod is named before Play** (0.2.0-dev.30.2). An EMF mod whose required mod isn't installed,
+  switched on or in its version range says so on its row before you play: "Needs EMF's lua mod >=1.36, which isn't
+  installed." For EMF's own mods (lua and the Lua mods in EMF's download) it adds that they come with EMF's release:
+  add EMF's zip with **Add mods**, or open **Get EMF**. With EMF's own loader installed, EMF decides at the start, so
+  the launcher only shows what EMF said after a start.
 - EMF's own files in its download (its core, its builder of EML content and its frame-time recorder) are no longer
   added as DLL mods, which Kiln would have loaded at every start: they are part of EMF, and Kiln says so.
 
