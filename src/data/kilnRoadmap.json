@@ -148,8 +148,7 @@
           "title": "Joining a server with mod buffs",
           "text": "Joining a server whose mods add buffs works again; update Kiln on the server and on every player's game.",
           "area": "servers",
-          "kind": "fix",
-          "gamePending": true
+          "kind": "fix"
         },
         {
           "title": "No freeze at a first start under Wine",
