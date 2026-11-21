@@ -188,7 +188,7 @@ body:has(.kiln-root) .skip-link { background: #0f0d0c; }
 .kiln-hub-note { padding: 1.25rem 1.4rem; border: 1px solid var(--k-line); border-left: 3px solid var(--k-gold); border-radius: 0.2rem 0.75rem 0.75rem 0.2rem; background: var(--k-bg1); font-size: 0.88rem; line-height: 1.7; }
 .kiln-hub-note strong { color: var(--k-text0); }
 .kiln-hub-note a { color: var(--k-ember-300); text-decoration: underline; text-underline-offset: 0.2em; }
-.kiln-hub-start { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin-bottom: 3.5rem; }
+.kiln-hub-start { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 1.25rem; margin-bottom: 3.5rem; }
 .kiln-hub-start a { display: flex; flex-direction: column; min-width: 0; padding: 1.6rem; border: 1px solid var(--k-line); border-radius: 0.75rem; background: var(--k-bg1); transition: border-color 0.2s, transform 0.2s; }
 .kiln-hub-start a:hover { border-color: var(--k-ember-400); transform: translateY(-3px); }
 .kiln-hub-start .who { color: var(--k-gold); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }

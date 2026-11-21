@@ -6,6 +6,9 @@ status: "works"
 updated: "2026-11-19"
 ---
 
+This page is about the modpack a **server** offers when you join it. For packs your friends share with a link or a
+code, see [Crucible: install a pack](/kiln/wiki/crucible-install).
+
 ## What a server needs from you
 
 | The mod needs | You need | Typical mods |

@@ -5,6 +5,7 @@ export const kilnSource = 'https://github.com/frostdev-ops/kiln';
 // fail the build when a file is missing here or a slug has no file, so the two lists cannot drift.
 export const kilnWikiSections = [
   { id: 'players', title: 'Players', pages: ['install', 'profiles', 'in-game', 'languages', 'modpacks', 'other-mods', 'eml-shroudforge', 'emf-mods', 'more-frameworks'] },
+  { id: 'crucible', title: 'Crucible modpacks', pages: ['crucible-share', 'crucible-install', 'pack-studio', 'crucible-website'] },
   { id: 'servers', title: 'Server admins', pages: ['dedicated-servers', 'servers', 'permissions', 'admin-pages'] },
   { id: 'modding', title: 'Modding', pages: ['first-mod', 'code-mods', 'hooks', 'events', 'world-programs', 'tasks', 'tasks-world', 'manifest', 'multiplayer', 'network', 'data-packs', 'game-data', 'onboot'] },
   {

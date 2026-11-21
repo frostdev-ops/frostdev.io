@@ -8,6 +8,7 @@ const bySlug = new Map(Object.entries(docs).map(([file, doc]) => [file.replace(/
 const pageCount = kilnWikiSections.reduce((n, section) => n + section.pages.length, 0);
 const start = [
   { who: 'Players', title: 'Play with mods', text: 'Install Kiln, keep profiles, join modded servers.', href: '/kiln/wiki/install', go: 'Install Kiln' },
+  { who: 'Modpacks', title: 'Share modpacks', text: 'Crucible: your mods as a link or code. Install a pack in two clicks.', href: '/kiln/wiki/crucible-share', go: 'Share your mods' },
   { who: 'Server admins', title: 'Run a server', text: 'Install, update and run servers. Manage them live.', href: '/kiln/wiki/servers', go: 'Run a server' },
   { who: 'Modders', title: 'Write a mod', text: 'Template, build, hot reload, tests in the server.', href: '/kiln/wiki/first-mod', go: 'Your first mod' },
 ];
