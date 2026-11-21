@@ -3,7 +3,7 @@ title: "EML and ShroudForge mods"
 nav: "EML and ShroudForge"
 description: "Kiln runs EML data mods and ShroudForge's Lua mods unchanged, with no extra loader and no Wine settings."
 status: "pending"
-updated: "2026-11-19"
+updated: "2026-11-21"
 ---
 
 EML (the Enshrouded Mod Loader) and ShroudForge are the frameworks with the most Enshrouded mods. Both come with Kiln
@@ -165,6 +165,10 @@ Measured on a lab server under Wine, with 7.5 GiB of real server data. Not measu
 
 Kiln ships ShroudForge's runtime, built from Kiln's fork of ShroudForge. So ShroudForge mods run even if you never
 installed ShroudForge.
+
+**Kiln mode (preview, 0.2.0-dev.30.2).** Kiln can also run ShroudForge mods on its own interpreter, with no separate
+ShroudForge runtime in the game. It is off by default; Kiln's bundled ShroudForge stays the default for every install.
+How to turn it on, what works and what doesn't yet: [Kiln mode](/kiln/wiki/kiln-mode).
 
 1. Put the mod in `mods/<mod>/` in the game folder, or in the folder set in ShroudForge's settings. Or drop it on the
    launcher window, as a zip, 7z or rar. A package whose id has capitals imports too (ShroudForge's own id rule applies:
