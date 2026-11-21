@@ -1,12 +1,13 @@
 // Browse and search public packs (DESIGN.md 1.4): words, tags, game build, where it runs, server pack, number of mods,
 // sort; the query lives in the address so a search can be shared and Back works.
-import { $, api, ApiError, h, packCard, pageData, type Pack, say } from './api.ts';
+import { $, api, ApiError, h, packCard, pageData, type Pack, say, skeletonCards } from './api.ts';
+import { countLine, emptyBrowse, FILTER_KEYS } from '../../lib/crucibleView.ts';
 import './account.ts';
 
 interface Results { packs: Pack[]; page: number; more: boolean }
 interface Facets { tags: { tag: string; n: number }[]; builds: { build: number; n: number }[] }
 
-const KEYS = ['q', 'tags', 'build', 'side', 'server', 'mods', 'sort'] as const;
+const KEYS = FILTER_KEYS;
 type State = Record<(typeof KEYS)[number], string>;
 const form = $<HTMLFormElement>('c-facets');
 const list = $('c-results');
@@ -49,27 +50,35 @@ const query = (s: State, p = 1) => {
   if (p > 1) u.set('page', String(p));
   return u.toString();
 };
-const describe = (s: State) => {
-  const bits = [];
-  if (s.q) bits.push(`matching “${s.q}”`);
-  if (s.tags) bits.push(`tagged ${s.tags.split(',').join(', ')}`);
-  if (s.build) bits.push(`for build ${s.build}`);
-  return bits.join(' ');
-};
 
+let retry: () => void = () => {};
 async function load(s: State, { append = false } = {}) {
   const my = ++seq;
-  if (!append) { page = 1; list.setAttribute('aria-busy', 'true'); say($('c-count'), 'Loading packs…'); }
+  $('c-failed').hidden = true;
+  if (!append) {
+    page = 1;
+    list.setAttribute('aria-busy', 'true');
+    list.replaceChildren(...skeletonCards(6));
+    $('c-empty').hidden = true;
+    more.hidden = true;
+    $('c-count').classList.remove('visually-hidden');
+    say($('c-count'), 'Loading packs…');
+  } else more.disabled = true;
   let r: Results;
   try {
     r = await api<Results>('GET', `/search?${query(s, page)}`);
   } catch (e) {
     if (my !== seq) return;
     list.removeAttribute('aria-busy');
-    say($('c-count'), e instanceof ApiError ? e.message : 'Packs could not be loaded.');
+    more.disabled = false;
+    if (append) { page--; } else { list.replaceChildren(); say($('c-count'), ''); }
+    say($('c-failed-text'), e instanceof ApiError ? e.message : "Packs couldn't be loaded. Try again in a minute.");
+    $('c-failed').hidden = false;
+    retry = () => load(s, { append });
     return;
   }
   if (my !== seq) return;
+  more.disabled = false;
   show(r, s, append);
 }
 
@@ -80,17 +89,30 @@ function show(r: Results, s: State, append: boolean) {
   for (const p of r.packs) list.append(packCard(p));
   const n = list.children.length;
   $('c-empty').hidden = n > 0;
+  if (!n) {
+    const e = emptyBrowse(s);
+    say($('c-empty-title'), e.title);
+    say($('c-empty-text'), e.text);
+    $('c-empty-none').hidden = e.kind !== 'none';
+    $('c-empty-nomatch').hidden = e.kind !== 'nomatch';
+  }
   more.hidden = !r.more;
-  say($('c-count'), n ? `${n}${r.more ? '+' : ''} pack${n === 1 && !r.more ? '' : 's'} ${describe(s)}`.trim() : 'No packs found.');
+  say($('c-count'), countLine(n, r.more, s));
+  // the empty box says it already; the line stays for screen readers
+  $('c-count').classList.toggle('visually-hidden', !n);
   if (append) list.children[firstNew]?.querySelector('a')?.focus();
 }
 
 async function facets(s: State) {
   let f: Facets;
-  try { f = await api<Facets>('GET', '/facets'); } catch { return; }
+  try { f = await api<Facets>('GET', '/facets'); } catch {
+    say($('c-tags-empty'), "Tags couldn't be loaded.");
+    $('c-tags-empty').hidden = false;
+    return;
+  }
   const box = $('c-tags');
+  $('c-tags-empty').hidden = f.tags.length > 0;
   if (f.tags.length) {
-    $('c-tags-empty').hidden = true;
     for (const t of f.tags) {
       box.append(h('label', {}, h('input', { type: 'checkbox', name: 'tag', value: t.tag }), h('span', { text: t.tag }), h('span', { class: 'n', text: String(t.n), 'aria-label': `${t.n} packs` })));
     }
@@ -120,4 +142,10 @@ form.addEventListener('change', go);
 form.addEventListener('reset', () => setTimeout(go));
 $<HTMLSelectElement>('c-sort').addEventListener('change', go);
 more.addEventListener('click', () => { page++; load(readState(), { append: true }); });
+$('c-retry').addEventListener('click', () => retry());
+$('c-empty-clear').addEventListener('click', () => {
+  $<HTMLInputElement>('c-q').value = '';
+  form.reset(); // the reset listener runs go()
+  $<HTMLInputElement>('c-q').focus();
+});
 window.addEventListener('popstate', () => { const s = readState(); writeForm(s); load(s); });

@@ -1,7 +1,11 @@
 // A pack's page (DESIGN.md 1.3, 7): what it is, who made it, credits with links, versions, size, game build, checks,
 // comments, upvotes, reports, and "Open in Kiln" (kiln://crucible/<code>) with the "Get Kiln" steps when nothing opens.
-import { $, api, ApiError, avatar, type Comment, coverUrl, creatorPath, fmtNum, fmtSize, h, linkified, pageData, type Pack, plural, say, signInUrl, timeEl, type Version } from './api.ts';
+import { $, type Account, api, ApiError, avatar, type Comment, coverUrl, creatorPath, failed, fmtNum, fmtSize, h, linkified, pageData, type Pack, plural, say, signInUrl, timeEl, type Version } from './api.ts';
 import { me } from './account.ts';
+import { checksView, kindLabel } from '../../lib/crucibleView.ts';
+
+/** Mods shown before "Show all": a big pack's table stays short until asked. */
+const CREDITS_SHOWN = 20;
 
 interface Data { kind: 'pack'; pack: Pack; latest: Version | null }
 const MATCH: Record<string, [string, string]> = {
@@ -22,7 +26,14 @@ async function start() {
       if (m?.[1]) { const c = await api<{ pack: Pack }>('GET', `/codes/${m[1]}`); d = { kind: 'pack', ...(await api<{ pack: Pack; latest: Version | null }>('GET', `/packs/${c.pack.id}`)) }; }
       else if (m?.[2]) d = { kind: 'pack', ...(await api<{ pack: Pack; latest: Version | null }>('GET', `/packs/${m[2]}`)) };
     } catch { /* below */ }
-    if (!d) { say($('c-title'), 'This pack is not on Crucible'); $('c-pack').removeAttribute('aria-busy'); return; }
+    if (!d) {
+      $('c-pack').replaceWith(h('section', { class: 'c-empty' },
+        h('img', { src: '/projects/crucible/empty.webp', width: 480, height: 360, alt: '' }),
+        h('h1', { text: 'This pack is not on Crucible' }),
+        h('p', { text: "We couldn't find that pack. It may have been deleted or taken down; copies people installed keep working." }),
+        h('p', {}, h('a', { class: 'c-btn secondary', href: '/kiln/crucible', text: 'Browse packs' }))));
+      return;
+    }
   }
   pack = d.pack;
   latest = d.latest;
@@ -35,6 +46,7 @@ async function start() {
   wireUpvote();
   wireReport();
   $('c-pack').removeAttribute('aria-busy');
+  $('c-side').removeAttribute('inert');
   loadVersions();
   const account = await me();
   if (account) {
@@ -54,7 +66,7 @@ function renderHead() {
   const owner = $<HTMLAnchorElement>('c-owner');
   owner.href = creatorPath(pack.owner.id);
   owner.replaceChildren(avatar(pack.owner, 28), h('span', { text: `by ${pack.owner.name}` }));
-  $('c-version').replaceChildren(...(latest ? [` · v${latest.version} (version ${latest.number}), `, timeEl(latest.published ?? latest.created) ?? ''] : []));
+  $('c-version').replaceChildren(...(latest ? [`v${latest.version}`, h('span', { 'aria-hidden': 'true', text: ' · ' }), timeEl(latest.published ?? latest.created) ?? ''] : []));
   say($('c-summary'), pack.summary);
   $('c-tagsline').replaceChildren(...pack.tags.map((t) => h('li', {}, h('a', { class: 'c-chip', href: `/kiln/crucible?tags=${encodeURIComponent(t)}`, text: t }))));
   say($('c-code'), pack.code);
@@ -84,7 +96,7 @@ function renderCredits() {
   const box = $('c-credits');
   const credits = latest?.credits ?? [];
   if (!credits.length) { box.replaceChildren(h('p', { class: 'muted', text: 'This pack lists no mods yet.' })); return; }
-  const rows = credits.map((c) => {
+  const rows = credits.map((c, i) => {
     const [label, tone] = MATCH[c.match ?? 'manual'] ?? MATCH.manual;
     let src: Node | string = h('span', { class: 'muted', text: 'no link' });
     if (c.source) {
@@ -92,46 +104,50 @@ function renderCredits() {
       try { host = new URL(c.source).host.replace(/^www\./, ''); } catch { /* shown as is */ }
       src = h('a', { href: c.source, rel: 'nofollow ugc noopener', text: host, 'aria-label': `Source of ${c.id}: ${host}` });
     }
-    return h('tr', {},
-      h('th', { scope: 'row' }, h('span', { text: c.id }), h('br'), h('span', { class: 'id', text: c.kind })),
+    return h('tr', { hidden: i >= CREDITS_SHOWN },
+      h('th', { scope: 'row' }, h('span', { class: 'mod', text: c.id }), h('span', { class: 'kind', text: kindLabel(c.kind) })),
       h('td', { text: c.version ?? '' }),
       h('td', {}, c.author ? h('span', { text: c.author }) : h('span', { class: 'muted', text: 'not credited yet' })),
       h('td', {}, src),
       h('td', {}, h('span', { class: `c-chip ${tone}`, text: label })));
   });
+  const tbody = h('tbody', {}, ...rows);
+  const all = credits.length > CREDITS_SHOWN
+    ? h('div', { class: 'c-more' }, h('button', { class: 'c-btn secondary', type: 'button', 'aria-controls': 'c-credits-table', text: `Show all ${credits.length} mods`, onclick: (e: Event) => {
+      tbody.querySelectorAll('tr[hidden]').forEach((r) => r.removeAttribute('hidden'));
+      (e.currentTarget as HTMLElement).parentElement?.remove();
+      box.querySelector<HTMLElement>('.c-table-wrap')?.focus();
+    } }))
+    : null;
   box.replaceChildren(
-    h('p', { class: 'muted', text: `${plural(credits.length, 'mod')} in version ${latest?.number}. Credits name each mod's author and where the mod comes from.` }),
-    h('div', { class: 'c-table-wrap', tabindex: '0', role: 'region', 'aria-label': 'Mods and credits' },
-      h('table', { class: 'c-table' },
+    h('p', { class: 'muted', text: `${plural(credits.length, 'mod')} in this version, each credited to its author with a link to where it comes from.` }),
+    h('div', { class: 'c-table-wrap', tabindex: '0', role: 'region', 'aria-label': 'Mods table' },
+      h('table', { class: 'c-table', id: 'c-credits-table' },
         h('thead', {}, h('tr', {}, ...['Mod', 'Version', 'Author', 'Source', 'Credit'].map((t) => h('th', { scope: 'col', text: t })))),
-        h('tbody', {}, ...rows))));
+        tbody)),
+    ...(all ? [all] : []));
 }
 
 function renderChecks() {
   const box = $('c-checks');
-  const c = latest?.checks;
-  if (!c) { box.replaceChildren(h('p', { class: 'muted', text: 'This version has not been checked yet.' })); return; }
-  const errors = c.errors ?? [], notes = c.notes ?? [];
-  const head = errors.length
-    ? h('p', { class: 'c-note bad' }, h('strong', { text: `Checks failed: ${plural(errors.length, 'problem')}. ` }), 'Read them before you install.')
-    : h('p', { class: notes.length ? 'c-note warn' : 'c-note' }, h('strong', { text: notes.length ? `Checks: ${plural(notes.length, 'note')}.` : 'Checks passed.' }));
-  const list = h('ul', { class: 'c-checks' },
-    ...errors.map((t) => h('li', {}, h('span', { class: 'c-chip bad', text: 'problem' }), h('span', { text: t }))),
-    ...notes.map((t) => h('li', {}, h('span', { class: 'c-chip warn', text: 'note' }), h('span', { text: t }))));
-  list.hidden = !errors.length && !notes.length;
-  box.replaceChildren(head, list,
-    h('p', { class: 'muted', text: c.full ? 'Crucible checked the files: format, sizes, zip safety, known-bad files and a code scan.' : 'Crucible checked the pack\'s list of files. Crucible checks packs automatically but does not review them.' }));
+  const v = checksView(latest?.checks);
+  const head = h('p', { class: `c-note ${({ ok: 'good', note: '', warn: 'warn', bad: 'bad', wait: 'wait', none: '' } as const)[v.tone]}` },
+    h('strong', { text: `${v.title}.` }), v.lead ? ` ${v.lead}` : '');
+  const chip = { problem: 'bad', warning: 'warn', note: '' } as const;
+  const list = h('ul', { class: 'c-checks' }, ...v.items.map((i) => h('li', {}, h('span', { class: `c-chip ${chip[i.level]}`, text: i.level }), h('span', { text: i.text }))));
+  list.hidden = !v.items.length;
+  box.replaceChildren(head, list, v.foot ? h('p', { class: 'muted c-checks-foot', text: v.foot }) : '');
 }
 
 async function loadVersions() {
   const ol = $('c-versions');
   let vs: Version[] = [];
   try { vs = (await api<{ versions: Version[] }>('GET', `/packs/${pack.id}/versions`)).versions; } catch (e) {
-    ol.replaceChildren(h('li', { class: 'c-error', text: e instanceof ApiError ? e.message : 'Versions could not be loaded.' }));
+    ol.replaceChildren(h('li', { class: 'c-plain' }, failed(e instanceof ApiError ? e.message : "Versions couldn't be loaded.", loadVersions)));
     return;
   }
   ol.replaceChildren(...vs.map((v) => h('li', {},
-    h('div', { class: 'head' }, h('strong', { text: `v${v.version}` }), h('span', { class: 'muted', text: `version ${v.number}` }),
+    h('div', { class: 'head' }, h('strong', { text: `v${v.version}` }),
       timeEl(v.published ?? v.created), h('span', { class: 'muted', text: fmtSize(v.size) }),
       v.status === 'withdrawn' ? h('span', { class: 'c-chip warn', text: 'withdrawn' }) : null,
       v.id === pack.latest ? h('span', { class: 'c-chip ok', text: 'current' }) : null),
@@ -163,7 +179,7 @@ function wireOpen() {
 
 function wireCopy() {
   $('c-copy').addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(pack.url); say($('c-copied'), `Link copied: ${pack.url}`); } catch { say($('c-copied'), `Copy this link: ${pack.url}`); }
+    try { await navigator.clipboard.writeText(pack.url); say($('c-copied'), 'Link copied.'); } catch { say($('c-copied'), `Copy this link: ${pack.url}`); }
   });
 }
 
@@ -172,6 +188,7 @@ function setUpvote(on: boolean, n: number) {
   const b = $('c-upvote');
   b.setAttribute('aria-pressed', String(on));
   b.title = on ? 'Take back your upvote' : 'Upvote this pack';
+  say($('c-upvote-word'), on ? 'Upvoted' : 'Upvote');
   say($('c-upvotes'), fmtNum(n));
 }
 
@@ -179,18 +196,28 @@ function needSignIn(msgEl: HTMLElement, what: string) {
   msgEl.replaceChildren(h('a', { href: signInUrl(), text: 'Sign in with Discord' }), ` to ${what}.`);
 }
 
+/** Why a signed-in account can't upvote or comment (null when it can). */
+function cannotTakePart(a: Account): (Node | string)[] | null {
+  if (a.banned) return ['This account can no longer upvote or comment on Crucible.'];
+  if (!a.eligible) return [h('a', { href: '/kiln/discord', text: 'Join the Kiln Discord' }), ' to upvote and comment. Your Discord account also needs to be at least 3 days old.'];
+  return null;
+}
+
 function wireUpvote() {
   const b = $<HTMLButtonElement>('c-upvote');
   b.addEventListener('click', async () => {
     const msg = $('c-upvote-msg');
-    if (!(await me())) return needSignIn(msg, 'upvote');
+    const a = await me();
+    if (!a) return needSignIn(msg, 'upvote');
+    const why = cannotTakePart(a);
+    if (why) return msg.replaceChildren(...why);
     const on = b.getAttribute('aria-pressed') !== 'true';
     b.disabled = true;
     try {
       const r = await api<{ upvoted: boolean; upvotes: number }>(on ? 'POST' : 'DELETE', `/packs/${pack.id}/upvote`);
       setUpvote(r.upvoted, r.upvotes);
       say(msg, r.upvoted ? 'Upvoted.' : 'Upvote taken back.');
-    } catch (e) { say(msg, e instanceof ApiError ? e.message : 'That did not work.'); } finally { b.disabled = false; }
+    } catch (e) { say(msg, e instanceof ApiError ? e.message : "That didn't work. Try again in a minute."); } finally { b.disabled = false; }
   });
 }
 
@@ -230,9 +257,9 @@ async function renderCompose() {
     area.replaceChildren(h('p', { class: 'muted' }, h('a', { href: signInUrl(), text: 'Sign in with Discord' }), ' to comment. Comments show your Discord name and avatar.'));
     return;
   }
-  if (!account.eligible) {
-    area.replaceChildren(h('p', { class: 'c-note', text: 'Comments and upvotes need a Discord account at least 3 days old in the Kiln Discord.' }),
-      h('p', {}, h('a', { href: '/kiln/discord', text: 'Join the Kiln Discord' })));
+  const why = cannotTakePart(account);
+  if (why) {
+    area.replaceChildren(h('p', { class: 'c-note' }, ...why));
     return;
   }
   area.replaceChildren(composer({ label: 'Write a comment', onSend: async (text) => { await api('POST', `/packs/${pack.id}/comments`, { text }); commentsPage = 1; await loadComments(); } }));
@@ -261,20 +288,23 @@ async function loadComments() {
   const ol = $('c-comments');
   let r: { comments: Comment[]; more: boolean };
   try { r = await api('GET', `/packs/${pack.id}/comments?page=${commentsPage}`); } catch (e) {
-    ol.replaceChildren(h('li', { class: 'c-error', text: e instanceof ApiError ? e.message : 'Comments could not be loaded.' }));
+    const box = h('li', { class: 'c-plain' }, failed(e instanceof ApiError ? e.message : "Comments couldn't be loaded.", () => { box.remove(); loadComments(); }));
+    if (commentsPage === 1) ol.replaceChildren(box); else { commentsPage--; ol.append(box); }
     return;
   }
   const account = await me();
-  const nodes = r.comments.map((c) => commentNode(c, account?.id ?? null, false));
+  const nodes = r.comments.map((c) => commentNode(c, account, false));
   if (commentsPage === 1) ol.replaceChildren(...nodes); else ol.append(...nodes);
-  if (commentsPage === 1 && !nodes.length) ol.replaceChildren(h('li', { class: 'muted', text: 'No comments yet.' }));
+  if (commentsPage === 1 && !nodes.length) ol.replaceChildren(h('li', { class: 'muted c-plain', text: 'No comments yet.' }));
   const more = $<HTMLButtonElement>('c-more-comments');
   more.hidden = !r.more;
   more.onclick = () => { commentsPage++; loadComments(); };
 }
 
-function commentNode(c: Comment, viewer: string | null, isReply: boolean): HTMLElement {
+function commentNode(c: Comment, account: Account | null, isReply: boolean): HTMLElement {
+  const viewer = account?.id ?? null;
   const owner = viewer !== null && viewer === pack.owner.id;
+  const canWrite = Boolean(account && !cannotTakePart(account));
   const li = h('li', { class: `c-comment${c.pinned ? ' pinned' : ''}`, id: `comment-${c.id}` });
   const text = h('p', { class: 'text' });
   if (c.deleted) text.append(h('em', { class: 'muted', text: 'This comment was deleted.' }));
@@ -284,7 +314,7 @@ function commentNode(c: Comment, viewer: string | null, isReply: boolean): HTMLE
   const act = (label: string, fn: () => unknown, aria?: string) => actions.append(h('button', { type: 'button', text: label, 'aria-label': aria, onclick: fn }));
   const who = c.author?.name ?? 'someone';
   if (!c.deleted && viewer) {
-    if (!isReply) act('Reply', () => {
+    if (!isReply && canWrite) act('Reply', () => {
       const box = li.querySelector('.c-reply-box') ?? li.appendChild(h('div', { class: 'c-reply-box' }));
       const form = composer({ label: `Reply to ${who}`, onSend: async (t) => { await api('POST', `/packs/${pack.id}/comments`, { text: t, parent: c.id }); await reload(); }, onCancel: () => box.replaceChildren() });
       box.replaceChildren(form);
@@ -296,7 +326,7 @@ function commentNode(c: Comment, viewer: string | null, isReply: boolean): HTMLE
         text.replaceWith(form);
         form.querySelector('textarea')?.focus();
       });
-      act('Delete', async () => { if (confirm('Delete your comment?')) { await api('DELETE', `/comments/${c.id}`).catch(() => {}); await reload(); } });
+      act('Delete', async () => { if (confirm('Delete your comment? This cannot be undone.')) { await api('DELETE', `/comments/${c.id}`).catch(() => {}); await reload(); } });
     } else act('Report', () => openReport('comment', c.id), `Report the comment by ${who}`);
     if (owner) {
       if (!isReply) act(c.pinned ? 'Unpin' : 'Pin', async () => { await api('POST', `/comments/${c.id}/pin`, { pinned: !c.pinned }).catch(() => {}); await reload(); });
@@ -310,7 +340,7 @@ function commentNode(c: Comment, viewer: string | null, isReply: boolean): HTMLE
       c.pinned ? h('span', { class: 'c-chip warn', text: 'pinned' }) : null,
       c.hidden ? h('span', { class: 'c-chip', text: 'hidden from others' }) : null),
     text, actions);
-  if (c.replies?.length) li.append(h('ol', { class: 'c-replies', 'aria-label': `Replies to ${who}` }, ...c.replies.map((r) => commentNode(r, viewer, true))));
+  if (c.replies?.length) li.append(h('ol', { class: 'c-replies', 'aria-label': `Replies to ${who}` }, ...c.replies.map((r) => commentNode(r, account, true))));
   return li;
 }
 

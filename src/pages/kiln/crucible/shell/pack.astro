@@ -1,6 +1,7 @@
 ---
 import KilnLayout from '../../../../layouts/KilnLayout.astro';
 import CrucibleBar from '../../../../components/crucible/CrucibleBar.astro';
+import CrucibleFooter from '../../../../components/crucible/CrucibleFooter.astro';
 import '../../../../styles/crucible.css';
 
 // A Crucible shell (src/lib/crucible.ts): served only through the Crucible service, which fills in the title, the Open
@@ -15,11 +16,11 @@ import '../../../../styles/crucible.css';
         <div>
           <img class="c-cover" id="c-cover" src="/projects/crucible/cover-forge.webp" width="1280" height="720" alt="" />
           <h1 class="c-title" id="c-title">Loading the pack…</h1>
-          <p><a class="c-owner" id="c-owner" href="/kiln/crucible"></a> <span class="muted" id="c-version"></span></p>
+          <p class="c-byline"><a class="c-owner" id="c-owner" href="/kiln/crucible"></a><span class="muted" id="c-version"></span></p>
           <p class="c-summary" id="c-summary"></p>
           <ul class="c-tags" id="c-tagsline" aria-label="Tags"></ul>
         </div>
-        <aside class="c-side" aria-label="Install">
+        <aside class="c-side" id="c-side" aria-label="Install" inert>
           <a class="c-btn primary" id="c-open" href="/kiln/download">Open in Kiln</a>
           <div class="c-nokiln" id="c-nokiln" role="status" hidden>
             <strong>No Kiln yet?</strong>
@@ -27,8 +28,7 @@ import '../../../../styles/crucible.css';
               <li><a id="c-getkiln" href="/kiln/download">Get Kiln</a> and install it.</li>
               <li>Start Kiln. It opens <span id="c-nokiln-pack">this pack</span>.</li>
             </ol>
-            <p class="muted">Started Kiln before? Come back and press Open in Kiln.</p>
-            <p class="muted">Kiln installed but nothing happened? Update Kiln, then press Open in Kiln again.</p>
+            <p class="muted">Have Kiln already? Update it to the newest version, then press Open in Kiln again.</p>
           </div>
           <a class="c-btn secondary" id="c-getkiln2" href="/kiln/download">Get Kiln</a>
           <div class="c-sharecode">
@@ -38,7 +38,7 @@ import '../../../../styles/crucible.css';
           <p class="muted c-status" id="c-copied" role="status" aria-live="polite"></p>
           <dl class="c-facts" id="c-facts"></dl>
           <div class="c-actions-row">
-            <button class="c-btn secondary" type="button" id="c-upvote" aria-pressed="false">▲ <span id="c-upvotes">0</span><span class="visually-hidden"> upvotes</span></button>
+            <button class="c-btn secondary" type="button" id="c-upvote" aria-pressed="false"><span aria-hidden="true">▲</span> <span id="c-upvote-word">Upvote</span> <span class="c-count" id="c-upvotes">0</span></button>
             <button class="c-btn ghost" type="button" id="c-report">Report</button>
           </div>
           <p class="c-status muted" id="c-upvote-msg" role="status" aria-live="polite"></p>
@@ -89,6 +89,7 @@ import '../../../../styles/crucible.css';
       </form>
     </dialog>
     <noscript><p class="c-note">This page needs JavaScript to show the pack. The Kiln Launcher can open the pack's code without a browser.</p></noscript>
+    <CrucibleFooter />
   </div>
   <script is:inline type="application/json" id="crucible-data">null</script>
 </KilnLayout>

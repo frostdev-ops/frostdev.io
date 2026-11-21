@@ -1,6 +1,7 @@
 ---
 import KilnLayout from '../../../../layouts/KilnLayout.astro';
 import CrucibleBar from '../../../../components/crucible/CrucibleBar.astro';
+import CrucibleFooter from '../../../../components/crucible/CrucibleFooter.astro';
 import '../../../../styles/crucible.css';
 
 // A Crucible shell (src/lib/crucible.ts): served only through the Crucible service, which fills in the title, the Open
@@ -26,7 +27,7 @@ import '../../../../styles/crucible.css';
         <form id="c-facets" aria-label="Filter packs">
           <fieldset id="c-tags">
             <legend>Tags</legend>
-            <p class="muted" id="c-tags-empty">No tags yet.</p>
+            <p class="muted" id="c-tags-empty" hidden>No tags yet.</p>
           </fieldset>
           <fieldset>
             <legend>Game build</legend>
@@ -67,12 +68,23 @@ import '../../../../styles/crucible.css';
         <ul class="c-grid" id="c-results"></ul>
         <div class="c-empty" id="c-empty" hidden>
           <img src="/projects/crucible/empty.webp" width="480" height="360" alt="" />
-          <p id="c-empty-text">No packs match. Try other words or fewer filters.</p>
+          <p class="c-empty-title" id="c-empty-title">No packs match</p>
+          <p id="c-empty-text">Try other words or fewer filters.</p>
+          <p class="c-empty-actions" id="c-empty-none" hidden>
+            <a class="c-btn primary" href="/kiln/wiki/crucible-share">How to share a pack</a>
+            <a class="c-btn secondary" href="/kiln/download">Get Kiln</a>
+          </p>
+          <p class="c-empty-actions" id="c-empty-nomatch" hidden><button class="c-btn secondary" type="button" id="c-empty-clear">Clear search and filters</button></p>
+        </div>
+        <div class="c-empty c-failed" id="c-failed" hidden>
+          <p class="c-empty-title" id="c-failed-text" role="alert"></p>
+          <p class="c-empty-actions"><button class="c-btn secondary" type="button" id="c-retry">Try again</button></p>
         </div>
         <div class="c-more"><button class="c-btn secondary" id="c-more" type="button" hidden>Show more packs</button></div>
         <noscript><p class="c-note">Crucible's pages need JavaScript to list packs. The Kiln Launcher's Crucible page works without a browser.</p></noscript>
       </section>
     </div>
+    <CrucibleFooter />
   </div>
   <script is:inline type="application/json" id="crucible-data">null</script>
 </KilnLayout>

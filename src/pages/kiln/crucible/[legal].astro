@@ -1,6 +1,7 @@
 ---
 import KilnLayout from '../../../layouts/KilnLayout.astro';
 import CrucibleBar from '../../../components/crucible/CrucibleBar.astro';
+import CrucibleFooter from '../../../components/crucible/CrucibleFooter.astro';
 import '../../../styles/crucible.css';
 
 // Crucible's copyright page (DESIGN.md 10.3), approved by the owner on 2026-11-20. The Crucible service answers
@@ -50,8 +51,8 @@ export function getStaticPaths() {
 
       <h2 id="authors">For mod authors</h2>
       <p>If you'd rather your mod were not shared in packs at all, say so in the notice or in your mod's description; we add its files to Crucible's blocklist. If you are fine with packs but the credit is wrong, write to us or report the pack on its page, and we correct it.</p>
-      <p><a href="/kiln/terms">Terms</a> · <a href="/kiln/privacy">Privacy</a></p>
     </article>
+    <CrucibleFooter />
   </div>
 </KilnLayout>
 <script>

@@ -20,7 +20,7 @@ function renderAccount(a: Account | null) {
   const menu = h('div', { class: 'menu' },
     h('a', { href: creatorPath(a.id), text: 'My packs' }),
     h('button', { type: 'button', text: 'Sign out', onclick: signOut }),
-    h('button', { type: 'button', class: 'danger', text: 'Sign out and forget me…', onclick: () => $<HTMLDialogElement>('c-forget-dialog')?.showModal() }));
+    h('button', { type: 'button', class: 'danger', text: 'Sign out and forget me…', onclick: () => { details.open = false; $<HTMLDialogElement>('c-forget-dialog')?.showModal(); } }));
   const details = h('details', {},
     h('summary', { 'aria-label': `Signed in as ${a.name}. Account menu` }, avatar(a, 28), h('span', { text: a.name })),
     menu);
@@ -60,16 +60,23 @@ function wireCode() {
     if (!code) { say($('c-code-error'), "That isn't a code. Codes look like H7QK-3MZP."); input.setAttribute('aria-invalid', 'true'); input.focus(); return; }
     location.assign(`${BASE}/p/${code}`);
   };
-  form.addEventListener('submit', (e) => { e.preventDefault(); open(input.value); });
+  input.addEventListener('focus', () => { if ($('c-code-error')?.classList.contains('info')) clearNotice(); });
+  form.addEventListener('submit', (e) => { e.preventDefault(); clearNotice(); open(input.value); });
   input.addEventListener('input', () => { input.removeAttribute('aria-invalid'); say($('c-code-error'), ''); });
   const q = new URL(location.href).searchParams.get('code');
   if (q) open(q);
 }
 
+function clearNotice() {
+  const el = $('c-code-error');
+  if (el?.classList.contains('info')) { el.classList.remove('info'); say(el, ''); }
+}
+
 function signinNotice() {
   const u = new URL(location.href);
   if (u.searchParams.get('signin') !== 'cancelled') return;
-  say($('c-code-error'), 'Sign-in was cancelled. You can keep browsing without signing in.');
+  $('c-code-error')?.classList.add('info');
+  say($('c-code-error'), 'Sign-in was cancelled. You can keep browsing without an account.');
   u.searchParams.delete('signin');
   history.replaceState(null, '', u.pathname + u.search + u.hash);
 }

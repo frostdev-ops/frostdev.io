@@ -1,6 +1,7 @@
 ---
 import KilnLayout from '../../../../layouts/KilnLayout.astro';
 import CrucibleBar from '../../../../components/crucible/CrucibleBar.astro';
+import CrucibleFooter from '../../../../components/crucible/CrucibleFooter.astro';
 import '../../../../styles/crucible.css';
 
 // A Crucible shell (src/lib/crucible.ts): served only through the Crucible service, which fills in the title, the Open
@@ -13,9 +14,10 @@ import '../../../../styles/crucible.css';
     <section class="c-empty" aria-labelledby="c-missing-h">
       <img src="/projects/crucible/empty.webp" width="480" height="360" alt="" />
       <h1 id="c-missing-h">This pack is not on Crucible</h1>
-      <p>We couldn't find that pack. Codes look like H7QK-3MZP. A pack that was taken down or deleted is no longer here; copies people installed keep working.</p>
+      <p id="c-missing-text">We couldn't find that pack. Check the code: codes look like H7QK-3MZP. A pack that was deleted or taken down is gone from here, but copies people installed keep working.</p>
       <p><a class="c-btn secondary" href="/kiln/crucible">Browse packs</a></p>
     </section>
+    <CrucibleFooter />
   </div>
   <script is:inline type="application/json" id="crucible-data">null</script>
 </KilnLayout>

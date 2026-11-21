@@ -8,7 +8,7 @@ async function start() {
   let d = pageData<Data>();
   const id = /\/u\/(\d{17,20})\/?$/.exec(location.pathname)?.[1];
   if (!d && id) { try { d = { kind: 'creator', ...(await api<{ user: User; packs: Pack[] }>('GET', `/users/${id}/packs`)) }; } catch { /* below */ } }
-  if (!d) { say($('c-creator-name'), 'This creator is not on Crucible'); return; }
+  if (!d) { say($('c-creator-name'), 'This creator is not on Crucible'); $('c-results').closest('section')?.querySelector('h2')?.setAttribute('hidden', ''); return; }
   document.title = `Modpacks by ${d.user.name} · Crucible`;
   say($('c-creator-name'), d.user.name);
   $('c-avatar').replaceWith(Object.assign(avatar(d.user, 128), { id: 'c-avatar' }));
@@ -18,11 +18,13 @@ async function start() {
   $('c-empty').hidden = d.packs.length > 0;
   const account = await me();
   if (account && account.id === d.user.id) {
+    $('c-empty-own').hidden = false;
+    $('c-empty-own-actions').hidden = false;
     try {
       const mine = (await api<{ packs: Pack[] }>('GET', '/me/packs')).packs.filter((p) => p.visibility !== 'public');
       if (mine.length) {
         $('c-mine').hidden = false;
-        $('c-mine-list').replaceChildren(...mine.map((p) => packCard(p, { extra: p.expiresAt ? h('p', { class: 'muted', text: `Deleted ${fmtWhen(p.expiresAt)} unless someone installs or you update it.` }) : undefined })));
+        $('c-mine-list').replaceChildren(...mine.map((p) => packCard(p, { extra: p.expiresAt ? h('p', { class: 'muted', text: `Deleted ${fmtWhen(p.expiresAt)} unless someone installs it or you update it.` }) : undefined })));
       }
     } catch { /* only the public list */ }
   }

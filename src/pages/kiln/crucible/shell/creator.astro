@@ -1,6 +1,7 @@
 ---
 import KilnLayout from '../../../../layouts/KilnLayout.astro';
 import CrucibleBar from '../../../../components/crucible/CrucibleBar.astro';
+import CrucibleFooter from '../../../../components/crucible/CrucibleFooter.astro';
 import '../../../../styles/crucible.css';
 
 // A Crucible shell (src/lib/crucible.ts): served only through the Crucible service, which fills in the title, the Open
@@ -20,13 +21,18 @@ import '../../../../styles/crucible.css';
       </div>
       <h2>Public packs</h2>
       <ul class="c-grid" id="c-results"></ul>
-      <div class="c-empty" id="c-empty" hidden><p>No public packs yet.</p></div>
+      <div class="c-empty" id="c-empty" hidden>
+        <p class="c-empty-title">No public packs yet</p>
+        <p id="c-empty-own" hidden>Share your mods from the Kiln Launcher, then make the pack public to list it here.</p>
+        <p class="c-empty-actions" id="c-empty-own-actions" hidden><a class="c-btn secondary" href="/kiln/wiki/crucible-share">How to share a pack</a></p>
+      </div>
     </section>
-    <section id="c-mine" aria-labelledby="c-mine-h" hidden>
+    <section class="c-mine" id="c-mine" aria-labelledby="c-mine-h" hidden>
       <h2 id="c-mine-h">Shared by link (only you see these)</h2>
-      <p class="muted">Packs you shared by link aren't listed for others. A link pack nobody installs or changes for a year is deleted.</p>
+      <p class="muted">Only people with the link or code can open these. A link pack that nobody installs and you don't update for a year is deleted.</p>
       <ul class="c-grid" id="c-mine-list"></ul>
     </section>
+    <CrucibleFooter />
   </div>
   <script is:inline type="application/json" id="crucible-data">null</script>
 </KilnLayout>

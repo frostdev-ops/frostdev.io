@@ -17,7 +17,7 @@ export interface Credit { kind: string; id: string; version: string | null; auth
 export interface Version {
   id: string; pack: string; number: number; version: string; changes: string; status: string; builds: number[]; kiln: string | null; api: string | null;
   size: number | null; installs: number; created: string; published: string | null; index: string | null;
-  checks: { errors?: string[]; notes?: string[]; full?: boolean } | null; credits?: Credit[];
+  checks: { state?: string; errors?: string[]; warnings?: string[]; notes?: string[]; full?: boolean } | null; credits?: Credit[];
 }
 export interface Comment {
   id: string; parent: string | null; author: User | null; text: string | null; deleted: boolean; created: string; edited: string | null;
@@ -147,3 +147,15 @@ export function packCard(p: Pack, { extra }: { extra?: Node } = {}) {
 }
 
 export function say(el: HTMLElement | null, text: string) { if (el) el.textContent = text; }
+
+/** Grey stand-ins for pack cards while a list loads (hidden from screen readers; the list says aria-busy). */
+export function skeletonCards(n: number) {
+  return Array.from({ length: n }, () => h('li', { class: 'c-skel', 'aria-hidden': 'true' },
+    h('div', { class: 'c-card' }, h('div', { class: 'cover' }), h('div', { class: 'body' }, h('span', { class: 'line w60' }), h('span', { class: 'line w40' }), h('span', { class: 'line' }), h('span', { class: 'line w80' })))));
+}
+
+/** A load that failed: the message and a Try again button. */
+export function failed(message: string, again: () => void) {
+  return h('div', { class: 'c-note bad c-failed-inline' }, h('span', { role: 'alert', text: message }), ' ',
+    h('button', { class: 'c-btn ghost small', type: 'button', text: 'Try again', onclick: again }));
+}
