@@ -107,6 +107,14 @@ with it you can leave out `asset`.
 
 A value Kiln can't read in `updates` is a warning and is ignored: the mod still loads, and `kiln lint` reports it.
 
+## Steam messages: `steamMessages`
+
+`"steamMessages": true` lets a C# mod lease Steam peer-to-peer message channels through `SteamMessages` in
+Kiln.Network (0.2.0-dev.30.3, mod API 0.2.13). Without it, `SteamMessages.Open` refuses. It is a declaration for
+trusted mods, not a sandbox: see [Steam messages](/kiln/wiki/steam-messages). Leave it out unless your mod needs
+Steam's own messages; most mods talk over a [channel](/kiln/wiki/network).
+
+
 ## Versions
 
 `apiVersion` is the mod API you built against (0.2 today; 0.2.0-dev.29.16 ships mod API 0.2.8, additive over 0.2.7: no
