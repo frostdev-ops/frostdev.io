@@ -43,6 +43,16 @@ body:has(.kiln-root) .marketing-nav a:focus-visible, body:has(.kiln-root) .marke
 body:has(.kiln-root) .marketing-nav a[aria-current="page"] { color: #f4ece6; }
 body:has(.kiln-root) .skip-link { background: #0f0d0c; }
 
+/* Reading pages (terms, privacy, Discord, Crucible's copyright page): products.css's layout, Kiln's charcoal panel. */
+.kiln-root .reading-page { border-color: var(--k-line); background: var(--k-bg1); color: var(--k-text1); }
+.kiln-root .reading-page h1, .kiln-root .reading-page h2 { color: var(--k-text0); font-family: var(--k-display); font-weight: 560; letter-spacing: -0.02em; }
+.kiln-root .reading-page strong { color: var(--k-text0); }
+.kiln-root .reading-page a { color: var(--k-ember-300); }
+.kiln-root .reading-page a:hover { color: var(--k-text0); }
+.kiln-root .reading-page .article-meta { color: var(--k-text2); }
+.kiln-root .reading-page pre { border-color: var(--k-line); background: var(--k-bg0); }
+.kiln-root .reading-page :not(pre) > code { color: var(--k-text0); }
+
 .kiln-root a:focus-visible { outline: 2px solid var(--k-ember-400); outline-offset: 4px; border-radius: 3px; }
 .kiln-display { font-family: var(--k-display); font-weight: 560; letter-spacing: -0.02em; }
 

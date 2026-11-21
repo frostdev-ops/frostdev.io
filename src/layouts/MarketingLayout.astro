@@ -44,12 +44,13 @@ const kiln = path === '/kiln' || path.startsWith('/kiln/');
         <a href="/guides">Guides</a>
         {glaze && <a href="/glaze/looks" aria-current={path === '/glaze/looks' ? 'page' : undefined}>Looks</a>}
         {glaze && <a href="/glaze/mods" aria-current={path === '/glaze/mods' ? 'page' : undefined}>Mods</a>}
-        {crucible && <a href="/kiln/crucible" aria-current={path === '/kiln/crucible' ? 'page' : undefined}>Crucible</a>}
+        {kiln && <a href="/kiln/crucible" aria-current={crucible ? 'page' : undefined}>Crucible</a>}
         {kiln && <a href="/kiln/download" aria-current={path === '/kiln/download' || path.startsWith('/kiln/download/') ? 'page' : undefined}>Download</a>}
         {kiln && <a href="/kiln/wiki" aria-current={path === '/kiln/wiki' || path.startsWith('/kiln/wiki/') ? 'page' : undefined}>Wiki</a>}
         {kiln && <a href="/kiln/roadmap" aria-current={path === '/kiln/roadmap' ? 'page' : undefined}>Roadmap</a>}
         {kiln && <a href="/kiln/agents" aria-current={path === '/kiln/agents' ? 'page' : undefined}>Agent skill</a>}
-        <a href={glaze ? "/glaze" : "/login"}>{glaze ? "Get Glaze" : "Sign in"} <span aria-hidden="true">↗</span></a>
+        {/* Crucible has its own Discord sign-in in its bar; this one is Rimeward's */}
+        {!crucible && <a href={glaze ? "/glaze" : "/login"}>{glaze ? "Get Glaze" : "Sign in"} <span aria-hidden="true">↗</span></a>}
       </nav>
     </header>
     <main id="main"><slot /></main>
