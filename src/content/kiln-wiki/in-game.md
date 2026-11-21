@@ -194,7 +194,7 @@ Delete the file to forget your commands. It belongs to the game folder, not to a
 Shift or Alt stay the game's, and so do the arrows while an input method (Chinese, Japanese, Korean) is composing.
 There is no mod API: Kiln never reads or logs the text. Tested in the game by bisdat.
 
-**Search with Ctrl+R** (0.2.0-dev.30.3, by bisdat, GitHub #44). With chat history on, press **Ctrl+R** while typing in
+**Search with Ctrl+R** (0.2.0-dev.30.3, by bisdat, GitHub #44; he tested it in game on Proton, HUD and Social chat). With chat history on, press **Ctrl+R** while typing in
 the chat to search the lines Up and Down would bring back.
 
 - Type to filter (case doesn't matter for plain letters). Each line shows once, at its latest place. Your unsent text is
