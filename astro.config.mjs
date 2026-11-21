@@ -6,6 +6,8 @@ export default defineConfig({
   output: 'static',
   compressHTML: true,
   build: { assets: '_site' },
+  // The launcher's Community tab linked /kiln/docs (0.2.0-dev.30 and older); the docs are the wiki.
+  redirects: { '/kiln/docs': '/kiln/wiki' },
   vite: {
     build: {
       rollupOptions: {
