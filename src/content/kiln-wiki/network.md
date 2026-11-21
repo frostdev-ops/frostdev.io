@@ -3,14 +3,15 @@ title: "Network: channels and the join"
 nav: "Network"
 description: "Your mod's own messages between server and players, who is connected, how a joining player's mods are checked, and network.json."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-21"
 ---
 
 Kiln.Network is Forge's SimpleChannel and join handshake for Enshrouded. It rides on the game's own connection: no
 extra port, nothing to open in a firewall. Players without Kiln never see Kiln's messages.
 
 For what a player needs to join and what server admins set, see [Multiplayer](/kiln/wiki/multiplayer) and
-[Run a server](/kiln/wiki/servers). This page is the code and the reference.
+[Run a server](/kiln/wiki/servers). This page is the code and the reference. For Steam's own peer-to-peer messages,
+outside the game's connection (0.2.0-dev.30.3), see [Steam messages](/kiln/wiki/steam-messages).
 
 ## A channel
 
