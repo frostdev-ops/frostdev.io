@@ -1,6 +1,26 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.30.1",
+      "date": "2026-11-20",
+      "title": "Clipboard prompt and ShroudForge's glider pitch",
+      "summary": "A small patch: no clipboard permission prompt after updating, and ShroudForge 1.8's glider pitch works under Kiln.",
+      "patch": true,
+      "features": [
+        {
+          "title": "No clipboard prompt after an update",
+          "text": "The launcher no longer reads the clipboard when it starts or updates; Got a code? fills in a copied pack code without a permission prompt and has a Paste button.",
+          "area": "launcher"
+        },
+        {
+          "title": "ShroudForge's glider pitch under Kiln",
+          "text": "ShroudForge 1.8's native glider pitch patch (Unlimited Flight's Upward Gliding) works under Kiln; Kiln's own glide steering hook now goes in only when a mod asks for it.",
+          "area": "compat",
+          "gamePending": true
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.30",
       "date": "2026-11-20",
       "title": "Crucible modpacks, equipment and the game's UI",
@@ -2917,10 +2937,10 @@
   ],
   "upcoming": [
     {
-      "version": "0.2.0-dev.30.1",
+      "version": "0.2.0-dev.30.2",
       "status": "next",
       "title": "ShroudForge and EML on Kiln's own engine",
-      "summary": "ShroudForge and EML mods on Kiln's own engine, in a patch after 0.2.0-dev.30. ShroudForge's own runtime (1.8.1 since dev.30) stays available as before.",
+      "summary": "ShroudForge and EML mods on Kiln's own engine, in a patch after 0.2.0-dev.30.1. ShroudForge's own runtime (1.8.1 since dev.30) stays available as before.",
       "patch": true,
       "note": "Comes as a dev.30 patch in the next few days.",
       "features": [
@@ -2933,12 +2953,6 @@
         {
           "title": "EML mods on Kiln's own engine",
           "text": "EML mods run on the same engine, and EML and Kiln mods can decode and encode game textures in code.",
-          "area": "compat",
-          "gamePending": true
-        },
-        {
-          "title": "ShroudForge's glider pitch under Kiln",
-          "text": "ShroudForge 1.8's native glider pitch patch (Unlimited Flight's Upward Gliding) also works with Kiln's own glide steering.",
           "area": "compat",
           "gamePending": true
         }
