@@ -340,6 +340,10 @@ mods in the server's `mods/` folder, or sync them from the launcher's server **M
 data mods as the server; Kiln's join check doesn't compare them yet. See
 [Servers and players](/kiln/wiki/other-mods#servers-and-players).
 
+On a server where ShroudForge runs, each EML mod needs an `extended.mod.json` with `"enabled": true`, or nothing runs it.
+Since 0.2.0-dev.30.3 `kiln.log` names such mods at the start. The file and what to do:
+[EML mods on a server that runs ShroudForge](/kiln/wiki/dedicated-servers#eml-mods-on-a-server-that-runs-shroudforge).
+
 ## Not tested yet
 
 - In a player's game: an EML mod's effect, ShroudForge's Modloader window and most in-game mods. On test servers

@@ -3,7 +3,7 @@ title: "Kiln in the game"
 nav: "In the game"
 description: "Kiln's line on the main menu (also with XHL-Core), the look of Kiln's menus, Kiln's graphics tools and the upscalers behind the game's FSR 3, Kiln's overlay next to OptiScaler, chat history, other mods' slash commands, and the keys of Kiln's menus."
 status: "pending"
-updated: "2026-11-19"
+updated: "2026-11-21"
 ---
 
 What Kiln adds to the game itself, besides your mods. The Kiln menu and its pages are on
@@ -193,6 +193,20 @@ with `"ui": {"chatHistory": true}` in `kiln/kiln.json`, then restart the game.
 Delete the file to forget your commands. It belongs to the game folder, not to a Steam account. Up and Down with Ctrl,
 Shift or Alt stay the game's, and so do the arrows while an input method (Chinese, Japanese, Korean) is composing.
 There is no mod API: Kiln never reads or logs the text. Tested in the game by bisdat.
+
+**Search with Ctrl+R** (0.2.0-dev.30.3, by bisdat, GitHub #44). With chat history on, press **Ctrl+R** while typing in
+the chat to search the lines Up and Down would bring back.
+
+- Type to filter (case doesn't matter for plain letters). Each line shows once, at its latest place. Your unsent text is
+  kept apart and comes back if you cancel.
+- **Ctrl+R** again or **Down** goes to the next older match, **Ctrl+Shift+R** or **Up** to a newer one. A click on a row
+  picks it.
+- **Enter** or **Tab** puts the line into the chat field **without sending it**; press Enter again to send. **Esc**
+  cancels.
+- Characters typed with AltGr (`@`, `€`, `{` on many keyboards) go into the search. Alt+Tab, leaving the chat or
+  starting an input method closes it.
+- While the search is open it has the keyboard: mods' key bindings and Kiln's menu key get no presses.
+- Nothing new is saved, and the search text is never logged.
 
 ## Other mods' slash commands
 

@@ -182,6 +182,21 @@ custom-pack portraits displayed in Beastmaster remain unverified. Capture/releas
 commands and joined-player synchronization still need hosted and joined game checks. See
 [ShroudForge](/kiln/wiki/eml-shroudforge#dev20-pairing-with-emf).
 
+## Hits
+
+New in 0.2.0-dev.30.3: EMF mods that react to hits get them (reported by PepegaJedi). `on_hit` (EMF API v31) and Lua's
+`emf.on_hit` work on Kiln's EMF layer: every hit the server applies to a creature, a player or a placed object arrives
+after the server's step, with the fields EMF gives (attacker, target, amount, the killing blow and other flags, damage
+types, weapon, position). Terrain and building hits are not passed, and a joined player's game sees no hits, as on EMF.
+Lab-tested on a test server.
+
+Not yet:
+- Fall, shroud, cold and drowning damage (`EMF_HIT_KIND_FALL` to `_DROWNING`, or `{kinds = ...}` with them in Lua) never
+  arrive. The mod's log says so once, at its first `on_hit`.
+- Changing a hit before it lands: `on_hit_before` and hit rules (`emf.hit_rule`) answer `false` / `nil`. Best estimate:
+  2 to 3 days of work, with fall, shroud, cold and drowning damage about 1 day more.
+- Buffs (API v32: `emf.buffs`, `emf.apply_buff`, `emf.on_buff` and the rest). Best estimate: 4 to 6 days.
+
 ## What doesn't work yet
 
 These are the current differences and evidence limits, replacing the older dev.19 gap list. For the functions EMF
@@ -194,6 +209,7 @@ added in 0.6.3 to 0.6.8, see [above](#mods-built-for-emf-063-to-068).
 | Attributes and progression | health, stamina and mana work. XP/level adapters retain queued progression timing, thread and request-limit differences |
 | Setting a player's level | queued for a later server step; a nonzero XP adjustment follows the level result and can take more steps |
 | Mod windows | left/right clicks implemented, with Kiln's plain ImGui look. Since 0.2.0-dev.29 a window grows with what is in it (the Beastmaster stable, for one), up to 85 % of the screen height, and scrolls past that, as under EMF's own loader; not looked at in a game yet. Refused on dedicated servers, as in EMF; client interaction still needs verification |
+| Hits | `on_hit` and `emf.on_hit` since 0.2.0-dev.30.3, entity hits only: no fall, shroud, cold or drowning damage, no changing hits, no buffs ([Hits](#hits)) |
 | Spawn with an E prompt | the prompt appears a step or two after the spawn |
 | Images and portraits | decoded-pixel limits plus a 64 MB encoded-file limit. A portrait asked for from a tick or render thread is empty until its drawing finishes. Offline archive/cache proof does not establish in-game presentation |
 | Radial-wheel input, joined messages and replication | implemented paths with host/server checks; real-client checks remain open |

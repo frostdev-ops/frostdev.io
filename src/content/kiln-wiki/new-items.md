@@ -3,7 +3,7 @@ title: "New items and recipes"
 nav: "New items"
 description: "Add items and recipes, borrow other items' models, name them in every language, and place them in loot and traders."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-21"
 ---
 
 A new item is a copy of an existing one (its **base**) with its own GUID, name, texts and values.
@@ -86,6 +86,22 @@ To draw an item's icon in a mod's window, see [Game UI](/kiln/wiki/game-ui).
 `station` is `"hand"` (the crafting menu), a recipe whose station to use, or a station's id. Traders are stations, so a
 trade offer is a recipe at the trader, on its crafting tab. New recipes appear in a matching
 crafting tab, with no unlock by default: players see them once they know an ingredient.
+
+**Water** (0.2.0-dev.30.3, mod API 0.2.13, thanks netjunk): `"water": 5` asks 5 charges a craft from the station's tank,
+or from the player and the base in a crafting menu ([A recipe's water](/kiln/wiki/data-packs#a-recipes-water)). In code it
+is `RecipeDefinition.Water`:
+
+```csharp
+Content.Recipes.Register(new RecipeDefinition
+{
+    Guid = Guid.Parse("1f0c8a52-3b7e-4d21-9a6c-2e5d8b4f7a10"), Name = "MyMod_Herb_Tea", Station = "0x6b8247d6",
+    Inputs = [("Food_T7_raw_herb_Thyme", 2)], Outputs = [("Food_T7_dish_hydration_ThymeTea", 1)],
+    Water = 5,                                       // charges from the station's tank each craft
+});
+```
+
+`Water` is 0 to 1023 (`ArgumentException` otherwise); null keeps the base recipe's, 0 clears it. Give either `Water` or
+`Fields["waterCharges"]`, not both (`ArgumentException`).
 
 ## Loot and drops
 

@@ -3,7 +3,7 @@ title: "Kiln on a dedicated server"
 nav: "Dedicated servers"
 description: "Put Kiln on an Enshrouded dedicated server: a rented host over FTP, your own Windows PC, or a headless Linux machine."
 status: "partial"
-updated: "2026-11-17"
+updated: "2026-11-21"
 ---
 
 This page is for server owners. It shows how to put Kiln on an Enshrouded dedicated server, check that it runs, add
@@ -235,6 +235,26 @@ removing mods.
 
 Players need some of these mods too, EML data mods above all. Kiln's join check doesn't compare other frameworks' mods
 yet, so tell your players or put them in your modpack. See [Servers and players](/kiln/wiki/other-mods#servers-and-players).
+
+### EML mods on a server that runs ShroudForge
+
+When the server's `mods/` holds a switched-on ShroudForge mod, or ShroudForge ran there before, Kiln lets ShroudForge run
+the EML mods too. ShroudForge runs an EML mod only while its `extended.mod.json` says `"enabled": true`. An EML mod you
+unzip yourself has no such file, so ShroudForge keeps it off, and a server has no in-game menu to switch it on.
+
+Put this file into each EML mod's folder (`mods/<mod>/`, next to its `mod.json`) as `extended.mod.json`. If the mod
+already has one, set its `"enabled"` to `true`:
+
+```json
+{"schemaVersion":1,"launcher":"EML","enabled":true,"targets":["client","server"],"settings":{}}
+```
+
+Then restart the server. Without ShroudForge, Kiln runs the EML mods itself and the file does no harm.
+
+Since 0.2.0-dev.30.3 `kiln/logs/kiln.log` names the EML mods nothing runs, in one warning at the start:
+`kiln-eml: 2 EML package(s) in … are switched off in ShroudForge or refused by it, so nothing runs them (…)`.
+`kiln/state/eml.json` lists each as `off-in-shroudforge` with what to do. EML mods in `kiln/eml/mods` don't run in such
+a start either, because ShroudForge reads only its own folder: move them to `mods/`.
 
 ### Mods with a cook recipe
 

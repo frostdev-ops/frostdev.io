@@ -1,8 +1,8 @@
 ---
 title: "Game UI"
-description: "Menu entries, your own screens, crafting tabs and panels, HUD lines, toasts, key bindings and raw key presses, item icons and names, and values in the game's own UI."
+description: "Menu entries, your own screens, the pointer and drag and drop, crafting tabs and panels, HUD lines, toasts, key bindings and raw key presses, the game's inventory slots, item icons and names, and values in the game's own UI."
 status: "works"
-updated: "2026-11-19"
+updated: "2026-11-21"
 ---
 
 All client side. On a dedicated server `Ui.Available` is false and calls do nothing, so a `side: both` mod can call them freely.
@@ -53,6 +53,43 @@ to `Client.Post`.
 Looks: `UiStyle.Game` uses the game's colours and font, `UiStyle.Kiln` Kiln's ember look, and `UiStyle.Player` the look
 the player chose. **Since 0.2.0-dev.29.16 `UiStyle.Player` is the default** for windows, screens and crafting panels;
 before, windows defaulted to Kiln's look. Your own theme and font: [Looks, themes and fonts](/kiln/wiki/ui-looks).
+
+### The pointer, held buttons and drag and drop
+
+New in 0.2.0-dev.30.3 (mod API 0.2.13), GitHub #113 (thanks Fuzen777): for a two-pane item screen with drag and drop
+between the panes, or a "hold the button on a cell" action.
+
+```csharp
+// where the pointer is and what is held
+if (ui.Pointer is { } p && ui.ButtonHeld(UiMouseButton.Left))
+    ui.DrawRect(p.X - 3, p.Y - 3, p.X + 3, p.Y + 3, Color.White);
+
+// drag and drop: a source after one widget, a target after another
+foreach (var s in _backpack)
+{
+    ui.Selectable(s.Name + "##b" + s.Slot);
+    ui.DragSource("stack", s.Slot.ToString(), s.Name);       // while dragged: "Iron Bar" by the pointer
+}
+ui.Selectable("Chest");
+if (ui.DropTarget("stack") is { } slot) Client.Post(() => MoveToChest(int.Parse(slot)));   // once, on the release
+```
+
+| Member | What |
+|---|---|
+| `ui.Pointer` | where the pointer is now, a `Vector2` in the overlay's pixels (the space `DrawRect` draws in); null until the overlay has seen the cursor |
+| `ui.ButtonHeld(button)` | the button (`UiMouseButton.Left`, `Right`, `Middle`) is down now, wherever the pointer is |
+| `ui.DragSource(kind, payload, preview)` | after a widget, every frame: the widget can be dragged; true on the frames it is. `payload` is text, at most 4096 bytes; `preview` is drawn by the pointer |
+| `ui.DropTarget(kind)` | after a widget, every frame: the payload on the frame a drag of that kind is released over it, else null |
+
+- **Kinds are your mod's own.** Another mod's target named `"stack"` never gets your payload, nor you theirs.
+- The pointer means something only while one is shown: a Kiln window or screen, the Kiln menu, or one of the game's
+  menus. In the play view the game recentres the cursor for mouse look. A drag works inside interactive windows; a panel
+  with `Interactive = false` gets no presses.
+- Released over anything but a target of its kind, a drag does nothing. If the source stops being drawn while the button
+  is held (a list that scrolled), the drag goes on with its last payload.
+- On an older Kiln: `Pointer` is null, `ButtonHeld` and `DragSource` false, `DropTarget` null.
+
+Not checked in a real game yet.
 
 ## Crafting menus
 
@@ -132,6 +169,34 @@ if (!listener.Ok) Log.Info(listener.Reason!);  // no Kiln overlay here (a dedica
   there is no Kiln overlay, `Listen` returns a listener that is not `Ok`, with a `Reason`, and never throws for that.
 
 Not yet used in a real game.
+
+## The game's inventory slots
+
+`Ui.Inventory` (0.2.0-dev.30, client only) works on the slots the game draws: the backpack, the inventory menu, a chest,
+a station, an NPC's crafting.
+
+```csharp
+// Ctrl+click marks an item; the game never sees the press
+Ui.Inventory.OnClick(new SlotClickOptions { Modifiers = SlotModifiers.Ctrl }, click =>
+{
+    if (click.ItemEntity.Value == 0) return;           // an empty slot, or a plain stack (no item entity)
+    SendToMyServer(click.ItemEntity);                  // your server half checks the item is the player's
+    Ui.Inventory.Mark(click.ItemEntity, new SlotMark(new Color(235, 60, 50)));
+});
+```
+
+- `OnClick` gets a click on a slot with the item's identity; by default the game never sees the press. Clicks count only
+  on screens with a pointer, never in the play view. A click is a wish: check it on the server before acting.
+- `Mark`, `MarkWhen` and `Hovered` draw a mark over an item's slot, wherever the game draws it, and say which slot is
+  under the cursor.
+- **Where the press was** (new in 0.2.0-dev.30.3, mod API 0.2.13, GitHub #107, thanks Fuzen777): `SlotClick.Pointer`,
+  in the overlay's pixels, the space `UiDraw` draws in and `ui.Pointer` reports (0, 0 is the top left of the game's
+  picture). Not UI units.
+- **The right slot at every resolution** (0.2.0-dev.30.3, GitHub #107). Through 0.2.0-dev.30.2 Kiln scaled the game's UI
+  by the wrong size, so marks, clicks, `Hovered` and docked panels missed the slot whenever the game's pixels per UI
+  unit aren't 1: above it at 1440p and 4K (at twice its position at 3840x2160), below it at 1280x720 or with a UI scale
+  above 1 at 1080p. The fix follows the game's code; marks and clicks at two resolutions and UI scales are a guided
+  check not yet run in a real game.
 
 ## Values in the game's own UI
 

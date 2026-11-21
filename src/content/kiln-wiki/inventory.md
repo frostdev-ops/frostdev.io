@@ -1,9 +1,9 @@
 ---
 title: "Inventory transfers"
 nav: "Inventory transfers"
-description: "Move gear with its state, put items on and take them off, swap whole sets of gear, read container names, keep items out of quick stack or move all, and keep data on one item."
+description: "Move gear with its state, put items on and take them off, swap whole sets of gear, read and set container names, keep items out of quick stack or move all, and keep data on one item."
 status: "pending"
-updated: "2026-11-17"
+updated: "2026-11-21"
 ---
 
 > **New in 0.2.0-dev.20.** These APIs require the dev.20 runtime and MDK or newer. Server evidence and pending client checks are tracked on
@@ -31,6 +31,23 @@ changes, including source, destination, item, amount and gear entity; totals cov
 
 `MoveOptions.DryRun` runs and rolls back, without a transfer event. Equipped/held gear and the action bar stay out by
 default; `Equipped` and `ActionBar` opt in. `Silent` skips transfer rules and events.
+
+**Moves into a player** (0.2.0-dev.30.3, GitHub #109, thanks Fuzen777). Before, a move into a player without `toSlot`
+could put a stack into an empty ring or other equipment slot, where the player never saw it. Now:
+
+- A stack moved into a player or an NPC lands only in the **backpack**: the backpack's own pages, then the pages of a
+  worn backpack. Never an equipment, currency or customization slot, and the action bar only with `MoveOptions.ActionBar`.
+  When nothing fits, the result is `NoRoom` and nothing moves.
+- A `toSlot` in a player must be a slot the item may enter: a backpack slot, a currency slot for a currency item, or a
+  worn equipment slot of the same type to top up the stack there (arrows onto the worn arrows). A named **empty
+  equipment slot is `Refused`**: a move is not an equip, use `Items.Equip`. A `toSlot` that is full or holds another item
+  gives way to the backpack search.
+- **Kiln checks after the move.** If any of it landed somewhere else, or left the slot without arriving, the move is
+  rolled back and `Refused`. So `Done` means the items are where the player can take them.
+- Chests and other containers keep the old rule: every page.
+
+Covered by host tests; a real player's backpack is not checked in a game yet. To have the player eat or drink what you
+moved, see [Use an item for a player](/kiln/wiki/abilities#use-an-item-for-a-player).
 
 Since dev.21 a dry-run move also runs native transfer handlers (`kiln.items` `transfer_listen`), unless it is silent too.
 They see `KILN_TRANSFER_DRY_RUN` in `ev->flags`. Keep and cancel as usual, so the dry run predicts the real move, but
@@ -86,13 +103,15 @@ rejoining are not yet confirmed.
 ```csharp
 if (Items.ContainerNamesAvailable && Items.ContainerName(chest) == "Ores")
     await Items.QuickStack(player, chest);
+bool renamed = await Items.SetContainerName(chest, "Ores");     // 0.2.0-dev.30.3
 
 using var keep = Items.Transfers.Keep(slot);
 using var keepTorches = Items.Transfers.KeepItem(torchItemId, player);
 using var deny = Items.Transfers.Deny(vault, TransferKinds.QuickStack);
 ```
 
-`ContainerName` reads the name a player entered; it does not rename a chest. An unnamed chest returns null.
+`ContainerName` reads the name a player or a mod gave a container. An unnamed chest returns null. To rename one, see
+[Rename a container](#rename-a-container).
 
 Rules keep a source slot, keep an item for an owner, or deny quick stack/move all into or out of a container. They end when
 disposed or the mod unloads. They cover the game's quick stack and move all, including a Quick Stack Station.
@@ -101,6 +120,33 @@ incoming request, handle `PlayerClientActionEvent` only when `e.Name == "invento
 Then parse `e.Payload` with `Items.Transfers.ParseAction` and cancel the held action if your rule requires it. The parser
 does not identify an action from its bytes. Joined-client events cannot cancel the server's action; a station has no
 such client request.
+
+### Rename a container
+
+> **New in 0.2.0-dev.30.3 (mod API 0.2.13).** Lab-tested on a test server. Players seeing the name in a real game is not
+> checked yet.
+
+```csharp
+foreach (var chest in Items.FindInventories(InventoryKinds.Containers))
+    if (Items.ContainerName(chest) is null) await Items.SetContainerName(chest, "Unsorted");
+```
+
+`Items.SetContainerName(entity, name)` does what a player's Rename button does, through the game's own rename on the
+server: the name reaches every player, goes into the save, and shows in the game's Rename screen and in `ContainerName`
+(GitHub #112, thanks Fuzen777). The task completes in the next step: `true` when the game took the name (also when the
+chest already had it), `false` when the rename couldn't run (the chest went away, the game's table of 1024 different
+names was full, the world closed). `kiln/logs/kiln.log` says why.
+
+- **Where:** `Items.ContainerRenameAvailable` is true where the server world runs, on a dedicated server or in a hosting
+  player's game (capability `items.rename`). On a joined client the call throws `InvalidOperationException`: let your
+  mod's server half rename.
+- **Name limits**, as in the game's Rename field: at most 48 characters and 64 bytes of UTF-8
+  (`Items.ContainerNameMaxChars`, `Items.ContainerNameMaxBytes`), no control characters except tab. Any script and
+  emoji, kept as given: no trimming and no profanity filter. `""` clears the name.
+- **Only containers:** an entity with an inventory of its own that is neither a player's nor an NPC's. A Flame Altar is
+  refused.
+- **Refusals throw at the call:** `ArgumentException` (no such entity, not a container, a name the field wouldn't take;
+  the message says which), `KilnUnavailableException` on an older Kiln or an unknown game build.
 
 ## Item data and saves
 

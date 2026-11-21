@@ -95,6 +95,17 @@ offers **Accept any of its group?**. Outputs are always single items. New in 0.2
 
 ![A new recipe whose inputs are any wood (expanded: its items and the game recipes that take it) and any stone](/projects/kiln/shots/studio-recipes-category.webp)
 
+#### Water from the tank
+
+New in 0.2.0-dev.30.3 (thanks netjunk). A recipe, new or changed, has a **Water from the tank** field: the water charges
+each craft takes. Under it the editor says what the chosen station does with it: how many charges its tank holds,
+that it has no tank and will never start the recipe, that you asked more than the tank holds, or that a crafting menu
+takes the water from the player and the base. How it works in the game: [A recipe's water](/kiln/wiki/data-packs#a-recipes-water).
+
+The game's old **Water** item is a canteen, not tank water, so the pickers no longer offer it. A recipe that already
+takes it is tagged **old canteen item, not tank water**, with a **Use tank water instead** button that removes those
+inputs and asks for the same amount of tank water. Nothing changes until you press it.
+
 ### Live checks
 
 The line at the top right (**Lint: 0 errors, 0 warnings**) checks the whole layer after every save, with Kiln's own

@@ -2,7 +2,7 @@
 title: "Events"
 description: "One event bus for every mod and service: subscribe, cancel, decide, post your own. About 110 event types."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-21"
 ---
 
 Kiln has one event bus, `Events`, like Forge's `EVENT_BUS`. Kiln's services post about 110 event types on it: players,
@@ -171,6 +171,34 @@ if (!ev.Canceled) StartStorm(ev.Strength);
 Derive from `KilnEvent`, `CancelableEvent`, `ResultEvent` or `CancelableResultEvent`. Other mods subscribe to your type
 like any other, through a shared library mod ([Other mods](/kiln/wiki/other-mods)). Posting inside a handler works.
 `Events.HasSubscribers<T>()` is cheap: check it before building an expensive event.
+
+## The game's own ECS events
+
+Below the bus, `GameEvents` reads and posts the game's own ECS events by their type name. `Each` gives a copy of every
+event of a type from the step that just ended (call it in `Tick.Post`); `Post` sends one that the game handles in the
+next step. Tick thread.
+
+```csharp
+private GameType? _died;
+
+public override void OnLoad()
+{
+    _died = GameTypes.Find("EntityDiedEvent");                 // resolve the type once and keep it
+    Context.Tick.Post += (in TickInfo t) =>
+    {
+        if (_died != null) GameEvents.Each(_died, e => Log.Info($"died {e["deadEntityId"]}"));
+    };
+}
+```
+
+`Post` checks the event before it sends it: a registered event type, its full size and plain fields. Game-owned strings,
+dynamic arrays and variants are refused, unnamed fields are zero (`timeStamp` too), and a full queue returns false.
+
+**Cheap every step since 0.2.0-dev.30.3** (GitHub #114, thanks Fuzen777). Before, every `Each` and `Post` by name read
+the game's whole list of event types again to check one name: 48 to 67 ms a step on a hosted world. Now a name is looked
+up once and remembered, and `GameTypes`' lists and a type's fields are worked out once. The new overloads
+`GameEvents.Each(GameType, handler)` and `GameEvents.Post(GameType, fields)` (mod API 0.2.13) skip even that lookup. For
+an older Kiln, listen through `Events.On<T>` instead, or call `Each` only every few steps.
 
 ## Threads
 

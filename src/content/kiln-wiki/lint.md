@@ -3,7 +3,7 @@ title: "Lint and analyzers"
 nav: "Lint and analyzers"
 description: "kiln lint checks your mod's JSON before the game has to. The analyzers catch thread and hot-reload mistakes in your C#."
 status: "works"
-updated: "2026-11-19"
+updated: "2026-11-21"
 ---
 
 ## kiln lint
@@ -42,6 +42,16 @@ New in 0.2.0-dev.29: KL334 checks [building-material pools](/kiln/wiki/blocks#bu
 mod you don't declare as a dependency, a wall shape with a roof pool), KL340 a
 [`run` native](/kiln/wiki/blocks#a-block-effect-that-runs-your-native) whose parameter binds to nothing, and lint checks
 `"world"` in `kiln.programs.json`. `"writes"` in `kiln.mod.json` is no longer called an unknown key.
+
+New in 0.2.0-dev.30.3: KL408 warns about a [recipe's water](/kiln/wiki/data-packs#a-recipes-water) that won't do what it
+looks like: an input naming the game's old Water canteen item (`Food_T1_raw_hydration_Water_Pouch_Filled_DEPRECATED`,
+which a craft takes as an item, never as tank water), water at a factory station without a tank (it never starts the
+recipe), or more water a craft than the station's tank holds. Crafting menus take water from the player and the base, so
+they get no warning.
+
+```text
+content/recipes.json:5:9: warning KL408: recipe "MyMod_Tea" takes "Food_T1_raw_hydration_Water_Pouch_Filled_DEPRECATED", the game's old Water canteen item, as an ingredient: a craft takes 2 of that item, never water from the station's tank. For the station's tank water, remove this input and give the recipe "water": 2 (water charges a craft)
+```
 
 ## C# analyzers
 
