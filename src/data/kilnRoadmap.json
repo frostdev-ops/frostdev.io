@@ -1,6 +1,52 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.30.3",
+      "date": "2026-11-21",
+      "title": "EMF hits, more of ShroudForge on Kiln's engine, and new mod APIs",
+      "summary": "EMF mods that react to hits, kiln mode running many more ShroudForge mods, mod API 0.2.13 (building input, Steam messages, game textures, item use, container names, outlines, pointer and drag and drop, recipe tank water) and fixes reported by players.",
+      "patch": true,
+      "features": [
+        {
+          "title": "EMF mods that react to hits",
+          "text": "EMF's on_hit and Lua's emf.on_hit report the hits the server applies, on Kiln's own EMF layer.",
+          "area": "compat"
+        },
+        {
+          "title": "More of ShroudForge in kiln mode",
+          "text": "Entities and components, the game's loaded resources, template components, the building cursor and props, and mod shortcuts work in kiln mode.",
+          "area": "compat"
+        },
+        {
+          "title": "Kiln mode's own fallback notice",
+          "text": "When Kiln's UI is missing, kiln mode still tells you which ShroudForge mods were skipped and why.",
+          "area": "compat",
+          "kind": "improved"
+        },
+        {
+          "title": "Chat history search",
+          "text": "Ctrl+R searches your earlier chat lines in the HUD and Social chat (by bisdat).",
+          "area": "core"
+        },
+        {
+          "title": "Building input and Steam messages for mods",
+          "text": "Mods can build as the local player, and talk over Steam's own peer-to-peer messages.",
+          "area": "api"
+        },
+        {
+          "title": "New mod APIs",
+          "text": "Game textures in code, using an item for a player, renaming containers, outlining entities, the pointer and drag and drop, and recipe tank water.",
+          "area": "api"
+        },
+        {
+          "title": "Fixes from player reports",
+          "text": "Items.Move never drops items into equipment slots, inventory marks are right at every resolution, Kiln's programs come back after a world change, and GameEvents lookups are cheap.",
+          "area": "api",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.30.2",
       "date": "2026-11-21",
       "title": "ShroudForge mods on Kiln's own engine and Crucible polish",
@@ -2998,38 +3044,8 @@
   ],
   "upcoming": [
     {
-      "version": "0.2.0-dev.30.3",
-      "status": "next",
-      "title": "More of ShroudForge on Kiln's own engine",
-      "summary": "The parts of ShroudForge's API that kiln mode does not have in 0.2.0-dev.30.2, and textures in code for Kiln mods.",
-      "patch": true,
-      "features": [
-        {
-          "title": "Mod keyboard shortcuts in kiln mode",
-          "text": "ShroudForge mods' keyboard shortcuts (shroudforge.input) work in kiln mode.",
-          "area": "compat"
-        },
-        {
-          "title": "In-game world changes in kiln mode",
-          "text": "ShroudForge mods can query and change entities, props and voxels in the game in kiln mode.",
-          "area": "compat"
-        },
-        {
-          "title": "Kiln mode's own fallback notice",
-          "text": "When Kiln's UI is missing, kiln mode still tells you which ShroudForge mods were skipped and why.",
-          "area": "compat",
-          "kind": "improved"
-        },
-        {
-          "title": "Textures in code for Kiln mods",
-          "text": "Kiln (C#) mods can decode and encode game textures in code.",
-          "area": "api"
-        }
-      ]
-    },
-    {
       "version": "0.2.0-dev.31",
-      "status": "planned",
+      "status": "next",
       "title": "Registries, values, UI, network and NPCs",
       "summary": "Kiln's own registries, so mods outlast game updates, and one data stage for all mods; mods' own character values and richer UI, map markers, station tabs, cloth on models and a debugger for the game client; control over what the server sends each player, survivors and bases, and friendly NPCs with bodies and routines of their own.",
       "features": [
