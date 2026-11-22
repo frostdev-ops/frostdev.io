@@ -1,6 +1,25 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.30.4",
+      "date": "2026-11-21",
+      "title": "Kiln mode starts again",
+      "summary": "A small patch: Kiln's interpreter for ShroudForge mods (kiln mode) starts again, and switching to it from the bundled ShroudForge no longer stops at the game data.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Kiln mode starts",
+          "text": "Kiln's interpreter for ShroudForge mods was turned away at every start in 0.2.0-dev.30.2 and 30.3 (a missing build mark); it starts now, and the release checks refuse a build without the mark.",
+          "area": "compat"
+        },
+        {
+          "title": "Switching to kiln mode",
+          "text": "After Kiln's bundled ShroudForge, kiln mode puts the game's own data back when it can prove what the bundled ShroudForge wrote, and otherwise asks you to verify the game files in Steam.",
+          "area": "compat"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.30.3",
       "date": "2026-11-21",
       "title": "EMF hits, more of ShroudForge on Kiln's engine, and new mod APIs",
