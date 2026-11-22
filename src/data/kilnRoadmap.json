@@ -1,6 +1,60 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.30.5",
+      "date": "2026-11-22",
+      "title": "Servers and Settings redesigned, building-tool APIs",
+      "summary": "The Servers pages are redesigned and every server action shows its progress; Settings has sections and a search; mod API 0.2.14 adds custom building tools and Fuzen777's UI requests; the save editor adds dyes, undo and redo and a polish pass; launcher updates take one click; kiln mode's first start is much faster.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Servers, redesigned",
+          "text": "One page per server with seven sections (Overview, Console, Players, World, Mods, Backups, Settings), a server switcher, and an Overview that shows the start stage by stage.",
+          "area": "servers"
+        },
+        {
+          "title": "Server actions show progress",
+          "text": "Start, Stop, Restart, Update the game and Install/Update Kiln show each step as it runs, say why one failed, and offer Try again.",
+          "area": "servers"
+        },
+        {
+          "title": "Settings, redesigned",
+          "text": "Six sections with short groups instead of one long page, and a search that jumps to any option.",
+          "area": "launcher"
+        },
+        {
+          "title": "Mod API 0.2.14: building tools and UI requests",
+          "text": "Custom building tools that run the game's own terraform with Kiln's limits (filtered removal, paid placement from backpack and magic chests, the material picker, building-area checks, the game's own undo), legacy block identities, recipe menu groups and knowledge entries; controller keys for mod UIs, slot rarity and level, the game's item detail, and outlines through walls (thanks Fuzen777).",
+          "area": "api"
+        },
+        {
+          "title": "Save editor: dyes, undo and redo, safer saves",
+          "text": "Dyes can be added, upgrade levels stay valid, undo and redo, restores that can't leave a half-written save, backups kept with their save, full keyboard use and layouts for small windows and the Deck.",
+          "area": "tools"
+        },
+        {
+          "title": "One-click launcher updates",
+          "text": "The launcher restarts by itself after an update (not while you play or have unsaved work), and the new Kiln goes into the game when it closes.",
+          "area": "launcher"
+        },
+        {
+          "title": "Faster first kiln-mode start",
+          "text": "The first kiln-mode start no longer re-reads all of the game's data files; on one PC 2 min 40 s, in tests 30 s to 4 s.",
+          "area": "compat"
+        },
+        {
+          "title": "Steam Deck and gamepads",
+          "text": "Play's notices fold to one line so the mod list keeps room on a Steam Deck, and a gamepad stick let go no longer keeps scrolling Kiln's screens (thanks Somamint and Fuzen777).",
+          "area": "launcher"
+        },
+        {
+          "title": "EML mods after a leftover backup",
+          "text": "A leftover modded backup of the game's data no longer makes every EML start fail; Kiln checks it first and makes a fresh one when that's provably safe (thanks potter420).",
+          "area": "compat"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.30.4",
       "date": "2026-11-21",
       "title": "Kiln mode starts again",
