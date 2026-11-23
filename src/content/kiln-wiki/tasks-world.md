@@ -1,12 +1,12 @@
 ---
 title: "World reads and writes from tasks"
 nav: "World from tasks"
-description: "Read entities and components from a Kiln task's worker with checked copies, and change a plain component between frames by compare-exchange. Experimental (KILNX003)."
+description: "Read entities and components from a Kiln task's worker with checked copies, and change a plain component between frames by compare-exchange. Normal Kiln API since 0.2.0-dev.30.7."
 status: "pending"
-updated: "2026-11-18"
+updated: "2026-11-23"
 ---
 
-> **New in 0.2.0-dev.29.18** (mod API 0.2.10), experimental. Not yet checked in a real game: the reads and writes have
+> **New in 0.2.0-dev.29.18** (mod API 0.2.10); no longer experimental since 0.2.0-dev.30.7 (mod API 0.2.16). Not yet checked in a real game: the reads and writes have
 > run only in Kiln's tests, against stand-ins for the game. They work only on the exact game builds Kiln knows,
 > dedicated server 26430253 and client 26430625; other builds answer `Unavailable`.
 
@@ -15,23 +15,15 @@ the tick for every look. Every read copies the bytes and checks the entity again
 value or a reason why not. A task can also change one kind of component itself: a plain one the game neither saves nor
 sends, by compare-exchange between frames. Everything else still changes on the tick.
 
-## KILNX003: the opt-in
+## No opt-in needed
 
-`WorldConcurrent` and its types are `[Experimental("KILNX003")]`: documented and in completion, but new, and their shape
-can still change. Using them is a compile error until the project opts in, next to `World` in `<KilnServices>` and
-`tasks.pool` in `<KilnFeatures>` ([project setup](/kiln/wiki/tasks#project-setup)):
+Since 0.2.0-dev.30.7 (mod API 0.2.16), `WorldConcurrent` and its types, and `FakeWorld.BusyReads` and `BusyWrites` in
+Kiln.TestKit, are normal Kiln API: no opt-in. Put `World` in `<KilnServices>` and `tasks.pool` in `<KilnFeatures>`
+([project setup](/kiln/wiki/tasks#project-setup)) and use them.
 
-```xml
-<PropertyGroup>
-  <NoWarn>$(NoWarn);KILNX003</NoWarn>
-</PropertyGroup>
-```
-
-- Put the same `NoWarn` line in the test project when its tests use them. `FakeWorld.BusyReads` and `BusyWrites` in
-  Kiln.TestKit carry the same id.
-- `KILNX001`, the id of Kiln's lab members, doesn't opt in to `WorldConcurrent`. Test builds before 0.2.0-dev.29.18
-  used `KILNX001` for it: switch to `KILNX003`, and keep `KILNX001` only if you also call lab members.
-- The mark goes once the in-game checks of the reads and the writes pass on both exact game builds.
+- On Kiln 0.2.0-dev.29.18 to 0.2.0-dev.30.6 they were `[Experimental("KILNX003")]` and a project opted in with
+  `<NoWarn>$(NoWarn);KILNX003</NoWarn>`. A project that still has that line builds as before; you can remove it.
+- Threading, bounds and capability checks are the same as before: only the experimental mark went.
 
 ## Where the reads work
 
@@ -142,7 +134,7 @@ again.
 ## Writes from a task
 
 Tasks change the world on the tick: `World.Write`, `Items.Give` and the rest, with `ToTick`, `OnTick` or `PostToTick`.
-The one exception, also experimental: a task can change a whole component itself by compare-exchange. Kiln compares the
+The one exception: a task can change a whole component itself by compare-exchange. Kiln compares the
 component with the bytes you expect and writes the new bytes only when they are equal. The write runs under the
 engine's own write gate, which every server frame holds for its whole update, so it lands only between frames and a
 frame never sees a half-written component. Nothing waits: when the gate is taken, the call answers `Busy` at once.
@@ -242,7 +234,6 @@ kiln.Entities.BusyWrites = 1;                                        // the next
 - They work only on dedicated server 26430253 and client 26430625. Other builds answer `Unavailable`, and a game update
   turns them off until Kiln knows the new build.
 - How long a write holds the gate on native Windows under load has not been measured yet.
-- They stay experimental (`KILNX003`) until their in-game checks pass on both builds.
 
 The reference is in Kiln's repository, `docs/kiln/services/world.md` ("World reads from task threads" and "World writes
 from task threads"), with the guide in `docs/kiln/modding/tasks.md`, on [GitHub](https://github.com/frostdev-ops/kiln).

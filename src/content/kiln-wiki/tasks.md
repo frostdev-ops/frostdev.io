@@ -25,8 +25,6 @@ task, and the mod's tick code moves the items.
   <KilnServices>World;Items;Chat</KilnServices>
   <!-- Kiln loads the mod only where its task pool runs -->
   <KilnFeatures>tasks.pool</KilnFeatures>
-  <!-- only for the world reads and writes from tasks, which are experimental -->
-  <NoWarn>$(NoWarn);KILNX003</NoWarn>
 </PropertyGroup>
 ```
 
@@ -35,9 +33,8 @@ task, and the mod's tick code moves the items.
   every `Context.Tasks.Run`. A mod that also works without tasks leaves the line out and asks
   `Capabilities.Is("tasks.pool")` before it starts one.
 - **`World`** goes in `<KilnServices>` when your tasks read or write the world.
-- **`KILNX003`** opts in to `WorldConcurrent`, the [world reads and writes from tasks](/kiln/wiki/tasks-world#kilnx003-the-opt-in).
-  A mod that doesn't use them leaves it out. Put the same `NoWarn` line in the test project when its tests call them
-  (the `kiln-unit-test` template has it as a comment). `KILNX001`, the lab members' id, doesn't opt in to them.
+- **`WorldConcurrent`**, the [world reads and writes from tasks](/kiln/wiki/tasks-world), is normal API since
+  0.2.0-dev.30.7: no `KILNX003` opt-in is needed (an existing `NoWarn` line for it is harmless).
 
 ## What to run as a task
 
