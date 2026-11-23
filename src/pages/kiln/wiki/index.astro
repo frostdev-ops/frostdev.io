@@ -1,7 +1,7 @@
 ---
 import type { MarkdownInstance } from 'astro';
 import KilnLayout from '../../../layouts/KilnLayout.astro';
-import { kilnSource, kilnWikiSections, kilnStatusLabel, type KilnWikiFrontmatter } from '../../../data/kiln';
+import { kilnApi, kilnSource, kilnWikiSections, kilnStatusLabel, type KilnWikiFrontmatter } from '../../../data/kiln';
 
 const docs = import.meta.glob<MarkdownInstance<KilnWikiFrontmatter>>('../../../content/kiln-wiki/*.md', { eager: true });
 const bySlug = new Map(Object.entries(docs).map(([file, doc]) => [file.replace(/^.*\/|\.md$/g, ''), doc.frontmatter]));
@@ -54,6 +54,13 @@ const start = [
         </ul>
       </section>
     ))}
+
+    <section class="kiln-hub-section" aria-labelledby="wiki-api">
+      <h2 id="wiki-api">Reference for modders<span>the newest release</span></h2>
+      <ul class="kiln-hub-list">
+        <li><a href={kilnApi}><strong>API reference</strong><span class="d">Every type and member a mod can use, by service, with the modder's guide. Press / to search.</span></a></li>
+      </ul>
+    </section>
 
     <section class="kiln-hub-section" aria-labelledby="wiki-agents">
       <h2 id="wiki-agents">For AI agents<span>{pageCount} wiki pages, one skill</span></h2>

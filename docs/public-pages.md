@@ -74,6 +74,15 @@ checkout>` copies it into `src/content/kiln-skill/`. Production nginx needs the 
 of the product-page location from `ops/public-site.nginx.conf`. Every Kiln page ends with "Enshrouded is a trademark of
 Keen Games GmbH. Kiln is unofficial."
 
+**Kiln's API reference.** `/kiln/api/` is not built here: it is the newest Kiln release's DocFX site (the modder's guide
+and the API reference), uploaded with the release by Kiln's `tools/release/publish.sh --sdk-site` and served by nginx
+(`location ^~ /kiln/api/`, a symlink to the release's `sdk/api/`; every release keeps its own copy at
+`/kiln/downloads/<version>/sdk/api/`). Kiln's DocFX template (`tools/docs-site/template/` in Kiln's repository) copies
+this site's Kiln frame: the header and footer of `MarketingLayout.astro` on a `/kiln` page, the charcoal-and-ember colours,
+the Fraunces face and the wiki's layout; change it there too when the frame here changes. The header's "API reference"
+link and the wiki hub and navigation point at it; a wiki page lists the API reference's service pages it explains
+(`kilnWikiApi` in `src/data/kiln.ts`, the other direction of Kiln's `tools/docs-site/wiki.json`).
+
 **Kiln on Discord.** `/kiln/discord`, `/kiln/privacy` and `/kiln/terms` belong to the Kiln app on Discord (the bot in
 the Kiln Discord server, named KilnBot until November 2026) and to the Kiln Launcher's optional Discord features. They
 are the three addresses the app's settings in Discord's developer portal point to: the install link's custom URL

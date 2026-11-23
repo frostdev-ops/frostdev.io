@@ -1,7 +1,7 @@
 ---
 import type { MarkdownInstance } from 'astro';
 import KilnLayout from '../../../layouts/KilnLayout.astro';
-import { kilnWikiOrder, kilnWikiSections, kilnStatusLabel, type KilnWikiFrontmatter } from '../../../data/kiln';
+import { kilnApi, kilnApiService, kilnWikiApi, kilnWikiOrder, kilnWikiSections, kilnStatusLabel, type KilnWikiFrontmatter } from '../../../data/kiln';
 
 // The Kiln wiki: one page per Markdown file in src/content/kiln-wiki/, written for people from Kiln's own docs.
 type Doc = MarkdownInstance<KilnWikiFrontmatter>;
@@ -15,6 +15,7 @@ const docs = import.meta.glob<Doc>('../../../content/kiln-wiki/*.md', { eager: t
 const bySlug = new Map(Object.entries(docs).map(([file, doc]) => [file.replace(/^.*\/|\.md$/g, ''), doc]));
 for (const { slug } of kilnWikiOrder) if (!bySlug.has(slug)) throw new Error(`Kiln wiki: no src/content/kiln-wiki/${slug}.md`);
 for (const slug of bySlug.keys()) if (!kilnWikiOrder.some((entry) => entry.slug === slug)) throw new Error(`Kiln wiki: ${slug}.md is in no section (src/data/kiln.ts)`);
+for (const slug of Object.keys(kilnWikiApi)) if (!bySlug.has(slug)) throw new Error(`Kiln wiki: kilnWikiApi names ${slug}, which has no page (src/data/kiln.ts)`);
 
 const slug = Astro.params.page as string;
 const { doc } = Astro.props as { doc: Doc };
@@ -27,6 +28,7 @@ const label = (page: string) => bySlug.get(page)!.frontmatter.nav ?? bySlug.get(
 const headings = doc.getHeadings().filter((heading) => heading.depth === 2);
 const updated = new Date(`${frontmatter.updated}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 const minutes = Math.max(1, Math.round(doc.rawContent().split(/\s+/).length / 220));
+const api = kilnWikiApi[slug] ?? [];
 ---
 
 <KilnLayout title={`${frontmatter.title} — Kiln wiki`} description={frontmatter.description} path={`/kiln/wiki/${slug}`}>
@@ -54,6 +56,8 @@ const minutes = Math.max(1, Math.round(doc.rawContent().split(/\s+/).length / 22
               </ul>
             </>
           ))}
+          <h2>Reference for modders</h2>
+          <ul><li><a href={kilnApi}><span>API reference</span></a></li></ul>
           <h2>For AI agents</h2>
           <ul><li><a href="/kiln/agents"><span>Agent skill</span></a></li></ul>
         </nav>
@@ -70,6 +74,12 @@ const minutes = Math.max(1, Math.round(doc.rawContent().split(/\s+/).length / 22
           <span>{minutes} min read</span>
           <span>Updated <time datetime={frontmatter.updated}>{updated}</time></span>
         </p>
+        {api.length > 0 && (
+          <p class="kiln-doc-api">
+            <span>In the API reference:</span>
+            {api.map((assembly) => <a href={kilnApiService(assembly)}>{assembly}</a>)}
+          </p>
+        )}
       </header>
       <div class="kiln-prose"><Content /></div>
       <nav class="kiln-pager" aria-label="Previous and next page">

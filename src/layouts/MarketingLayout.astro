@@ -47,6 +47,8 @@ const kiln = path === '/kiln' || path.startsWith('/kiln/');
         {kiln && <a href="/kiln/crucible" aria-current={crucible ? 'page' : undefined}>Crucible</a>}
         {kiln && <a href="/kiln/download" aria-current={path === '/kiln/download' || path.startsWith('/kiln/download/') ? 'page' : undefined}>Download</a>}
         {kiln && <a href="/kiln/wiki" aria-current={path === '/kiln/wiki' || path.startsWith('/kiln/wiki/') ? 'page' : undefined}>Wiki</a>}
+        {/* the API reference is Kiln's own DocFX site (served from the release files, location /kiln/api/), in this frame */}
+        {kiln && <a href="/kiln/api/">API reference</a>}
         {kiln && <a href="/kiln/roadmap" aria-current={path === '/kiln/roadmap' ? 'page' : undefined}>Roadmap</a>}
         {kiln && <a href="/kiln/agents" aria-current={path === '/kiln/agents' ? 'page' : undefined}>Agent skill</a>}
         {/* Crucible has its own Discord sign-in in its bar; this one is Rimeward's */}

@@ -140,6 +140,10 @@ body:has(.kiln-root) .skip-link { background: #0f0d0c; }
 .kiln-doc-head h1 { margin: 0.35rem 0 0.9rem; color: var(--k-text0); font-family: var(--k-display); font-size: clamp(2.1rem, 4vw, 2.9rem); font-weight: 560; line-height: 1.1; letter-spacing: -0.025em; text-wrap: balance; }
 .kiln-doc-lead { color: var(--k-text1); font-size: 1.05rem; line-height: 1.7; text-wrap: pretty; }
 .kiln-doc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-top: 1rem; color: var(--k-text2); font-size: 0.75rem; }
+/* The API reference's service pages for this page (kilnWikiApi): /kiln/api/, Kiln's DocFX site in the same look. */
+.kiln-doc-api { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem 0.5rem; margin-top: 0.75rem; color: var(--k-text2); font-size: 0.75rem; }
+.kiln-doc-api a { padding: 0.15rem 0.6rem; border: 1px solid var(--k-line-strong); border-radius: 999px; color: var(--k-ember-300); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.72rem; transition: border-color 0.15s, color 0.15s; }
+.kiln-doc-api a:hover { border-color: var(--k-ember-400); color: var(--k-text0); }
 
 .kiln-prose { color: var(--k-text1); }
 .kiln-prose h2 { scroll-margin-top: 1.5rem; margin: 2.75rem 0 1rem; color: var(--k-text0); font-family: var(--k-display); font-size: 1.55rem; font-weight: 560; line-height: 1.25; letter-spacing: -0.015em; }

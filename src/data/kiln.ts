@@ -56,6 +56,54 @@ export interface KilnWikiFrontmatter {
 /** The wiki's pages in reading order, with their section. */
 export const kilnWikiOrder = kilnWikiSections.flatMap((section) => section.pages.map((slug) => ({ slug, section })));
 
+// The API reference: the newest Kiln release's DocFX site (Kiln's tools/docs-site), served from the release files by
+// ops/public-site.nginx.conf (location /kiln/api/), not built here. Each release keeps its own copy at
+// /kiln/downloads/<version>/sdk/api/.
+export const kilnApi = '/kiln/api/';
+export const kilnApiService = (assembly: string) => `${kilnApi}api/services/${assembly}.html`;
+
+// The API reference's service pages for each wiki page. Kiln's tools/docs-site/wiki.json links each service page to its
+// wiki pages; this is the same list the other way round. Keep the two in step (the wiki build fails on a slug with no page).
+export const kilnWikiApi: Record<string, readonly string[]> = {
+  'abilities': ['Kiln.Abilities'],
+  'affixes': ['Kiln.Blocks'],
+  'assets': ['Kiln.Assets'],
+  'blocks': ['Kiln.Blocks'],
+  'building-input': ['Kiln.Client'],
+  'code-mods': ['Kiln.Api', 'Kiln.Chat', 'Kiln.Saves'],
+  'creature-ai': ['Kiln.Creatures'],
+  'creatures': ['Kiln.Creatures', 'Kiln.CreatureControl', 'Kiln.Spawn'],
+  'data-packs': ['Kiln.Content'],
+  'dev-kit': ['Kiln.DevTools'],
+  'drawing': ['Kiln.Client'],
+  'eml-shroudforge': ['Kiln.Eml'],
+  'events': ['Kiln.Api', 'Kiln.Gameplay', 'Kiln.World'],
+  'first-mod': ['Kiln.Api'],
+  'game-ui': ['Kiln.Ui'],
+  'hooks': ['Kiln.Hooks', 'Kiln.Sigs'],
+  'impact': ['Kiln.Abilities'],
+  'inventory': ['Kiln.Items'],
+  'models': ['Kiln.Assets'],
+  'multiplayer': ['Kiln.Players'],
+  'network': ['Kiln.Network'],
+  'new-items': ['Kiln.Content', 'Kiln.Items'],
+  'permissions': ['Kiln.Permissions', 'Kiln.Chat'],
+  'player-rules': ['Kiln.Rules'],
+  'progression': ['Kiln.Skills'],
+  'quests': ['Kiln.Quests'],
+  'sounds': ['Kiln.Audio'],
+  'steam-messages': ['Kiln.Network'],
+  'talents': ['Kiln.Skills'],
+  'tasks': ['Kiln.Api'],
+  'tasks-world': ['Kiln.World', 'Kiln.Game'],
+  'testing': ['Kiln.Testing', 'Kiln.TestKit'],
+  'ui-blocks': ['Kiln.Ui'],
+  'ui-looks': ['Kiln.Ui'],
+  'world-edits': ['Kiln.Build', 'Kiln.Queries', 'Kiln.Terrain'],
+  'world-programs': ['Kiln.Systems', 'Kiln.Game'],
+  'world-progress': ['Kiln.Quests'],
+};
+
 // The agent skill (src/content/kiln-skill/kiln-modding/, mirrored from Kiln's agent/skills/kiln-modding/ by
 // scripts/mirror-kiln-skill.sh). Order and one-line descriptions for the skill page.
 export const kilnSkillFiles = [
