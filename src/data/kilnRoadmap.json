@@ -1,6 +1,45 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.30.6",
+      "date": "2026-11-22",
+      "title": "EMF blocks, block operations and crafting sources",
+      "summary": "EMF mods built with the current EMF SDK load again and can read and break blocks; mod API 0.2.15 adds block operations and Fuzen777's crafting sources (craft and dye from linked chests); the save editor shows names in your game's language; Simplified Chinese covers 30.5.",
+      "patch": true,
+      "features": [
+        {
+          "title": "EMF 0.6.19 and its block functions",
+          "text": "Mods built with the current EMF SDK (Night Raids 1.3.0, Beastmaster 1.19.0, EMF Lua 1.40) load again, and EMF's block functions (what is at a cell, finding a wall, queued block breaking with ruin protection) work on Kiln.",
+          "area": "compat"
+        },
+        {
+          "title": "Mod API 0.2.15: block operations",
+          "text": "Kiln mods can read a block (kind, material, provenance, hardness, health), find the first wall between two points and break the blocks in a box with the game's own damage; natural ground and unbreakable blocks are never removed.",
+          "area": "api"
+        },
+        {
+          "title": "Fuzen777's requests: crafting sources, equipment, HUD lists",
+          "text": "Mods can let players craft and dye from linked chests in any base or none, give items straight into an equipment slot, and add rows to the HUD's arrow and spell lists (thanks Fuzen777).",
+          "area": "api"
+        },
+        {
+          "title": "Save editor in your game's language",
+          "text": "Item, skill and knowledge names come from the installed game's own translations in all 15 languages, and search finds both the translated and the English name.",
+          "area": "tools"
+        },
+        {
+          "title": "Simplified Chinese",
+          "text": "The launcher and in-game texts new in 30.5, translated by MagicFox (XHL).",
+          "area": "launcher"
+        },
+        {
+          "title": "Safer hosted worlds with mod content",
+          "text": "Two rare hosted-world races in mod content are fixed: late model references written by the wrong side, and drop tables read while Kiln was still patching them.",
+          "area": "compat"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.30.5",
       "date": "2026-11-22",
       "title": "Servers and Settings redesigned, building-tool APIs",
@@ -3191,6 +3230,11 @@
           "title": "Villager routines",
           "text": "Mods can give villagers a daily plan, such as roaming, sitting and sleeping, that stays after a restart.",
           "area": "content"
+        },
+        {
+          "title": "Camera control",
+          "text": "Mods can play camera paths for cutscenes, set a follow camera, field of view and shake, and lock a player's camera mode for a time.",
+          "area": "api"
         }
       ]
     },
@@ -3200,11 +3244,6 @@
       "title": "Camera, pets and taming",
       "summary": "Camera control for mods, pets that follow and fight for their owner, and taming.",
       "features": [
-        {
-          "title": "Camera control",
-          "text": "Mods can play camera paths for cutscenes, set a follow camera, field of view and shake, and lock a player's camera mode for a time.",
-          "area": "api"
-        },
         {
           "title": "Pets that follow you",
           "text": "Mods can add pets that follow their owner, fight hostile creatures and can be revived instead of dying.",
