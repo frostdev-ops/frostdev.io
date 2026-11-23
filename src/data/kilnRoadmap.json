@@ -1,6 +1,35 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.30.8",
+      "date": "2026-11-23",
+      "title": "Player storage on, building tools change terrain, EMF 0.6.20",
+      "summary": "Player storage starts again on servers and hosted worlds; building tools from Kiln mods change terrain in a real game; EMF 0.6.20 mods load; crafting menus count linked containers.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Player storage starts again",
+          "text": "30.7 switched player storage off at start on servers and hosted worlds; it works now, and Kiln says which check failed if it can't (thanks Fuzen777).",
+          "area": "api"
+        },
+        {
+          "title": "Building tools change terrain",
+          "text": "Strokes of Kiln mods' building tools reach the game's terraform, and Remove on the primary button works (thanks bisdat).",
+          "area": "content"
+        },
+        {
+          "title": "EMF 0.6.20",
+          "text": "Mods built with EMF 0.6.20 (API v48) load on Kiln.",
+          "area": "compat"
+        },
+        {
+          "title": "Crafting counts",
+          "text": "Crafting menus count linked containers in their ingredient rows; station screens show what their buttons can move (thanks Fuzen777).",
+          "area": "content"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.30.7",
       "date": "2026-11-23",
       "title": "Player storage, Unlimited Flight, brushes in the picker",
