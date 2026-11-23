@@ -1,6 +1,40 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.30.7",
+      "date": "2026-11-23",
+      "title": "Player storage, Unlimited Flight, brushes in the picker",
+      "summary": "Mod API 0.2.16 adds player storage (bags, quivers and spellbooks saved with the character, safe from loss and duplication); Kiln's own /unlimitedflight; Kiln tasks are no longer experimental; mods' building tools show their brushes; fixes for a blank NVIDIA launcher on Linux, big ShroudForge mods and the Steam Deck's report save.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Player storage for mods",
+          "text": "Mods can give players bags, quivers and spellbooks of their own, saved with the character, shown in the HUD's ammo lists, kept when a mod or Kiln is removed, and protected against loss and duplication (thanks Fuzen777).",
+          "area": "api"
+        },
+        {
+          "title": "Unlimited Flight, built in",
+          "text": "/unlimitedflight gives the host or an admin unlimited glider stamina and S/W steering without Creative Mode, within the server's limits.",
+          "area": "content"
+        },
+        {
+          "title": "Kiln tasks are normal API",
+          "text": "Task-thread world reads and writes are no longer experimental: no opt-in needed.",
+          "area": "api"
+        },
+        {
+          "title": "Mods' brushes in the brush picker",
+          "text": "Building tools from Kiln mods list their brushes in the game's picker at their sizes, and tool-only blocks files load (thanks bisdat).",
+          "area": "content"
+        },
+        {
+          "title": "Fixes for Linux, ShroudForge and the Deck",
+          "text": "A blank NVIDIA launcher recovers by itself, ShroudForge mods that walk huge game assets start, a stale ShroudForge backup is never restored over current files, and reports save on the Steam Deck.",
+          "area": "launcher"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.30.6",
       "date": "2026-11-22",
       "title": "EMF blocks, block operations and crafting sources",
