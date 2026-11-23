@@ -1,6 +1,35 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.30.9",
+      "date": "2026-11-23",
+      "title": "Fewer fake Flame Altars, server restarts and staged updates",
+      "summary": "Kiln's terrain saves stop adding fake Flame Altars and base areas; servers restart and take mod and Kiln updates on their own; the launcher's Check now says what it found; the Nexus runtime comes as a folder.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Fewer fake Flame Altars",
+          "text": "Kiln's terrain saves no longer add fake base areas, and add far fewer altars to the world list; big bases keep Kiln's edits (thanks bisdat).",
+          "area": "content"
+        },
+        {
+          "title": "Server restart and staged updates",
+          "text": "Kiln.Admin restarts the server with a countdown and a save; mod and Kiln updates are applied at the next start, crash-safe, with one rollback.",
+          "area": "servers"
+        },
+        {
+          "title": "Check now says what it found",
+          "text": "About, Settings and the Deck say whether Kiln is up to date, what is available, or why the check failed (thanks HadToRegister).",
+          "area": "launcher"
+        },
+        {
+          "title": "Ready for Kiln Web Admin",
+          "text": "Kiln.Admin's metrics, one-time logins and command forms, and the admin pages as a package for web pages.",
+          "area": "servers"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.30.8",
       "date": "2026-11-23",
       "title": "Player storage on, building tools change terrain, EMF 0.6.20",
