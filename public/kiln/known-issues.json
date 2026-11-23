@@ -123,6 +123,22 @@
         }
       },
       "added": "2026-11-18"
+    },
+    {
+      "id": "sf-unlimited-flight-old",
+      "title": "SF Unlimited Flight is out of date: Kiln has its own Unlimited Flight",
+      "match": {
+        "findings": [
+          "sf-mod-bundled-newer"
+        ],
+        "text": "sf-unlimited-flight"
+      },
+      "fix": "Your SF Unlimited Flight is older than the copy Kiln brings, and its glider pitch may not work next to Kiln. Kiln has its own Unlimited Flight since 0.2.0-dev.30.7: as the host or a server admin, type /unlimitedflight on in chat (unlimited glider stamina, S climbs, W dives; /unlimitedflight status shows what works here). Then you can remove SF Unlimited Flight in the Mods list.",
+      "action": {
+        "label": "Open Mods",
+        "to": "runtime"
+      },
+      "added": "2026-11-23"
     }
   ]
 }
