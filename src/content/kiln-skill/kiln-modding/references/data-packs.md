@@ -64,6 +64,11 @@ re-applied (checked every ~2 s). Packs apply even when no mod references Kiln.Co
   `"@refs": true` on the rule.
 - `station`: `"hand"`, a recipe whose station to use, or `"0x<workshop id>"` (traders are workshops too). `unlock`:
   `Always` (default) or `LikeBase`.
+- `water`: the recipe's water, charges a craft (0..1023; the recipe screen's "Water" row). A station with a tank (Seedbed,
+  Oven, Cooking Station, Laboratory, Coffee Brewer, Beehive) takes it from its tank; a crafting menu from the crafter and
+  the base's wells and barrels; a factory station without a tank never starts it (KL408). A rule on a game recipe sets
+  `waterCharges`. Never use the item `Food_T1_raw_hydration_Water_Pouch_Filled_DEPRECATED` ("Water") as an input for
+  this: it is an old canteen item, and a craft takes the item.
 - Clients: new items need a stated `clients: "kiln"` (definitions are synced; PNG icons are not) or `"mod"`.
 - Removing a mod: its items stay registered until restart; after a restart, saved stacks become placeholders named
   `[Missing: <mod>:<item>]` and come back when the mod does.

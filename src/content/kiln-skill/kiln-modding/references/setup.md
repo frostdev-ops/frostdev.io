@@ -2,7 +2,7 @@
 
 Wiki: [dev kit](https://frostdev.io/kiln/wiki/dev-kit), [your first mod](https://frostdev.io/kiln/wiki/first-mod).
 
-`Kiln.Api`, `Kiln.Sdk`, `Kiln.Templates` and `Kiln.TestKit` share the full MDK pack version: `0.2.0-dev.29.19` for this release (the
+`Kiln.Api`, `Kiln.Sdk`, `Kiln.Templates` and `Kiln.TestKit` share the full MDK pack version: `0.2.0-dev.30.6` for this release (the
 four `.nupkg` files on its GitHub release), or a unique
 `0.2.0-dev.local.<date>.<time>` for a local pack. `0.2.0` is only the source's base version. These packages use a local feed,
 not nuget.org: pass the MDK feed as `--feed` or `$KILN_FEED`. Use the actual pack version when editing a project by hand.
@@ -46,13 +46,13 @@ installed MDK to confirm availability. These add typed blocks and/or `blocks/*.j
 **dev.26+:** `dotnet new kiln-unit-test -n MyMod.Tests --mod ../MyMod/MyMod.csproj` makes an xunit project on
 the `Kiln.TestKit` package ([testing.md](testing.md)). `Game` in `KilnServices` references `Kiln.Game` (`Kiln.Ecs` typed reads);
 the build then writes `kiln.gametypes.json` beside the mod, which Kiln checks at load. Release packs carry their full version
-(`0.2.0-dev.29.19`) and an SDK feed folder (`sdk/feed/`). The launcher can move its data folder (Settings, Library, Data
+(`0.2.0-dev.30.6`) and an SDK feed folder (`sdk/feed/`). The launcher can move its data folder (Settings, Library, Data
 folder); after a move, delete a native mod project's `build` folder once (CMake keeps the old SDK path). Not run in a real
 launcher window yet.
 
 The project file:
 ```xml
-<Project Sdk="Kiln.Sdk/0.2.0-dev.29.19">
+<Project Sdk="Kiln.Sdk/0.2.0-dev.30.6">
   <PropertyGroup>
     <KilnModId>my-mod</KilnModId>
     <Version>1.0.0</Version>
@@ -70,7 +70,7 @@ The project file:
 | `KilnModId` | lower-case `AssemblyName` | `id` |
 | `KilnModName`, `Version` | `AssemblyName`, 1.0.0 | `name`, `version` |
 | `Authors`, `Description`, `PackageLicenseExpression`, `PackageProjectUrl` | | `authors`, `description`, `license`, `url` |
-| `KilnApiVersion` | the SDK's (0.2.11 for dev.29.19) | `apiVersion` |
+| `KilnApiVersion` | the SDK's (0.2.15 for dev.30.6) | `apiVersion` |
 | `KilnSide` | server | `side` |
 | `KilnClients` | from the side: server none, else mod | `clients` |
 | `KilnEntryType` | the only public `Mod` subclass | `entryType` |

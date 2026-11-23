@@ -12,11 +12,12 @@ updated: "2026-11-17"
 - Kiln's matching SDK/MDK download and the [`kiln` command](/kiln/wiki/cli), both under
   [Mod authors](/kiln/download#authors) on the download page, or a source-built MDK. Unpack the download:
   the folder holding the `.nupkg` files is the local package "feed". Point `kiln new` at it with `--feed` or `$KILN_FEED`.
-  Use the full package version (`0.2.0-dev.29.16` for this release), not the API base `0.2.0`.
+  Use the full package version (`0.2.0-dev.30.6` for the current release), not the API base `0.2.0`.
   Since 0.2.0-dev.26 the packages are also on a NuGet feed, for `dotnet` and your IDE: the source is
-  `https://frostdev.io/kiln/downloads/0.2.0-dev.29.16/sdk/feed/index.json`. `kiln new` still takes the unpacked folder.
-- The [API reference](https://frostdev.io/kiln/downloads/0.2.0-dev.29.16/sdk/api/) of this release: every public type and
-  member, with the thread and the side it is for, and the modder's guide next to it.
+  `https://frostdev.io/kiln/downloads/<version>/sdk/feed/index.json` (for example `0.2.0-dev.30.6`). `kiln new` still takes the unpacked folder.
+- The [API reference](https://frostdev.io/kiln/api/) of the newest release: every public type and member, with the
+  thread and the side it is for, and the modder's guide next to it. Each release's own copy stays at
+  `https://frostdev.io/kiln/downloads/<version>/sdk/api/`.
 
 ## 1. Make the mod
 
@@ -69,7 +70,7 @@ You get `my-mod-0.1.0.zip`. Players add it to their launcher library. Admins unz
 ## Without `kiln`
 
 ```sh
-dotnet new install "<feed>/Kiln.Templates.0.2.0-dev.29.16.nupkg" # once; use your MDK's full version
+dotnet new install "<feed>/Kiln.Templates.0.2.0-dev.30.6.nupkg"  # once; use your MDK's full version
 dotnet new kiln-mod -n MyMod --feed <feed> --server <folder> --tests
 dotnet build -t:KilnDeploy                                 # add -p:KilnReload=true to reload
 dotnet build -t:KilnPack

@@ -2,6 +2,11 @@
 
 The wiki: https://frostdev.io/kiln/wiki/<page>.
 
+The generated API reference: https://frostdev.io/kiln/downloads/<version>/sdk/api/, for example
+https://frostdev.io/kiln/downloads/0.2.0-dev.30.5/sdk/api/. Release builds publish one (a few older versions have none).
+It covers every public type and member with its XML docs, so look there when this skill or the wiki doesn't name a call.
+There is no "latest" URL: use the version the mod builds on.
+
 | Question | Page |
 |---|---|
 | Start a project | `first-mod`, `dev-kit` |
@@ -49,11 +54,31 @@ The wiki: https://frostdev.io/kiln/wiki/<page>.
 | NoClip, player rules, creative mode | `player-rules` |
 | Mod texts in several languages, the game's own texts | `languages` |
 | Network channels, synced configs, client code | `multiplayer`, `network` |
+| A mod's own Steam peer-to-peer messages (dev.30.3+) | `steam-messages` |
+| Building as the local player: select, place, remove, undo, dismantle (dev.30.3+) | `building-input` |
 | Mods of other engines (EML, EMF, closed DLL mods), chain loading | `other-mods`, `emf-mods`, `eml-shroudforge`, `more-frameworks`, `dinput8-chain` |
+| ShroudForge mods on Kiln's own interpreter (kiln mode, preview, dev.30.2) | `kiln-mode` |
 | Hooks, patches, typed hooks (advanced tier) | `hooks` |
 | Forge concepts | `forge` |
 | Kiln's menus in the game, chat history, other mods' slash commands, graphics tools | `in-game` |
 | What works today | `status` |
+
+Core services and the mod lifecycle (pages in the repository's `docs/kiln/`):
+
+| Question | Page |
+|---|---|
+| Lifecycle events (`ModsLoadedEvent`, `ServerStartedEvent`, `ModReloadedEvent`), the Mods API, IMC, hot reload | `modding/lifecycle.md` |
+| What happens when a mod throws: the fault limit that disables it, crash reports | `modding/faults.md` |
+| `kiln debug`: breakpoints, call stack and locals in a running local server | `modding/debugging.md` |
+| World edits the game saves and replicates (terrain, building blocks, props), schematics, undo, `Build.PlaceOnce`, `/build` | `services/build.md` |
+| Create and destroy entities from templates (creatures, item drops, props), the per-world list of what Kiln spawned | `services/spawn.md` |
+| The server's game settings, live (enemy and boss factors, day length, weather, XP), written back on request | `services/settings.md` |
+| One creature at runtime: catalog, per-creature values, variants, AI events, commands | `services/creatures.md` |
+| A mod's own resources, overrides of the game's, item icons, retextures | `services/assets.md` |
+| Play sounds, music, voice-over and narration from code (client) | `services/audio.md` |
+| New nodes in the game's skill tree, Kiln talent trees | `services/skills.md` |
+| Levels, experience, skill points from code | `services/progression.md` |
+| The game's knowledge (quest steps, NPC rescues, dialogue heard): read, grant, revoke, watch; the vanilla journal; the client veto | `services/knowledge.md` |
 
 dev.26+ (pages in the repository's `docs/kiln/`):
 
@@ -116,7 +141,7 @@ dev.28+ and dev.29+ (pages in the repository's `docs/kiln/`):
 | Equipment sets, tool wear | `services/items.md` |
 | Material pools, world tables | `services/worldtables.md` |
 | NPC roster past 64 | `services/npcs.md`, `services/quests.md` |
-| Gems | `services/gems.md`, `gems-new.md`, `gems-forge.md`, `gems-sockets.md`, `ui-gemforge.md` |
+| Gems | `services/gems.md`, `services/gems-new.md`, `services/gems-forge.md`, `services/gems-sockets.md`, `ui-gemforge.md` |
 | Bases and stations | `services/stations.md` |
 | Item icons and names, looks and themes, fonts | `ui.md` |
 | The game's own texts (`Content.Text`) | `services/content.md` |
@@ -136,6 +161,24 @@ dev.28+ and dev.29+ samples: boot-gallery, OreVein, TerrainSample, TransformScal
 CreatureControlSample, CreatureAi, Decisions, WaterWorks, TypedHookVolume, FrostMark, equipment-sets, MaterialPools,
 Budgets, ValueBars; dev.29.11+ GemSample, GemEffects; dev.29.18+ FetchNearby, SampleTasks.
 dev.29+ templates: `system-wrap`, `client-program`.
+
+dev.30+ (pages in the repository's `docs/kiln/`):
+
+| Question | Page |
+|---|---|
+| Gear values in the tooltip's numbers: the `gear` and `gearRules` pack sections, `Content.Gear` | `services/content.md` "Gear values", "Gear rules" |
+| Gear in code: rarity, enhancement slots, level (`Items.GearOf`), raising rarity (`Items.UpgradeRarity`) | `services/items.md` "Gear: rarity, enhancements, level", "Upgrading rarity" |
+| Rarity at creation, rarity upgrades (`RarityRollBlock`, `RarityUpgradeBlock`) | `modding/item-blocks.md` "Rarity at creation", "Rarity upgrades" |
+| Upgrade stations (`UpgradeStation`) | `modding/world-blocks.md` "Upgrade stations" |
+| Lines and numbers in the game's item detail view (`Ui.Tooltip`), marks and clicks on the game's slots (`SlotMark`, `InventoryScreens`) | `ui.md` |
+| dev.30.5+: building tools, brushes, material pools (`BuildingToolBlock`, `TerrainBrushBlock`, `ToolMaterialPoolBlock`) | `services/tools.md` |
+| dev.30.5+: what a tool's primary and secondary action does (`TerrainToolAction`, add and remove modes, capabilities) | `services/tool-actions.md` |
+| dev.30.5+: what placing terrain costs (pool items, normal building supplies, undo refunds) | `services/tool-payment.md` |
+| dev.30.5+: terrain-only removal, a per-tool list of removable materials | `services/terrain-tool-carving.md` |
+| dev.30.5+: a mod's item or recipe tracked as game knowledge (`KnowledgeBlock`) | `modding/item-blocks.md` "Tracking"; reads and changes: `services/knowledge.md` |
+| dev.30.6+: block queries and controlled breaking (`Build.BlockAt`, `FindWall`, `BreakBox`) | `services/build-blocks.md` |
+
+dev.30+ samples: GearValues, RarityAnvil, SlotMarks.
 
 Sample mods: Hello, SampleLib, SampleConsumer, SampleTests, BigStacks, NewItems, SpellTweaks, CreatureTweaks, EliteVukah, FireNova,
 ImpactSample, AssetSample, ModelSample, SoundSample, VfxSample, SkillTreeSample, quests-sample, NpcSample, Schematics, MenuButtons, UiSample,

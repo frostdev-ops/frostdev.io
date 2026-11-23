@@ -15,11 +15,11 @@ Enshrouded is a trademark of Keen Games GmbH. Kiln is unofficial.
 
 1. Read the page for what you're using: https://frostdev.io/kiln/wiki. [references/docs-map.md](references/docs-map.md) says
    which one.
-2. The current build is **0.2.0-dev.29.19**, with mod API 0.2.11 and the matching 0.2.0-dev.29.19 MDK. A mark like
-   **dev.20+**, **dev.28+** or **dev.29.19+** means that runtime and its MDK or newer; check the installed build
-   (`Mods.RuntimeApiVersion`). Which build added what, and what a real game has shown:
-   [references/versions.md](references/versions.md). Much of dev.28 to dev.29.19 ran only on test servers, in host tests
-   or under Wine: take the verification status from the release notes' "Checked" and "Not yet" text and never claim more.
+2. The current build, its mod API and the MDK to use are in [references/versions.md](references/versions.md), which also
+   says which build added what and what a real game has shown. A mod can read the running Kiln's mod API at run time as
+   `Mods.RuntimeApiVersion`. A mark like **dev.20+**, **dev.28+** or **dev.29.19+** means that runtime and its MDK or
+   newer; check the installed build (`Mods.RuntimeApiVersion`). Much of dev.28 to dev.29.19 ran only on test servers,
+   in host tests or under Wine: take the verification status from the release notes' "Checked" and "Not yet" text and never claim more.
    Server/offline verification does not establish client rendering, input or multiplayer behavior. The official
    launcher has Nexus integration switched off: import downloaded archives by hand.
 3. Decide the side and what players need, before writing code:
@@ -78,6 +78,10 @@ Never deploy to a server players are using. Use a separate local test server.
   `Capabilities.Is(name)` / `Why(name)`; an off capability throws `KilnUnavailableException`. dev.27+: every service
   does, and KILN121 warns when a `[RequiresCapability]` member is used with nothing asking first. A mod that cannot work
   without a row names it in `KilnFeatures` (`tasks.pool`), so Kiln does not load it where the row is off.
+- **Player input and Steam (dev.30.3+).** `BuildingInput` sends the local player's own building input (the server
+  still checks permissions, resources and range; game client 26430625, not checked in a real game yet). `SteamMessages` is Steam
+  peer-to-peer outside the game's connection (`Open` needs `"steamMessages": true` in kiln.mod.json); prefer Kiln.Network
+  channels. Ask `Available` first. [references/api.md](references/api.md#client).
 - **Read every result (dev.27+).** A refusal by the game is a result with `Ok = false` and a `Reason`, not an exception.
   KILN120 warns when nobody reads one; pass the reason on to the player or the log.
 - **Never ship Kiln assemblies.** Kiln.Sdk references them with `ExcludeAssets=runtime`.

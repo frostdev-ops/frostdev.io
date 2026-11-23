@@ -24,6 +24,7 @@ the project folder is validated and copied. JSON with `//` comments and trailing
   "entryType": "MyMod.MyModClass",   // default: the only public Mod subclass
   "exports": ["MyMod.Api.dll"],      // assemblies dependents compile against
   "advanced": false,
+  "steamMessages": false,    // dev.30.3+: true = the mod opens its own Steam peer message leases (SteamMessages.Open throws without it)
   "tests": { "autoRun": true, "timeoutSeconds": 20 },
   "writes": ["Fuel"],        // dev.27+: component types written with World.Write/Update/WriteField/WriteAt (max 64)
   "boot": false,             // dev.28+: true | "required": Mod.OnBoot runs before the game starts (boot.md)

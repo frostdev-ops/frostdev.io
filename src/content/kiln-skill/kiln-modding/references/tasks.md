@@ -54,6 +54,13 @@ private string Scan(CommandContext c, Player player)
   world): `KilnUnavailableException` at once.
 - Budget per step: server world 64 items or 2 ms per mod (4 ms for all mods), client world 64 items or 1 ms per mod.
   The rest waits for the next step. Hand back small pieces.
+- dev.30+ (mod API 0.2.12) `ToTick(WorldKind.Menu)` / `OnTick(WorldKind.Menu, ...)` / `PostToTick(WorldKind.Menu, ...)`:
+  the game's UI frame on a client while no world runs (main menu, between worlds), ~30/s, 64 items or 1 ms per mod
+  (2 ms all). Only any-thread and main-thread UI APIs there: `Game.IsTickThread` is false, tick-only APIs throw
+  `InvalidOperationException` ("menu hop"). A world's start cancels waiting menu hops (task ends `Cancelled`); each menu
+  stretch is its own session. In a world or on a server: `KilnUnavailableException`. No `NextGateWindow(WorldKind.Menu)`
+  (`ArgumentOutOfRangeException`). A task started in the menu on the main thread still belongs to the client world:
+  name `WorldKind.Menu`.
 - What may cross: values (`EntityId`, `ItemId`, `WorldPosition`, your own records). Not spans into component memory,
   lists Kiln reuses, or the `ModContext` of an unloading mod.
 - Item moves, spawns and chat stay on the tick. Return a plan from the task and carry it out in tick code.
@@ -80,7 +87,8 @@ private string Scan(CommandContext c, Player player)
 ## Tests
 Kiln.TestKit runs a mod's tasks on its own pool: `kiln.Tasks.Settle()` waits for them and steps the server while they
 wait for the tick; `kiln.Tasks.Live` counts the running ones. `KilnHarnessOptions.Side` picks a dedicated server, a
-hosting client or a joined client (`EnterWorld`, `LeaveWorld`, `OnMainThread`). `FakeWorld.BusyReads` / `BusyWrites`
+hosting client or a joined client (`EnterWorld`, `LeaveWorld`, `OnMainThread`; dev.30+ `MenuFrame()` after `LeaveWorld` runs
+one main-menu UI frame with its menu hops). `FakeWorld.BusyReads` / `BusyWrites`
 (KILNX003) make the next reads or writes answer busy.
 
 ## Native plugins (`kiln_tasks.h`)
