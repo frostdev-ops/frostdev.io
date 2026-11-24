@@ -2,7 +2,7 @@
 title: "Multiplayer"
 description: "What players need, who can join, a short hold at the door, kicks and bans, per-character progress, synced configs, your own network messages and client code."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-23"
 ---
 
 ## Decide what players need
@@ -85,6 +85,8 @@ connections on a test server, not yet with a real player's game.
 The server sends its changes to items, recipes and game data at join. Stack sizes, ingredients, crafting times and
 tooltips match, and go back at leave. No code, and your mod needn't be on their game.
 
+A value of your own on an entity can reach Kiln clients too: [Replication](/kiln/wiki/replication#a-sidecar-your-own-value-on-an-entity) (dev.31+).
+
 Not so for a [resource patch](/kiln/wiki/onboot#resource-patches): it changes data the game read at its own start, so
 both sides need the mod. Since 0.2.0-dev.29 a boot mod loads in a player's game too, and the join compares what it
 made on both sides: a player whose settings of the mod differ from the server's is told to take the server's and restart
@@ -109,6 +111,9 @@ leaves the client's file alone.
 
 The sidecar is client-side and editable, like a character save, so don't put what a server must trust in `Carried`. Talent trees are
 checked when they arrive, as the game checks a tree at login.
+
+For numbers of your own per character (a fishing level, a purse), with levels and a copy for the player's screen, see
+[Mod values](/kiln/wiki/mod-values) (dev.31+).
 
 ## Synced configs
 

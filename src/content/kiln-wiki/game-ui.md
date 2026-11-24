@@ -2,7 +2,7 @@
 title: "Game UI"
 description: "Menu entries, your own screens, the pointer and drag and drop, crafting tabs and panels, HUD lines, toasts, key bindings and raw key presses, the game's inventory slots, item icons and names, and values in the game's own UI."
 status: "works"
-updated: "2026-11-21"
+updated: "2026-11-23"
 ---
 
 All client side. On a dedicated server `Ui.Available` is false and calls do nothing, so a `side: both` mod can call them freely.
@@ -100,7 +100,8 @@ Ui.Crafting.AddPanel("Recipe info", (ui, c) => ui.Text($"recipe {c.Recipe:x8}"))
 ```
 
 Workshop 0 is the hand menu. Panels sit next to any open crafting menu. The game has a fixed number of tabs; past that, an addition
-is refused.
+is refused. A station of your own can lay out its whole menu in tabs for every Kiln player (dev.31+):
+[Station tabs](/kiln/wiki/station-menus#station-tabs).
 
 **At production stations** (0.2.0-dev.29.15): a kiln's, smelter's or loom's screen is not a crafting menu, so tabs never
 show there. A panel shows there only when it asks:

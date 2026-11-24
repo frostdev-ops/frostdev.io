@@ -3,7 +3,7 @@ title: "Network: channels and the join"
 nav: "Network"
 description: "Your mod's own messages between server and players, who is connected, how a joining player's mods are checked, and network.json."
 status: "works"
-updated: "2026-11-21"
+updated: "2026-11-23"
 ---
 
 Kiln.Network is Forge's SimpleChannel and join handshake for Enshrouded. It rides on the game's own connection: no
@@ -84,7 +84,8 @@ other side reads them in `NetPeer.Properties`.
    `Vanilla`.
 2. The server compares. **Missing:** a server mod with `side: both` the player lacks or has in a version
    `versionMatch` refuses, a required channel, another protocol, or (since 0.2.0-dev.29) a boot mod in the same version
-   whose [boot content](/kiln/wiki/onboot#settings-and-joining-players) differs. **Extra:** a player's `both` mod the
+   whose [boot content](/kiln/wiki/onboot#settings-and-joining-players) differs, or (since 0.2.0-dev.31) the [NPC bodies](/kiln/wiki/survivors#a-body-of-your-own)
+   the server built that the player's game didn't build the same way. **Extra:** a player's `both` mod the
    server doesn't have.
 3. `modSync` decides (below). A refused player's Kiln shows the server's name and the missing mods, and the launcher can
    offer the server's [modpack](/kiln/wiki/modpacks).
@@ -106,7 +107,7 @@ complete before admission timed out", so update both sides.
 
 | Key | Default | Means |
 |---|---|---|
-| `modSync` | not set | `off` (no check), `warn` (let in, with warnings), `refuse` (refuse on anything missing). Not set: as `warn`, but a player missing a mod that **states** `clients: "mod"` is refused |
+| `modSync` | not set | `off` (no check), `warn` (let in, with warnings), `refuse` (refuse on anything missing). Not set: as `warn`, but a player missing a mod that **states** `clients: "mod"` is refused. `off` also waives the check of custom NPC bodies: such a player may crash when the game loads that NPC ([Survivors](/kiln/wiki/survivors#a-body-of-your-own)) |
 | `versionMatch` | `exact` | `exact`, `major` (same major; for 0.x the same minor) or `any` |
 | `requireKiln` | false | refuse every player without Kiln |
 | `optionalMods` | `[]` | mod ids never counted as missing |
@@ -128,6 +129,8 @@ complete before admission timed out", so update both sides.
 - Kiln pings Ready peers every 10 s (`NetPeer.RoundTrip`).
 - Nothing throws when the transport is missing: channels open, sends return false and peer lists are empty.
   `Network.Kick` needs the capability `players.kick`.
+
+Your own small values on entities, rather than messages, are [replication sidecars](/kiln/wiki/replication#a-sidecar-your-own-value-on-an-entity).
 
 The wire format, the lab tests and every detail of the hold are in Kiln's repository, `docs/kiln/network.md`, on
 [GitHub](https://github.com/frostdev-ops/kiln).

@@ -3,7 +3,7 @@ title: "Inventory transfers"
 nav: "Inventory transfers"
 description: "Move gear with its state, put items on and take them off, swap whole sets of gear, read and set container names, keep items out of quick stack or move all, and keep data on one item."
 status: "pending"
-updated: "2026-11-21"
+updated: "2026-11-23"
 ---
 
 > **New in 0.2.0-dev.20.** These APIs require the dev.20 runtime and MDK or newer. Server evidence and pending client checks are tracked on
@@ -120,6 +120,10 @@ incoming request, handle `PlayerClientActionEvent` only when `e.Name == "invento
 Then parse `e.Payload` with `Items.Transfers.ParseAction` and cancel the held action if your rule requires it. The parser
 does not identify an action from its bytes. Joined-client events cannot cancel the server's action; a station has no
 such client request.
+
+**What kind of inventory is this? (dev.31+)** `Items.FindInventoryOwners` answers a kind (player, villager, player storage, production station,
+base storage, or unknown) for each container it finds, only where Kiln can prove it:
+[Station tabs, inventory owners and menu extras](/kiln/wiki/station-menus#what-kind-of-inventory-is-this).
 
 ### Rename a container
 

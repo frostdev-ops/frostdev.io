@@ -2,7 +2,7 @@
 title: "Data packs"
 description: "Change items, recipes, loot and drops with JSON in your mod. They apply at world load and come off with the mod."
 status: "works"
-updated: "2026-11-21"
+updated: "2026-11-23"
 ---
 
 JSON files in your mod's `content/` folder. Kiln applies them at world load, before the save is read, in mod load order. Unload
@@ -29,6 +29,9 @@ the mod and they come off. Edit a file on a running server and they apply again 
 | `drops` | enemy drops and fixed chests, by table |
 
 The same files hold [game data](/kiln/wiki/game-data) and [new items](/kiln/wiki/new-items).
+
+Since 0.2.0-dev.31 (dev.31+) a pack's `registry` section edits the same data, and more, by names Kiln keeps stable across
+game updates: [Registries](/kiln/wiki/registries).
 
 ## Picking entries
 
@@ -88,7 +91,8 @@ From code: `RecipeDefinition.Water` and `ContentEntry.CraftingWater` ([below](#f
 ## When two mods disagree
 
 Later entries win within a pack, the later mod between packs, and code over packs. Conflicts and problems are logged per
-file and don't stop the rest.
+file and don't stop the rest. Registry edits (dev.31+) are reported alongside these: the launcher's Conflicts view shows
+which edit won and why one was refused ([Registries](/kiln/wiki/registries#several-mods-one-field)).
 
 ## From code
 

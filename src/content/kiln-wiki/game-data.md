@@ -2,7 +2,7 @@
 title: "Game data"
 description: "Tune spells, creatures, attacks, buffs, perks and skill nodes with data packs, and clone them into new ones."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-23"
 ---
 
 Same rules as items: changes belong to your mod, come off when it unloads, and reach Kiln players through the server. They
@@ -52,7 +52,8 @@ The server decides, so players without Kiln play along. Their tooltips and some 
 Some data the game reads only once, when it starts: the balancing table (experience per level, Flame Altars per flame
 level, the level cap) is the best-known case. A change made from `OnLoad` comes too late for it: the game keeps what it
 read. Since 0.2.0-dev.28 a boot mod changes such fields before the game reads them, with a
-[resource patch](/kiln/wiki/onboot#resource-patches).
+[resource patch](/kiln/wiki/onboot#resource-patches). Since 0.2.0-dev.31 (dev.31+) the balancing table is also the `balance`
+[registry](/kiln/wiki/registries): fields such as `balance.levelCap` and `balance.xpPerLevel[2]` under Kiln's own names, applied at start.
 
 ## Clones
 

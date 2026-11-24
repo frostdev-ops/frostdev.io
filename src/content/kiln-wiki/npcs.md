@@ -3,10 +3,13 @@ title: "Friendly NPCs"
 nav: "Friendly NPCs"
 description: "Place NPCs and make new ones, with a roster entry, vendor stock and voiced lines, in the game's own directory and menus."
 status: "works"
-updated: "2026-11-15"
+updated: "2026-11-23"
 ---
 
 > **One fix awaits a client retest:** the Survivors list now takes its row and text from the NPC, not its summon tool.
+
+To recruit and house the game's own survivors from a server mod, give villagers a day plan, or give an NPC a body and animations of
+its own (dev.31+), see [Survivors, routines and NPC bodies](/kiln/wiki/survivors).
 
 The [quest engine](/kiln/wiki/quests) runs the logic. This page is what the game itself shows: your NPCs in its roster, your quests
 in its journal, your lines in its NPC menu, with per-language text and voice.
@@ -120,7 +123,8 @@ v.Follow(player, distance: 4, catchUp: 40);
 [Subscribe] void OnState(VillagerStateEvent e) { /* e.NpcId, e.From, e.To */ }
 ```
 
-`Follow` and `Stay` work in a real game. Past about 20 m a follower may turn back. Past `catchUp` it teleports to the player.
+Since 0.2.0-dev.31 a `GoTo`, `Teleport`, `Stay` or `Follow` from a mod suspends the villager's [routine](/kiln/wiki/survivors#a-day-plan)
+until its owner calls `Routines.Resume`. `Follow` and `Stay` work in a real game. Past about 20 m a follower may turn back. Past `catchUp` it teleports to the player.
 
 ## Don't rename
 

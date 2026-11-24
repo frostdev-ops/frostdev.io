@@ -2,7 +2,7 @@
 title: "The manifest"
 description: "kiln.mod.json: id and version, where the mod runs, what players need, boot content, update checks, dependencies and load order."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-23"
 ---
 
 Every mod folder has a `kiln.mod.json`. Kiln.Sdk writes it from your project file, or add your own. The build checks it
@@ -129,6 +129,32 @@ API is `Kiln.Mods.RuntimeApiVersion`.
 | `>=1.0 <2` | both conditions |
 | `[1.0,2.0)` | Forge-style interval |
 | `*` | any |
+
+### Requiring a particular dev build (dev.31+)
+
+For the `kiln` dependency only, a plain range such as `>=0.2.0` also accepts a dev build like `0.2.0-dev.30.8`, as if it were
+`0.2.0`. That keeps the release-style requirements of existing mods working, but it can't say "this feature came in
+dev.30.9". A range that **names a pre-release** compares the real version instead:
+
+```jsonc
+"dependencies": { "kiln": ">=0.2.0-dev.30.9" }    // refuses dev.30.8 and older dev builds
+```
+
+| `kiln` range | dev.30.8 | dev.30.9 | dev.31 | 0.2.0 |
+|---|---|---|---|---|
+| `>=0.2.0` | yes | yes | yes | yes |
+| `>=0.2.0-dev.30.9` | **no** | yes | yes | yes |
+| `=0.2.0-dev.30.9` (or `[0.2.0-dev.30.9]`): exactly that build | no | yes | no | no |
+| `>=0.2.0-dev.30.9 \|\| =0.2.0` | yes | yes | yes | yes |
+
+- A plain `>=0.2.0` still accepts dev builds. Name the dev build you need.
+- **Each alternative stands alone.** In `>=0.2.0-dev.30.9 || =0.2.0` the plain second alternative still accepts dev.30.8. Within
+  one alternative, every comparator uses the real version if any of them names a pre-release: `>=0.2.0 <0.3.0-dev.1` rejects
+  `0.2.0-dev.30.8`.
+- Numbers in a pre-release compare by value (dev.30.10 is newer than dev.30.9). Build metadata after a `+` never matters.
+- Only the `kiln` dependency works this way. Other dependencies, `incompatible` and `apiVersion` keep their rules.
+
+Dev.31's mod API is 0.2.17. `apiVersion` stays the API you built against: `"0.2"` loads on it.
 
 ## Load order
 

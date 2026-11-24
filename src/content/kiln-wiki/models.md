@@ -2,7 +2,7 @@
 title: "3D models"
 description: "Give an item a new mesh, or a new item its own model: model in Blender, ship glTF and a recipe, cook on the player's machine."
 status: "partial"
-updated: "2026-11-17"
+updated: "2026-11-23"
 ---
 
 > **Partly built.** Rigid weapon models work in game. Skinned models, worn looks and animations cook from glTF and run on a
@@ -10,7 +10,8 @@ updated: "2026-11-17"
 > a lab server, and not yet seen drawn in the game.
 
 Model in Blender (or anything that writes glTF 2.0). A recipe, `assets/cook.json`, turns it into the game's format on the player's
-machine. Start with `kiln new model MyWeapons`.
+machine. Start with `kiln new model MyWeapons`. Since 0.2.0-dev.31 a model can also carry cloth and bone chains (a cape, a banner,
+a tail that sways): [Cloth and bone chains](/kiln/wiki/model-physics).
 
 <!-- shot: cube-sword | The ModelSample cube sword in a player's hand -->
 

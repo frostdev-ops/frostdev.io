@@ -3,7 +3,7 @@ title: "Production stations and bases"
 nav: "Stations and bases"
 description: "Let a mod run a base's kilns, smelters and looms: fill them from the Magic chests, stop and start them, pick their recipe, collect what they made, lend their finished items to fills and crafts, and watch them."
 status: "works"
-updated: "2026-11-19"
+updated: "2026-11-23"
 ---
 
 New in 0.2.0-dev.29.14 (mod API 0.2.6). A mod can keep a base's production stations going the way a player does with
@@ -16,6 +16,8 @@ starts over, its materials go back into the station); "after the current craft" 
 not take deposits at the quick-stack station never receives a station's output. Since 0.2.0-dev.29.17 a mod can also
 let a station lend its finished items to its base: the charcoal still in a kiln can fill the forge next to it and pay
 for your crafts ([below](#station-outputs-as-stock)).
+
+A station of your own can also lay its crafting menu out in tabs since 0.2.0-dev.31: [Station tabs, inventory owners and menu extras](/kiln/wiki/station-menus#station-tabs).
 
 ## In your project
 
@@ -50,6 +52,8 @@ EntityId? room = Bases.FindRoomFor(home.Id, charcoalId);
 - **A base's id changes** when an overlapping altar is added or removed: it is the smallest of its altars' ids. Keep
   per-base data by an altar's own id (`BaseInfo.Altars`), in `WorldData`. `BasesChangedEvent` says which ids were
   `Added`, `Removed`, `Changed` (carry your data over) or `Kept`.
+- **Chests (dev.31+).** `Bases.Chests(id)` lists a base's chests, ordinary ones too; `Storage` and `Stock` still leave them out.
+  What it includes, and why being listed grants nothing: [Station tabs, inventory owners and menu extras](/kiln/wiki/station-menus#a-bases-chests-baseschests).
 - The game rebuilds its bases every step, so a base can be gone between two reads. Since 0.2.0-dev.29.15 `Storage`,
   `WaterSources`, `Stock`, `Stations.InBase` and `FindRoomFor` then answer empty or null instead of throwing.
 - Nothing fires when a player puts items into a chest: poll `Bases.Stock` every few seconds.

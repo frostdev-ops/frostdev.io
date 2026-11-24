@@ -2,7 +2,7 @@
 title: "Code mods"
 description: "The Mod class, the tick thread, events, configs, commands, permissions, saved data, other mods, what a call does when it cannot work, and what waits for a game test."
 status: "works"
-updated: "2026-11-19"
+updated: "2026-11-23"
 ---
 
 ## The mod
@@ -85,7 +85,8 @@ var homes = _config.Value.MaxHomes;        // always current
 ```
 
 Kiln writes a commented file, keeps the player's values, fixes bad ones and reloads on change. `[RequiresRestart]` applies
-at the next load. `[Synced]` sends the server's value to players.
+at the next load. `[Synced]` sends the server's value to players. `[Range(min, max, step)]` (dev.31+) gives the config slider a step:
+[Slider steps](/kiln/wiki/station-menus#slider-steps-rangemin-max-step).
 
 **A file that can't be written (0.2.0-dev.28).** A read-only folder or a full disk is never reported as saved.
 `ConfigFile.TrySet` is all or nothing: it returns false with "cannot write" and the reason, and changes nothing; before,

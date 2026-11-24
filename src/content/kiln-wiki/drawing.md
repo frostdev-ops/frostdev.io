@@ -3,7 +3,7 @@ title: "Drawing on screen and in the world"
 nav: "Drawing"
 description: "Run code every frame and draw over the game: shapes, text and images in pixels, markers and labels at world positions, and outlines on entities with the game's own highlight."
 status: "pending"
-updated: "2026-11-21"
+updated: "2026-11-23"
 ---
 
 > **New in 0.2.0-dev.16, not yet seen in the game.** It passes its tests (projection, the time budget, dispatch). Nobody
@@ -29,7 +29,9 @@ private void OnFrame(RenderFrameEvent e)
   images from your mod (`Ui.LoadImage("pin.png")`) or the game's item icons (`Ui.ItemImage(item)`, 0.2.0-dev.29.15).
   Since 0.2.0-dev.29.16 `ImageTrimmed` draws an image without its transparent margin and `ImagePart` a part of one (a
   sprite sheet's cell). Multiply sizes by `e.Scale`, the UI scale.
-- **`e.World`, at world positions** in metres: markers, labels, icons, lines, boxes and rings. Points behind the camera
+- **`e.World`, at world positions** in metres: markers, labels, icons, lines, boxes and rings. Since 0.2.0-dev.31 it draws
+  nothing while one of the game's menus covers the world; `e.WorldOverMenus` takes the same calls and draws over menus too
+  ([details](/kiln/wiki/station-menus#draw-over-the-games-menus)). Points behind the camera
   aren't drawn; lines, boxes and rings are cut at the screen's edge. `ToScreenClamped` puts an off-screen point on the
   edge of the screen, so you can draw an arrow towards it.
 - **`e.Camera`**, the game's camera this frame: position, heading (0 is north), pitch, field of view, and `Pivot`,
@@ -96,6 +98,7 @@ private void OnFilled(IReadOnlyList<EntityId> chests)
 - World drawing needs the game's camera, which Kiln finds on the current game build. On a build where it isn't found,
   `e.Camera.Valid` stays false and only screen drawing works.
 - Camera shake (gliding) isn't included, so markers can tremble a little against the scene.
+- `e.Camera` only reads the camera. To play a camera path, follow an entity or change the lens, see [Camera control](/kiln/wiki/camera).
 
 The `RenderSample` mod in the Kiln repository has an FPS counter, a compass strip and waypoints: Ctrl+J drops one where
 you stand, Ctrl+Shift+J removes the nearest, Ctrl+Alt+J hides everything. Native plugins get the same drawing through

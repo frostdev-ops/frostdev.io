@@ -2,7 +2,7 @@
 title: "Building blocks"
 description: "Say what you mean: a spell, a sword, a potion, a status, a creature. Kiln picks the game data, the ids and the programs."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-23"
 ---
 
 > **Works** since 0.2.0-dev.14: on test servers, and much of it seen in the game (spells, abilities, items, creature rules,
@@ -98,6 +98,8 @@ hand-made GUIDs and a dozen game field paths.
 | Building materials, shapes, terrain | New building blocks and shapes for the hammer | |
 | `CreatureBlock` | A creature: body, animation, AI, behaviour, stats, spawns | [Creature AI](/kiln/wiki/creature-ai) |
 | `NpcBlock` | A friendly NPC: body, talk, wares, roster place | [Friendly NPCs](/kiln/wiki/npcs) |
+| dev.31+: `RoutineBlock` | A villager's day plan: windows of the game day, each with one of the game's tasks | [Survivors and routines](/kiln/wiki/survivors#a-day-plan) |
+| dev.31+: `BaseRulesBlock` | More Flame Altars and bigger build zones, read at start | [Survivors and routines](/kiln/wiki/survivors#base-rules) |
 | `VfxBlock` | Particles and a light, from nothing | below |
 | `MaterialBlock` | A surface for a model, from PNGs and numbers | below |
 | `SoundBlock` | A sound from your audio files | [Sounds](/kiln/wiki/sounds#sound-blocks) |
