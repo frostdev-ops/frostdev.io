@@ -1,6 +1,25 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.1",
+      "date": "2026-11-24",
+      "title": "No false \"Will not run\", crafting diagnostics",
+      "summary": "Mods that need a recent Kiln load again, and clearer kiln.log lines for crafting from linked storage.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Crafting diagnostics",
+          "text": "kiln.log says why the crafting menu left a recipe to the game, and where another mod changed a game function Kiln hooks (thanks Fuzen777).",
+          "area": "core"
+        },
+        {
+          "title": "No false \"Will not run\"",
+          "text": "The launcher and kilnctl check mods against the release's own version, so a mod that needs Kiln 0.2.0-dev.28 or newer (several XHL ports) loads again.",
+          "area": "launcher"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31",
       "date": "2026-11-23",
       "title": "Registries, values, UI, network and NPCs",
