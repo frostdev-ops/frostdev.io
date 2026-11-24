@@ -1,6 +1,40 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.2",
+      "date": "2026-11-24",
+      "title": "Creative effect toggles, sharing without a login",
+      "summary": "Switch each creative effect on and off, share packs by link without Discord, save packs to a file on the Deck, and open Kiln Web Admin from the launcher.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Creative effect toggles",
+          "text": "Each creative effect (invulnerability, no consume, unlimited flight and the rest) has its own switch in the F7 menu, /creative effect and the API, with the reason when one is locked.",
+          "area": "content"
+        },
+        {
+          "title": "Share without a login",
+          "text": "Crucible makes unlisted links and codes without a Discord login, on desktop and Steam Deck; public publishing still needs sign-in.",
+          "area": "launcher"
+        },
+        {
+          "title": "Deck: save a pack as a file",
+          "text": "When QR sign-in fails in Game Mode, the share screen saves the pack as a local .kilnpack.",
+          "area": "launcher"
+        },
+        {
+          "title": "Open Kiln Web Admin",
+          "text": "Servers > Overview opens the Web Admin mod's panel, over SSH for remote servers.",
+          "area": "servers"
+        },
+        {
+          "title": "EMF 0.6.22",
+          "text": "Kiln accepts EMF's v49 SDK and headers next to v48.",
+          "area": "compat"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.1",
       "date": "2026-11-24",
       "title": "No false \"Will not run\", crafting diagnostics",
