@@ -1,6 +1,116 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31",
+      "date": "2026-11-23",
+      "title": "Registries, values, UI, network and NPCs",
+      "summary": "Kiln's own registries, so mods outlast game updates, and one data stage for all mods; mods' own character values and richer UI, map markers, station tabs, cloth on models and a debugger for the game client; control over what the server sends each player, survivors and bases, and friendly NPCs with bodies and routines of their own.",
+      "features": [
+        {
+          "title": "Kiln registries: mods that outlast game updates",
+          "area": "api",
+          "text": "Mods and data packs edit items, recipes, loot, drops and balance by Kiln's stable names. Kiln translates fields for the running game build and refuses unproven edits. Mods can add items and recipes and hide recipes or loot without deleting their records."
+        },
+        {
+          "title": "One data stage and a Conflicts view",
+          "area": "api",
+          "text": "Kiln applies startup registry edits in load order and reports competing changes in the launcher's Conflicts view. Mods choose when supported runtime edits run; the report says which edits won and which were refused."
+        },
+        {
+          "title": "Mods' own character values",
+          "text": "Mods can give characters their own counters, currencies and experience with levels, saved with the character.",
+          "area": "content"
+        },
+        {
+          "title": "Richer UI windows",
+          "text": "UI windows can have text fields, tables, tabs, trees and images, show live game values, and run commands on the server.",
+          "area": "content"
+        },
+        {
+          "title": "Map markers and labels",
+          "text": "Mods can put markers on the game's map, on a compass strip and as labels in the world; servers can send them to players.",
+          "area": "content"
+        },
+        {
+          "title": "Station menu tabs",
+          "text": "A mod's crafting station can have its own menu tabs, headings and recipe layout.",
+          "area": "content"
+        },
+        {
+          "title": "Cloth and chains on models",
+          "text": "Modded models can have cloth and bone chains that the game itself simulates.",
+          "area": "content"
+        },
+        {
+          "title": "Debugger in the game client",
+          "text": "Mod authors can attach a debugger to mods running in the game client and on a Windows dedicated server.",
+          "area": "tools"
+        },
+        {
+          "title": "Network inspector",
+          "text": "Mod authors and admins can see what the server sends each player: counters per player and channel, and watches on single entities.",
+          "area": "servers"
+        },
+        {
+          "title": "Mod data on the network",
+          "text": "Mods can send small data of their own with entities to Kiln players, and players without Kiln see safe stand-ins for Kiln-only items.",
+          "area": "servers"
+        },
+        {
+          "title": "Survivor recruiting",
+          "text": "Mods can recruit survivors, give their summon tool, move them into a base and assign their beds.",
+          "area": "content"
+        },
+        {
+          "title": "Larger bases",
+          "text": "Mods can raise the number of Flame Altars a base may have and the build-zone size per altar level.",
+          "area": "content"
+        },
+        {
+          "title": "NPC bodies of your own",
+          "text": "A friendly roster NPC can have a model and animations of the mod's own and still be a real villager.",
+          "area": "content"
+        },
+        {
+          "title": "Villager routines",
+          "text": "Mods can give villagers a daily plan, such as roaming, sitting and sleeping, that stays after a restart.",
+          "area": "content"
+        },
+        {
+          "title": "Camera control",
+          "text": "Mods can play camera paths for cutscenes, set a follow camera, field of view and shake, and lock a player's camera mode for a time.",
+          "area": "api",
+          "gamePending": true
+        },
+        {
+          "title": "Inventory owners, over-menu draws, and slider steps",
+          "text": "Mods can query the kinds of inventory owners, list a base's containers, draw world overlays over menus by request, and set the steps used by config sliders.",
+          "area": "api",
+          "gamePending": true
+        },
+        {
+          "title": "Item icons",
+          "text": "Item icon buttons keep their layout when scrolled out of view, and players can configure icon-cache limits.",
+          "area": "content",
+          "kind": "fix",
+          "gamePending": true
+        },
+        {
+          "title": "Clearer player-storage and crafting diagnostics",
+          "text": "Kiln reports which stage failed when a modded bag could not be set up and how far linked-stock payment got for a player craft.",
+          "area": "servers",
+          "kind": "improved",
+          "gamePending": true
+        },
+        {
+          "title": "Require a specific dev build",
+          "text": "Mods that require a named Kiln dev build refuse earlier builds instead of running on an older runtime.",
+          "area": "core",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.30.9",
       "date": "2026-11-23",
       "title": "Fewer fake Flame Altars, server restarts and staged updates",
@@ -3248,91 +3358,8 @@
   ],
   "upcoming": [
     {
-      "version": "0.2.0-dev.31",
-      "status": "next",
-      "title": "Registries, values, UI, network and NPCs",
-      "summary": "Kiln's own registries, so mods outlast game updates, and one data stage for all mods; mods' own character values and richer UI, map markers, station tabs, cloth on models and a debugger for the game client; control over what the server sends each player, survivors and bases, and friendly NPCs with bodies and routines of their own.",
-      "features": [
-        {
-          "title": "Kiln registries: mods that outlast game updates",
-          "area": "api",
-          "text": "Mods and data packs add to, change and remove entries in Kiln's own registries (items, recipes, loot, creatures, abilities and more) instead of touching the game's internals. Kiln translates them to the game, so after an Enshrouded update only Kiln needs an update, not every mod."
-        },
-        {
-          "title": "One data stage for all mods",
-          "area": "api",
-          "text": "Kiln reads the game's data once at start, every mod's changes apply on top in one ordered pass with conflicts shown in one place, and the result is ready before the game reads it: no per-start limits, and registries are complete from a mod's first line."
-        },
-        {
-          "title": "Mods' own character values",
-          "text": "Mods can give characters their own counters, currencies and experience with levels, saved with the character.",
-          "area": "content"
-        },
-        {
-          "title": "Richer UI windows",
-          "text": "UI windows can have text fields, tables, tabs, trees and images, show live game values, and run commands on the server.",
-          "area": "content"
-        },
-        {
-          "title": "Map markers and labels",
-          "text": "Mods can put markers on the game's map, on a compass strip and as labels in the world; servers can send them to players.",
-          "area": "content"
-        },
-        {
-          "title": "Station menu tabs",
-          "text": "A mod's crafting station can have its own menu tabs, headings and recipe layout.",
-          "area": "content"
-        },
-        {
-          "title": "Cloth and chains on models",
-          "text": "Modded models can have cloth and bone chains that the game itself simulates.",
-          "area": "content"
-        },
-        {
-          "title": "Debugger in the game client",
-          "text": "Mod authors can attach a debugger to mods running in the game client and on a Windows dedicated server.",
-          "area": "tools"
-        },
-        {
-          "title": "Network inspector",
-          "text": "Mod authors and admins can see what the server sends each player: counters per player and channel, and watches on single entities.",
-          "area": "servers"
-        },
-        {
-          "title": "Mod data on the network",
-          "text": "Mods can send small data of their own with entities to Kiln players, and players without Kiln see safe stand-ins for Kiln-only items.",
-          "area": "servers"
-        },
-        {
-          "title": "Survivor recruiting",
-          "text": "Mods can recruit survivors, give their summon tool, move them into a base and assign their beds.",
-          "area": "content"
-        },
-        {
-          "title": "Larger bases",
-          "text": "Mods can raise the number of Flame Altars a base may have and the build-zone size per altar level.",
-          "area": "content"
-        },
-        {
-          "title": "NPC bodies of your own",
-          "text": "A friendly roster NPC can have a model and animations of the mod's own and still be a real villager.",
-          "area": "content"
-        },
-        {
-          "title": "Villager routines",
-          "text": "Mods can give villagers a daily plan, such as roaming, sitting and sleeping, that stays after a restart.",
-          "area": "content"
-        },
-        {
-          "title": "Camera control",
-          "text": "Mods can play camera paths for cutscenes, set a follow camera, field of view and shake, and lock a player's camera mode for a time.",
-          "area": "api"
-        }
-      ]
-    },
-    {
       "version": "0.2.0-dev.32",
-      "status": "planned",
+      "status": "next",
       "title": "Camera, pets and taming",
       "summary": "Camera control for mods, pets that follow and fight for their owner, and taming.",
       "features": [
