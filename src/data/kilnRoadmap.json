@@ -1,6 +1,20 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.7",
+      "date": "2026-11-25",
+      "title": "Download missing mods for a pack",
+      "summary": "An installed Crucible pack that is missing mods says so and downloads only what is missing.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Download missing mods for a pack",
+          "text": "An installed pack missing a mod from your Library says so before you load it and downloads only what is missing.",
+          "area": "launcher"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.6",
       "date": "2026-11-25",
       "title": "Quieter saves on slow PCs",
