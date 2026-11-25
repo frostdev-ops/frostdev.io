@@ -1,6 +1,25 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.9",
+      "date": "2026-11-25",
+      "title": "Inventory marks stay out of the game's menus",
+      "summary": "Mod marks on inventory slots no longer cover the game's item menu, drop-downs or context menus.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Inventory marks stay out of the game's menus",
+          "text": "A slot under the game's item menu, a drop-down or a context menu shows no mod mark while it is open (#117).",
+          "area": "core"
+        },
+        {
+          "title": "GameScreen.PopupOpen",
+          "text": "Mods can tell when one of the game's popups covers its UI (mod API 0.2.19).",
+          "area": "api"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.8",
       "date": "2026-11-25",
       "title": "Packs install again after a mod changed its folder",
