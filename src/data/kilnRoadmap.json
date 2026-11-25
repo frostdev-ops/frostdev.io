@@ -1,6 +1,30 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.4",
+      "date": "2026-11-25",
+      "title": "Crucible codes without a profile",
+      "summary": "Got a code and an empty local profile when no profile is loaded, and new profiles never take over another folder’s profile.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Got a code works without a profile",
+          "text": "The Crucible \"Got a code\" link is on Play even when no local profile is loaded.",
+          "area": "launcher"
+        },
+        {
+          "title": "Create an empty local profile",
+          "text": "Settings offers an empty local profile when nothing is loaded, without changing the game.",
+          "area": "launcher"
+        },
+        {
+          "title": "A new profile never takes over another folder's profile",
+          "text": "A new profile gets its own ID instead of one a game still uses for another data folder's profile.",
+          "area": "launcher"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.3",
       "date": "2026-11-24",
       "title": "Korean review, EMF Lua host and kiln new fix",
