@@ -1,6 +1,35 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.13",
+      "date": "2026-11-25",
+      "title": "FSR 4 on RX 6000, Beastmaster on Kiln, XHL's APIs",
+      "summary": "FSR 4 on more AMD cards, Building Tools next to Kiln, Beastmaster without EMF, and four new APIs from XHL's requests.",
+      "patch": true,
+      "features": [
+        {
+          "title": "FSR 4 on RX 6000 and RX 7000",
+          "text": "FSR 4 no longer draws a black screen on RX 6000/7000 cards, and Kiln falls back to FSR 3.1 if its picture comes out wrong.",
+          "area": "core"
+        },
+        {
+          "title": "Building Tools next to Kiln",
+          "text": "Kiln's cursor hook no longer hides the game code Building Tools looks for.",
+          "area": "core"
+        },
+        {
+          "title": "Beastmaster on Kiln alone",
+          "text": "Beastmaster runs without EMF: orders, markers, buffs and its creature packs on Kiln's own EML runner.",
+          "area": "core"
+        },
+        {
+          "title": "XHL's APIs",
+          "text": "Crosshair hits, game texts in every language, owned key presses and joined-client views (mod API 0.2.22).",
+          "area": "api"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.12",
       "date": "2026-11-25",
       "title": "Crafting from linked chests, everywhere",
@@ -3608,8 +3637,8 @@
     {
       "version": "0.2.0-dev.32",
       "status": "next",
-      "title": "Camera, pets and taming",
-      "summary": "Camera control for mods, pets that follow and fight for their owner, and taming.",
+      "title": "Pets, taming and more registries",
+      "summary": "Pets that follow and fight for their owner, taming, and Kiln registries for creatures, spells, buffs, perks, stations, world rules and skills.",
       "features": [
         {
           "title": "Pets that follow you",
@@ -3620,6 +3649,26 @@
           "title": "Taming creatures",
           "text": "Players can tame creatures step by step, by feeding, weakening or using a tool, to make them their pet.",
           "area": "content"
+        },
+        {
+          "title": "Creature, spell, buff and perk registries",
+          "text": "Mods and data packs edit creatures, spells, buffs and perks by Kiln's stable names, as they edit items and recipes today, so they keep working after game updates.",
+          "area": "api"
+        },
+        {
+          "title": "Station, world-rule, skill and limit registries",
+          "text": "Crafting stations, world rules such as build zones and difficulty, skills and Kiln's limits become registries too.",
+          "area": "api"
+        },
+        {
+          "title": "One view over every registry",
+          "text": "One typed view over all registries, equipment rules on the registries, and editor hints that point mods from old paths to registry fields.",
+          "area": "api"
+        },
+        {
+          "title": "ShroudForge mods on the registries",
+          "text": "ShroudForge mods' data edits get named owners in the Conflicts view, and their effects can replay on Kiln's registries (opt-in).",
+          "area": "compat"
         },
         {
           "title": "Cooked terrain tiles",
