@@ -1,6 +1,35 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.12",
+      "date": "2026-11-25",
+      "title": "Crafting from linked chests, everywhere",
+      "summary": "Crafting menus, station fills, building and locks can use chests a mod links in other bases.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Crafting from linked chests works in every menu",
+          "text": "Crafting stations, NPCs and the inventory craft from chests a mod links in other bases, without Cross-Base Storage (#132).",
+          "area": "core"
+        },
+        {
+          "title": "Linked chests for fills, building and locks",
+          "text": "Mods can let linked chests feed station fills, the Construction Hammer and locks such as lockpicks (mod API 0.2.21, #147).",
+          "area": "api"
+        },
+        {
+          "title": "Markers on dedicated servers",
+          "text": "Map markers reach joined Kiln players on dedicated servers.",
+          "area": "core"
+        },
+        {
+          "title": "Update game banner",
+          "text": "Play shows a clear Update game banner when the game's Kiln is older than the launcher's.",
+          "area": "core"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.11",
       "date": "2026-11-25",
       "title": "Mods place their windows",
