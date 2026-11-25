@@ -1,6 +1,30 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.5",
+      "date": "2026-11-25",
+      "title": "Links that open the launcher, repair kits for mods",
+      "summary": "Crucible and Nexus links work again when they start the launcher, and mods can use repair kits and pay item costs.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Crucible and Nexus links open the launcher again",
+          "text": "A Crucible or Nexus link opened while the launcher is closed starts it and shows the preview or takes the download.",
+          "area": "launcher"
+        },
+        {
+          "title": "One window per link",
+          "text": "A link opened while the launcher runs goes to that window once.",
+          "area": "launcher"
+        },
+        {
+          "title": "Repair kits and scrolls through mods",
+          "text": "Mods that use items can use repair kits, and scrolls and mana grenades cost mana as from the hotbar.",
+          "area": "api"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.4",
       "date": "2026-11-25",
       "title": "Crucible codes without a profile",
