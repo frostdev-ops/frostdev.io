@@ -1,6 +1,30 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.3",
+      "date": "2026-11-24",
+      "title": "Korean review, EMF Lua host and kiln new fix",
+      "summary": "A native-speaker review of the Korean translation, EMF Lua mods without a separate Lua mod, and kiln new installing its templates again.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Korean translation reviewed",
+          "text": "kraewon7422 corrected 71 Korean texts in the launcher and the game.",
+          "area": "launcher"
+        },
+        {
+          "title": "EMF Lua mods work without EMF's Lua mod",
+          "text": "Kiln ships EMF's unmodified Lua host and uses it only when an enabled EMF Lua script needs it (thanks matenm and the EMF contributors).",
+          "area": "compat"
+        },
+        {
+          "title": "kiln new templates",
+          "text": "kiln new installs its templates again on .NET SDKs with the newer \"no templates found\" message.",
+          "area": "tools"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.2",
       "date": "2026-11-24",
       "title": "Creative effect toggles, sharing without a login",
