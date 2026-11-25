@@ -1,6 +1,20 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.8",
+      "date": "2026-11-25",
+      "title": "Packs install again after a mod changed its folder",
+      "summary": "A pack install puts back a Library mod that changed its own files and keeps the player's copy aside.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Packs install again when a mod changed its own Library folder",
+          "text": "Reinstalling a pack no longer fails when one of its mods wrote logs or settings into its Library folder; Kiln keeps the changed copy in kiln-changed.",
+          "area": "launcher"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.7",
       "date": "2026-11-25",
       "title": "Download missing mods for a pack",
