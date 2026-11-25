@@ -1,6 +1,25 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.11",
+      "date": "2026-11-25",
+      "title": "Mods place their windows",
+      "summary": "Mods can open their screens and windows where they belong and remember where you moved them.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Mod windows open where they belong",
+          "text": "Mods can place their screens and windows and remember where you left them, always inside the screen (#146).",
+          "area": "core"
+        },
+        {
+          "title": "Screen and window placement",
+          "text": "Position, MoveTo / Resize, Placement and RememberPlacement for Kiln screens and windows (mod API 0.2.20).",
+          "area": "api"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.10",
       "date": "2026-11-25",
       "title": "Fast spell switches keep the Spell slot",
