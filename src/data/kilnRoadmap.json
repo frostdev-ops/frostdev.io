@@ -1,6 +1,20 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.6",
+      "date": "2026-11-25",
+      "title": "Quieter saves on slow PCs",
+      "summary": "A slow Kiln save writer is logged as a delay, not an error at every autosave.",
+      "patch": true,
+      "features": [
+        {
+          "title": "No more save errors from a slow writer",
+          "text": "When Kiln writes mod data more slowly than the game saves, kiln.log shows one warning and a summary instead of an error at every autosave.",
+          "area": "core"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.5",
       "date": "2026-11-25",
       "title": "Links that open the launcher, repair kits for mods",
