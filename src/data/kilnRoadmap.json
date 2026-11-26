@@ -1,6 +1,65 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.17",
+      "date": "2026-11-26",
+      "title": "Registry edits take effect, roll back and keep saves safe",
+      "summary": "Mods' loot, drop, item and balance changes through Kiln's registries take effect on this game build, can be rolled back, never damage saves, and joining checks you made the server's balance changes.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Registry edits take effect",
+          "text": "Mods that change loot rarities, drop tables, shield block, instrument comfort or stamina cost through Kiln's registries now change the game.",
+          "area": "content"
+        },
+        {
+          "title": "Mods can remove items",
+          "text": "A removed item leaves loot, recipes and drop tables; the copies you already own stay.",
+          "area": "content"
+        },
+        {
+          "title": "Roll back registry changes",
+          "text": "kilnctl and the launcher's Conflicts view can start the next boot on the last registry plan a world started on cleanly, with a dry run first; saves are never touched.",
+          "area": "servers"
+        },
+        {
+          "title": "Registry edits keep saves safe",
+          "text": "A lower stack limit keeps bigger stacks whole, and an edit that would narrow item levels or build zones against a world is refused with a reason.",
+          "area": "core"
+        },
+        {
+          "title": "Joining checks registry balance",
+          "text": "Joining a server checks that your game made the same balance changes, such as level cap or XP, and says to use the server's modpack if not.",
+          "area": "servers"
+        },
+        {
+          "title": "Item and recipe changes reach joined players",
+          "text": "Item and recipe changes a server makes while you're connected reach you without rejoining.",
+          "area": "servers"
+        },
+        {
+          "title": "Reloads say what waits for a restart",
+          "text": "Reloading a mod, kilnctl status and the launcher name the registry edits that wait for a restart, and a data pack that fails while it reloads is undone completely.",
+          "area": "servers"
+        },
+        {
+          "title": "Other loaders' writers named",
+          "text": "The Conflicts page names ShroudForge and EML packages that changed an entry before Kiln, and flags values changed outside Kiln as best effort.",
+          "area": "compat"
+        },
+        {
+          "title": "Conflicts view in every language",
+          "text": "The launcher's Conflicts view is translated into all launcher languages.",
+          "area": "launcher"
+        },
+        {
+          "title": "When joined players see registry edits",
+          "text": "Each registry field says when a joined Kiln player sees a server's edit, and a new lint suggests what players a data-only registry pack needs.",
+          "area": "api"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.16",
       "date": "2026-11-26",
       "title": "NPC speech, docked windows, linked-chest building",
