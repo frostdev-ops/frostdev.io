@@ -1,6 +1,25 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.14",
+      "date": "2026-11-25",
+      "title": "Kilnwarden's web panel and a font-cache fix",
+      "summary": "Open web panel works with Kilnwarden, and the Linux launcher gets a way out of a broken font cache.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Open web panel works with Kilnwarden",
+          "text": "The launcher's Open web panel shows for servers running Kilnwarden.",
+          "area": "core"
+        },
+        {
+          "title": "A way out of a broken font cache",
+          "text": "On Linux, a launcher window stuck black in a broken font cache offers to fix it and restart.",
+          "area": "core"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.13",
       "date": "2026-11-25",
       "title": "FSR 4 on RX 6000, Beastmaster on Kiln, XHL's APIs",
