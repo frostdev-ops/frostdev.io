@@ -1,6 +1,59 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.16",
+      "date": "2026-11-26",
+      "title": "NPC speech, docked windows, linked-chest building",
+      "summary": "Mods can make NPCs speak and dock their windows together; building and station fills use linked chests; removed mods leave nothing behind in your game data.",
+      "patch": true,
+      "features": [
+        {
+          "title": "NPCs say what mods want",
+          "text": "Mods can show their own lines in villagers' and craftspeople's speech bubbles, or quiet them.",
+          "area": "api"
+        },
+        {
+          "title": "Docked mod windows",
+          "text": "Mod windows that dock to each other move together in the same frame.",
+          "area": "api"
+        },
+        {
+          "title": "Building from linked chests",
+          "text": "The hammer lists and pays blocks from linked chests, also with Building Tools.",
+          "area": "core"
+        },
+        {
+          "title": "Station +1 / +n from links",
+          "text": "A station's ingredient buttons count and take from linked chests.",
+          "area": "core"
+        },
+        {
+          "title": "Typing in Kiln's search fixed",
+          "text": "Keys another mod sends no longer end up in Kiln's text fields.",
+          "area": "core"
+        },
+        {
+          "title": "No leftovers of removed mods",
+          "text": "Kiln checks its clean copy of the game data against Steam's files, so an uninstalled mod's changes no longer stay in your game.",
+          "area": "core"
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-dev.31.15",
+      "date": "2026-11-25",
+      "title": "Lock prompts count linked chests",
+      "summary": "A lock's \"Required\" line turns green when a linked chest holds the item.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Lock prompts count linked chests",
+          "text": "A lock's \"Required: Lockpick\" line turns green when a linked chest has the pick, on a hosted world and on a Kiln server.",
+          "area": "core"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.14",
       "date": "2026-11-25",
       "title": "Kilnwarden's web panel and a font-cache fix",
