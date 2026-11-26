@@ -13,9 +13,9 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
   path="/kiln/privacy"
 >
   <article class="product-page reading-page">
-    <p class="article-meta"><a href="/kiln">Kiln</a> · Updated <time datetime="2026-11-20">November 20, 2026</time></p>
+    <p class="article-meta"><a href="/kiln">Kiln</a> · Updated <time datetime="2026-11-26">November 26, 2026</time></p>
     <h1>Kiln on Discord: privacy.</h1>
-    <p>This page covers two things that Frostdev runs: the <strong>Kiln app on Discord</strong> (the bot in the <a href={invite}>Kiln Discord server</a>, named KilnBot until November 2026) and the <strong>Discord features of the Kiln Launcher</strong>. Discord itself handles your account and your messages under <a href="https://discord.com/privacy">Discord's privacy policy</a>. This website has its own <a href="/privacy">privacy page</a>.</p>
+    <p>This page covers what Frostdev runs for Kiln: the <strong>Kiln app on Discord</strong> (the bot in the <a href={invite}>Kiln Discord server</a>, named KilnBot until November 2026), the <strong>Discord features of the Kiln Launcher</strong>, and <a href="#kilnwarden">Kilnwarden's hosted access and Discord sign-in</a>. Discord itself handles your account and your messages under <a href="https://discord.com/privacy">Discord's privacy policy</a>. This website has its own <a href="/privacy">privacy page</a>.</p>
 
     <h2>The short version</h2>
     <ul>
@@ -23,6 +23,7 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
       <li>The launcher's Discord features are optional and stay off until you turn them on.</li>
       <li>The launcher sends nothing to Discord until you press a button on a screen that shows what will be sent.</li>
       <li>AI assistants help run Kiln's support. They read the server's public channels and write many of the replies.</li>
+      <li>Kilnwarden's hosted access passes encrypted traffic that Frostdev cannot read, and we commit not to get certificates for your panel's name.</li>
       <li>We don't sell data, show ads or build profiles of you.</li>
     </ul>
 
@@ -84,12 +85,31 @@ const invite = 'https://discord.gg/7pjr8SMTfU';
       <p><strong>Discord.</strong> /modpack in Discord and the "Get this modpack" button on your Discord profile work as described there; Discord tells us your user ID when you use the command; we keep nothing about it. Reports keep your Discord user ID until handled and 30 days after.</p>
     </section>
 
+    <section aria-labelledby="kilnwarden">
+      <h2 id="kilnwarden">Kilnwarden: hosted access and Discord sign-in</h2>
+      <p><strong>Kilnwarden</strong> is a web admin panel that runs inside an Enshrouded server with Kiln. The panel and everything it keeps stay on that server, under the control of whoever runs it; Frostdev is not involved. Frostdev only takes part when the server's owner turns on <strong>hosted access</strong> (an address like <code>myserver.kiln.nexus</code>) or <strong>Discord sign-in</strong>. This section says what Frostdev's services see and keep for those two.</p>
+      <p><strong>kiln.nexus is frostdev's own domain for Kiln. It has no affiliation with Nexus Mods (nexusmods.com).</strong></p>
+
+      <p><strong>The relay.</strong> With hosted access, the server keeps one outbound connection to Frostdev's relay, and the relay hands each visitor's connection to it. The connection stays encrypted end to end: TLS ends inside the game server, with the panel's own certificate, whose key never leaves that server. The relay reads only the name the browser asks for. It sees the visitor's IP address and port and passes them to the panel, so the panel can show who connected. The relay keeps counts, not addresses: how many connections and how much data per name, in memory only. nginx in front of the relay records a visitor's address only when a connection fails, and keeps that log 14 days.</p>
+      <p>For each name the relay stores the panel's public key, the name's state and its times (claimed, first connected, last seen), and the Discord user ID of the account that claimed it. A name is kept until it is released, banned, or its server has not connected for 90 days. While a name moves to another server, it also keeps the new server's public key and the time of the move, for at most 24 hours. Short-lived records that prove a name to Let's Encrypt are deleted within about an hour. The relay's own log keeps events, names and key fingerprints for 7 days, without IP addresses or Discord IDs. Before maintenance we copy this list of names, and those copies are deleted after 7 days.</p>
+
+      <p><strong>Claiming a name.</strong> A name is claimed with a Discord account that is a member of the Kiln Discord server, on <a href="https://claim.kiln.nexus">claim.kiln.nexus</a>. Discord tells us your user ID, username, display name and your membership of the Kiln server; we cancel Discord's sign-in key at once. Your session there lasts 30 minutes and is held in memory only. The only thing kept afterwards is your Discord user ID with the name. Moving a name to another server, or releasing a name that is in use, takes 24 hours, and the old server's panel is told and can undo it. An undo removes the Discord ID from the name until the server's owner claims it again. When a name is released, it and your ID are deleted after those 24 hours (at once if the name was never used). If an account is banned for abuse, its Discord ID is kept until the ban is lifted.</p>
+
+      <p><strong>Discord sign-in to a panel.</strong> When a panel offers "Sign in with Discord", the sign-in goes through frostdev.io. Discord tells us your user ID, names, and your roles and nickname in the Discord server the panel's owner chose; we cancel Discord's sign-in key at once. frostdev.io keeps the sign-in in memory for at most 10 minutes and hands the panel a signed statement of those details, valid for 2 minutes. frostdev.io keeps nothing about you on disk and logs only whether a sign-in worked. What the panel then keeps is up to that server's owner.</p>
+
+      <p id="kiln-nexus-certificates"><strong>Certificates for kiln.nexus names.</strong> Frostdev runs the DNS for kiln.nexus, so in principle Frostdev could get a certificate for your panel's name and read its traffic. We commit not to. The relay gives no one a way to answer a certificate check for a name that isn't theirs, and a CAA record on kiln.nexus forbids wildcard certificates. Every certificate issued for a kiln.nexus name is published in public Certificate Transparency logs, so anyone can check which ones exist.</p>
+
+      <p><strong>Deleting your data.</strong> Release your name on the claim pages, or write to <a href="mailto:admin@frostdev.io">admin@frostdev.io</a> and we release it at once. Logs that mention the name go after 7 days (the relay's log) and 14 days (nginx), and the copies of the list after 7 days.</p>
+      <p><strong>Who else is involved.</strong> <strong>Cloudflare</strong> runs the DNS for kiln.nexus without carrying its traffic; it does carry frostdev.io, including the sign-in pages and the panel's connection to the relay's control service. <strong>Let's Encrypt</strong> issues each panel's certificate. <strong>Discord</strong> handles the sign-in.</p>
+    </section>
+
     <h2 id="others">Who else is involved</h2>
     <ul>
       <li><strong>Discord</strong> stores your account, your messages and your posts. See <a href="https://discord.com/privacy">Discord's privacy policy</a>.</li>
       <li><strong>Cloudflare</strong> delivers frostdev.io, as the <a href="/privacy">site's privacy page</a> describes.</li>
       <li><strong>Cloudflare R2</strong> stores Crucible's pack files and images, as described under <a href="#crucible">Crucible</a> above.</li>
       <li><strong>GitHub</strong>, when you open an issue in Kiln's repository yourself.</li>
+      <li><strong>Let's Encrypt</strong> and Cloudflare's DNS, for <a href="#kilnwarden">Kilnwarden</a>'s hosted access.</li>
       <li><strong>Anthropic</strong> and <strong>Wallu</strong>, as described under <a href="#ai">AI assistants</a> above.</li>
     </ul>
 
