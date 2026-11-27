@@ -2,7 +2,7 @@
 title: "Creatures"
 description: "Change one creature, make variants like an Elite Vukah, swap them into natural spawns, and give orders."
 status: "works"
-updated: "2026-11-07"
+updated: "2026-11-27"
 ---
 
 This runs on the server, so players without Kiln see the results. For a creature of your own with its AI and rules,
@@ -74,3 +74,18 @@ Call `CreatureAdminCommands.Register()` for `/creature near`, `inspect <entity>`
 
 Most creatures aren't saved: they respawn, and your changes last the session. For ones the game saves (villagers, tamed
 animals), set `Persist` on the variant.
+
+## Pets and taming (0.2.0-dev.32, beta 1)
+
+A creature can be a player's **pet**: it belongs to one character, follows, fights by your rules, goes down instead of dying and is
+revived. A wild creature can be **tamed** in steps you design (weaken it, feed it, use a tool) and end as a pet. Both run on the
+server, with Kiln holding the records, the exact costs and the receipts; the choices are your mod's: [Pets](/kiln/wiki/pets) and
+[Taming](/kiln/wiki/taming). Only enemy creatures that walk can be a pet's body in this release.
+
+## Many at once: the creatures registry
+
+Variants and `CreatureRef` change one creature or add a kind. To change **every creature of a kind**, for all mods and all players, by
+names that outlive game updates, use the `creatures` and `arsenals` [registries](/kiln/wiki/new-registries): level, faction, size, health and
+damage scaling, 14 resistances, speeds, loot slots, an enemy's sight, a wild animal's taming steps, and each attack's chance, threat and
+ranges. An edit there is global to the kind: creatures that spawn **after** it copy the new level, faction, size, resistances and
+speeds; health and damage scaling and an enemy's sight reach every creature of the entry at once. (Experimental; not seen in a real game.)

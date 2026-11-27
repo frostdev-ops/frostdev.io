@@ -2,7 +2,7 @@
 title: "Multiplayer"
 description: "What players need, who can join, a short hold at the door, kicks and bans, per-character progress, synced configs, your own network messages and client code."
 status: "works"
-updated: "2026-11-23"
+updated: "2026-11-27"
 ---
 
 ## Decide what players need
@@ -86,6 +86,18 @@ The server sends its changes to items, recipes and game data at join. Stack size
 tooltips match, and go back at leave. No code, and your mod needn't be on their game.
 
 A value of your own on an entity can reach Kiln clients too: [Replication](/kiln/wiki/replication#a-sidecar-your-own-value-on-an-entity) (dev.31+).
+
+**Since 0.2.0-dev.32 (beta 1, a test build)** four more things reach Kiln players by themselves or by the join:
+
+- **Pets:** the server sends each owner a view of their pets; a player with Kiln gets the pet bar and recovery markers
+  ([Pets](/kiln/wiki/pets)). A pet on a game creature looks like that creature to everyone, vanilla players included.
+- **NPC speech and dialogue:** the host decides the bubbles, farewells, menu lines and topics; Kiln players show them. A Kiln player on
+  31.16 to 31.21 sees greetings and `Say` only; vanilla players see the game's lines ([NPC speech and dialogue](/kiln/wiki/npc-dialogue)).
+- **Registry edits:** each field of the [registries](/kiln/wiki/new-registries) says what a joined client sees. Server-only fields
+  (`creatures`, `arsenals`, `buffs`, `lootRules`, `randomLoot`) need nothing on the player's side; `now` fields (items, recipes, `perks.value`,
+  `skills.cost`, `abilities.timing`) travel to Kiln players, and vanilla players keep their own numbers; `restart` fields (`balance`, `world`,
+  `difficulty`, `limits`) are **not** sent, both sides need the same values and the join compares them.
+- **Gear rules** written through the registry compare as before: a server and a player on dev.31 still join each other.
 
 Not so for a [resource patch](/kiln/wiki/onboot#resource-patches): it changes data the game read at its own start, so
 both sides need the mod. Since 0.2.0-dev.29 a boot mod loads in a player's game too, and the join compares what it

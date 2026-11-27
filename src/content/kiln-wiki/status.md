@@ -1,11 +1,11 @@
 ---
 title: "What works today"
 description: "What Kiln does in the current build, what is on but not yet confirmed in a real game, what's being built and what isn't, as of November 2026."
-updated: "2026-11-19"
+updated: "2026-11-27"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
-[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). This page describes **0.2.0-dev.29.19** (mod API 0.2.11), the current development release; check the download's version before using its new APIs.
+[GitHub](https://github.com/frostdev-ops/kiln/releases) and [this site](/kiln#download). The tables further down were last written in full for **0.2.0-dev.29.19** (mod API 0.2.11). What came after is summarised in [New in 0.2.0-dev.32](#new-in-020-dev32-beta-1) (the newest, a test build on the beta channel) and in the release notes and the [roadmap](/kiln/roadmap); check the download's version before using a new API.
 
 "Works" means it has run on a test server or in the game. "Seen in the game" means a player saw it in Enshrouded, in the
 test sessions of 6 and 7 November 2026, or, for dev.24 and later, in the one real game the release's notes name (Linux,
@@ -13,6 +13,29 @@ Proton, one client). Where only a game can show the result, it's under
 [Built, game test pending](#built-game-test-pending) and, for dev.29,
 [On, not yet confirmed in a real game](#on-not-yet-confirmed-in-a-real-game) until a player has seen it. Things that failed in those sessions are
 listed under [Open in the game](#open-in-the-game); some have had fixes since that still need a game test.
+
+## New in 0.2.0-dev.32 (beta 1)
+
+Beta 1 is a **test build** (mod API 0.2.27): in the launcher's Settings, under Launcher updates, set **Channel** to the test builds to try it. It adds
+pets, taming, NPC dialogue, twelve more registries with views and `Registry.Reauthor`, exact costs with receipts, gear rules written through
+the registry, effect replay of ShroudForge and EML packages, and tools for the game's terrain tiles. Everything below ran on dedicated lab
+servers with test peers and bots, in host tests and in Kiln's test suites; **nothing of dev.32 has been seen in a real game client yet.**
+
+| Area | What it brings | Not yet seen in a real game |
+|---|---|---|
+| [Pets](/kiln/wiki/pets) | records per character, summon, follow, orders, going down instead of dying, revives with an exact cost, the owner's bar and markers | the bar, markers, animation, attack orders over 30 s, anchors at login, terrain |
+| [Taming](/kiln/wiki/taming) | attempts in steps (feed, weaken, tool, the game's own), exact costs with receipts, refunds, a pet at the end; the game's wildlife taming read and watched | the natural bait flow, who tamed an animal, a client's progress, refunds |
+| [NPC dialogue](/kiln/wiki/npc-dialogue) | greeting picks, farewells, the line when a menu opens, talk pages, per-player lines | the first menu before the host answers, a per-player budget, a farewell NPC |
+| [The dev.32 registries](/kiln/wiki/new-registries) | creatures, arsenals, perks, skills, stations, buffs, abilities, world rules, difficulty bounds, limits, loot rules and tables; views over everything else (262 of 277 fields proven in a lab) | creature, arsenal and perk edits in play, a joined client's skill screen, buff and ability timing, altars above 16, gifting beyond 50 m, cleared no-build zones |
+| [Loot odds and levels](/kiln/wiki/loot-rules) | `lootRules` and `randomLoot`, re-authored off the world tick in one turn | real loot rolls, a hot reload mid-pass, co-op or hosted worlds |
+| [Gear rules](/kiln/wiki/data-packs#gear-numbers-and-gear-rules) | `gearRules` written through the registry, byte for byte as before | gear rules on a client, tooltips and durability in play, a join with a dev.31 peer |
+| [Effect replay](/kiln/wiki/eml-shroudforge#when-a-game-update-breaks-a-package-effect-replay-020-dev32-beta-1) | opt-in replay of a ShroudForge or EML package's recorded effect after a game update | hosted ShroudForge's journal, a replay after a real update, a joined client |
+| [Exact costs](/kiln/wiki/inventory#exact-costs-and-receipts) | one cost from one named slot, once, with a receipt | refunds in play |
+| [Terrain tiles](/kiln/wiki/world-edits#the-games-own-terrain-tiles) | tools only: a tile codec, a checker, a lab pack; no mod API | a cooked tile on a client |
+| NPC speech bubbles (31.16) | seen in a real game | (the menu parts above are new) |
+
+**Limits.** The registries are experimental (`KILNX031`) and may change in any release. Pets walk beside their owner only where Kiln
+has a measured clearance profile for the creature's body; otherwise they catch up. Only enemy creatures that walk can be pets.
 
 ## New in the 0.2.0-dev.29 patches
 

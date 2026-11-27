@@ -3,7 +3,7 @@ title: "Kiln on a dedicated server"
 nav: "Dedicated servers"
 description: "Put Kiln on an Enshrouded dedicated server: a rented host over FTP, your own Windows PC, or a headless Linux machine."
 status: "partial"
-updated: "2026-11-21"
+updated: "2026-11-27"
 ---
 
 This page is for server owners. It shows how to put Kiln on an Enshrouded dedicated server, check that it runs, add
@@ -373,6 +373,11 @@ Every Enshrouded update changes the server program. Kiln checks the build at eve
 
 Players' games are separate: their Kiln needs to know their game build too. Players with the launcher get that from
 Kiln updates in the launcher.
+
+Registry edits (since dev.31) have their own commands: `kilnctl registry rollback <server>` runs the next starts on the last good start's
+plan instead of the mods' current registry edits (`--clear` ends it), and, since 0.2.0-dev.32 (beta 1), `kilnctl registry replay <server>
+--opt-in <mod>` lets Kiln re-apply a ShroudForge or EML package's recorded effect after a game update that broke its Lua
+([Registries](/kiln/wiki/registries#other-loaders-packages-conflicts-and-effect-replay)). The launcher's Conflicts page shows both.
 
 On Linux, `kilnctl update myserver` stops the server, backs up the save, updates the game through SteamCMD, says
 whether Kiln knows the new build, and starts the server again.

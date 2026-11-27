@@ -3,7 +3,7 @@ title: "Hooks and patches"
 nav: "Hooks"
 description: "The advanced tier: detours, mid hooks, memory patches and symbols on game code and inside other mods' DLLs, from C# or a native plugin, through Kiln's one hook registry."
 status: "pending"
-updated: "2026-11-19"
+updated: "2026-11-27"
 ---
 
 > **Changed in 0.2.0-dev.21.** Every hook Kiln places on the game exe now goes through one registry, kiln.hooks v2.
@@ -22,6 +22,11 @@ or `"advanced": true` in `kiln.mod.json`:
 { "id": "mycoremod", "version": "1.0.0", "apiVersion": "0.1", "entryAssembly": "MyCoremod.dll",
   "side": "server", "advanced": true }
 ```
+
+Since 0.2.0-dev.32 (beta 1) the manifest also takes `"native": true`, the same setting under the name of its tier (the Native
+tier: raw hooks, symbols and memory; give one of the two, or both with the same value). `"advanced"` keeps working with no removal
+date, and a Kiln before dev.32 warns about an unknown `"native"` key and does not opt the mod in, so a mod for older Kilns keeps
+`"advanced": true`.
 
 Without it, the first hook call throws `InvalidOperationException`, and the build fails with
 [KILN107](/kiln/wiki/lint). Every hook, patch and symbol load is logged in `kiln/logs/kiln.log` with the mod id.

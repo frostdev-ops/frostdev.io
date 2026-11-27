@@ -3,13 +3,17 @@ title: "Friendly NPCs"
 nav: "Friendly NPCs"
 description: "Place NPCs and make new ones, with a roster entry, vendor stock and voiced lines, in the game's own directory and menus."
 status: "works"
-updated: "2026-11-23"
+updated: "2026-11-27"
 ---
 
 > **One fix awaits a client retest:** the Survivors list now takes its row and text from the NPC, not its summon tool.
 
 To recruit and house the game's own survivors from a server mod, give villagers a day plan, or give an NPC a body and animations of
 its own (dev.31+), see [Survivors, routines and NPC bodies](/kiln/wiki/survivors).
+
+To change what the game's **own** NPCs say (the bubble over a villager, its farewells, the line it speaks when its menu opens,
+topics on its talk page), see [NPC speech and dialogue](/kiln/wiki/npc-dialogue) (bubbles since dev.31.16, the rest in
+0.2.0-dev.32 beta 1).
 
 The [quest engine](/kiln/wiki/quests) runs the logic. This page is what the game itself shows: your NPCs in its roster, your quests
 in its journal, your lines in its NPC menu, with per-language text and voice.

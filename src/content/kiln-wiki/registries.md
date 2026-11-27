@@ -3,12 +3,13 @@ title: "Registries: game data by stable names"
 nav: "Registries"
 description: "Edit items, recipes, loot, drops and balance through names Kiln supplies and keeps stable across game updates: entry points, transactions, adding and hiding entries, how mods stack, and what is still refused."
 status: "pending"
-updated: "2026-11-23"
+updated: "2026-11-27"
 ---
 
-> **New in 0.2.0-dev.31 (dev.31+, mod API 0.2.17), experimental.** The registry types carry the diagnostic `KILNX031` and
-> may change in any release until each registry is marked stable; at API 1.0.0 the stable ones are frozen (additive
-> only). Edits ran on a dedicated server and in offline tests. Not yet seen in a real game client.
+> **New in 0.2.0-dev.31 (dev.31+, mod API 0.2.17), experimental; twelve more registries, views and `Registry.Reauthor` in
+> 0.2.0-dev.32 (beta 1, a test build, mod API 0.2.27).** The registry types carry the diagnostic `KILNX031` and may change in any
+> release until each registry is marked stable; at API 1.0.0 the stable ones are frozen (additive only). Edits ran on dedicated
+> servers and in offline tests. **Not yet seen in a real game client.**
 
 A registry is a piece of the game's data under names Kiln gives it. You edit `items.maxStack` of
 `game:material_t1_wood_logs`, never a game function, a field path or an address. Kiln maps each field onto the game for
@@ -25,6 +26,7 @@ Registries hold data only. [Data packs](/kiln/wiki/data-packs), [game data](/kil
 | `loot` | random loot, one entry per item | stack sizes, rarities |
 | `drops` | the game's drop tables | each entry's item, count, chance and weight |
 | `balance` | one entry, `game:balance` | experience and levels, flame altars, water sources, build-zone sizes, fog resistance, durability, sockets, perk costs |
+| `creatures`, `arsenals`, `perks`, `skills`, `stations`, `buffs`, `abilities`, `world`, `difficulty`, `limits`, `lootRules`, `randomLoot` | dev.32 | creature values, enemy attacks, perk values, skill costs, stations, buff lengths, ability timing, the world's build rules, difficulty bounds, game limits and how loot rolls: [The dev.32 registries](/kiln/wiki/new-registries), [Loot odds and levels](/kiln/wiki/loot-rules) |
 
 ## Ids
 
@@ -95,7 +97,7 @@ Each field says so in its page, on its C# property and in `RegistrySchema`:
 | `restart` | after a game restart: the game reads it once | the whole `balance` table |
 
 A later point never writes a restart field: it answers `RestartRequired`. A field Kiln hasn't traced yet ships with the
-cautious value and an unproven mapping: `items.block`, `items.fuel.burnTime` and `items.comfort` in this release.
+cautious value and an unproven mapping; in this release only `items.fuel.burnTime` and the damage of simple perks are in that state.
 
 ## Transactions: Registry.Change
 
@@ -120,7 +122,8 @@ change never puts an old snapshot over a later one. A change is not disposable: 
   It says the registry is ready, not that every edit of yours applied: read the results.
 - Adds and removes are GameStart-only. A transaction that includes one is refused with `RestartRequired` and commits none
   of its other edits. A refused field-only edit doesn't stop the valid ones.
-- Limits: 16 open drafts and 256 retained changes per mod (64 and 1,024 in all), 4,096 edits a change.
+- Limits: 16 open drafts and 256 retained changes per mod (64 and 1,024 in all). One change takes at most 4,096 edits of one registry
+  (16,384 of `randomLoot`, since dev.32; [below](#edits-per-call)).
 
 ## Add and hide entries
 
@@ -196,14 +199,82 @@ A plain `op` sets the value; an object is `mul`, `add`, `min`, `max`, `raiseOnly
 a list of fixed length is edited one element at a time (`xpPerLevel[2]`). Fields that apply now or at world load follow
 a pack's hot reload; adds and removes wait for a restart.
 
+## Edits per call
+
+Since 0.2.0-dev.32 a registry declares the most edits **of that registry** one call may carry: `RegistrySchema.EditsPerCall` says it,
+and each registry page in Kiln's repository too. One call is one `OnRegistry` callback (that is one phase of one entry point), one
+`Registry.Change`, or one batch a native plugin sends. `randomLoot` takes 16,384 (every field of every table of the game's loot
+data fits with room), every other registry 4,096; each registry is counted on its own. A call over a registry's cap is
+**refused whole**: nothing of it applies, `registry.json` has a row for each registry the call named (the one over its cap
+with its count and the cap), `kiln.log` says so, and Kiln **never throws** for it in your code. Before dev.32 an edit past
+4,096 threw, so a mod that caught it kept a cut call and one that did not lost its whole pass. Split big edits over the
+phases (`Alter`, `Final`) or over several `Registry.Change` calls. An edit is one field of one entry, so count fields.
+
+## Re-author a pass when settings change
+
+An `OnRegistry` pass can follow a settings file or the game's state (a player's level) without a restart:
+`Registry.Reauthor(RegistryEntryPoint.WorldLoad)` runs your declared `WorldLoad` pass again from the next host tick, in the same
+world, and its new layers replace the old ones in one turn: the game never sees a moment without your values, and the pass never
+stacks on its own last result. It runs on a worker thread of Kiln's, not on the world tick, so **read your settings and game state
+first**, in the handler that saw them change, and don't call tick-thread APIs inside the pass. It answers `false` (the reason in
+`kiln.log`) for another entry point, a mod with no `WorldLoad` pass, a call from inside `OnRegistry`, or no running back-end.
+Requests while one runs become one more pass, never one each. The worked example is [Loot odds and
+levels](/kiln/wiki/loot-rules#follow-a-setting-or-a-players-level).
+
+## Read anything: views
+
+`RegistryViews` reads every registry, and every other resource type of the running build, under Kiln names, **read only**. The
+registries are stable views; everything else is an advanced view named from the game's reflection and checked per game build. See
+[The dev.32 registries](/kiln/wiki/new-registries#read-anything-views).
+
+## What players see: `clients`
+
+Each field has a "joined client" column on its page in Kiln's repository: `serverOnly` (the client needs nothing), `now` (Kiln's
+content sync sends the layer to Kiln players, who use it at their next use; vanilla players keep their own numbers), `worldLoad`
+(sent, used at the next world load), `restart` (**not** sent: both sides need the same boot values and the join compares them), or
+`localOnly`. Choose a registry-only pack's `clients` by the strictest field it edits:
+
+| Fields | `clients` |
+|---|---|
+| `loot`, `drops`, `creatures`, `arsenals`, `buffs`, `lootRules`, `randomLoot` (all server only) | `none` |
+| synced `items`, `recipes`, `perks.value`, `skills.cost`, `abilities.timing` | `kiln` for matching tooltips and prediction; `none` lets vanilla players in with their own numbers |
+| `balance`, `world`, `difficulty`, `limits` (read once at start) | `mod`, with `side: "both"` |
+| adding or hiding items and recipes | at least `kiln`; `mod` for assets of your own |
+
+`kiln lint` says `KL213` when a registry-only pack's `clients` differs from what its fields need.
+
+## After a reload
+
+`reload <id>` of a mod with registry edits applies what its `applies` allows now and says what waits for a restart. A pack's field that
+applies `now` or `worldLoad` is composed again with every other mod's. A `restart` field keeps the start's value; the reloaded value applies
+at the next start. An entry added or removed the start did not have, or a section the start never read, waits too. Each such edit is a
+`RestartRequired:` row in `registry.json`, in the reply of `reload <id>`, in `kilnctl status` and first in the launcher's Conflicts view
+("Waits for a restart"). A pack that throws while it applies leaves none of its new registry section behind. `kilnctl registry
+rollback <server>` makes the next starts run the last good start's plan instead of the mods' current registry edits, until
+`kilnctl registry rollback --clear`; `registry.json` says what changed back and which mods' edits were left out.
+
+## Other loaders' packages: conflicts and effect replay
+
+`registry.json` and the Conflicts view also name ShroudForge and EML packages that wrote a field before Kiln, from the change journal
+of the start's archive writer (hosted ShroudForge, Kiln's interpreter for ShroudForge mods in kiln mode, kiln-eml's EML pass), and a
+ShroudForge package that changed a value at run time in kiln mode. **Effect replay** (dev.32) is opt-in per package: after a game
+update, a package's Lua can fail and change nothing until its author updates it; Kiln records each package's last effect in
+registry terms, and for a package you opt in, applies it through the registry on a later game build where its Lua was not applied.
+Opt in with `kilnctl registry replay <server> --opt-in <mod>` (`--opt-out` undoes it) or the toggle on the launcher's Conflicts
+page. A package with anything the registry cannot hold (a list's membership, a created entry, a field another package also changed) is
+refused whole, never in part, and `registry.json` `replay` says why. Not seen in a real game: hosted ShroudForge writing its
+journal, replay after a real game update and on a joined client.
+
 ## What is unproven and what is refused
 
-- **Item removal is refused on the current game build.** It needs the drop-table rows to be proven, and they aren't: the
-  report says `drop tables not proven on this build` and **nothing** of that removal is applied. Hiding loot and recipes
-  does work.
-- **Unproven fields** (`items.block`, `items.fuel.burnTime`, `items.comfort`, `loot.stack.scalable`,
-  `loot.stack.maxScaled`, `loot.rarities`, `loot.fixedRarity`) are refused per entry with the reason until a Kiln update
-  maps them.
+- **Item removal works on the current game build** (server 1287369): its drop-table rows are proven, so a hide of an item also
+  hides the recipes that depend on it and sets its direct-drop slots to chance and weight 0. A game build Kiln has not proven yet
+  refuses it **whole** with `drop tables not proven on this build` and nothing of that removal applies. Hiding loot and recipes
+  alone always works.
+- **One field is off on the current build:** `items.fuel.burnTime` (no game code reads an item's burn time, so an edit would change
+  nothing) and the damage of simple perks (`perks.damage.*`: Kiln has not traced when the game reads it). Every edit of them is
+  refused with the reason. The fields that were unproven in dev.31 (`items.block`, `items.comfort`, the `loot` rarity fields) are
+  mapped now.
 - **Whole-number storage.** A fractional value for a field the game stores as a whole number isn't rounded: it is
   refused with a reason that starts `not_exact:`.
 - **Per-entry refusals.** At `ModLoad`, `WorldLoad` and `HotReload` an entry that can't take an edit (an exclusive

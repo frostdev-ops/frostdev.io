@@ -3,7 +3,7 @@ title: "Lint and analyzers"
 nav: "Lint and analyzers"
 description: "kiln lint checks your mod's JSON before the game has to. The analyzers catch thread and hot-reload mistakes in your C#."
 status: "works"
-updated: "2026-11-21"
+updated: "2026-11-27"
 ---
 
 ## kiln lint
@@ -69,6 +69,9 @@ Kiln.Sdk runs these over every mod, in `dotnet build` and live in your editor. T
 | `KILN108` | a service used but not listed in `KilnServices`. Since 0.2.0-dev.29.16 a mod that lists `Stations` instead of `Blocks` no longer gets a false KILN108 for `BaseIdChange` |
 | `KILN120` | a Kiln result (`IKilnResult`, for example from `Items.Equip` or `NoClip.Set`) that nobody reads |
 | `KILN121` | a call that needs a capability, with no check of it first and no `catch` of `KilnUnavailableException` |
+| `KILN122`, `KILN123` | registry entry points declared without a real `OnRegistry` override; zero, `Manual` or unknown automatic points ([Registries](/kiln/wiki/registries)) |
+| `KILN124`, `KILN125` | info only, since 0.2.0-dev.32 (beta 1): an old data path (a data pack section, a resource patch, `ContentEntry`) or Native-tier code (a hook or memory write by address) that a [registry](/kiln/wiki/new-registries) field covers; the hint names the field and never refuses a mod |
+| `KL213` | a registry-only data pack whose `clients` differs from what its fields need ([Registries](/kiln/wiki/registries#what-players-see-clients)) |
 | `KILN034` | **error**: an `OnBoot` that never runs (no `"boot"` in kiln.mod.json and no `<KilnBoot>`), or the run-time `Blocks.Define` in boot code |
 | `KILN035` | a tick, world or service API in boot code (`OnBoot`) |
 | `KILN036` | **error**: a `[Query]` struct or a generated native the build can't reserve or write (two structs with one key, more than 32 programs in a file, a name too long) |

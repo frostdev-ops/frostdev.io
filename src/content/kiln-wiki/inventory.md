@@ -3,7 +3,7 @@ title: "Inventory transfers"
 nav: "Inventory transfers"
 description: "Move gear with its state, put items on and take them off, swap whole sets of gear, read and set container names, keep items out of quick stack or move all, and keep data on one item."
 status: "pending"
-updated: "2026-11-23"
+updated: "2026-11-27"
 ---
 
 > **New in 0.2.0-dev.20.** These APIs require the dev.20 runtime and MDK or newer. Server evidence and pending client checks are tracked on
@@ -181,6 +181,34 @@ name, and a player without Kiln notices nothing. A mod can't draw into the game'
 in a screen of your own, a HUD line or a notice. The sample `ItemData` shows its notch count this way.
 
 Rolled bonuses on one item are [affixes](/kiln/wiki/affixes), kept as item data of Kiln's own.
+
+## Exact costs and receipts
+
+New in 0.2.0-dev.32 (beta 1, a test build). `ItemCosts` (Kiln.Items, server) takes **one cost from one slot you name**, exactly once,
+and gives you a **receipt**. Taming's steps and a pet's revive pay through it; any server mod may.
+
+```csharp
+var twigs = Items.Lookup("Material_T1_Twigs")!.Id;
+var slot = ItemCosts.Choose(EntityRef.Of(player), twigs, 3);                 // the first plain stack that can pay; null: none
+if (slot is not { } selection) return;
+CostReceipt receipt = await ItemCosts.Take(selection, 3, Guid.NewGuid());    // all or nothing, from that slot only
+if (receipt.Committed) Log.Info($"took {receipt.Taken}");
+else if (receipt.Uncertain) Log.Warn($"unknown whether paid: {receipt.Reason}");   // never submit it again as if nothing happened
+else Log.Info($"refused: {receipt.Refusal}");                                // StaleSelection, NotAStack, ...
+CostReceipt back = await ItemCosts.Refund(receipt, Guid.NewGuid());          // a committed take, once
+```
+
+- **Nothing is searched when the cost runs.** The selection is a snapshot of one slot; if the slot changed (another item, another
+  count, gear), the cost is refused (`StaleSelection`) and nothing is taken. A player's game never names a slot id of its own: the
+  server builds the selection from its own read.
+- **One request id, one debit.** The same id with the same cost gives the same receipt; the same id with another cost is a
+  conflict. A retry after a network hiccup sends the same id and can never pay twice.
+- **Wear** takes durability off a gear item through the game's own durability debit (`ItemCosts.Wear`); it refuses to break the tool
+  unless you allow it. **Refund** gives a committed take back to the same owner (or a wear's durability back to the same item), once.
+- A receipt is **Committed**, **Refused** (nothing changed, with a reason) or **Uncertain** (a fault inside the game's change:
+  whether it was paid is not known; it is never refunded).
+- Not promised: atomicity with anything else. A pet record or your own data is another store and is saved on its own.
+- A walkthrough (a blessing that costs three twigs, refunded if it fails) is `docs/kiln/modding/item-costs.md` in Kiln's repository, on [GitHub](https://github.com/frostdev-ops/kiln).
 
 ## With shroudlink and with players
 

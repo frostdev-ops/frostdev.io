@@ -2,7 +2,7 @@
 title: "World edits"
 description: "Dig, build, flatten and paint terrain, place props, paste schematics, lay terrain overlays, and ask the world about ground, sight and paths. Players without Kiln see it all."
 status: "works"
-updated: "2026-11-17"
+updated: "2026-11-27"
 ---
 
 Kiln uses the game's own building and terraforming, so every player sees the edits. It adds the areas it edits to the save, so
@@ -199,6 +199,15 @@ crafting or interacting in an area. The admin **Zones** and **Map** pages edit t
 Kiln's own edits leave bases alone unless asked (`BuildFlags.InBases`), and follow zones when asked (`BuildFlags.RespectZones`).
 To find a base and read its altars, Magic chests and production stations (`Bases.Of`, `Bases.At`), see
 [Stations and bases](/kiln/wiki/stations).
+
+## The game's own terrain tiles
+
+The ground the game ships is stored in about 19,000 tiles at seven levels of detail, read before a world loads. **A mod cannot replace them
+yet.** 0.2.0-dev.32 adds the groundwork as tools only: a tile codec, a checker that every shipped tile survives a read and rewrite
+byte for byte, and a qualification pack for a lab server. None of it is a mod API, and the baked-terrain capability stays off. A
+dedicated lab server reads a Kiln-written tile back cell for cell; **no game client has shown one**: holes, the old horizon, seams across
+levels of detail, collision and a joined or hosted client are still to be checked. For ground a mod can change today, use an
+overlay above. `docs/kiln/modding/terrain-tiles.md` in Kiln's repository ([GitHub](https://github.com/frostdev-ops/kiln)) has a walkthrough for an overlay and the tools.
 
 ## Limits
 

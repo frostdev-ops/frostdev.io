@@ -3,7 +3,7 @@ title: "EML and ShroudForge mods"
 nav: "EML and ShroudForge"
 description: "Kiln runs EML data mods and ShroudForge's Lua mods unchanged, with no extra loader and no Wine settings."
 status: "pending"
-updated: "2026-11-21"
+updated: "2026-11-27"
 ---
 
 EML (the Enshrouded Mod Loader) and ShroudForge are the frameworks with the most Enshrouded mods. Both come with Kiln
@@ -343,6 +343,24 @@ data mods as the server; Kiln's join check doesn't compare them yet. See
 On a server where ShroudForge runs, each EML mod needs an `extended.mod.json` with `"enabled": true`, or nothing runs it.
 Since 0.2.0-dev.30.3 `kiln.log` names such mods at the start. The file and what to do:
 [EML mods on a server that runs ShroudForge](/kiln/wiki/dedicated-servers#eml-mods-on-a-server-that-runs-shroudforge).
+
+## When a game update breaks a package: effect replay (0.2.0-dev.32, beta 1)
+
+A ShroudForge or EML package changes the game's data with its own Lua, which names the game's types and paths. After a game update that Lua
+can fail, and the package then changes nothing until its author updates it. Kiln now **records each package's last effect** in terms of its
+[registries](/kiln/wiki/registries) (what the package changed, with the values it left), and for a package you **opt in**, applies that effect
+on a later game build where its Lua was not applied. Recording is on by default; replaying is your choice, per package.
+
+- **Opt in** on the launcher's **Conflicts** page (Effect replay, per package), or on a server with
+  `kilnctl registry replay <server> --opt-in <mod>` (`--opt-out` undoes it; with no flag it lists the packages).
+- **Whole or not at all.** A package whose effect holds anything the registries cannot (a list's membership, an entry it created, a field
+  another package also changed) is not replayed in part: nothing of it is, and the Conflicts page says why.
+- **It cannot run the package's Lua**, create entries, or follow the game's new values where the package set a field: the recorded value is
+  set as it was. Other mods' registry edits win over it.
+- **Named writers.** The Conflicts page also names which ShroudForge or EML package wrote a field before Kiln, from the start's change
+  journal, with a "hosted journal" line when Kiln's bundled ShroudForge wrote it.
+
+Not seen in a real game: hosted ShroudForge writing its journal, a replay after a real game update, and a replay on a joined client.
 
 ## Not tested yet
 
