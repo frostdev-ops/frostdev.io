@@ -3895,6 +3895,11 @@
           "area": "content"
         },
         {
+          "title": "NPC dialogue for mods",
+          "text": "Building on NPC speech: a replaced greeting picks a new line each time an NPC greets, mods can set farewells and the talk menu's own line, and villagers without a talk page can get one of the mod's, for survival mods such as Living Larder.",
+          "area": "api"
+        },
+        {
           "title": "One view over every registry",
           "text": "One typed view over every game resource with Kiln's names, Stable, Advanced and Native labels across the modding API, and editor hints that point mods from old paths to registry fields.",
           "area": "api"
