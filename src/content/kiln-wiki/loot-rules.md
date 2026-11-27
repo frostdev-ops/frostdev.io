@@ -73,10 +73,13 @@ world runs**. Declare a `WorldLoad` pass and ask Kiln to run it again when an in
 [RegistryEntryPoints(RegistryEntryPoint.WorldLoad)]
 public sealed class Leveler : Mod
 {
-    public override void OnLoad() => Config.Register<Settings>().Changed += _ => Kiln.Registry.Registry.Reauthor(RegistryEntryPoint.WorldLoad);
+    public override void OnLoad() => Config.Register<Settings>().Changed += _ =>
+    {
+        if (Capabilities.Is("kiln.registry.live")) Kiln.Registry.Registry.Reauthor(RegistryEntryPoint.WorldLoad);
+    };
     public override void OnRegistry(RegistryContext context)
     {
-        if (context.Phase != RegistryPhase.Alter) return;
+        if (context.Phase != RegistryPhase.Alter || !Capabilities.Is("kiln.registry")) return;
         var w = Kiln.Registry.Registry.For(context).LootRules.RarityWeights;   // the values below this mod
         w.Legendary = w.Legendary * 4;                                          // never stacks
     }

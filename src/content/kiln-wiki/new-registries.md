@@ -117,7 +117,7 @@ dialogs, materials, UI data: the long tail no registry covers yet). Registries a
 by Kiln from the game's reflection, checked per game build, never written.
 
 ```csharp
-if (RegistryViews.Available && RegistryViews.Find("quest") is { } quests)
+if (Capabilities.Is("kiln.registry.view") && RegistryViews.Find("quest") is { } quests)
     foreach (var id in quests.Select("game:quest_*"))
         if (quests[id].TryGet<int>("xpReward", out var xp, out var why)) Log.Info($"{id.Value}: {xp} xp");
         else Log.Info(why);                                      // this entry has no value of it, in Kiln words

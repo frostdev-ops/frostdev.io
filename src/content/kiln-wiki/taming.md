@@ -79,6 +79,7 @@ Every action carries your **request id** and the **token** of the last answer. U
 a message is lost, send the **same** one again and Kiln answers with what happened, never paying twice.
 
 ```csharp
+if (!Capabilities.Is(Taming.Capability)) return;                   // "taming.steps": a server world runs
 var r = Taming.Begin(player, EntityRef.Of(wolf), "my-mod:wolf", Guid.NewGuid());
 if (!r.Ok || r.Progress is not { } p) { Log.Info(r.Reason ?? "refused"); return; }   // Busy, TemplateMismatch, OutOfRange, ...
 // weaken has no cost, so no selection:

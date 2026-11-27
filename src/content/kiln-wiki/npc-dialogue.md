@@ -31,17 +31,18 @@ For friendly NPCs of your own, with quests and conversations, see [Friendly NPCs
 ```csharp
 foreach (var v in Villagers.List().Where(v => Npcs.CanSpeak(v.Entity))) { /* an NPC with dialogue lines */ }
 
-Npcs.Say(npc, "I'm starving...", TimeSpan.FromSeconds(6));        // once, now, no voice-over, 0.5 s to 60 s
+_ = Npcs.Say(npc, "I'm starving...", TimeSpan.FromSeconds(6));     // once, now, no voice-over, 0.5 s to 60 s
 
 var speech = Npcs.Speech(npc);                                     // your override of this NPC's greetings
 speech.Priority = 10;                                              // outranks other mods' overrides of the same NPC
 speech.Pick = SpeechPick.InOrder;                                  // set before Replace
-speech.Replace("No food, no work.", "My stomach is louder than my anvil.");
+_ = speech.Replace("No food, no work.", "My stomach is louder than my anvil.");
 // speech.Suppress();                                              // or: no greeting bubble at all
 speech.Clear();                                                    // the game's own lines (or the next mod's) again
 ```
 
-A line is a plain string, or a text per language: `UiText.Of(("en", "I'm starving"), ("de", "Ich verhungere"))`.
+A line is a plain string, or a text per language: `UiText.Of(("en", "I'm starving"), ("de", "Ich verhungere"))`. Each call answers
+with a `SpeechResult` (`Ok`, `Reason`); read it, or write `_ =` where a refusal does not matter ([KILN120](/kiln/wiki/lint)).
 
 - **`Say`** shows one bubble now, even when the NPC is not the player's target. A newer `Say` of the NPC replaces it.
 - **`Speech(npc)`** is *your* override of the greeting bubble. `Replace` gives 1 to 32 lines (up to 200 characters each); the NPC
@@ -71,16 +72,16 @@ changes, call `Refresh()` to ask again for every player now.
 
 ```csharp
 // the line in the menu's speech box when a player leaves it
-Npcs.Farewells(npc).Replace("Come back with something to eat.", "Don't forget me, Flameborn.");
+_ = Npcs.Farewells(npc).Replace("Come back with something to eat.", "Don't forget me, Flameborn.");
 
 // the NPC's own line when a player opens its menu; per player with By (-1: no line for that player)
 var plea = Npcs.MenuLine(npc);
 plea.Pick = SpeechPick.By(ctx => fed.Contains(ctx.Player) ? -1 : 0);
-plea.Replace("Please, Flameborn, I haven't eaten in days.");
+_ = plea.Replace("Please, Flameborn, I haven't eaten in days.");
 plea.Refresh();                                                    // after `fed` changed
 
 // one line in one player's menu: now if it is open, else when it opens within 5 s; once
-Npcs.MenuSay(npc, player, "Thanks, I feel better already.");
+_ = Npcs.MenuSay(npc, player, "Thanks, I feel better already.");
 
 // a talk page: your topics after the NPC's own (a villager without topics, Ramone, gets a page)
 Npcs.Topics(npc).Set(new NpcTopic("feed", "Here, have some bread.")

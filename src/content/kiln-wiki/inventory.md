@@ -188,6 +188,7 @@ New in 0.2.0-dev.32 (beta 1, a test build). `ItemCosts` (Kiln.Items, server) tak
 and gives you a **receipt**. Taming's steps and a pet's revive pay through it; any server mod may.
 
 ```csharp
+if (!Capabilities.Is("items.costs.exact")) return;
 var twigs = Items.Lookup("Material_T1_Twigs")!.Id;
 var slot = ItemCosts.Choose(EntityRef.Of(player), twigs, 3);                 // the first plain stack that can pay; null: none
 if (slot is not { } selection) return;

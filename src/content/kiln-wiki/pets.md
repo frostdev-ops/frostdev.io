@@ -67,18 +67,28 @@ otherwise for two characters.
 ## Give, summon, order, revive
 
 ```csharp
+// one place that reads every answer: a refusal is a result with a Reason, not an exception
+async Task<PetResult?> Ask(Task<PetResult> request)
+{
+    var r = await request;
+    if (!r.Ok) Log.Info($"pet request refused: {r.Reason}");
+    return r.Ok ? r : null;
+}
+
+if (!Capabilities.Is("pets.records") || !Capabilities.Is("pets.summon")
+    || !Capabilities.Is("pets.follow") || !Capabilities.Is("pets.downed")) return;   // a joined client has none of these
 var key = CharacterData.KeyOf(player);                    // the character
-var given = await Pets.Grant(key, "my-mod:hound", PetRequest.New());       // a record, no body yet
-var pet = given.Pet!.Id;
 var who = PlayerRef.Of(player);
-await Pets.Summon(who, pet, PetRequest.New());            // a protected body 2 to 4 m from the owner, following
-await Pets.Command(who, pet, PetOrder.Stay, EntityRef.None, PetRequest.New());
-await Pets.Command(who, pet, PetOrder.Attack, EntityRef.Of(enemy), PetRequest.New());
-await Pets.Revive(who, pet, PetRequest.New());           // the owner channels next to its recovery anchor
-await Pets.Release(who, pet, PetRequest.New());          // for good
+var given = await Ask(Pets.Grant(key, "my-mod:hound", PetRequest.New()));      // a record, no body yet
+if (given?.Pet is not { } pet) return;
+if (await Ask(Pets.Summon(who, pet.Id, PetRequest.New())) is null) return;     // a protected body 2 to 4 m from the owner, following
+if (await Ask(Pets.Command(who, pet.Id, PetOrder.Stay, EntityRef.None, PetRequest.New())) is null) return;
+if (await Ask(Pets.Command(who, pet.Id, PetOrder.Attack, EntityRef.Of(enemy), PetRequest.New())) is null) return;
+if (await Ask(Pets.Revive(who, pet.Id, PetRequest.New())) is null) return;     // the owner channels next to its recovery anchor
+if (await Ask(Pets.Release(who, pet.Id, PetRequest.New())) is null) return;    // for good
 ```
 
-Every call answers with a result: `Ok`, a `Reason` that starts with a word (`Busy`, `NotOwner`, `Capacity`, `NoSafeGround`,
+Every call answers with a result (the `Ask` helper above is where yours reads it): `Ok`, a `Reason` that starts with a word (`Busy`, `NotOwner`, `Capacity`, `NoSafeGround`,
 `TargetProtected`, `OutOfRange`, ...) and the pet as it is after. A refusal is not an exception; check `Ok`. Pass a fresh
 `PetRequest.New()` for each action you mean; resend the **same** one after a network hiccup and Kiln gives the first answer back
 instead of doing it twice.
