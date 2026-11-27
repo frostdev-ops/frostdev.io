@@ -1,6 +1,39 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.21",
+      "date": "2026-11-27",
+      "title": "Building tools, spell lists and ShroudForge in multiplayer",
+      "summary": "Mods' building tools keep their own brushes and add terrain from the second start, a mod's spell or arrow list stays put while you scroll, and a ShroudForge mod that changes blocks tells you why it does nothing in a game you joined.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Building tools keep their brushes",
+          "text": "Picking another brush size for a mod's building tool keeps the tool and its own brushes instead of turning it into the vanilla Overgrowth Tool, and each brush's preview shows the vanilla size nearest its own (thanks SonjaNemitz).",
+          "area": "content",
+          "kind": "fix"
+        },
+        {
+          "title": "Building tools that add terrain",
+          "text": "A building tool that adds terrain works from the second start of the game, also with the tool pool an earlier version kept (thanks SonjaNemitz).",
+          "area": "content",
+          "kind": "fix"
+        },
+        {
+          "title": "Spell lists stay put while you scroll",
+          "text": "A mod's spell or arrow list in place of the game's keeps its spells and arrows on screen while the game builds the list again: no flash of the game's own list after a switch, and on a dedicated server the cursor no longer jumps back to the equipped spell (thanks Fuzen777).",
+          "area": "content",
+          "kind": "fix"
+        },
+        {
+          "title": "ShroudForge block edits in a joined game",
+          "text": "A ShroudForge mod that changes the world's blocks in a game you joined now says why it does nothing there: one message over the game and a kiln.log line naming the mod. Only the server or the player hosting can change blocks, so run such a mod there (thanks netjunk).",
+          "area": "compat",
+          "kind": "improved"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.20",
       "date": "2026-11-26",
       "title": "The festive season",
