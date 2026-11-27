@@ -84,14 +84,14 @@ plea.Refresh();                                                    // after `fed
 _ = Npcs.MenuSay(npc, player, "Thanks, I feel better already.");
 
 // a talk page: your topics after the NPC's own (a villager without topics, Ramone, gets a page)
-Npcs.Topics(npc).Set(new NpcTopic("feed", "Here, have some bread.")
+_ = Npcs.Topics(npc).Set(new NpcTopic("feed", "Here, have some bread.")
 {
     Reply = "Bread! Bless you.",                                   // in the speech box when picked
     Hint = NpcTopicHint.Attention,                                 // the list's marker
     OnPick = ctx =>                                                // on the host, for the player who picked it
     {
         FeedNpc(ctx.Npc);
-        ctx.Reply("Now I can work again.");                        // to that player only
+        _ = ctx.Reply("Now I can work again.");                        // to that player only
     },
 });
 ```
