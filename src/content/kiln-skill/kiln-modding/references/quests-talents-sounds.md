@@ -109,6 +109,41 @@ builds them from the mod's files at boot, so changes need a restart).
 - `knowledge`: `{"name": {"scope": "world"}}`, resolved as `<mod>:<name>`.
 - Villagers: `Villagers.Find/Of/List`, `.Teleport`, `.GoTo`, `.Stay`, `.Follow`, `VillagerStateEvent`.
 
+## NPC speech bubbles (Kiln.Npcs, dev.31.16+, mod API 0.2.23)
+The full guide to bubbles, picks, farewells, menu lines and talk pages is [api-npcs.md](api-npcs.md); this is the short form.
+Your text in the game's own speech bubble over a villager, craftsperson or assistant; the host decides, Kiln clients
+show it, vanilla clients keep the game's lines. `"side": "server"`, `"clients": "none"` is enough (players need Kiln, not the mod).
+```csharp
+Npcs.Say(npc, "I'm starving...", TimeSpan.FromSeconds(6));          // once, now, no voice; 0.5-60 s; UiText for languages
+var s = Npcs.Speech(npc);                                           // this mod's override of that NPC
+s.Replace("No food, no work.", "My stomach...");                    // greets with these (1-32 lines, <= 200 chars), no voice
+s.Suppress();                                                       // or: no greeting bubble
+s.Clear();                                                          // the game's lines again (also on unload / world end)
+```
+- Several mods: highest `Priority`, then the most recent. A Say shows over any override; a newer Say replaces it
+  (`SayOptions(Interrupt: false)` waits for another mod's). `Npcs.SpeechOf`, `IsSaying`, `CanSpeak` (tick), `Available`.
+- A mod on both sides decides on the host (`Lifecycle.IsServerRunning`); a joined client's own calls change only its screen.
+- Never guard the calls with `Npcs.Available` / `Capabilities.Is("npcspeech.bubble")`: both are false on a dedicated
+  server (no bubbles of its own), which still sends; guarded, no player sees anything. The calls never throw for it.
+- Not changed: the talk gesture when a player presses E. Tests: `KilnHarness.NpcSpeech` (`ModeOf`, `LinesOf`,
+  `Saying`). Sample `HungryCrafter`. `services/npc-speech.md`.
+
+### NPC dialogue (dev.32: picks, farewells, the menu's line, talk pages)
+```csharp
+s.Pick = SpeechPick.InOrder;                                        // Random (default: new line each greeting), InOrder, Seeded(n), By(ctx => i)
+Npcs.Farewells(npc).Replace("Come back with food.");                // the menu's farewell (no Suppress)
+var m = Npcs.MenuLine(npc);                                         // the NPC's own line when its menu opens
+m.Pick = SpeechPick.By(ctx => Fed(ctx.Player) ? -1 : 0);            // per player on the host, one open ahead; -1 = none
+m.Replace("I can't work like this."); m.Refresh();                  // Refresh: ask again for every player now
+Npcs.MenuSay(npc, player, "Thanks!");                               // one line in that player's menu
+Npcs.Topics(npc).Set(new NpcTopic("feed", "Here, have some bread.") // rows after the NPC's own (Ramone gets a page)
+    { Reply = "Bless you.", Hint = NpcTopicHint.Attention, OnPick = ctx => { Feed(ctx.Npc); ctx.Reply("..."); } });
+```
+- `By` and `OnPick` run on the host's tick thread as your mod; Random/InOrder/Seeded are picked by each player's game.
+- Kiln 0.2.0-dev.32 on the player's game (channel `kiln:npcdialog`); 31.16-31.21 clients keep the v1 greetings only.
+- 16 topics per NPC (all mods); a topic's `Close` needs a `Reply`. Tests: `PickOf`, `FarewellsOf`, `MenuLinesOf`,
+  `TopicsOf`, `RepliesTo`, `PickTopic(npc, topicId, player)`.
+
 ## Sounds (`assets/cook.json`, service Audio)
 `"side": "both"` or `"client"`, `"clients": "mod"`. Ship your audio and the recipe. Plain JSON: no comments. Template: `kiln new sound`.
 ```json

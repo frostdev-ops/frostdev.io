@@ -32,7 +32,7 @@ real game. Clips can be reworked at cook time:
 only. Page: `docs/kiln/modding/item-blocks.md` "Moves"; sample `mods/samples/WeaponMoves`; `kiln new item-blocks`.
 
 **Effects and tools.** dev.29+: `EffectBlock.Run` (JSON `"run"`) calls an `[ImpactNative]` first, in the same step
-([api.md](api.md#abilities)); server only. dev.28+: `ToolBlock.WearPerDebit`.
+([api-content.md](api-content.md#abilities)); server only. dev.28+: `ToolBlock.WearPerDebit`.
 
 **Block kinds of your own (dev.28+).** `Blocks.RegisterKind` adds a kind other mods write in C# or `blocks/*.json`;
 Kiln lowers it into items, weapons, spells, statuses and effects. A plan waits as `PendingContent` until content is

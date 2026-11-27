@@ -64,10 +64,13 @@ Wiki [stations](https://frostdev.io/kiln/wiki/stations); page `docs/kiln/service
 - dev.29.17+: `Stations.SetOutputSource(station)` lends a station's finished items to its base, after the bag and the
   Magic chests, in fills (`FillOptions.UseStationOutputs`, default true) and in a player's craft. `FillOptions.Chests`
   names up to 64 ordinary chests, used after the Magic chests. dev.29.19+: on a Kiln client with a Kiln server the
-  station screen's "+1" / "+10" fill buttons and the ingredients' Available counts include opted-in outputs (rows
-  `stations.stock_ui`, `stations.fill_ui`; their hooks go in only once the server's craft-stock snapshot is on); the
-  server checks every press again. Not yet seen in a real game.
+  station screen's "+1" / "+10" fill buttons include opted-in outputs (row `stations.fill_ui`), and the ingredients'
+  Available counts (row `stations.stock_ui`) do in crafting menus; 30.8+ a production station's ingredient rows keep the
+  game's counts (dev.29.19 to 30.7 they counted outputs). Their hooks go in only once the server's craft-stock snapshot
+  is on; the server checks every press again. Not yet seen in a real game.
 - dev.29.14+: an automated station's craft fires `ItemCraftedEvent` once, at its end.
+- dev.30.6+: `Crafting.AddSource(player, container, options)` makes a player's crafts (and dye tinting) pay from a linked
+  container in any base: [api-items.md](api-items.md#crafting-from-linked-containers-306-mod-api-0215).
 
 ## Gems and the Shroud Forge (Kiln.Abilities, dev.29.11+)
 Wiki [gems](https://frostdev.io/kiln/wiki/gems); pages `docs/kiln/services/gems.md`, `gems-new.md`, `gems-forge.md`,

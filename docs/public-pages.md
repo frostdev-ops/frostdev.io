@@ -64,10 +64,10 @@ leads to `/kiln/download`, which lists every file of the release. It and the wik
 Kiln's own brand (charcoal, ember and gold from Kiln's
 `branding/palette.json`, the Fraunces display face) inside the site's header and footer, without the frost background
 animation; `src/layouts/KilnLayout.astro` and `src/styles/kiln.css`. `/kiln/wiki` and `/kiln/wiki/<page>` are its
-wiki: 68 Markdown pages in `src/content/kiln-wiki/`, ordered by `src/data/kiln.ts` (the build fails when the two
+wiki: 83 Markdown pages in `src/content/kiln-wiki/`, ordered by `src/data/kiln.ts` (the build fails when the two
 disagree), written for people from Kiln's own docs, with no reverse-engineering details and no paths into Kiln's
 repository. Pages built but not fully tried in a real game carry a "Game test pending" badge. `/kiln/agents` shows
-Kiln's agent skill (a SKILL.md and sixteen reference files) and offers `/kiln/agents/kiln-modding.zip` (a stored zip built
+Kiln's agent skill (a SKILL.md and twenty-nine reference files; the skill's generated `references/api-index/` is not mirrored) and offers `/kiln/agents/kiln-modding.zip` (a stored zip built
 at build time, byte-for-byte reproducible) and each file as `text/markdown` under `/kiln/agents/kiln-modding/`. The
 skill's canonical copy is in Kiln's repository (`agent/skills/kiln-modding/`); `scripts/mirror-kiln-skill.sh <kiln
 checkout>` copies it into `src/content/kiln-skill/`. Production nginx needs the `/kiln/` location and the `kiln` entry

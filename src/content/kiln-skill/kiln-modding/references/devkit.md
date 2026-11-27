@@ -51,6 +51,8 @@ KL6xx licences. Findings can carry `fixes`.
 | KILN112 (error) | `clients` too low for the mod's blocks | raise `clients` (`kiln` or `mod`) |
 | KILN120 (dev.27+) | a Kiln result (`IKilnResult`, or a task of one) nobody reads | check `result.Ok` and pass `Reason` on, or `_ = ...` on purpose (both are code fixes) |
 | KILN121 (dev.27+) | a `[RequiresCapability("row")]` member used with no `Capabilities.Is("row")`, no guard property of the service (`NoClip.Available`, `World.SupportsTrackedWrites`, `Time.WeatherChoiceAvailable`) and no `catch` of `KilnUnavailableException` in the same member | check or catch there, or mark the caller `[RequiresCapability]`; a check inside your own helper or a field is not followed |
+| KILN122 (dev.31+), KILN123 (dev.31+) | `[RegistryEntryPoints]` points declared without a real `OnRegistry` override; zero, `Manual` or unknown automatic points | declare only points you author, with an override |
+| KILN124 (info, dev.32+), KILN125 (info, dev.32+) | an old data path (a pack section, a resource patch, `ContentEntry` / `GameDataEntry`) a registry field covers; Native-tier code (a hook or memory write by address) a registry field covers | edit the registry field it names (the fix moves one-to-one pack values); the hint never refuses a mod |
 | KILN194 (error), KILN195, KILN196, KILN197 (error) | a game path string that doesn't exist, a config name no program declares, a write to an identity field, a typed field of another section | the suggestion, or the typed field |
 | KILN034 (error, dev.28+) | `OnBoot` without `"boot"`, or the run-time `Blocks.Define` in boot code | `KilnBoot`, `BootDefinitions` |
 | KILN035 (dev.28+) | a tick, world or service API in boot code | move it to `OnLoad` |
@@ -58,7 +60,8 @@ KL6xx licences. Findings can carry `fixes`.
 | KILN180 to KILN182 (dev.29+) | a typed-hook descriptor it cannot use, no `Hooks` service, a sigdb file that is not JSON | fix the descriptor |
 
 Experimental ids are errors until the project opts in with `NoWarn`: `KILNX001` lab members (never in a mod players
-install), `KILNX002` not proven in a client (`SteamGuard`), `KILNX003` (dev.29.18+) `WorldConcurrent`.
+install), `KILNX002` not proven in a client (`SteamGuard`). `KILNX003` for `WorldConcurrent` is retired:
+Since 0.2.0-dev.30.7, mod API 0.2.16 (no longer experimental).
 
 KILN001-004 are manifest checks. Build steps: KILN020/021 the layout stamp (`Game`); dev.27+ KILN030 a warning of the
 `"writes"` step or the bake, KILN031 an unreadable input, KILN032 a bake that failed or timed out (names `KilnBake=false`; dev.28+ also an

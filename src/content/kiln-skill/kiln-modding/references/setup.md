@@ -2,7 +2,7 @@
 
 Wiki: [dev kit](https://frostdev.io/kiln/wiki/dev-kit), [your first mod](https://frostdev.io/kiln/wiki/first-mod).
 
-`Kiln.Api`, `Kiln.Sdk`, `Kiln.Templates` and `Kiln.TestKit` share the full MDK pack version: `0.2.0-dev.30.6` for this release (the
+`Kiln.Api`, `Kiln.Sdk`, `Kiln.Templates` and `Kiln.TestKit` share the full MDK pack version: `0.2.0-dev.31.21` for this release (the
 four `.nupkg` files on its GitHub release), or a unique
 `0.2.0-dev.local.<date>.<time>` for a local pack. `0.2.0` is only the source's base version. These packages use a local feed,
 not nuget.org: pass the MDK feed as `--feed` or `$KILN_FEED`. Use the actual pack version when editing a project by hand.
@@ -52,7 +52,7 @@ launcher window yet.
 
 The project file:
 ```xml
-<Project Sdk="Kiln.Sdk/0.2.0-dev.30.6">
+<Project Sdk="Kiln.Sdk/0.2.0-dev.31.21">
   <PropertyGroup>
     <KilnModId>my-mod</KilnModId>
     <Version>1.0.0</Version>
@@ -70,7 +70,7 @@ The project file:
 | `KilnModId` | lower-case `AssemblyName` | `id` |
 | `KilnModName`, `Version` | `AssemblyName`, 1.0.0 | `name`, `version` |
 | `Authors`, `Description`, `PackageLicenseExpression`, `PackageProjectUrl` | | `authors`, `description`, `license`, `url` |
-| `KilnApiVersion` | the SDK's (0.2.15 for dev.30.6) | `apiVersion` |
+| `KilnApiVersion` | the SDK's (0.2.25 for dev.31.21) | `apiVersion` |
 | `KilnSide` | server | `side` |
 | `KilnClients` | from the side: server none, else mod | `clients` |
 | `KilnEntryType` | the only public `Mod` subclass | `entryType` |
@@ -83,7 +83,7 @@ The project file:
 Not in the manifest:
 | Property | Does |
 |---|---|
-| `KilnServices` | services to reference: Abilities, Assets, Audio, Blocks, Build, Chat, Client, Combat, Content, Creatures, Gameplay, Hooks, Items, Network, Permissions, PlayerAnim, Players, Quests, Rules, Saves, Settings, Skills, Spawn, Time, Ui, Vfx, World; dev.28+ CreatureControl, Queries, Terrain; dev.29+ Systems, Sigs; dev.29.15+ Stations (Kiln.Blocks without Blocks' defaults); `Game` (`Kiln.Ecs` types); and `Testing`. Gems are in Abilities, Bases and Stations in Blocks, tasks in Kiln.Api |
+| `KilnServices` | services to reference: Abilities, Assets, Audio, Blocks, Build, Chat, Client, Combat, Content, Creatures, Gameplay, Hooks, Items, Network, Permissions, PlayerAnim, Players, Quests, Rules, Saves, Settings, Skills, Spawn, Time, Ui, Vfx, World; dev.28+ CreatureControl, Queries, Terrain; dev.29+ Systems, Sigs; dev.29.15+ Stations (Kiln.Blocks without Blocks' defaults); dev.31+ Camera, Markers, ModValues, Registry (with `<NoWarn>$(NoWarn);KILNX031</NoWarn>`); dev.32+ Pets, Taming; `Game` (`Kiln.Ecs` types); and `Testing`. Gems are in Abilities, Bases and Stations in Blocks, tasks in Kiln.Api |
 | `KilnServer`, `KilnModsDir` | deploy target |
 | `KilnReload` | KilnDeploy also reloads the mod |
 | `KilnModFolders` | data folders copied into the mod; includes `blocks`, content, assets, skills, quests, icons, Impact and audio sources; inspect the installed SDK for the full list |

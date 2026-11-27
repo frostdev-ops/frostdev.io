@@ -12,7 +12,6 @@ microseconds of work, not for work made of tick-only calls, not for something th
 ```xml
 <KilnFeatures>tasks.pool</KilnFeatures>          <!-- Kiln loads the mod only where the pool runs; without it KILN121 warns -->
 <KilnServices>World;Items;Chat</KilnServices>    <!-- World for WorldConcurrent -->
-<NoWarn>$(NoWarn);KILNX003</NoWarn>               <!-- only for WorldConcurrent; also in the test project that calls it -->
 ```
 A mod that also works without tasks leaves the feature out and asks `Capabilities.Is("tasks.pool")` first.
 
@@ -65,7 +64,7 @@ private string Scan(CommandContext c, Player player)
   lists Kiln reuses, or the `ModContext` of an unloading mod.
 - Item moves, spawns and chat stay on the tick. Return a plan from the task and carry it out in tick code.
 
-## World reads from a task: `WorldConcurrent` (Kiln.World, experimental KILNX003)
+## World reads from a task: `WorldConcurrent` (Kiln.World)
 - `Open(id)`, `Read<T>(entity, component)`, `ReadMany`, `ReadBytes`, `Query(in query, span)`, `Template`, `Validate`.
   Each read copies and checks the entity around the copy, and answers a `ConcurrentRead<T>` (`IsOk`, `Status`,
   `Value`). `ReadStatus`: `Ok`, `Absent`, `Stale`, `Unreadable` (try again), `Unavailable`, `SizeMismatch`, `TooSmall`,
@@ -75,7 +74,9 @@ private string Scan(CommandContext c, Player player)
 - Works only on the two game builds Kiln has exact profiles for (server 26430253, client 26430625). Elsewhere
   `IsAvailable` is false and every call answers `Unavailable` (rows `world.ecs_read`, `world.ecs_write`). Always have a
   tick fallback: `WorldConcurrent.OrOnTick(ctx, offTick, onTick)`.
-- The opt-in is `KILNX003`. `KILNX001` (lab members) does not opt in to it. Its shape can still change.
+- Since 0.2.0-dev.30.7, mod API 0.2.16 (no longer experimental). First shipped in dev.29.18 with the
+  `KILNX003` opt-in; neither mod nor test projects need it now. Old suppressions are harmless.
+  Threading, bounds and capability checks are unchanged; unrelated experimental APIs retain their opt-ins.
 
 ## Analyzers
 - KILN101: a tick-thread API inside a task's work.
@@ -89,7 +90,7 @@ Kiln.TestKit runs a mod's tasks on its own pool: `kiln.Tasks.Settle()` waits for
 wait for the tick; `kiln.Tasks.Live` counts the running ones. `KilnHarnessOptions.Side` picks a dedicated server, a
 hosting client or a joined client (`EnterWorld`, `LeaveWorld`, `OnMainThread`; dev.30+ `MenuFrame()` after `LeaveWorld` runs
 one main-menu UI frame with its menu hops). `FakeWorld.BusyReads` / `BusyWrites`
-(KILNX003) make the next reads or writes answer busy.
+make the next reads or writes answer busy, with no experimental opt-in.
 
 ## Native plugins (`kiln_tasks.h`)
 The same pool. dev.29.19+ `KILN_TASK_RESIDENT`, only together with `KILN_TASK_LONG_RUNNING` (else
