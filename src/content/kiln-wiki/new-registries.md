@@ -37,6 +37,8 @@ Entries are not added or removed in these registries (a mod's own buffs and abil
 come from `skills/*.json`). Each registry has a page in Kiln's repository (`docs/kiln/modding/registries/`, on [GitHub](https://github.com/frostdev-ops/kiln)) with
 every field, its range, when it applies and what a joined client sees; the generated API reference has the C# types.
 
+<!-- shot: conflicts-registry | The launcher's Conflicts view with a creatures edit and its writer -->
+
 ## A pack for each
 
 A data pack's `registry` section, by Kiln id; no code:

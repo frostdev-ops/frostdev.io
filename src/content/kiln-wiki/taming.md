@@ -19,6 +19,8 @@ retried request, times the attempt out, settles refunds and creates the pet reco
 A taming on the game's own creatures and items is server-only: players don't need your mod. The window or key that lets a
 player choose the slot to feed from is your mod's own UI.
 
+<!-- shot: tamed-wolf | A tamed wolf next to its owner, with the pet bar -->
+
 ## Declare a taming
 
 A taming has an id (`<your mod id>:<name>`), the creatures it tames, its steps in order (the last one tames) and optional timeouts,

@@ -31,6 +31,8 @@ world's loot GUID and the second the scene node of the **first chest** that uses
 update moves tables, but a table whose first chest changes gets a new id and edits that name the old one are refused. So **select by prefix and by
 values** (`game:labels_*`, `game:world_*`, "tables whose legendary mode is `set`"), never by an id copied from another game build.
 
+<!-- shot: loot-legendary | A boss chest with a legendary drop after a lootRules edit -->
+
 ## From a data pack
 
 Double the world-wide legendary weight and give every enemy and generic-container table two more levels:
