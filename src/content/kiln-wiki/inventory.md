@@ -3,7 +3,7 @@ title: "Inventory transfers"
 nav: "Inventory transfers"
 description: "Move gear with its state, put items on and take them off, swap whole sets of gear, read and set container names, keep items out of quick stack or move all, and keep data on one item."
 status: "pending"
-updated: "2026-11-27"
+updated: "2026-11-28"
 ---
 
 > **New in 0.2.0-dev.20.** These APIs require the dev.20 runtime and MDK or newer. Server evidence and pending client checks are tracked on
@@ -52,6 +52,33 @@ moved, see [Use an item for a player](/kiln/wiki/abilities#use-an-item-for-a-pla
 Since dev.21 a dry-run move also runs native transfer handlers (`kiln.items` `transfer_listen`), unless it is silent too.
 They see `KILN_TRANSFER_DRY_RUN` in `ev->flags`. Keep and cancel as usual, so the dry run predicts the real move, but
 don't count, log or change anything outside the transfer: it is all rolled back.
+
+## Checked moves
+
+New in 0.2.0-dev.32 (beta 1, mod API 0.2.27, a test build on the launcher's beta channel). `Items.Move` names its source by slot number: when it runs, it moves whatever is in that
+slot **then**. A move a player asked for on an old view (a drag and drop in your own inventory screen, a request that arrives twice) can
+move another stack, or another piece of gear. `Items.MoveChecked` takes the slots as a read listed them and moves only while they still
+hold that:
+
+```csharp
+if (!Items.Available || !Items.CheckedMovesAvailable) return;
+var seen = Items.Read(player)!.Slots.First(s => s.Item == flint);   // what the player dragged
+var spot = Items.Read(chest)!.Slots.First(s => s.IsEmpty);          // where they dropped it
+MoveResult r = await Items.MoveChecked(player, seen, chest, 3, spot);   // exactly 3, exactly into that slot
+if (r.Status == ItemsStatus.SlotChanged) { /* the view was old: send the player a fresh one */ }
+```
+
+- The source must still hold the item and the count it held; gear must be the same item with the same stamp. A destination, when you give
+  one, must still hold what it held (an empty slot: still empty) and take the **whole** count: nothing goes to another slot and nothing moves
+  in part. Without a destination Kiln chooses, as `Items.Move` does, and a part may move (`Partial`).
+- Kiln checks both slots inside the move's own transaction, in the step it runs, so nothing can change between the check and the move.
+- `SlotChanged`: a slot changed, read again. `NoRoom`: the destination cannot take the whole count. `Refused`: as for `Items.Move`. In each
+  case nothing moved, in either inventory. The same request twice moves once: the second finds its source changed.
+- No options: a player's equipped and held items and the action bar are refused, as `Items.Move` without options refuses them.
+- `Items.CheckedMovesAvailable` is false on an older Kiln and while moves are off; then `MoveChecked` answers `Unavailable`. Gear also
+  needs the capability `items.instances`. Kiln.TestKit does not model moves: offline, `MoveChecked` is `Unavailable`.
+- Since dev.32 an `ItemsResult` (what `Items.Give` and `Items.Take` answer) is a Kiln result like the others: `Ok` is true only for `Done` (all of it) and
+  `Reason` says why not. `Succeeded` still counts a partial give.
 
 ## Equip and unequip
 
@@ -184,7 +211,7 @@ Rolled bonuses on one item are [affixes](/kiln/wiki/affixes), kept as item data 
 
 ## Exact costs and receipts
 
-New in 0.2.0-dev.32 (beta 1, a test build). `ItemCosts` (Kiln.Items, server) takes **one cost from one slot you name**, exactly once,
+New in 0.2.0-dev.32 (beta 1, mod API 0.2.27, a test build on the launcher's beta channel). `ItemCosts` (Kiln.Items, server) takes **one cost from one slot you name**, exactly once,
 and gives you a **receipt**. Taming's steps and a pet's revive pay through it; any server mod may.
 
 ```csharp

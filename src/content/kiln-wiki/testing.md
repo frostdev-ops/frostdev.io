@@ -2,7 +2,7 @@
 title: "Testing"
 description: "Tests that run inside the server with Kiln.Testing, and unit tests with no game under dotnet test with Kiln.TestKit."
 status: "works"
-updated: "2026-11-19"
+updated: "2026-11-28"
 ---
 
 Kiln.Testing runs tests in a running server, on the tick thread, so they can touch game state. It's Kiln's take on Forge's GameTest.
@@ -139,6 +139,27 @@ world reads and writes run on the fake world, with `kiln.Entities.BusyReads` and
 
 New in 0.2.0-dev.29.19: `KilnHarness.LogFile` and `ReadLogFile()` read kiln.log while the harness writes it, which
 `File.ReadAllText` can't do on Windows.
+
+New in 0.2.0-dev.32 (beta 1, mod API 0.2.27, a test build on the launcher's beta channel): `kiln.Pets` and `kiln.Taming` run Kiln's real pet roster and taming engine on the kit's
+world, for tests of the rules your mod puts around them ([Pets](/kiln/wiki/pets), [Taming](/kiln/wiki/taming)). Join a player, place a
+creature, give bait, call `Pets` and `Taming` through `kiln.Run`, and step until the request answers:
+
+```csharp
+using var kiln = new KilnHarness();
+kiln.Step();
+var who = kiln.Pets.Join(HarnessPets.Character(1), new WorldPosition(10, 0, 10));          // a PlayerRef in the kit's world
+Assert.True(kiln.Run(() => Pets.Define(new PetDefinition { Id = "my-mod:wolf", Creature = "game:enemy_wildbeast_wolf" })).Ok);
+var t = kiln.Run(() => Pets.Grant(who, "my-mod:wolf", PetRequest.New()));
+kiln.StepUntil(() => t.IsCompleted, maxSteps: 50);
+Assert.True(t.Result.Ok, t.Result.Reason);
+kiln.Pets.Down(t.Result.Pet!.Id);                                                           // the test makes a pet go down
+```
+
+`kiln.Pets` also lists the live `Bodies`, `Of(character)` and the `HostilePairs`; `kiln.Taming` has `Place`, `Give`, `Count` and `Hurt` for
+the target and the bait. The kit keeps no walking and no save receipts, its taming wears no tools and has no game taming of its own, and
+exact costs (`ItemCosts`) have no fake yet: test those rules as plain functions and the flow on a test server. For registry edits,
+`kiln.Registry.RunReauthored` runs your pass as a re-author does, off the world tick, and `Refused` names a call Kiln would refuse whole
+([Registries](/kiln/wiki/registries#testing)).
 
 Not faked: the Shroud Forge's actions (`Gems.Socket`, `Unsocket`, `Upgrade`, `Recycle`, new in 0.2.0-dev.29.11) and
 production stations (`Stations`, new in 0.2.0-dev.29.14). Under the kit they answer unavailable, so test those in a server.
