@@ -77,13 +77,13 @@ public sealed class Leveler : Mod
 {
     public override void OnLoad() => Config.Register<Settings>().Changed += _ =>
     {
-        if (!Capabilities.Is("kiln.registry.live")) return;
+        if (!Registries.Available) return;                                      // kiln.registry.live: the host's back-end
         var asked = Registries.Reauthor();                                      // the WorldLoad pass runs again, off the tick
         if (!asked.Ok) Log.Warn($"not authored again: {asked.Reason}");
     };
     public override void OnRegistry(RegistryContext context)
     {
-        if (context.Phase != RegistryPhase.Alter || !Capabilities.Is("kiln.registry")) return;
+        if (context.Phase != RegistryPhase.Alter || !Registries.Available) return;
         var w = Registries.For(context).LootRules.RarityWeights;                // the values below this mod
         w.Legendary = w.Legendary * 4;                                          // never stacks
     }

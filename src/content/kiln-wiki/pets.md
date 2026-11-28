@@ -79,8 +79,8 @@ async Task<PetResult?> Ask(Task<PetResult> request)
     return r.Ok ? r : null;
 }
 
-if (!Capabilities.Is("pets.records") || !Capabilities.Is("pets.summon")
-    || !Capabilities.Is("pets.follow") || !Capabilities.Is("pets.downed")) return;   // a joined client has none of these
+if (!Capabilities.Is(Pets.RecordsCapability) || !Capabilities.Is(Pets.SummonCapability)
+    || !Capabilities.Is(Pets.FollowCapability) || !Capabilities.Is(Pets.DownedCapability)) return;   // a joined client has none of these
 var who = PlayerRef.Of(player);                           // the player in game; their character owns the pet
 var given = await Ask(Pets.Grant(who, "my-mod:hound", PetRequest.New()));      // a record, no body yet
 if (given?.Pet is not { } pet) return;
