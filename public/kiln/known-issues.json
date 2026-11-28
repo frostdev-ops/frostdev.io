@@ -139,6 +139,19 @@
         "to": "runtime"
       },
       "added": "2026-11-23"
+    },
+    {
+      "id": "kiln-menu-steam-screenshot",
+      "title": "The Kiln menu is missing from Steam screenshots",
+      "match": {
+        "text": "steam screenshot",
+        "os": [
+          "windows"
+        ]
+      },
+      "fix": "Steam's screenshot key (F12) captures the game before Kiln draws its menu on top, so the menu is left out of the picture. Use Windows' Snipping Tool (Win+Shift+S), Xbox Game Bar (Win+Alt+PrtScn) or another desktop capture tool instead.",
+      "copy": "Win+Shift+S",
+      "added": "2026-11-28"
     }
   ]
 }
