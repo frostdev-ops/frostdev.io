@@ -2,7 +2,7 @@
 title: "Data packs"
 description: "Change items, recipes, loot and drops with JSON in your mod. They apply at world load and come off with the mod."
 status: "works"
-updated: "2026-11-27"
+updated: "2026-11-28"
 ---
 
 JSON files in your mod's `content/` folder. Kiln applies them at world load, before the save is read, in mod load order. Unload
@@ -29,12 +29,12 @@ the mod and they come off. Edit a file on a running server and they apply again 
 | `drops` | enemy drops and fixed chests, by table |
 | `gear` | a weapon's or armour's numbers as the tooltip shows them: power, armour, rarity, levels (dev.30+) |
 | `gearRules` | the game's balancing values for gear: durability per rarity, socket chances, the workbench's unlock cost (dev.30+; needs `"boot": true`) |
-| `registry` | the same data, and creatures, loot odds, world rules and more, by names Kiln keeps stable (dev.31+, new ones in dev.32) |
+| `registry` | the same data, and creatures, loot odds, world rules and more, by names Kiln keeps stable (dev.31+; twelve more in dev.32 beta 1) |
 
 The same files hold [game data](/kiln/wiki/game-data) and [new items](/kiln/wiki/new-items).
 
 Since 0.2.0-dev.31 (dev.31+) a pack's `registry` section edits the same data, and more, by names Kiln keeps stable across
-game updates: [Registries](/kiln/wiki/registries). Since 0.2.0-dev.32 (beta 1, a test build) twelve more registries are there: creatures,
+game updates: [Registries](/kiln/wiki/registries). Since 0.2.0-dev.32 (beta 1, mod API 0.2.27, a test build on the launcher's beta channel) twelve more registries are there: creatures,
 arsenals, perks, skills, buffs, abilities, the world's build rules, difficulty bounds, limits and loot odds
 ([The dev.32 registries](/kiln/wiki/new-registries), [Loot odds and levels](/kiln/wiki/loot-rules)).
 
@@ -111,7 +111,7 @@ armour 45") instead of solving damage multipliers by hand:
 that set the same member conflict. The server's values act for everyone; a Kiln client shows them in its tooltips, a player without
 Kiln plays with them and sees the game's numbers.
 
-**Since 0.2.0-dev.32 (beta 1)** each `gearRules` key is also a field of the `balance` [registry](/kiln/wiki/registries) of the same name
+**Since 0.2.0-dev.32 (beta 1, on the beta channel)** each `gearRules` key is also a field of the `balance` [registry](/kiln/wiki/registries) of the same name
 (`rarityDurability.<rarity>`, `socketChance.<rarity>`, `durability.start`, `unlockCost.seed`, and so on: 19 fields), and Kiln writes
 a file's values through that mapping **where it gives the same bytes**. At every start Kiln builds the table both ways and serves the
 registry's copy only when the two are identical; otherwise the old way, with the reason in `kiln/state/registry.json`

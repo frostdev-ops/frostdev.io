@@ -55,7 +55,7 @@ read. Since 0.2.0-dev.28 a boot mod changes such fields before the game reads th
 [resource patch](/kiln/wiki/onboot#resource-patches). Since 0.2.0-dev.31 (dev.31+) the balancing table is also the `balance`
 [registry](/kiln/wiki/registries): fields such as `balance.levelCap` and `balance.xpPerLevel[2]` under Kiln's own names, applied at start.
 
-Since 0.2.0-dev.32 (beta 1, a test build) the `buffs` and `abilities` [registries](/kiln/wiki/new-registries) give a buff's duration and
+Since 0.2.0-dev.32 (beta 1, mod API 0.2.27, a test build on the launcher's beta channel) the `buffs` and `abilities` [registries](/kiln/wiki/new-registries) give a buff's duration and
 stacking and an ability's timing (when a cast releases, hits, pays and applies a buff) the same stable names. A data pack's
 `buffs` and `sequences` sections keep working with the game's paths; a registry edit is the later layer and wins, and the report says
 so. So do `creatures`, `arsenals`, `perks` and `skills`: the same creature, attack, perk and skill-node values as `templates`,

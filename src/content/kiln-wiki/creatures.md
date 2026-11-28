@@ -2,7 +2,7 @@
 title: "Creatures"
 description: "Change one creature, make variants like an Elite Vukah, swap them into natural spawns, and give orders."
 status: "works"
-updated: "2026-11-27"
+updated: "2026-11-28"
 ---
 
 This runs on the server, so players without Kiln see the results. For a creature of your own with its AI and rules,
@@ -77,12 +77,12 @@ animals), set `Persist` on the variant.
 
 ## Pets and taming (0.2.0-dev.32, beta 1)
 
-A creature can be a player's **pet**: it belongs to one character, follows, fights by your rules, goes down instead of dying and is
+New in 0.2.0-dev.32 (beta 1, mod API 0.2.27, a test build on the launcher's beta channel). A creature can be a player's **pet**: it belongs to one character, follows, fights by your rules, goes down instead of dying and is
 revived. A wild creature can be **tamed** in steps you design (weaken it, feed it, use a tool) and end as a pet. Both run on the
 server, with Kiln holding the records, the exact costs and the receipts; the choices are your mod's: [Pets](/kiln/wiki/pets) and
 [Taming](/kiln/wiki/taming). Only enemy creatures that walk can be a pet's body in this release.
 
-## Many at once: the creatures registry
+## Many at once: the creatures registry (0.2.0-dev.32, beta 1)
 
 Variants and `CreatureRef` change one creature or add a kind. To change **every creature of a kind**, for all mods and all players, by
 names that outlive game updates, use the `creatures` and `arsenals` [registries](/kiln/wiki/new-registries): level, faction, size, health and

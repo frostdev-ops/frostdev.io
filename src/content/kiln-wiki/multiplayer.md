@@ -87,7 +87,7 @@ tooltips match, and go back at leave. No code, and your mod needn't be on their 
 
 A value of your own on an entity can reach Kiln clients too: [Replication](/kiln/wiki/replication#a-sidecar-your-own-value-on-an-entity) (dev.31+).
 
-**Since 0.2.0-dev.32 (beta 1, a test build)** four more things reach Kiln players by themselves or by the join:
+**Since 0.2.0-dev.32 (beta 1, mod API 0.2.27, a test build on the launcher's beta channel)** four more things reach Kiln players by themselves or by the join:
 
 - **Pets:** the server sends each owner a view of their pets; a player with Kiln gets the pet bar and recovery markers
   ([Pets](/kiln/wiki/pets)). A pet on a game creature looks like that creature to everyone, vanilla players included.

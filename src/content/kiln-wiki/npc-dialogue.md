@@ -3,7 +3,7 @@ title: "NPC speech and dialogue"
 nav: "NPC dialogue"
 description: "Put your own lines in the game's speech bubble over a villager or craftsperson, and in its dialogue menu: greetings, farewells, the line it speaks when you open the menu, and topics on its talk page."
 status: "pending"
-updated: "2026-11-27"
+updated: "2026-11-28"
 ---
 
 > **Bubbles: since 0.2.0-dev.31.16 (mod API 0.2.23).** Their replacement lines were seen in a real game (Marshall's Living
@@ -96,7 +96,9 @@ _ = Npcs.Topics(npc).Set(new NpcTopic("feed", "Here, have some bread.")
 });
 ```
 
-- **Farewells** have no voice-over and cannot be suppressed (only replaced).
+- **Farewells** have no voice-over and cannot be suppressed (only replaced). `Npcs.Farewells(npc)` and `Npcs.MenuLine(npc)` give you an
+  `NpcLines` (`Replace`, `Clear`, `Pick`, `Priority`, `Refresh()`); `Npcs.Speech(npc)` gives the greeting's `NpcSpeech`, which has the
+  same and also `Suppress()`.
 - **The menu's line** is spoken in the speech box first, with the game's reveal and sound; dismissing it shows the topics, or ends the
   dialogue when there are none. A craftsperson with a menu line opens its menu instead of going straight to crafting, so the line is
   seen. A reply waiting through `MenuSay` wins over it at that opening.

@@ -375,7 +375,7 @@ Players' games are separate: their Kiln needs to know their game build too. Play
 Kiln updates in the launcher.
 
 Registry edits (since dev.31) have their own commands: `kilnctl registry rollback <server>` runs the next starts on the last good start's
-plan instead of the mods' current registry edits (`--clear` ends it), and, since 0.2.0-dev.32 (beta 1), `kilnctl registry replay <server>
+plan instead of the mods' current registry edits (`--clear` ends it), and, since 0.2.0-dev.32 (beta 1, on the beta channel), `kilnctl registry replay <server>
 --opt-in <mod>` lets Kiln re-apply a ShroudForge or EML package's recorded effect after a game update that broke its Lua
 ([Registries](/kiln/wiki/registries#other-loaders-packages-conflicts-and-effect-replay)). The launcher's Conflicts page shows both.
 

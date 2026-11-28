@@ -70,7 +70,7 @@ Kiln.Sdk runs these over every mod, in `dotnet build` and live in your editor. T
 | `KILN120` | a Kiln result (`IKilnResult`, for example from `Items.Equip` or `NoClip.Set`) that nobody reads |
 | `KILN121` | a call that needs a capability, with no check of it first and no `catch` of `KilnUnavailableException` |
 | `KILN122`, `KILN123` | registry entry points declared without a real `OnRegistry` override; zero, `Manual` or unknown automatic points ([Registries](/kiln/wiki/registries)) |
-| `KILN124`, `KILN125` | info only, since 0.2.0-dev.32 (beta 1): an old data path (a data pack section, a resource patch, `ContentEntry`) or Native-tier code (a hook or memory write by address) that a [registry](/kiln/wiki/new-registries) field covers; the hint names the field and never refuses a mod |
+| `KILN124`, `KILN125` | info only, since 0.2.0-dev.32 (beta 1, on the beta channel): an old data path (a data pack section, a resource patch, `ContentEntry`) or Native-tier code (a hook or memory write by address) that a [registry](/kiln/wiki/new-registries) field covers; the hint names the field and never refuses a mod |
 | `KL213` | a registry-only data pack whose `clients` differs from what its fields need ([Registries](/kiln/wiki/registries#what-players-see-clients)) |
 | `KILN034` | **error**: an `OnBoot` that never runs (no `"boot"` in kiln.mod.json and no `<KilnBoot>`), or the run-time `Blocks.Define` in boot code |
 | `KILN035` | a tick, world or service API in boot code (`OnBoot`) |

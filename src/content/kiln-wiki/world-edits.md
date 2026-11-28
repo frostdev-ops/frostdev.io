@@ -203,7 +203,7 @@ To find a base and read its altars, Magic chests and production stations (`Bases
 ## The game's own terrain tiles
 
 The ground the game ships is stored in about 19,000 tiles at seven levels of detail, read before a world loads. **A mod cannot replace them
-yet.** 0.2.0-dev.32 adds the groundwork as tools only: a tile codec, a checker that every shipped tile survives a read and rewrite
+yet.** 0.2.0-dev.32 (beta 1, on the beta channel) adds the groundwork as tools only: a tile codec, a checker that every shipped tile survives a read and rewrite
 byte for byte, and a qualification pack for a lab server. None of it is a mod API, and the baked-terrain capability stays off. A
 dedicated lab server reads a Kiln-written tile back cell for cell; **no game client has shown one**: holes, the old horizon, seams across
 levels of detail, collision and a joined or hosted client are still to be checked. For ground a mod can change today, use an

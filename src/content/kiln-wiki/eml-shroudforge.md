@@ -3,7 +3,7 @@ title: "EML and ShroudForge mods"
 nav: "EML and ShroudForge"
 description: "Kiln runs EML data mods and ShroudForge's Lua mods unchanged, with no extra loader and no Wine settings."
 status: "pending"
-updated: "2026-11-27"
+updated: "2026-11-28"
 ---
 
 EML (the Enshrouded Mod Loader) and ShroudForge are the frameworks with the most Enshrouded mods. Both come with Kiln
@@ -346,13 +346,13 @@ Since 0.2.0-dev.30.3 `kiln.log` names such mods at the start. The file and what 
 
 ## When a game update breaks a package: effect replay (0.2.0-dev.32, beta 1)
 
-A ShroudForge or EML package changes the game's data with its own Lua, which names the game's types and paths. After a game update that Lua
+New in 0.2.0-dev.32 (beta 1, mod API 0.2.27, a test build on the launcher's beta channel). A ShroudForge or EML package changes the game's data with its own Lua, which names the game's types and paths. After a game update that Lua
 can fail, and the package then changes nothing until its author updates it. Kiln now **records each package's last effect** in terms of its
 [registries](/kiln/wiki/registries) (what the package changed, with the values it left), and for a package you **opt in**, applies that effect
 on a later game build where its Lua was not applied. Recording is on by default; replaying is your choice, per package.
 
 - **Opt in** on the launcher's **Conflicts** page (Effect replay, per package), or on a server with
-  `kilnctl registry replay <server> --opt-in <mod>` (`--opt-out` undoes it; with no flag it lists the packages).
+  `kilnctl registry replay <server> --opt-in <mod>` (`<mod>` is `shroudforge:<id>` or `eml:<id>`; `--opt-out` undoes it; with no flag it lists the packages).
 - **Whole or not at all.** A package whose effect holds anything the registries cannot (a list's membership, an entry it created, a field
   another package also changed) is not replayed in part: nothing of it is, and the Conflicts page says why.
 - **It cannot run the package's Lua**, create entries, or follow the game's new values where the package set a field: the recorded value is

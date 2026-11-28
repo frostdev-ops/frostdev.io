@@ -23,7 +23,7 @@ or `"advanced": true` in `kiln.mod.json`:
   "side": "server", "advanced": true }
 ```
 
-Since 0.2.0-dev.32 (beta 1) the manifest also takes `"native": true`, the same setting under the name of its tier (the Native
+Since 0.2.0-dev.32 (beta 1, on the beta channel) the manifest also takes `"native": true`, the same setting under the name of its tier (the Native
 tier: raw hooks, symbols and memory; give one of the two, or both with the same value). `"advanced"` keeps working with no removal
 date, and a Kiln before dev.32 warns about an unknown `"native"` key and does not opt the mod in, so a mod for older Kilns keeps
 `"advanced": true`.
