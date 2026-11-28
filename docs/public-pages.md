@@ -81,7 +81,10 @@ and the API reference), uploaded with the release by Kiln's `tools/release/publi
 this site's Kiln frame: the header and footer of `MarketingLayout.astro` on a `/kiln` page, the charcoal-and-ember colours,
 the Fraunces face and the wiki's layout; change it there too when the frame here changes. The header's "API reference"
 link and the wiki hub and navigation point at it; a wiki page lists the API reference's service pages it explains
-(`kilnWikiApi` in `src/data/kiln.ts`, the other direction of Kiln's `tools/docs-site/wiki.json`).
+(`kilnWikiApi` in `src/data/kiln.ts`, the other direction of Kiln's `tools/docs-site/wiki.json`). A service whose page the
+published site does not have yet (`Kiln.Pets` and `Kiln.Taming`, new in dev.32 beta 1) is listed in `kilnApiBeta` in the same
+file: its chip is marked "beta" and opens the same service's file in the agent skill (`/kiln/agents/kiln-modding/references/`)
+instead of a 404. Delete the entry when the release that has the page is published.
 
 **Kiln on Discord.** `/kiln/discord`, `/kiln/privacy` and `/kiln/terms` belong to the Kiln app on Discord (the bot in
 the Kiln Discord server, named KilnBot until November 2026) and to the Kiln Launcher's optional Discord features. They

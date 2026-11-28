@@ -144,6 +144,8 @@ body:has(.kiln-root) .skip-link { background: #0f0d0c; }
 .kiln-doc-api { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem 0.5rem; margin-top: 0.75rem; color: var(--k-text2); font-size: 0.75rem; }
 .kiln-doc-api a { padding: 0.15rem 0.6rem; border: 1px solid var(--k-line-strong); border-radius: 999px; color: var(--k-ember-300); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.72rem; transition: border-color 0.15s, color 0.15s; }
 .kiln-doc-api a:hover { border-color: var(--k-ember-400); color: var(--k-text0); }
+/* A service the published API reference has no page for yet (kilnApiBeta): the chip opens the agent skill's file, marked beta. */
+.kiln-doc-api a[data-beta] span { margin-left: 0.2rem; padding: 0 0.35rem; border-radius: 999px; background: rgb(255 165 107 / 0.14); color: var(--k-ember-300); font-family: inherit; font-size: 0.62rem; letter-spacing: 0.04em; text-transform: uppercase; }
 
 .kiln-prose { color: var(--k-text1); }
 .kiln-prose h2 { scroll-margin-top: 1.5rem; margin: 2.75rem 0 1rem; color: var(--k-text0); font-family: var(--k-display); font-size: 1.55rem; font-weight: 560; line-height: 1.25; letter-spacing: -0.015em; }

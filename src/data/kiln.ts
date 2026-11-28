@@ -68,6 +68,14 @@ export const kilnWikiOrder = kilnWikiSections.flatMap((section) => section.pages
 export const kilnApi = '/kiln/api/';
 export const kilnApiService = (assembly: string) => `${kilnApi}api/services/${assembly}.html`;
 
+// Services whose API reference page comes only with the dev.32 DocFX site: the one served under /kiln/api/ is still the
+// 0.2.0-dev.31.x release's, which has no page for them, so a wiki chip would 404. Until the dev.32 site is published (the
+// beta 1 release), the chip points at the same service's file in the agent skill, marked beta. Delete the entry then.
+export const kilnApiBeta: Record<string, string> = {
+  'Kiln.Pets': '/kiln/agents/kiln-modding/references/api-pets.md',
+  'Kiln.Taming': '/kiln/agents/kiln-modding/references/api-taming.md',
+};
+
 // The API reference's service pages for each wiki page. Kiln's tools/docs-site/wiki.json links each service page to its
 // wiki pages; this is the same list the other way round. Keep the two in step (the wiki build fails on a slug with no page).
 export const kilnWikiApi: Record<string, readonly string[]> = {
@@ -133,7 +141,7 @@ export const kilnSkillFiles = [
   { path: 'references/api-items.md', about: 'Items, data on one item, recipes, crafting from linked chests, exact costs with receipts.' },
   { path: 'references/api-gear.md', about: 'Rarity, enhancements and upgrades, a type\'s numbers, gear rules.' },
   { path: 'references/api-content.md', about: 'Content and game data, creatures and variants, abilities, assets.' },
-  { path: 'references/api-registry.md', about: 'The 17 registries, data packs and OnRegistry, Registry.Reauthor, edit caps, read-only views.' },
+  { path: 'references/api-registry.md', about: 'The 17 registries, data packs and OnRegistry, Registries.Reauthor, edit caps, read-only views.' },
   { path: 'references/api-pets.md', about: 'Pets: define, give, summon, order, going down and revives, PvP by your rule.' },
   { path: 'references/api-taming.md', about: 'Taming: steps with exact costs, refunds, a pet at the end, the game\'s own taming.' },
   { path: 'references/api-npcs.md', about: 'NPC speech bubbles, greeting picks, farewells, the menu\'s line, talk pages.' },

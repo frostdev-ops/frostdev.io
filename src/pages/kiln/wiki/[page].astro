@@ -1,7 +1,7 @@
 ---
 import type { MarkdownInstance } from 'astro';
 import KilnLayout from '../../../layouts/KilnLayout.astro';
-import { kilnApi, kilnApiService, kilnWikiApi, kilnWikiOrder, kilnWikiSections, kilnStatusLabel, type KilnWikiFrontmatter } from '../../../data/kiln';
+import { kilnApi, kilnApiBeta, kilnApiService, kilnWikiApi, kilnWikiOrder, kilnWikiSections, kilnStatusLabel, type KilnWikiFrontmatter } from '../../../data/kiln';
 
 // The Kiln wiki: one page per Markdown file in src/content/kiln-wiki/, written for people from Kiln's own docs.
 type Doc = MarkdownInstance<KilnWikiFrontmatter>;
@@ -77,7 +77,9 @@ const api = kilnWikiApi[slug] ?? [];
         {api.length > 0 && (
           <p class="kiln-doc-api">
             <span>In the API reference:</span>
-            {api.map((assembly) => <a href={kilnApiService(assembly)}>{assembly}</a>)}
+            {api.map((assembly) => kilnApiBeta[assembly]
+              ? <a href={kilnApiBeta[assembly]} data-beta title="New in dev.32 beta 1: not in the published API reference yet. This opens the agent skill's file for it.">{assembly} <span>beta</span></a>
+              : <a href={kilnApiService(assembly)}>{assembly}</a>)}
           </p>
         )}
       </header>
