@@ -73,7 +73,11 @@ reported once the game's items are readable, and until then the taming is not de
 With code instead of blocks, `Taming.Define(new TamingDefinition { ... })` takes the same fields, and `Taming.DefineJson(json)` reads one
 definition or an array. In C# the two times are `TimeSpan`s (`InactivityTimeout = TimeSpan.FromMinutes(2)`); in JSON they are numbers of
 seconds. Both calls answer with a result (`Ok`, a `Refusal` such as `DefinitionInUse` while attempts of the old definition run, and a
-`Reason`) instead of returning nothing; `DefineJson` gives one per definition. Game items there are `game:<debug name in lower case>`.
+`Reason`) instead of returning nothing; `DefineJson` gives one per definition. Both throw `KilnUnavailableException` when the service row
+`kiln.taming` is off (ask `Capabilities.Is("kiln.taming")` first); they do not ask the rows of the steps, because a definition is only
+data, so you can make one in `OnLoad` before any world runs. `Begin` and `Advance` ask those rows (`taming.steps`, and `items.costs.exact`,
+`items.costs.wear`, `taming.native` or `pets.records` for the steps and the pet a definition uses) and throw `KilnUnavailableException`
+naming the one that is off. Game items there are `game:<debug name in lower case>`.
 
 ## Drive an attempt
 
@@ -82,7 +86,7 @@ Every action carries a **`TamingRequest`**: your **request id** and the **token*
 the **same** request again and Kiln answers with what happened, never paying twice. A begin takes no token.
 
 ```csharp
-if (!Capabilities.Is(Taming.Capability)) return;                   // "taming.steps": a server world runs
+if (!Taming.Available) return;                                      // taming.steps: a server world runs
 var r = await Taming.Begin(player, EntityRef.Of(wolf), "my-mod:wolf", TamingRequest.New());
 if (!r.Ok || r.Progress is not { } p) { Log.Info($"{r.Refusal}: {r.Reason}"); return; }   // Busy, TemplateMismatch, OutOfRange, ...
 // weaken has no cost, so no selection; p.Token is the token of the last answer:
