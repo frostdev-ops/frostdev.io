@@ -103,9 +103,11 @@ else if (r.Refusal == TamingRefusal.CommitDeferred) { /* every step paid: Taming
   logs): `Busy`, `NotOwner`, `OwnerOffline`, `StaleSession`, `StaleStep`, `RequestConflict`, `StaleSelection`, `OutOfRange`,
   `TemplateMismatch`, `DefinitionUnknown`, `Capacity`, `RefusedByMod`, `CommitDeferred`, ... (`Other` for a word a later Kiln
   adds).
-- **Rows:** `taming.steps` (on while a server world runs); a definition also needs the rows of its steps: `items.costs.exact`
-  (feed, and any refund), `items.costs.wear` (tool), `taming.native` (native), `pets.records` (names a pet). `Taming.Define*`
-  throws `KilnUnavailableException` naming the one that is off.
+- **Rows:** `kiln.taming` for `Taming.Define` and `DefineJson` (a definition is data: made when your mod loads, before any
+  world runs); `taming.steps` for the attempts (on while a server world runs), and an attempt also needs the rows of its
+  definition's steps: `items.costs.exact` (feed, and any refund), `items.costs.wear` (tool), `taming.native` (native),
+  `pets.records` (names a pet). `Taming.Begin` throws `KilnUnavailableException` naming the one that is off, `Advance` for
+  its step's.
 - **A tame that cannot bind yet** (a full roster, a transient refusal) leaves the attempt `AwaitingCommit` with
   `CommitDeferred`: every step is paid, `Taming.Retry` takes nothing more and tries again.
 
@@ -144,5 +146,8 @@ Kiln changes none of that.
 
 ## Tests
 
-No TestKit fake yet. Test your own rules as plain functions; check the flow on a local server with commands like
-`TamingSample`'s, and read `kiln.log` (`taming:` lines) and each `TamingResult.Reason`.
+`KilnHarness.Taming` (dev.32+, [testing.md](testing.md)) runs Kiln's real attempt engine on the kit's world: `kiln.Taming`'s
+`Join` and `Place` make the player and the creature, `Give` items, `Hurt` it, then `Taming.Begin`, `Advance`, `Retry` and `Cancel` in
+`kiln.Run`, with exact stack takes and refunds on the kit's inventories; tamings your `OnLoad` defined stay. It wears no tools
+and runs none of the game's own taming (`NativeStep` counts the steps the test makes): check those, and the flow with a
+player, on a local server with commands like `TamingSample`'s, reading `kiln.log` (`taming:` lines) and each `r.Refusal`.

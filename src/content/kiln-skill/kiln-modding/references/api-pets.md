@@ -29,6 +29,7 @@ public override void OnLoad()
     Blocks.Define("hound", new PetBlock { Creature = "game:enemy_wildbeast_wolf_earlygame", Name = "Hound" });   // "my-mod:hound"
 
     // every choice spelled out, no Kiln.Blocks
+    if (!Capabilities.Is(Pets.DefinitionsCapability)) return;
     var def = Pets.Define(new PetDefinition
     {
         Id = "my-mod:duelist",
@@ -81,15 +82,27 @@ or a revive running is `DefinitionInUse`. A definition's id must start with your
 ## Give, summon, order, revive, release
 
 ```csharp
+if (!Capabilities.Is(Pets.RecordsCapability) || !Capabilities.Is(Pets.SummonCapability)) return;   // ask the rows you call
 var key = CharacterData.KeyOf(player);                  // the character (never account-only)
 var given = await Pets.Grant(key, "my-mod:hound", PetRequest.New());       // a Ready record, no body yet
+if (!given.Ok) { Log.Info($"not given: {given.Refusal}"); return; }
 var who = PlayerRef.Of(player);
 var pet = given.Pet!.Id;
-await Pets.Summon(who, pet, PetRequest.New());          // a protected body 2 to 4 m away, following
-await Pets.Command(who, pet, PetOrder.Stay, EntityRef.None, PetRequest.New());
-await Pets.Command(who, pet, PetOrder.Attack, EntityRef.Of(enemy), PetRequest.New());   // your rule says when; Kiln checks the target
-await Pets.Revive(who, pet, PetRequest.New());          // stand at its recovery anchor; summon the anchor first
-await Pets.Release(who, pet, PetRequest.New());         // for good: a tombstone until a save holds it
+var r = await Pets.Summon(who, pet, PetRequest.New());  // a protected body 2 to 4 m away, following
+if (!r.Ok) Log.Info($"not out: {r.Refusal}");           // every request answers a PetResult: check it
+if (Capabilities.Is(Pets.FollowCapability))
+{
+    r = await Pets.Command(who, pet, PetOrder.Stay, EntityRef.None, PetRequest.New());
+    r = await Pets.Command(who, pet, PetOrder.Attack, EntityRef.Of(enemy), PetRequest.New());   // your rule says when; Kiln checks the target
+    if (r.Refusal == PetRefusal.TargetProtected) Log.Info("its rule protects that target");
+}
+if (Capabilities.Is(Pets.DownedCapability))
+{
+    r = await Pets.Revive(who, pet, PetRequest.New());  // stand at its recovery anchor; summon the anchor first
+    if (!r.Ok) Log.Info($"no revive: {r.Refusal}");
+}
+r = await Pets.Release(who, pet, PetRequest.New());     // for good: a tombstone until a save holds it
+if (!r.Ok) Log.Info($"not released: {r.Refusal}");
 foreach (var p in Pets.Of(key)) Log.Info($"{p.Label}: {p.Life} {p.Presence} {p.Health}/{p.HealthMax}");
 ```
 
@@ -167,12 +180,14 @@ says current, stale (no keepalive for 3 s) or disconnected. Capability `pets.hud
 
 ## Tests
 
-`Kiln.TestKit` has no pet fake yet (`KilnHarness.Registry` and `NpcSpeech` exist; see [testing.md](testing.md)). Test your rules (cooldowns, outcome choices) as plain functions, and check the rest on a
-local server with `/pet`-style commands like `PetsSample`'s. Lab only: `LabBots` (Kiln.Players, experimental `KILNX001`) can
+`KilnHarness.Pets` (dev.32+, [testing.md](testing.md)) runs Kiln's real roster on the kit's world: `kiln.Pets.Join` a player
+and `Down` a pet; grant, summon, order and revive through `Pets.*` in `kiln.Run`; read `Bodies`, `Of` and `HostilePairs`; a character is
+one player across `kiln.Pets` and `kiln.Taming`. It keeps bodies without game entities (no walking), and has no save receipts
+and no owner's view: check those on a local server with `/pet`-style commands like `PetsSample`'s. Lab only: `LabBots` (Kiln.Players, experimental `KILNX001`) can
 stand in for a player on a test server; never ship it.
 
 ## Rules that bite
 
 [pitfalls.md](pitfalls.md#dev32-additions) has the table. The short list: the API is server-only and tick-thread; every
 request needs its own `PetRequest.New()`; a game creature's id, never a GUID; only walking enemies; an id lower case with your
-mod id in front; revive costs are one plain stack item; `Reason` strings are words first (`Busy: ...`), switch on the first word.
+mod id in front; revive costs are one plain stack item; decide by `r.Refusal` (`PetRefusal`), never by the `Reason` text.
