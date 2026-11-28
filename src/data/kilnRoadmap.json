@@ -1,6 +1,27 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.26",
+      "date": "2026-11-28",
+      "title": "Greeneye mods beside other hooks",
+      "summary": "Greeneye Loader mods such as Hollow Halls Progression read the same game code they found again where Kiln or another mod has hooked the game, and kiln.log says what a Greeneye mod asked for when it does not start.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Greeneye mods read the code they found",
+          "text": "Hollow Halls Progression stopped at the start with \"unsupported game signatures\" next to Kiln's newer hooks: Greeneye mods now get the game's own code where Kiln or another mod has hooked it, the same code they found (thanks Dark-Thoughts).",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "Why a Greeneye mod did not start",
+          "text": "When a Greeneye mod stops at the start, kiln.log names the game signatures it could not find and where Kiln read the game's code, so a support report shows what went wrong.",
+          "area": "compat",
+          "kind": "improved"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.25",
       "date": "2026-11-28",
       "title": "Cameras anywhere, Kiln's overlay by choice",
