@@ -152,6 +152,22 @@
       "fix": "Steam's screenshot key (F12) captures the game before Kiln draws its menu on top, so the menu is left out of the picture. Use Windows' Snipping Tool (Win+Shift+S), Xbox Game Bar (Win+Alt+PrtScn) or another desktop capture tool instead.",
       "copy": "Win+Shift+S",
       "added": "2026-11-28"
+    },
+    {
+      "id": "ual-over-kiln",
+      "title": "Ultimate ASI Loader sits where Kiln's dinput8.dll should be",
+      "fix": "dinput8.dll in the game folder is Ultimate ASI Loader, not Kiln, so the game starts without Kiln. Mod managers such as Multi DLL Installer or Vortex can put it back after Kiln was installed. Press Install (or Repair) on the Runtime page: Kiln puts its loader back and keeps Ultimate ASI Loader running as xinput9_1_0.dll, so your .asi plugins still load. If that manager puts it back again, press Repair again afterwards. On Kiln 0.2.0-dev.31.24 and earlier, if Kiln refuses with \"another file has that name\", move dinput8.dll out of the game folder first, then try again.",
+      "action": {
+        "label": "Open Runtime",
+        "to": "runtime"
+      },
+      "match": {
+        "findings": [
+          "proxy-not-kiln"
+        ],
+        "text": "Ultimate ASI Loader"
+      },
+      "added": "2026-11-28"
     }
   ]
 }
