@@ -3,7 +3,7 @@ title: "Loot odds and levels: lootRules and randomLoot"
 nav: "Loot rules"
 description: "Change how likely each rarity is in random loot and what level it rolls at, for the whole world or for enemies, barrels and chests, and follow a setting or a player's level while the world runs."
 status: "pending"
-updated: "2026-11-27"
+updated: "2026-11-28"
 ---
 
 > **New in 0.2.0-dev.32 (beta 1, mod API 0.2.27), experimental (`KILNX031`).** Beta 1 is a test build: switch the launcher's
@@ -50,24 +50,26 @@ Loot is the server's alone, so a pack with only these edits needs `"clients": "n
 ## From C#
 
 ```csharp
-registry.Alter(view =>
+if (!Registries.Available) return;                                       // in Mod.OnRegistry(RegistryContext context)
+var registry = Registries.For(context);
+registry.Alter(stage =>
 {
-    var weights = view.LootRules.RarityWeights;
+    var weights = stage.LootRules.RarityWeights;
     weights.Legendary = weights.Legendary * 2;
-    foreach (var table in view.RandomLoot.Select("game:labels_*"))        // enemies and generic containers
+    foreach (var table in stage.RandomLoot.Select("game:labels_*"))       // enemies and generic containers
         if (table.Rarity.Legendary.Mode == RandomLootMode.Set)             // the elite, boss and chest tables with their own odds
             table.Rarity.Legendary.Weight = table.Rarity.Legendary.Weight * 2;
 });
 ```
 
 Reads leave out your own layers, so `x * 2` restates your intent every time the pass runs and never stacks (see
-[the registries page](/kiln/wiki/registries#edit-from-c)). The `RegistryEdits` sample in Kiln's repository has this and the rest; the pages `docs/kiln/modding/registries/lootRules.md` and
+[the registries page](/kiln/wiki/registries#edit-from-c); the examples use `using Kiln.Registry;` for `Registries`). The `RegistryEdits` sample in Kiln's repository has this and the rest; the pages `docs/kiln/modding/registries/lootRules.md` and
 `randomLoot.md` list every field, its range and the id rules.
 
 ## Follow a setting or a player's level
 
 Edits that depend on a settings file or on the game's state (the highest player level in the world, say) must change **while the
-world runs**. Declare a `WorldLoad` pass and ask Kiln to run it again when an input changes:
+world runs**. Declare a `WorldLoad` pass and ask Kiln to run it again with `Registries.Reauthor()` when an input changes:
 
 ```csharp
 [RegistryEntryPoints(RegistryEntryPoint.WorldLoad)]
@@ -75,12 +77,14 @@ public sealed class Leveler : Mod
 {
     public override void OnLoad() => Config.Register<Settings>().Changed += _ =>
     {
-        if (Capabilities.Is("kiln.registry.live")) Kiln.Registry.Registry.Reauthor(RegistryEntryPoint.WorldLoad);
+        if (!Capabilities.Is("kiln.registry.live")) return;
+        var asked = Registries.Reauthor();                                      // the WorldLoad pass runs again, off the tick
+        if (!asked.Ok) Log.Warn($"not authored again: {asked.Reason}");
     };
     public override void OnRegistry(RegistryContext context)
     {
         if (context.Phase != RegistryPhase.Alter || !Capabilities.Is("kiln.registry")) return;
-        var w = Kiln.Registry.Registry.For(context).LootRules.RarityWeights;   // the values below this mod
+        var w = Registries.For(context).LootRules.RarityWeights;                // the values below this mod
         w.Legendary = w.Legendary * 4;                                          // never stacks
     }
 }
@@ -98,9 +102,12 @@ What `Reauthor` promises:
   change, and keep them in fields the pass reads. A tick-thread call inside a re-authored pass throws; Kiln then runs that mod's
   passes on the tick, slower, and says so once in `kiln.log`. (`Players.All` and `Progression.Get` are fine: they answer from the
   last snapshot.)
-- **It answers `false`** (the reason is in `kiln.log`) for any other entry point (only `WorldLoad` is re-authored), a mod with no
+- **It answers a result, so read it.** `Reauthor()` takes no entry point (only `WorldLoad` is re-authored on request) and returns a
+  `RegistryReauthorResult`: `Ok` when the pass is queued, otherwise `Ok` is false with a `Reason` (also in `kiln.log`) for a mod with no
   declared `WorldLoad` pass, a call from inside `OnRegistry`, or no running back-end. With no world loaded, the next world load
-  authors the pass anyway.
+  authors the pass anyway. If the capability `kiln.registry.live` is off the call throws `KilnUnavailableException`, so ask first, as above.
+- **The pass knows how it runs.** Inside `OnRegistry`, `context.OffTick` is true on Kiln's worker and `context.Pass` says which kind of
+  pass it is (`Point`, `ReauthoredOnTick`, `ReauthoredOffTick`).
 
 ## Limits
 

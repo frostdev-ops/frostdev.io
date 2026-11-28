@@ -1,7 +1,7 @@
 ---
 title: "What works today"
 description: "What Kiln does in the current build, what is on but not yet confirmed in a real game, what's being built and what isn't, as of November 2026."
-updated: "2026-11-27"
+updated: "2026-11-28"
 ---
 
 Kiln is in early access: dev builds on [Nexus Mods](https://www.nexusmods.com/enshrouded/mods/301),
@@ -17,7 +17,7 @@ listed under [Open in the game](#open-in-the-game); some have had fixes since th
 ## New in 0.2.0-dev.32 (beta 1)
 
 Beta 1 is a **test build** (mod API 0.2.27): in the launcher's Settings, under Launcher updates, set **Channel** to the test builds to try it. It adds
-pets, taming, NPC dialogue, twelve more registries with views and `Registry.Reauthor`, exact costs with receipts, gear rules written through
+pets, taming, NPC dialogue, twelve more registries with views and `Registries.Reauthor`, exact costs with receipts, gear rules written through
 the registry, effect replay of ShroudForge and EML packages, and tools for the game's terrain tiles. Everything below ran on dedicated lab
 servers with test peers and bots, in host tests and in Kiln's test suites; **nothing of dev.32 has been seen in a real game client yet.**
 

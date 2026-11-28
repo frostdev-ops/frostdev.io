@@ -3,10 +3,10 @@ title: "Registries: game data by stable names"
 nav: "Registries"
 description: "Edit items, recipes, loot, drops and balance through names Kiln supplies and keeps stable across game updates: entry points, transactions, adding and hiding entries, how mods stack, and what is still refused."
 status: "pending"
-updated: "2026-11-27"
+updated: "2026-11-28"
 ---
 
-> **New in 0.2.0-dev.31 (dev.31+, mod API 0.2.17), experimental; twelve more registries, views and `Registry.Reauthor` in
+> **New in 0.2.0-dev.31 (dev.31+, mod API 0.2.17), experimental; twelve more registries, views and `Registries.Reauthor` in
 > 0.2.0-dev.32 (beta 1, a test build, mod API 0.2.27).** The registry types carry the diagnostic `KILNX031` and may change in any
 > release until each registry is marked stable; at API 1.0.0 the stable ones are frozen (additive only). Edits ran on dedicated
 > servers and in offline tests. **Not yet seen in a real game client.**
@@ -52,19 +52,26 @@ Override `Mod.OnRegistry`. It runs once per pass and point you declare:
 ```csharp
 using Kiln;
 using Kiln.Registry;
-using DataRegistry = Kiln.Registry.Registry;
 
 [RegistryEntryPoints(RegistryEntryPoint.GameStart | RegistryEntryPoint.WorldLoad)]
 public sealed class Stacks : Mod
 {
     public override void OnRegistry(RegistryContext context)
     {
-        var registry = DataRegistry.For(context);
-        registry.Alter(view => view.Items["game:material_t1_wood_logs"].MaxStack = 500);
+        if (!Registries.Available) return;                    // no registry back-end here (a client without it)
+        var registry = Registries.For(context);
+        registry.Alter(stage => stage.Items["game:material_t1_wood_logs"].MaxStack = 500);
         registry.Items.Final("game:material_t1_*", item => item.MaxStack = Math.Min(item.MaxStack, 2000));
     }
 }
 ```
+
+**`Registries` since dev.32.** The entry class was `Registry` in dev.31, which is also the name of its namespace, so code inside a
+`Kiln.*` namespace needed an alias (`using DataRegistry = Kiln.Registry.Registry;`). Beta 1 names it `Registries`, with the same
+members. A mod built for dev.31 keeps building and running: `Registry` is still there, marked obsolete (a warning that names
+`Registries`), and it goes no earlier than 1.0. The loot field `ItemLootEntry.FixedRarity` has the same treatment: the new name is
+`Rarity` (a `RegistryRarity?`, null for none). `RegistryContext`, `RegistryEntryPoint` and `RegistryPhase` live in namespace `Kiln`
+with `Mod.OnRegistry`; the typed data (entries, the stage) is `Kiln.Registry`'s.
 
 An assignment is an absolute edit in the **alter** pass; `registry.Final(...)` is the explicit **final** pass and
 `registry.Add(...)` the **add** pass; `registry.Items.Final(pattern, edit)` edits a selection in the final pass. Nothing is submitted until your handler returns without throwing. Keep copied
@@ -99,17 +106,19 @@ Each field says so in its page, on its C# property and in `RegistrySchema`:
 A later point never writes a restart field: it answers `RestartRequired`. A field Kiln hasn't traced yet ships with the
 cautious value and an unproven mapping; in this release only `items.fuel.burnTime` and the damage of simple perks are in that state.
 
-## Transactions: Registry.Change
+## Transactions: Registries.Change
 
 Outside the automatic passes, on the tick thread of a loaded world, open a transaction. It lasts until you revert it or
 the world ends:
 
 ```csharp
-var change = DataRegistry.Change(view => view.Items["game:material_t1_wood_logs"].MaxStack = 500);
+if (!Registries.Available) return;
+var change = Registries.Change(stage => stage.Items["game:material_t1_wood_logs"].MaxStack = 500);
 if (!change.Result.Ok) Log.Warn(change.Result.Reason ?? "registry change not applied");
 
 // later, on the tick thread: takes out this change only, and recomposes the rest
 var reverted = change.Revert();
+if (!reverted.Ok) Log.Warn(reverted.Reason ?? "registry revert not applied");
 ```
 
 `Result` tells Applied, Refused, RestartRequired, WorldRequired, Skipped (another writer's bytes were left alone),
@@ -117,8 +126,8 @@ Unverified (Kiln couldn't prove a rollback) or the pending states, with counts a
 reverted change with nothing refused or skipped. A later commit wins and relative edits compose, so reverting an earlier
 change never puts an old snapshot over a later one. A change is not disposable: leaving a scope doesn't undo it.
 
-- `DataRegistry.Read(view => ...)` reads live values in an expiring, read-only frame.
-- `DataRegistry.Ready` (subscribe in `OnLoad`) tells when the game-start or a world-load application is ready.
+- `Registries.Read(stage => ...)` reads live values in an expiring, read-only frame.
+- `Registries.Ready` (subscribe in `OnLoad`) tells when the game-start or a world-load application is ready.
   It says the registry is ready, not that every edit of yours applied: read the results.
 - Adds and removes are GameStart-only. A transaction that includes one is refused with `RestartRequired` and commits none
   of its other edits. A refused field-only edit doesn't stop the valid ones.
@@ -132,9 +141,11 @@ Experimental, and at **GameStart** only. A later point answers `RestartRequired`
 ```csharp
 if (context.EntryPoint == RegistryEntryPoint.GameStart)
 {
-    registry.Add(view => view.Items.AddLike(new("my-mod:stout_logs"), new("game:material_t1_wood_logs"),
-        item => item.MaxStack = 100));
-    registry.Alter(view => view.Loot.Remove("game:material_t1_wood_logs"));
+    if (Capabilities.Is("registry.items.add"))
+        registry.Add(stage => stage.Items.AddLike(new("my-mod:stout_logs"), new("game:material_t1_wood_logs"),
+            item => item.MaxStack = 100));
+    if (Capabilities.Is("registry.loot.remove"))
+        registry.Alter(stage => stage.Loot.Remove("game:material_t1_wood_logs"));
 }
 ```
 
@@ -199,27 +210,35 @@ A plain `op` sets the value; an object is `mul`, `add`, `min`, `max`, `raiseOnly
 a list of fixed length is edited one element at a time (`xpPerLevel[2]`). Fields that apply now or at world load follow
 a pack's hot reload; adds and removes wait for a restart.
 
+Two shapes new in dev.32 (beta 1). **`select` can be just the id or pattern as a plain string** (`"select": "game:material_t1_*"`); the
+object form (`id`, `has`, `where`) still works. **An appended list element names a struct of its own as a nested object**, as the C#
+types show it: `{ "item": "game:material_stone", "count": { "min": 1, "max": 3 }, "chance": 0.5 }` appends a drop entry (the dotted
+leaf `"count.min"` of earlier packs still reads; one element names a leaf once). In C#, one element of a plain list is set by index
+(`item.Perks[1] = id`) and `AppendNew()` gives a new element whose values, its item too, go in the append itself.
+
 ## Edits per call
 
 Since 0.2.0-dev.32 a registry declares the most edits **of that registry** one call may carry: `RegistrySchema.EditsPerCall` says it,
 and each registry page in Kiln's repository too. One call is one `OnRegistry` callback (that is one phase of one entry point), one
-`Registry.Change`, or one batch a native plugin sends. `randomLoot` takes 16,384 (every field of every table of the game's loot
+`Registries.Change`, or one batch a native plugin sends. `randomLoot` takes 16,384 (every field of every table of the game's loot
 data fits with room), every other registry 4,096; each registry is counted on its own. A call over a registry's cap is
 **refused whole**: nothing of it applies, `registry.json` has a row for each registry the call named (the one over its cap
 with its count and the cap), `kiln.log` says so, and Kiln **never throws** for it in your code. Before dev.32 an edit past
 4,096 threw, so a mod that caught it kept a cut call and one that did not lost its whole pass. Split big edits over the
-phases (`Alter`, `Final`) or over several `Registry.Change` calls. An edit is one field of one entry, so count fields.
+phases (`Alter`, `Final`) or over several `Registries.Change` calls. An edit is one field of one entry, so count fields.
 
 ## Re-author a pass when settings change
 
 An `OnRegistry` pass can follow a settings file or the game's state (a player's level) without a restart:
-`Registry.Reauthor(RegistryEntryPoint.WorldLoad)` runs your declared `WorldLoad` pass again from the next host tick, in the same
+`Registries.Reauthor()` runs your declared `WorldLoad` pass again from the next host tick, in the same
 world, and its new layers replace the old ones in one turn: the game never sees a moment without your values, and the pass never
-stacks on its own last result. It runs on a worker thread of Kiln's, not on the world tick, so **read your settings and game state
-first**, in the handler that saw them change, and don't call tick-thread APIs inside the pass. It answers `false` (the reason in
-`kiln.log`) for another entry point, a mod with no `WorldLoad` pass, a call from inside `OnRegistry`, or no running back-end.
-Requests while one runs become one more pass, never one each. The worked example is [Loot odds and
-levels](/kiln/wiki/loot-rules#follow-a-setting-or-a-players-level).
+stacks on its own last result. It takes no entry point (only `WorldLoad` is re-authored on request). It runs on a worker thread of
+Kiln's, not on the world tick, so **read your settings and game state first**, in the handler that saw them change, and don't call
+tick-thread APIs inside the pass. It answers a `RegistryReauthorResult`: `Ok` when the pass is queued, otherwise `Ok` is false with a
+`Reason` (also in `kiln.log`) for a mod with no `WorldLoad` pass, a call from inside `OnRegistry`, or no running back-end. Check it
+the way you check any Kiln result. Requests while one runs become one more pass, never one each. Inside the pass, `context.Pass` says
+which kind it is (`Point`, `ReauthoredOnTick`, `ReauthoredOffTick`) and `context.OffTick` is true on Kiln's worker. The worked example
+is [Loot odds and levels](/kiln/wiki/loot-rules#follow-a-setting-or-a-players-level).
 
 ## Read anything: views
 
@@ -260,8 +279,8 @@ of the start's archive writer (hosted ShroudForge, Kiln's interpreter for Shroud
 ShroudForge package that changed a value at run time in kiln mode. **Effect replay** (dev.32) is opt-in per package: after a game
 update, a package's Lua can fail and change nothing until its author updates it; Kiln records each package's last effect in
 registry terms, and for a package you opt in, applies it through the registry on a later game build where its Lua was not applied.
-Opt in with `kilnctl registry replay <server> --opt-in <mod>` (`--opt-out` undoes it) or the toggle on the launcher's Conflicts
-page. A package with anything the registry cannot hold (a list's membership, a created entry, a field another package also changed) is
+Opt in with `kilnctl registry replay <server> --opt-in <mod>` (`<mod>` is `shroudforge:<id>` or `eml:<id>`; `--opt-out` undoes it) or
+the toggle on the launcher's Conflicts page. A package with anything the registry cannot hold (a list's membership, a created entry, a field another package also changed) is
 refused whole, never in part, and `registry.json` `replay` says why. Not seen in a real game: hosted ShroudForge writing its
 journal, replay after a real game update and on a joined client.
 
@@ -288,8 +307,10 @@ journal, replay after a real game update and on a joined client.
 ## Testing
 
 `KilnHarness.Registry` in Kiln.TestKit is a recording fake: `Seed` supplies values, `Author` runs one of your passes and
-returns the edits it would send. It doesn't simulate live application, pass composition or the game's mapping, so an offline
-test proves your callback, not the game. Try a registry edit on a [test server](/kiln/wiki/testing) and read
+returns the edits it would send. Since dev.32, `Reauthors` lists the `Registries.Reauthor()` requests your mod made, `RunReauthored`
+runs your `WorldLoad` pass the way a re-author does (off the world tick by default, where a tick-thread API throws as in a game), and
+`Refused` says why Kiln would refuse the call whole (for example a registry over its edits-per-call cap). It doesn't simulate live
+application, pass composition or the game's mapping, so an offline test proves your callback, not the game. Try a registry edit on a [test server](/kiln/wiki/testing) and read
 `kiln/state/registry.json`.
 
 The `RegistryEdits` sample in the Kiln repository shows an add, a hide and a setting-driven alter at `GameStart`, `WorldLoad`

@@ -3,7 +3,7 @@ title: "The dev.32 registries: creatures, skills, buffs, world rules and more"
 nav: "New registries"
 description: "Twelve more registries: edit a creature's health, a skill's cost, a buff's length, the build rules of the world and how loot rolls, by stable names, plus a read-only view of everything else in the game's data."
 status: "pending"
-updated: "2026-11-27"
+updated: "2026-11-28"
 ---
 
 > **New in 0.2.0-dev.32 (beta 1, mod API 0.2.27), experimental (`KILNX031`).** Beta 1 is a test build: switch the launcher's
@@ -61,16 +61,18 @@ id as 8 hex digits.) A plain `op` sets the value; `mul`, `add`, `min`, `max`, `r
 Not every creature has every field: most have no size of their own, and only enemies have sight and an arsenal. Select the ones that
 do (`"has": ["enemy"]`, or by id), or the edit is refused for the others and a relative edit over one of them refuses as a whole.
 
-The same in C#, from `Mod.OnRegistry` ([the registries page](/kiln/wiki/registries#edit-from-c)):
+The same in C#, from `Mod.OnRegistry` (`using Kiln.Registry;`; [the registries page](/kiln/wiki/registries#edit-from-c) has the whole mod):
 
 ```csharp
-registry.Alter(view =>
+if (!Registries.Available) return;                            // in Mod.OnRegistry(RegistryContext context)
+var registry = Registries.For(context);
+registry.Alter(stage =>
 {
-    var vukah = view.Creatures["game:enemy_vukah_melee"];
+    var vukah = stage.Creatures["game:enemy_vukah_melee"];
     vukah.Sight.Range = vukah.Sight.Range * 1.5;
     vukah.Resist.Fire = 2.0;                                  // takes double fire damage; 0 would mean immune
-    view.Arsenals["game:enemy_vukah_melee"].Attacks[0].Chance = 0.5;
-    view.Skills["game:skill_4475e8dd"].Cost = 0;
+    stage.Arsenals["game:enemy_vukah_melee"].Attacks[0].Chance = 0.5;
+    stage.Skills["game:skill_4475e8dd"].Cost = 0;
 });
 ```
 
@@ -102,7 +104,7 @@ registry.Alter(view =>
 | XHL Enemy Difficulty Limits (raised bounds) | `difficulty.<setting>.max` |
 | XHL Unlimited Gifting Range | `limits.giftingRange` |
 | More Flame Altars (altars above 16) | `limits.maxAltars` with `balance.altarsPerFlameLevel` above 16 |
-| Loot Rarity Leveler | `lootRules` and `randomLoot` with `Registry.Reauthor` |
+| Loot Rarity Leveler | `lootRules` and `randomLoot` with `Registries.Reauthor` |
 
 Not covered: the settings screen's slider steps (only a game client has them; resource patches still edit them), and what those
 mods do beyond a number (Enemy Difficulty Limits' wider perception, More Flame Altars' merged bases). Past 16 altars, the game's
@@ -125,12 +127,13 @@ if (Capabilities.Is("kiln.registry.view") && RegistryViews.Find("quest") is { } 
 
 The first read is slow (4 to 11 seconds for a registry's first resolved read, about 0.2 seconds to list an advanced view): do it
 off the game's thread, never in a tick. To write, use a registry field where one covers the member (`CoveredBy` says which) or the
-old path. By name from code that does not know a registry's typed property: `view.Entries("creatures")["game:enemy_vukah_melee"].Set("health.perPlayer", 1.2)` inside a pass.
+old path. By name from code that does not know a registry's typed property: `stage.Entries("creatures")["game:enemy_vukah_melee"].Set("health.perPlayer", 1.2)` inside a pass.
 
 ## Re-author when settings change
 
 An `OnRegistry` pass can be asked to run again, in the same world, without a restart:
-`Registry.Reauthor(RegistryEntryPoint.WorldLoad)`. It runs off the world tick, replaces your layers in one turn and never stacks.
+`Registries.Reauthor()` (it takes no entry point: only `WorldLoad` is re-authored). It runs off the world tick, replaces your layers in
+one turn and never stacks, and it answers a `RegistryReauthorResult` to check (`Ok`, else a `Reason`).
 The [loot page](/kiln/wiki/loot-rules#follow-a-setting-or-a-players-level) shows it in use. One call takes at most 4,096 edits of
 a registry (16,384 for `randomLoot`); a call over the cap is refused whole and logged, never thrown.
 
