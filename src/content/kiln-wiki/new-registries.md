@@ -61,6 +61,12 @@ id as 8 hex digits.) A plain `op` sets the value; `mul`, `add`, `min`, `max`, `r
 Not every creature has every field: most have no size of their own, and only enemies have sight and an arsenal. Select the ones that
 do (`"has": ["enemy"]`, or by id), or the edit is refused for the others and a relative edit over one of them refuses as a whole.
 
+In C#, a typed property reads 0 or false for a creature that has no value of the field, so tell such creatures by `Kind`
+(a `RegistryCreatureKind`: `Enemy`, `Wildlife`, `Animal`, `Villager`) or by id, never by a 0 (for `Resist.*` a 0 means immune). Reading
+by name is stricter: `entry.Get<T>(field)` of a field the entry has no value of throws `InvalidOperationException` (before dev.32 it
+returned `default`). Read it as a nullable type (`entry.Get<double?>("sight.range")` gives null), or ask with
+`entry.TryGet<double>("sight.range", out var range)`.
+
 The same in C#, from `Mod.OnRegistry` (`using Kiln.Registry;`; [the registries page](/kiln/wiki/registries#edit-from-c) has the whole mod):
 
 ```csharp
@@ -69,7 +75,8 @@ var registry = Registries.For(context);
 registry.Alter(stage =>
 {
     var vukah = stage.Creatures["game:enemy_vukah_melee"];
-    vukah.Sight.Range = vukah.Sight.Range * 1.5;
+    if (vukah.Kind == RegistryCreatureKind.Enemy)             // only enemies have sight and an arsenal
+        vukah.Sight.Range = vukah.Sight.Range * 1.5;
     vukah.Resist.Fire = 2.0;                                  // takes double fire damage; 0 would mean immune
     stage.Arsenals["game:enemy_vukah_melee"].Attacks[0].Chance = 0.5;
     stage.Skills["game:skill_4475e8dd"].Cost = 0;
@@ -82,7 +89,7 @@ registry.Alter(stage =>
   as it spawns (level, faction, size, resistances, speeds, loot) reach creatures that spawn **after** the edit; health and damage scaling and an enemy's
   sight are read at once by every creature of the entry, also those already in the world.
 - **Arsenals** are shared: an edit reaches every enemy that uses it, at its next decision. An arsenal keeps its attacks (only their values
-  change; adding or removing one is refused).
+  change; adding or removing one is refused). In C# `ArsenalEntry.Attacks` is a list of `RegistryArsenalAttack`.
 - **Perks:** `value` is read when the perk's effect starts (the item equipped, the perk unlocked): an effect already running keeps
   its value until it starts again. A perk whose value is a whole number takes whole numbers only (`not_exact`, never rounded). The
   damage of simple perks is refused for now: Kiln has not traced when the game reads it.
@@ -119,7 +126,8 @@ dialogs, materials, UI data: the long tail no registry covers yet). Registries a
 by Kiln from the game's reflection, checked per game build, never written.
 
 ```csharp
-if (Capabilities.Is("kiln.registry.view") && RegistryViews.Find("quest") is { } quests)
+if (!RegistryViews.Available) return;                           // kiln.registry.view: every read below needs it
+if (RegistryViews.Find("quest") is { } quests)
     foreach (var id in quests.Select("game:quest_*"))
         if (quests[id].TryGet<int>("xpReward", out var xp, out var why)) Log.Info($"{id.Value}: {xp} xp");
         else Log.Info(why);                                      // this entry has no value of it, in Kiln words

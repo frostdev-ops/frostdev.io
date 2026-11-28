@@ -70,7 +70,8 @@ public sealed class Stacks : Mod
 `Kiln.*` namespace needed an alias (`using DataRegistry = Kiln.Registry.Registry;`). Beta 1 names it `Registries`, with the same
 members. A mod built for dev.31 keeps building and running: `Registry` is still there, marked obsolete (a warning that names
 `Registries`), and it goes no earlier than 1.0. The loot field `ItemLootEntry.FixedRarity` has the same treatment: the new name is
-`Rarity` (a `RegistryRarity?`, null for none). `RegistryContext`, `RegistryEntryPoint` and `RegistryPhase` live in namespace `Kiln`
+`Rarity` (a `RegistryRarity?`, null for none). The creature kind and an arsenal's attack element are `RegistryCreatureKind` and
+`RegistryArsenalAttack`, so a file with `using Kiln;` and `using Kiln.Registry;` can name them. `RegistryContext`, `RegistryEntryPoint` and `RegistryPhase` live in namespace `Kiln`
 with `Mod.OnRegistry`; the typed data (entries, the stage) is `Kiln.Registry`'s.
 
 An assignment is an absolute edit in the **alter** pass; `registry.Final(...)` is the explicit **final** pass and
