@@ -168,6 +168,21 @@
         "text": "Ultimate ASI Loader"
       },
       "added": "2026-11-28"
+    },
+    {
+      "id": "ioring-kiln-content",
+      "title": "The game closes at start on Windows 11 with a mod that has its own textures or models",
+      "fix": "Windows 11 lets the game read its files with IoRing, which skips how Kiln serves a mod's own textures and models, so a mod like Flamebound Ledger makes the game close in the main menu. Update Kiln to 0.2.0-dev.31.29 or newer on the Runtime page; it handles this by itself. Or, in Steam: Library > Enshrouded > Properties > Launch options, add the line below (after anything already there) and start the game again. It can stay after the update. If the Mods button then says the overlay's drawing is off, switch on Settings > Graphics > Draw Kiln's overlay anyway for one start, then off again.",
+      "copy": "--disable-ioring",
+      "match": {
+        "findings": [
+          "ioring-kiln-content"
+        ],
+        "os": [
+          "windows"
+        ]
+      },
+      "added": "2026-11-28"
     }
   ]
 }
