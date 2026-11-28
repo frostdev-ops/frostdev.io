@@ -3,7 +3,7 @@ title: "Taming: steps, costs and a pet at the end"
 nav: "Taming"
 description: "Let players tame a creature in steps you design (weaken it, feed it, use a tool), with exact costs, refunds and timeouts Kiln settles for you, ending in a pet, or hook into the game's own wildlife taming."
 status: "pending"
-updated: "2026-11-27"
+updated: "2026-11-28"
 ---
 
 > **New in 0.2.0-dev.32 (beta 1, mod API 0.2.27).** Beta 1 is a test build: switch the launcher's **Channel** (Settings,
@@ -60,8 +60,8 @@ The same in `blocks/*.json`:
 | Setting | Default | Meaning |
 |---|---|---|
 | `rangeMeters` | 3 (1 to 8) | how close the player must be |
-| `inactivitySeconds` | 30 (1 to 300) | an attempt with no applied step for this long ends |
-| `maxAttemptSeconds` | 300 | the longest an attempt lasts |
+| `inactivitySeconds` (C#: `InactivityTimeout`) | 30 (1 to 300) | an attempt with no applied step for this long ends |
+| `maxAttemptSeconds` (C#: `MaxAttemptDuration`) | 300 (up to 3,600) | the longest an attempt lasts |
 | `refund` | `nonRefundable` | `refundOnFail`: a failure that is not the player's (the body gone, the world ended) gives paid steps back. `escrow`: also when the player cancels or the time runs out |
 | `requireThresholdUntilCommit` | true | the target must still be weak enough at the last step |
 | `removeTarget`, `summonPet` | true, true | with a pet: the wild body goes once the record exists and the pet comes out |
@@ -71,35 +71,44 @@ A creature that is not in `creatures` is refused before any cost is taken. A tra
 reported once the game's items are readable, and until then the taming is not defined (`Begin` answers `DefinitionUnknown`).
 
 With code instead of blocks, `Taming.Define(new TamingDefinition { ... })` takes the same fields, and `Taming.DefineJson(json)` reads one
-definition or an array. Game items there are `game:<debug name in lower case>`.
+definition or an array. In C# the two times are `TimeSpan`s (`InactivityTimeout = TimeSpan.FromMinutes(2)`); in JSON they are numbers of
+seconds. Both calls answer with a result (`Ok`, a `Refusal` such as `DefinitionInUse` while attempts of the old definition run, and a
+`Reason`) instead of returning nothing; `DefineJson` gives one per definition. Game items there are `game:<debug name in lower case>`.
 
 ## Drive an attempt
 
-Every action carries your **request id** and the **token** of the last answer. Use a new id for each action you intend; if
-a message is lost, send the **same** one again and Kiln answers with what happened, never paying twice.
+Every action carries a **`TamingRequest`**: your **request id** and the **token** of the last answer (the same shape as
+[Pets](/kiln/wiki/pets)' `PetRequest`). `TamingRequest.New(token)` makes a new id for each action you intend; if a message is lost, send
+the **same** request again and Kiln answers with what happened, never paying twice. A begin takes no token.
 
 ```csharp
 if (!Capabilities.Is(Taming.Capability)) return;                   // "taming.steps": a server world runs
-var r = Taming.Begin(player, EntityRef.Of(wolf), "my-mod:wolf", Guid.NewGuid());
-if (!r.Ok || r.Progress is not { } p) { Log.Info(r.Reason ?? "refused"); return; }   // Busy, TemplateMismatch, OutOfRange, ...
-// weaken has no cost, so no selection:
-r = await Taming.Advance(player, p.Id, new TamingToken(Guid.NewGuid(), p.StepChallenge, p.Revision, p.CompletedSteps));
-if (!r.Ok || r.Progress is not { } q) { Log.Info(r.Reason ?? "refused"); return; }
-// a feed step takes the slot the player chose; the server read these rows itself
-var pick = Taming.Choices(player, q.Id).Choices[0].Selection;
-r = await Taming.Advance(player, q.Id, new TamingToken(Guid.NewGuid(), q.StepChallenge, q.Revision, q.CompletedSteps), pick);
+var r = await Taming.Begin(player, EntityRef.Of(wolf), "my-mod:wolf", TamingRequest.New());
+if (!r.Ok || r.Progress is not { } p) { Log.Info($"{r.Refusal}: {r.Reason}"); return; }   // Busy, TemplateMismatch, OutOfRange, ...
+// weaken has no cost, so no selection; p.Token is the token of the last answer:
+r = await Taming.Advance(player, p.Id, TamingRequest.New(p.Token));
+if (!r.Ok || r.Progress is not { } q) { Log.Info($"{r.Refusal}: {r.Reason}"); return; }
+// a feed step takes the slot the player chose; the server read these rows itself, and the view has its own token
+var choices = Taming.Choices(player, q.Id);
+var pick = choices.Choices[0].Selection;
+r = await Taming.Advance(player, q.Id, TamingRequest.New(choices.Token), pick);
 if (r.Ok && r.Pet is { } tamed) { /* tamed: tamed is the new pet record */ }
 ```
 
 - **Nothing is searched when a cost runs.** The slot the player picked must still hold what the server read; if it changed the
   step is refused (`StaleSelection`) and nothing is taken. A player's game never names a slot of its own: build your picker from `Taming.Choices`.
 - **The last step tames.** An `Ok` answer carries the new `Pet` when the taming names one.
-- **If every step is paid but the tame cannot bind yet** (a full pet roster, for example), the answer starts with `CommitDeferred`:
-  nothing more is taken, and `Taming.Retry` tries again later.
+- **If every step is paid but the tame cannot bind yet** (a full pet roster, for example), the answer's `Refusal` is
+  `TamingRefusal.CommitDeferred`: nothing more is taken, and `Taming.Retry` tries again later.
 - **Cancel the step you do not want** by handling `TamingBeginningEvent`, `TamingAdvancingEvent` or `TamingCommittingEvent` and
-  calling `Cancel()`: nothing is spent and the token stays valid.
-- **Reasons start with a word** (`Busy`, `WrongOwner`, `StaleStep`, `StaleSession`, `OutOfRange`, `TemplateMismatch`,
-  `RequestConflict`): switch on that word.
+  calling `Cancel()`: nothing is spent, the token stays valid, and the caller's answer is `TamingRefusal.RefusedByMod`.
+- **Decide by `Refusal`.** It is a `TamingRefusal` (`Busy`, `NotOwner`, `StaleStep`, `StaleSession`, `OutOfRange`, `TemplateMismatch`,
+  `RequestConflict`, `Capacity`, `RefusedByMod`, ...), with the same words as the pets' `PetRefusal` for the same things. `Reason` is
+  text for your log. A word a later Kiln adds reads as `Other` until your mod is built against it.
+- **The token rotates.** Keep the last answer's `Progress`: the next request is `TamingRequest.New(progress.Token)`. A stale token is
+  `StaleStep` or `StaleSession`, with nothing taken. To cancel with `Taming.Cancel`, send `TamingRequest.New()` (no token, works from a stale
+  view) or a request with the current token.
+- **`Choices` lists the first 256 slots** and sets `Truncated` when more could pay; it is not a refusal.
 
 ## The game's own taming
 
@@ -136,4 +145,6 @@ places the game's own bait item), and driving a petting step from a mod is exper
 
 The full guides are in Kiln's repository, `docs/kiln/modding/taming.md` (a walkthrough first) and `docs/kiln/services/taming.md` (the contract),
 on [GitHub](https://github.com/frostdev-ops/kiln). The complete example is `TamingSample` there (`/tame begin`, `/tame step`, `/tame feed`, `/tame retry`).
+Until the API reference of beta 1 is published, the `Kiln.Taming` chip under the title opens the
+[agent skill's taming file](/kiln/agents/kiln-modding/references/api-taming.md), which lists the members.
 Related: [Pets](/kiln/wiki/pets), [Creatures](/kiln/wiki/creatures), [Inventory transfers](/kiln/wiki/inventory#exact-costs-and-receipts).

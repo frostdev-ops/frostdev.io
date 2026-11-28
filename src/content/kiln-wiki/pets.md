@@ -3,7 +3,7 @@ title: "Pets: owned creatures that follow you"
 nav: "Pets"
 description: "Give a player a pet that follows, fights, goes down and is revived: how to define one, what Kiln keeps for you, what your mod decides, and what players see."
 status: "pending"
-updated: "2026-11-27"
+updated: "2026-11-28"
 ---
 
 > **New in 0.2.0-dev.32 (beta 1, mod API 0.2.27).** Beta 1 is a test build: switch the launcher's **Channel** (Settings,
@@ -43,12 +43,13 @@ Or as data, in `blocks/*.json`, section `pets`, with every choice written out:
       "targets": { "pvp": "byModRule", "hostileFactions": ["vukah", "fogger"] },
       "downed": { "outcome": "absent" },
       "revive": { "channelSeconds": 5, "cost": { "item": "Material_T1_Twigs", "count": 3 } },
-      "caps": { "livePerCharacter": 2 }, "hud": { "recoveryMarker": false }
+      "limits": { "livePerCharacter": 2 }, "hud": { "recoveryMarker": false }
     } } }
 ```
 
 Without Kiln.Blocks, `Pets.Define(new PetDefinition { Id = "my-mod:hound", Creature = "game:enemy_wildbeast_wolf_earlygame" })`
-does the same and answers with a result (`DefinitionInUse`, `CreatureUnknown`, `CreatureUnsupported`).
+does the same and answers with a `PetDefinitionResult`: `Ok`, a `Refusal` to decide by (`PetRefusal.DefinitionInUse`, `CreatureUnknown`,
+`CreatureUnsupported`) and a `Reason` for your log. A definition's name is `Name` on the block and on `PetDefinition` alike.
 
 | Choice | What you set | If you say nothing |
 |---|---|---|
@@ -61,38 +62,45 @@ does the same and answers with a result (`DefinitionInUse`, `CreatureUnknown`, `
 | How many | per character, live per character, live per world | 32, 1, 16 |
 | The bar | a row in the owner's pet bar, a marker on the recovery anchor | both on |
 
+In C# a duration is a `TimeSpan` (`ChannelDuration`, `StuckAfter`, `RepathInterval`); in `blocks/*.json` it is a number of seconds
+(`channelSeconds`, `stuckSeconds`, `repathSeconds`). The "how many" choice is `PetLimits` in C# and `limits` in JSON.
+
 Players are always protected by default: a pet never harms a player and a player never harms a pet, until your mod says
 otherwise for two characters.
 
 ## Give, summon, order, revive
 
 ```csharp
-// one place that reads every answer: a refusal is a result with a Reason, not an exception
+// one place that reads every answer: a refusal is a result with a Refusal, not an exception
 async Task<PetResult?> Ask(Task<PetResult> request)
 {
     var r = await request;
-    if (!r.Ok) Log.Info($"pet request refused: {r.Reason}");
+    if (!r.Ok) Log.Info($"pet request refused ({r.Refusal}): {r.Reason}");   // decide by r.Refusal, log r.Reason
     return r.Ok ? r : null;
 }
 
 if (!Capabilities.Is("pets.records") || !Capabilities.Is("pets.summon")
     || !Capabilities.Is("pets.follow") || !Capabilities.Is("pets.downed")) return;   // a joined client has none of these
-var key = CharacterData.KeyOf(player);                    // the character
-var who = PlayerRef.Of(player);
-var given = await Ask(Pets.Grant(key, "my-mod:hound", PetRequest.New()));      // a record, no body yet
+var who = PlayerRef.Of(player);                           // the player in game; their character owns the pet
+var given = await Ask(Pets.Grant(who, "my-mod:hound", PetRequest.New()));      // a record, no body yet
 if (given?.Pet is not { } pet) return;
 if (await Ask(Pets.Summon(who, pet.Id, PetRequest.New())) is null) return;     // a protected body 2 to 4 m from the owner, following
 if (await Ask(Pets.Command(who, pet.Id, PetOrder.Stay, EntityRef.None, PetRequest.New())) is null) return;
 if (await Ask(Pets.Command(who, pet.Id, PetOrder.Attack, EntityRef.Of(enemy), PetRequest.New())) is null) return;
 if (await Ask(Pets.Revive(who, pet.Id, PetRequest.New())) is null) return;     // the owner channels next to its recovery anchor
 if (await Ask(Pets.Release(who, pet.Id, PetRequest.New())) is null) return;    // for good
+foreach (var p in Pets.Of(who)) Log.Info($"{p.Label}: {p.Life} {p.Presence} {p.Health}/{p.HealthMax}");   // empty for a player not in game
 ```
 
-Every call answers with a result (the `Ask` helper above is where yours reads it): `Ok`, a `Reason` that starts with a word (`Busy`, `NotOwner`, `Capacity`, `NoSafeGround`,
-`TargetProtected`, `OutOfRange`, ...) and the pet as it is after. A refusal is not an exception; check `Ok`. Pass a fresh
-`PetRequest.New()` for each action you mean; resend the **same** one after a network hiccup and Kiln gives the first answer back
-instead of doing it twice.
+Every call answers with a `PetResult` (the `Ask` helper above is where yours reads it): `Ok`, a `Refusal` (a `PetRefusal`: `Busy`,
+`NotOwner`, `Capacity`, `NoSafeGround`, `TargetProtected`, `OutOfRange`, `RefusedByMod`, ...) to decide by, a `Reason` text for your log,
+the pet as it is after, and the receipts of any cost. A refusal is not an exception; check `Ok`. Pass a fresh `PetRequest.New()` for
+each action you mean (its `RequestId` is in the answer); resend the **same** one after a network hiccup and Kiln gives the first
+answer back instead of doing it twice.
 
+- **Ask first.** Each service row is a constant of `Pets` (`Pets.RecordsCapability` is `"pets.records"`, and `SummonCapability`,
+  `FollowCapability`, `FightCapability`, `DownedCapability`, `ControlCapability`, `DefinitionsCapability`, `HudServerCapability`,
+  `HudClientCapability`); `Capabilities.Why(row)` says why one is off. A joined player's game has none of the server rows.
 - **Where a pet comes from** is your mod's choice: a quest reward, a command, a shop, or [taming](/kiln/wiki/taming).
 - **Summon and dismiss** are the owner's wish. The wish stays through logout: the next login brings the pet back (a downed pet
   comes back as its recovery anchor, never with its health).
@@ -113,7 +121,8 @@ Events.On<PetDowningEvent>(e =>
 Events.On<PetRevivingEvent>(e => { if (OnCooldown(e.Owner)) e.Cancel(); });   // nothing has been taken yet
 ```
 
-A revive is **quoted first** (a read: nothing moves), then the owner channels next to the anchor. Walking away, being hurt (when you
+A revive is **quoted first** (a read: nothing moves), then the owner channels next to the anchor. What it costs is the definition's
+(`PetRevivePolicy.Cost`); the optional `selection` of `Pets.Revive` only says which of the owner's slots pays it. Walking away, being hurt (when you
 say so) or leaving cancels it and takes nothing. At the end the cost is taken **once**, exactly, from one stack in the owner's
 inventories with a receipt, and the pet is back with the health fraction you chose. A cost that cannot be taken (the item
 is missing from the game) is your mod's error in `kiln.log`, and that pet's revives are refused with nothing taken.
@@ -137,7 +146,8 @@ cannot get one.
 
 Kiln draws a pet bar for owners who run Kiln: one row per pet with health, and a marker over a recovery anchor. A mod can hide
 it per pet (`PetHudPolicy`), a player can hide it on their own game (`PetsClient.Configure`), and a mod can draw its own from
-`PetsClient.Snapshot`, read once per frame.
+`PetsClient.Snapshot`, read once per frame. Both throw `KilnUnavailableException` where the row `pets.hud.client`
+(`Pets.HudClientCapability`) is off, a dedicated server for one, so ask first.
 
 ## What you need to know
 
@@ -149,4 +159,5 @@ it per pet (`PetHudPolicy`), a player can hide it on their own game (`PetsClient
   worlds.
 
 The full guides are in Kiln's repository, `docs/kiln/modding/pets.md` (a walkthrough first, then the reference) and `docs/kiln/services/pets.md`
-(the contract, every event and every reason), on [GitHub](https://github.com/frostdev-ops/kiln). The API reference is linked under the title. Related: [Taming](/kiln/wiki/taming), [Creatures](/kiln/wiki/creatures), [Multiplayer](/kiln/wiki/multiplayer).
+(the contract, every event and every reason), on [GitHub](https://github.com/frostdev-ops/kiln). The API reference chips under the title are the service pages; until the reference of beta 1 is published, the `Kiln.Pets` chip opens the
+[agent skill's pets file](/kiln/agents/kiln-modding/references/api-pets.md), which lists the members. Related: [Taming](/kiln/wiki/taming), [Creatures](/kiln/wiki/creatures), [Multiplayer](/kiln/wiki/multiplayer).
