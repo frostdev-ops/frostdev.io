@@ -1,6 +1,27 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.27",
+      "date": "2026-11-28",
+      "title": "ShroudForge 1.8 mods with grouped choices",
+      "summary": "ShroudForge 1.8 mods whose settings sort their choices into groups, such as Gear Up, can be added again, and when Kiln does refuse a ShroudForge mod it names the setting and what ShroudForge expects.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Gear Up and other ShroudForge 1.8 mods can be added",
+          "text": "Add mods refused Gear Up as \"invalid metadata\": the launcher and Kiln's in-game Mods page now take ShroudForge 1.8's grouped choices, and the Mods page shows each group as a heading over its choices (thanks Ezra).",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "ShroudForge refusals say what is wrong",
+          "text": "When a ShroudForge mod breaks ShroudForge's own rules, Kiln names the setting and the field and says what ShroudForge expects, instead of \"invalid metadata\", and it refuses the same things ShroudForge refuses.",
+          "area": "compat",
+          "kind": "improved"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.26",
       "date": "2026-11-28",
       "title": "Greeneye mods beside other hooks",
