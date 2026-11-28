@@ -1,6 +1,45 @@
 {
   "released": [
     {
+      "version": "0.2.0-dev.31.25",
+      "date": "2026-11-28",
+      "title": "Cameras anywhere, Kiln's overlay by choice",
+      "summary": "Mod cameras can go anywhere in the world, players with a frame generation mod can choose to draw Kiln's overlay anyway, the launcher shows up once in the app menu under Gear Lever, and Ultimate ASI Loader under two names no longer stops Install.",
+      "patch": true,
+      "features": [
+        {
+          "title": "Mod cameras without a distance limit",
+          "text": "A mod's camera no longer has to stay within 250 m of your character: a mod can show your whole base from 300 m up, or frame a huge mount from far behind.",
+          "area": "api",
+          "kind": "improved"
+        },
+        {
+          "title": "Draw Kiln's overlay anyway",
+          "text": "Next to an NVIDIA Streamline frame generation mod or OptiScaler, a switch in the launcher draws Kiln's overlay and HUD mods anyway, at your own risk (thanks Soligna).",
+          "area": "launcher",
+          "kind": "new"
+        },
+        {
+          "title": "Once in the app menu under Gear Lever",
+          "text": "The launcher's AppImage no longer adds a second Kiln Launcher entry when Gear Lever or another AppImage tool already added one (thanks Dark-Thoughts).",
+          "area": "launcher",
+          "kind": "fix"
+        },
+        {
+          "title": "Ultimate ASI Loader under two names",
+          "text": "Install and Repair no longer refuse when another mod manager put Ultimate ASI Loader back over Kiln's loader: Kiln keeps the newer copy chained, and Play says so when it comes back (thanks KR-NXM5).",
+          "area": "compat",
+          "kind": "fix"
+        },
+        {
+          "title": "EML mods wait for a busy file",
+          "text": "EML mods no longer all fail when the game you just quit is still closing: Kiln waits a moment for the file, and the launcher opens a Shroudtopia or ShroudForge mod's settings file (thanks sosmic).",
+          "area": "compat",
+          "kind": "fix"
+        }
+      ]
+    },
+    {
       "version": "0.2.0-dev.31.24",
       "date": "2026-11-28",
       "title": "ShroudForge mods in the right place",
