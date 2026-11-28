@@ -106,13 +106,14 @@ Never deploy to a server players are using. Use a separate local test server.
   `creatures.health.perPlayer`, `lootRules.rarityWeights.legendary`), edit it by Kiln id from a data pack's `registry` section or
   `Mod.OnRegistry`, not by the game's paths. A pass reads the values below its own layers, so `x * 2` never stacks. One call takes at
   most the registry's edit cap (4,096; `randomLoot` 16,384): over it the whole call is refused (logged, never thrown). Settings or
-  state that change while a world runs (dev.32+): `Registry.Reauthor(RegistryEntryPoint.WorldLoad)`, never from inside `OnRegistry`, and read
+  state that change while a world runs (dev.32+): `Registries.Reauthor()` (check its result), never from inside `OnRegistry`, and read
   your inputs first (the pass runs off the tick). `restart` fields (`balance`, `world`, `difficulty`, `limits`) are `GameStart`
   only and both sides need the same values. [references/api-registry.md](references/api-registry.md).
 - **Pets, taming and exact costs (dev.32+).** Server, tick thread, `await` the result; every action takes a fresh
-  `PetRequest.New()` (or request id) and a taming token built from the last answer. Kiln keeps records, bodies, receipts and
-  timeouts; you choose the creature, the steps, the cost, who fights whom and when a pet attacks. Only enemy creatures that walk
-  are pets. A refusal is a result with a `Reason` starting with a word: read it. Never resubmit an uncertain receipt.
+  `PetRequest.New()` or `TamingRequest.New(progress.Token)` (the token of the last answer). Kiln keeps records, bodies,
+  receipts and timeouts; you choose the creature, the steps, the cost, who fights whom and when a pet attacks. Only enemy
+  creatures that walk are pets. A refusal is a result: decide by `r.Refusal` (`PetRefusal`, `TamingRefusal`), never by the
+  `Reason` text. Never resubmit an uncertain receipt.
   [references/api-pets.md](references/api-pets.md), [references/api-taming.md](references/api-taming.md).
 - **NPC lines (dev.31.16+, dev.32+).** The host decides, Kiln clients show it; do not guard `Npcs.*` calls with `Npcs.Available`.
   Lines are up to 200 characters (2048 bytes for all languages of a line); at most 16 topics per NPC across mods; the menu parts need

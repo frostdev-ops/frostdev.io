@@ -158,4 +158,4 @@ export const kilnSkillFiles = [
 ] as const;
 
 /** Fixed timestamp for the skill zip, so the same files build the same bytes. Update with the mirror. */
-export const kilnSkillUpdated = '2026-11-27';
+export const kilnSkillUpdated = '2026-11-28';
